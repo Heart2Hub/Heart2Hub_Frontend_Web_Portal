@@ -40,6 +40,7 @@ export const postLogin = createAsyncThunk(
   async (details) => {
     try {
       const response = await staffApi.getStaffByUsername(details.username);
+      localStorage.setItem("staffUsername", details.username);
       return response.data;
     } catch (error) {
       return Promise.reject(error.response.data);
@@ -62,7 +63,6 @@ export const staffSlice = createSlice({
   },
   extraReducers(builder) {
     builder.addCase(login.fulfilled, (state, action) => {
-      console.log(action.payload);
       state.staffSliceData.accessToken = action.payload;
       localStorage.setItem("accessToken", action.payload);
     });

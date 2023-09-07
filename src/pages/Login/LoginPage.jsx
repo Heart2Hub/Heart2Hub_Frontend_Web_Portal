@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Link from "@mui/material/Link";
@@ -8,8 +8,11 @@ import Typography from "@mui/material/Typography";
 import useInput from "../../hooks/use-input";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { login, postLogin } from "../../store/slices/staffSlice";
+import { login, postLogin, logout } from "../../store/slices/staffSlice";
 import { authApi } from "../../api/Api";
+import { hasExpired } from "../../utility/Utility";
+import jwt_decode from "jwt-decode";
+import { Alert, Snackbar } from "@mui/material";
 
 function LoginPage() {
   const {
@@ -28,63 +31,107 @@ function LoginPage() {
     inputBlurHandler: passwordBlurHandler,
     reset: resetPasswordInput,
   } = useInput((value) => value.trim() !== "" && value.length >= 6, "");
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (localStorage.getItem("isLoggedIn")) {
+      const decodedAccessToken = jwt_decode(
+        localStorage.getItem("accessToken")
+      );
+      const hasAccessTokenExpired = hasExpired(
+        new Date(decodedAccessToken.exp * 1000)
+      );
+      if (hasAccessTokenExpired) {
+        dispatch(logout());
+        navigate("/");
+      } else {
+        const fetchData = async () => {
+          const details = {
+            username: localStorage.getItem("staffUsername"),
+          };
+          const userResponse = dispatch(postLogin(details));
+          await userResponse.unwrap();
+        };
+        fetchData().catch(console.error).then(navigate("/home"));
+      }
+    }
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!enteredUsernameIsValid || !enteredPasswordIsValid) {
+      if (!enteredUsernameIsValid) {
+        handleOpen({
+          message: "Error: Username should be 6 characters or more",
+          severity: "error",
+        });
+      } else {
+        handleOpen({
+          message: "Error: Password should be 6 characters or more",
+          severity: "error",
+        });
+      }
       return;
     } else {
-      console.log(enteredUsername);
-      console.log(enteredPassword);
-
       try {
         const response = dispatch(
           login({ username: enteredUsername, password: enteredPassword })
         );
-        console.log("SENT");
         const data = await response.unwrap();
-        console.log("RECEIVED");
-        console.log(JSON.toString(data));
-
         authApi.updateAccessToken(data);
-        console.log("Updated access token and attached to axios");
         const details = {
           username: enteredUsername,
         };
-        console.log("performing post login");
-
         const userResponse = dispatch(postLogin(details));
         await userResponse.unwrap();
-        console.log(JSON.toString(userResponse));
+        handleOpen({ message: "Successfully Logged In", severity: "success" });
 
-        console.log("getting staff entity");
         resetUsernameInput();
         resetPasswordInput();
-
-        console.log("login was a success now we can move on");
         if (localStorage.getItem("isLoggedIn")) {
           navigate("/home");
         }
-      } catch (exception) {
-        console.log(exception.toString());
-        // resetUsernameInput();
-        // resetPasswordInput();
-      }
+      } catch (exception) {}
+      handleOpen({ message: "Error: Unable to find user", severity: "error" });
     }
+  };
+
+  //For Snackbar
+  const [snackBarState, setSnackBarState] = useState({
+    open: false,
+    vertical: "bottom",
+    horizontal: "left",
+    message: "",
+    severity: "info",
+  });
+  const { vertical, horizontal, open, message, severity } = snackBarState;
+  const handleOpen = (newSnackBarState) => {
+    setSnackBarState({
+      ...newSnackBarState,
+      vertical: "bottom",
+      horizontal: "left",
+      open: true,
+    });
+  };
+  const handleClose = () => {
+    setSnackBarState({ ...snackBarState, open: false });
   };
 
   return (
     <>
-      {/* <Snackbar
-        open={!error.equals(null)}
-        autoHideDuration={10000}
-        message= {error}
-        action={action}
-      /> */}
+      <Snackbar
+        anchorOrigin={{ vertical, horizontal }}
+        open={open}
+        autoHideDuration={6000}
+        onClose={handleClose}
+      >
+        <Alert onClose={handleClose} severity={severity} sx={{ width: "100%" }}>
+          {message}
+        </Alert>
+      </Snackbar>
+
       <Grid container spacing={2} sx={{ width: "100vw" }}>
         <Grid xs>
           <Typography
