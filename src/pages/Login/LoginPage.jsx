@@ -133,7 +133,7 @@ function LoginPage() {
       </Snackbar>
 
       <Grid container spacing={2} sx={{ width: "100vw" }}>
-        <Grid xs>
+        <Grid item xs>
           <Typography
             component="h1"
             variant="h1"
@@ -162,7 +162,7 @@ function LoginPage() {
             Clinical Excellence, Digital Elegance.
           </Typography>
         </Grid>
-        <Grid xs={5}>
+        <Grid item xs={5}>
           <Box
             sx={{
               marginTop: "10%",
