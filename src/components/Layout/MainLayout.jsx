@@ -2,6 +2,7 @@ import { Box, CssBaseline, Toolbar } from "@mui/material";
 import React from "react";
 import Header from "../Header/Header";
 import SideNavigation from "../SideNavigation/SideNavigation";
+import { Outlet } from "react-router";
 
 function MainLayout(props) {
   const drawerWidth = 240;

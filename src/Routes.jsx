@@ -1,24 +1,34 @@
 import MainLayout from "./components/Layout/MainLayout";
-import HomePage from "./pages/HomePage";
-import LoginPage from "./pages/LoginPage";
-import ErrorPage from "./pages/ErrorPage";
+import HomePage from "./pages/Home/HomePage";
+import LoginPage from "./pages/Login/LoginPage";
+import ErrorPage from "./pages/Error/ErrorPage";
+import LoginLayout from "./components/Layout/LoginLayout";
 
 const routes = [
   {
     path: "/",
-    layout: MainLayout,
-    element: <HomePage />,
-    // exact: true,
+    element: (
+      <LoginLayout>
+        <LoginPage />
+      </LoginLayout>
+    ),
+    exact: true,
   },
   {
-    path: "/login",
-    layout: MainLayout,
-    element: <LoginPage />,
+    path: "/home",
+    element: (
+      <MainLayout>
+        <HomePage />
+      </MainLayout>
+    ),
   },
   {
     path: "/error",
-    layout: MainLayout,
-    element: <ErrorPage />,
+    element: (
+      <MainLayout>
+        <ErrorPage />
+      </MainLayout>
+    ),
   },
 ];
 
