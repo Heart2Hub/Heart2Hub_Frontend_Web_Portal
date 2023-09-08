@@ -6,10 +6,8 @@ import React from "react";
 
 // @mui material components
 import Grid from "@mui/material/Grid";
-
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
-import { Outlet } from "react-router-dom";
 
 function Administration() {
   return (
@@ -21,13 +19,26 @@ function Administration() {
             <MDBox mb={1.5}>
               <SimpleBlogCard
                 image="https://bit.ly/3Hlw1MQ"
-                title="Card title"
-                description="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facilis non dolore est fuga nobis ipsum illum eligendi nemo iure repellat, soluta, optio minus ut reiciendis voluptates enim impedit veritatis officiis."
+                title="Staff Management"
                 action={{
                   type: "internal",
                   route: "/administration/staff-management",
                   color: "info",
-                  label: "Go Somewhere",
+                  label: "Continue",
+                }}
+              />{" "}
+            </MDBox>
+          </Grid>
+          <Grid item xs={12} md={6} lg={3}>
+            <MDBox mb={1.5}>
+              <SimpleBlogCard
+                image="https://bit.ly/3Hlw1MQ"
+                title="Facility Management"
+                action={{
+                  type: "internal",
+                  route: "/administration/facility-management",
+                  color: "info",
+                  label: "Continue",
                 }}
               />{" "}
             </MDBox>

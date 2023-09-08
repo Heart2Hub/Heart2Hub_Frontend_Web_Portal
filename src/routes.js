@@ -53,6 +53,7 @@ import Administration from "layouts/administration";
 import Manpower from "layouts/manpower";
 import Finance from "layouts/finance";
 import StaffManagement from "layouts/administration/staff-management";
+import FacilityManagement from "layouts/administration/facility-management";
 
 const routes = [
   {
@@ -93,6 +94,13 @@ const routes = [
     icon: <Icon fontSize="small">notifications</Icon>,
     route: "/administration/staff-management",
     component: <StaffManagement />,
+  },
+  {
+    name: "Facility Management",
+    key: "facilitymanagement",
+    icon: <Icon fontSize="small">notifications</Icon>,
+    route: "/administration/facility-management",
+    component: <FacilityManagement />,
   },
   {
     type: "collapse",
