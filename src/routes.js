@@ -54,13 +54,29 @@ import Manpower from "layouts/manpower";
 import Finance from "layouts/finance";
 import StaffManagement from "layouts/administration/staff-management";
 import FacilityManagement from "layouts/administration/facility-management";
+import Home from "layouts/home";
+import Account from "layouts/account";
 
 const routes = [
+  {
+    name: "Home",
+    key: "home",
+    route: "*",
+    component: <Home />,
+  },
+  {
+    type: "collapse",
+    name: "Account",
+    key: "account",
+    icon: <Icon fontSize="small">account_circle</Icon>,
+    route: "/account",
+    component: <Account />,
+  },
   {
     type: "collapse",
     name: "Outpatient",
     key: "outpatient",
-    icon: <Icon fontSize="small">dashboard</Icon>,
+    icon: <Icon fontSize="small">local_hospital</Icon>,
     route: "/outpatient",
     component: <Outpatient />,
   },
@@ -68,7 +84,7 @@ const routes = [
     type: "collapse",
     name: "Inpatient",
     key: "inpatient",
-    icon: <Icon fontSize="small">table_view</Icon>,
+    icon: <Icon fontSize="small">bed</Icon>,
     route: "/inpatient",
     component: <Inpatient />,
   },
@@ -84,21 +100,19 @@ const routes = [
     type: "collapse",
     name: "Administration",
     key: "administration",
-    icon: <Icon fontSize="small">notifications</Icon>,
+    icon: <Icon fontSize="small">build</Icon>,
     route: "/administration",
     component: <Administration />,
   },
   {
     name: "Staff Management",
     key: "staffmanagement",
-    icon: <Icon fontSize="small">notifications</Icon>,
     route: "/administration/staff-management",
     component: <StaffManagement />,
   },
   {
     name: "Facility Management",
     key: "facilitymanagement",
-    icon: <Icon fontSize="small">notifications</Icon>,
     route: "/administration/facility-management",
     component: <FacilityManagement />,
   },
@@ -106,7 +120,7 @@ const routes = [
     type: "collapse",
     name: "Manpower",
     key: "manpower",
-    icon: <Icon fontSize="small">person</Icon>,
+    icon: <Icon fontSize="small">group</Icon>,
     route: "/manpower",
     component: <Manpower />,
   },
@@ -114,7 +128,7 @@ const routes = [
     type: "collapse",
     name: "Finance",
     key: "finance",
-    icon: <Icon fontSize="small">login</Icon>,
+    icon: <Icon fontSize="small">attach_money</Icon>,
     route: "/finance",
     component: <Finance />,
   },

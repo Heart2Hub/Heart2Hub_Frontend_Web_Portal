@@ -28,12 +28,14 @@ import Icon from "@mui/material/Icon";
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
+import MDButton from "components/MDButton";
 
 // Material Dashboard 2 React base styles
 import colors from "assets/theme/base/colors";
 import typography from "assets/theme/base/typography";
+import MDInput from "components/MDInput";
 
-function ProfileInfoCard({ title, description, info, social, action, shadow }) {
+function FormCard({ title, description, info, social, action, shadow }) {
   const labels = [];
   const values = [];
   const { socialMediaColors } = colors;
@@ -59,7 +61,7 @@ function ProfileInfoCard({ title, description, info, social, action, shadow }) {
 
   // Render the card info items
   const renderItems = labels.map((label, key) => (
-    <MDBox key={label} display="flex" py={1} pr={2}>
+    <MDBox key={label} py={1} pr={2} display="flex" flexDirection="column">
       <MDTypography
         variant="button"
         fontWeight="bold"
@@ -67,9 +69,7 @@ function ProfileInfoCard({ title, description, info, social, action, shadow }) {
       >
         {label}: &nbsp;
       </MDTypography>
-      <MDTypography variant="button" fontWeight="regular" color="text">
-        &nbsp;{values[key]}
-      </MDTypography>
+      <MDInput type={values[key]} size="small" />
     </MDBox>
   ));
 
@@ -119,22 +119,15 @@ function ProfileInfoCard({ title, description, info, social, action, shadow }) {
         </MDTypography> */}
       </MDBox>
       <MDBox p={2}>
-        {/* <MDBox mb={2} lineHeight={1}>
+        <MDBox mb={2} lineHeight={1}>
           <MDTypography variant="button" color="text" fontWeight="light">
             {description}
           </MDTypography>
-        </MDBox> */}
-        {/* <MDBox opacity={0.3}>
-          <Divider />
-        </MDBox> */}
-        <MDBox>
-          {renderItems}
-          {/* <MDBox display="flex" py={1} pr={2}>
-            <MDTypography variant="button" fontWeight="bold" textTransform="capitalize">
-              social: &nbsp;
-            </MDTypography>
-            {renderSocial}
-          </MDBox> */}
+        </MDBox>
+
+        <MDBox>{renderItems}</MDBox>
+        <MDBox pt={2}>
+          <MDButton color="primary">Change Password</MDButton>
         </MDBox>
       </MDBox>
     </Card>
@@ -142,12 +135,12 @@ function ProfileInfoCard({ title, description, info, social, action, shadow }) {
 }
 
 // Setting default props for the ProfileInfoCard
-ProfileInfoCard.defaultProps = {
+FormCard.defaultProps = {
   shadow: true,
 };
 
 // Typechecking props for the ProfileInfoCard
-ProfileInfoCard.propTypes = {
+FormCard.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
   info: PropTypes.objectOf(PropTypes.string).isRequired,
@@ -159,4 +152,4 @@ ProfileInfoCard.propTypes = {
   shadow: PropTypes.bool,
 };
 
-export default ProfileInfoCard;
+export default FormCard;

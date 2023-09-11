@@ -30,6 +30,8 @@ import {
 
 // Images
 import brandWhite from "assets/images/logo-ct.png";
+import Outpatient from "layouts/outpatient";
+import Home from "layouts/home";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -100,15 +102,14 @@ export default function App() {
       <Sidenav
         color={sidenavColor}
         brand={brandWhite}
-        brandName="Material Dashboard 2"
+        brandName="Heart2Hub"
         routes={routes}
         onMouseEnter={handleOnMouseEnter}
         onMouseLeave={handleOnMouseLeave}
       />
-
       <Routes>
         {getRoutes(routes)}
-        <Route path="*" element={<Navigate to="/outpatient" />} />
+        {/* <Route path="*" element={<Navigate to="/outpatient" />} /> */}
       </Routes>
     </ThemeProvider>
   );

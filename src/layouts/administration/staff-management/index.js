@@ -41,7 +41,7 @@ function StaffManagement() {
                 </MDTypography>
               </MDBox>
               <MDBox pt={3}>
-                <DataTable table={{ columns, rows }} />
+                <DataTable canSearch={true} table={{ columns, rows }} />
               </MDBox>
             </Card>
           </Grid>
