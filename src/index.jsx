@@ -13,12 +13,12 @@ const root = createRoot(container);
 
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <MaterialUIControllerProvider>
-        <Provider store={store}>
+    <Provider store={store}>
+      <BrowserRouter>
+        <MaterialUIControllerProvider>
           <App />
-        </Provider>
-      </MaterialUIControllerProvider>
-    </BrowserRouter>
+        </MaterialUIControllerProvider>
+      </BrowserRouter>
+    </Provider>
   </React.StrictMode>
 );

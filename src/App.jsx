@@ -32,6 +32,7 @@ import {
 import brandWhite from "assets/images/logo-ct.png";
 import Outpatient from "layouts/outpatient";
 import Home from "layouts/home";
+import ErrorPage from "layouts/error";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -75,6 +76,8 @@ export default function App() {
     document.scrollingElement.scrollTop = 0;
   }, [pathname]);
 
+  const location = useLocation();
+
   const getRoutes = (allRoutes) =>
     allRoutes.map((route) => {
       if (route.collapse) {
@@ -82,7 +85,6 @@ export default function App() {
       }
 
       if (route.route) {
-        console.log(route.route);
         return (
           <Route
             exact
@@ -99,18 +101,17 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Sidenav
-        color={sidenavColor}
-        brand={brandWhite}
-        brandName="Heart2Hub"
-        routes={routes}
-        onMouseEnter={handleOnMouseEnter}
-        onMouseLeave={handleOnMouseLeave}
-      />
-      <Routes>
-        {getRoutes(routes)}
-        {/* <Route path="*" element={<Navigate to="/outpatient" />} /> */}
-      </Routes>
+      {!(location.pathname == "/error" || location.pathname == "/") && (
+        <Sidenav
+          color={sidenavColor}
+          brand={brandWhite}
+          brandName="Heart2Hub"
+          routes={routes}
+          onMouseEnter={handleOnMouseEnter}
+          onMouseLeave={handleOnMouseLeave}
+        />
+      )}
+      <Routes>{getRoutes(routes)}</Routes>
     </ThemeProvider>
   );
 }
