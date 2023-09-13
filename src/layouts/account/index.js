@@ -17,6 +17,7 @@ import MDTypography from "components/MDTypography";
 import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
 import MDInput from "components/MDInput";
 import FormCard from "examples/Cards/FormCards";
+import { CheckBox } from "@mui/icons-material";
 
 function Account() {
   return (
@@ -32,7 +33,7 @@ function Account() {
               role: "DOCTOR",
               department: "ACCIDENT & EMERGENCY (A&E)",
               subDepartment: "A&E CLINIC 1",
-              head: "Yes",
+              head: <CheckBox />,
             }}
             shadow={false}
           />

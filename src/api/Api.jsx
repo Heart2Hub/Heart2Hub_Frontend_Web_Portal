@@ -22,6 +22,9 @@ export const authApi = {
 };
 
 export const staffApi = {
+  getAllStaff() {
+    return axiosFetch.get(`${REST_ENDPOINT}/staff/getAllStaff`);
+  },
   getStaffByUsername(username) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/staff/getStaffByUsername?username=${username}`
