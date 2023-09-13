@@ -48,7 +48,7 @@ function StaffShift({ username, dateToday, dateList }) {
         setToday(dateToday);
         setListOfDates(dateList);
         getAllShiftsForStaff();
-    }, [shifts?.length, open])
+    }, [shifts?.length, dateList, open])
 
     return (
         <TableRow role="checkbox" tabIndex={-1} key={staffUsername} sx={{ display: 'flex'}}>

@@ -70,7 +70,6 @@ function AddShift({ username, open, handleClose, date }) {
                         <Grid md={12}>
                             <Typography variant="h6">Staff: {username}</Typography>
                             <Typography variant="h6">Date: {date}</Typography>
-                            {console.log(date)}
                             {/* <Typography variant="h6">Role: </Typography> */}
                             {/* <Typography variant="h6">Department: </Typography> */}
                             <br/>
