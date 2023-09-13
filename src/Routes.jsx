@@ -19,6 +19,7 @@ import FacilityManagement from "layouts/administration/facility-management";
 import Home from "layouts/home";
 import Account from "layouts/account";
 import ErrorPage from "layouts/error";
+import Rostering from "layouts/manpower/rostering";
 
 const routes = [
   {
@@ -92,6 +93,12 @@ const routes = [
     icon: <Icon fontSize="small">group</Icon>,
     route: "/manpower",
     component: <Manpower />,
+  },
+  {
+    name: "Manpower",
+    key: "manpower",
+    route: "/manpower/rostering",
+    component: <Rostering />,
   },
   {
     type: "collapse",
