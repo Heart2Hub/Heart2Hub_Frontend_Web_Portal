@@ -23,7 +23,12 @@ import breakpoints from "assets/theme/base/breakpoints";
 import burceMars from "assets/images/bruce-mars.jpg";
 import backgroundImage from "assets/images/bg-profile.jpeg";
 
+import { useSelector } from "react-redux";
+import { selectStaff } from "../../../store/slices/staffSlice";
+
 function Header({ children }) {
+  const staff = useSelector(selectStaff);
+
   return (
     <MDBox position="relative" mb={5}>
       <MDBox position="relative" minHeight="5rem" />
@@ -37,18 +42,18 @@ function Header({ children }) {
         }}
       >
         <Grid container spacing={3} alignItems="center">
-          <Grid item>
+          <Grid item justifyContent="center">
             <MDAvatar
               src={burceMars}
               alt="profile-image"
-              size="xl"
-              shadow="sm"
+              size="xxl"
+              shadow="xxl"
             />
           </Grid>
           <Grid item>
             <MDBox height="100%" mt={0.5} lineHeight={1}>
               <MDTypography variant="h5" fontWeight="medium">
-                Tan Wee Kek
+                {staff.firstname} <bold>{staff.lastname}</bold>
               </MDTypography>
               {/* <MDTypography variant="button" color="text" fontWeight="regular">
                 Doctor / Internal Medicine

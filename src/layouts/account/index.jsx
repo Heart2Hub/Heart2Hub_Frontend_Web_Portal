@@ -18,7 +18,12 @@ import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
 import MDInput from "components/MDInput";
 import FormCard from "examples/Cards/FormCards";
 
+import { useSelector } from "react-redux";
+import { selectStaff } from "../../store/slices/staffSlice";
+
 function Account() {
+  const staff = useSelector(selectStaff);
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -28,16 +33,18 @@ function Account() {
           <ProfileInfoCard
             title="profile information"
             info={{
-              username: "tanweekek",
-              role: "DOCTOR",
-              department: "ACCIDENT & EMERGENCY (A&E)",
-              subDepartment: "A&E CLINIC 1",
-              head: "Yes",
+              username: staff.username,
+              role: staff.staffRoleEnum,
+              department: staff.department ? staff.department : "NO DEPARTMENT",
+              subDepartment: staff.subDepartment
+                ? staff.subDepartment
+                : "NO SUB DEPARTMENT",
+              head: staff.isHead ? "TRUE" : "FALSE",
             }}
             shadow={false}
           />
           <Divider orientation="horizontal" sx={{ ml: -2, mr: 1 }} />
-          <FormCard
+          {/* <FormCard
             title="change password"
             description={`To change your password, please fill in the fields below.
                 Your password must contain at least 8 characters.`}
@@ -65,7 +72,7 @@ function Account() {
             ]}
             action={{ route: "", tooltip: "Edit Profile" }}
             shadow={false}
-          />
+          /> */}
         </MDBox>
       </Header>
     </DashboardLayout>
