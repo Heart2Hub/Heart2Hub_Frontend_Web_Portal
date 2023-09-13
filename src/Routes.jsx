@@ -20,6 +20,7 @@ import Home from "layouts/home";
 import Account from "layouts/account";
 import ErrorPage from "layouts/error";
 import Rostering from "layouts/manpower/rostering";
+import CalendarRoster from "layouts/manpower/rostering/CalendarRoster";
 
 const routes = [
   {
@@ -95,10 +96,16 @@ const routes = [
     component: <Manpower />,
   },
   {
-    name: "Manpower",
-    key: "manpower",
+    name: "Rostering",
+    key: "rostering",
     route: "/manpower/rostering",
     component: <Rostering />,
+  },
+  {
+    name: "Calendar",
+    key: "calendar",
+    route: "/manpower/rostering/calendar",
+    component: <CalendarRoster />,
   },
   {
     type: "collapse",
