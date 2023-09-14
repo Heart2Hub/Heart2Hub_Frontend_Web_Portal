@@ -2,11 +2,14 @@ import React, { useEffect, useState} from 'react';
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
+import InputLabel from '@mui/material/InputLabel';
 import Modal from "@mui/material/Modal";
+import Select from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import axios from 'axios';
 import moment from 'moment';
+import { MenuItem } from '@mui/material';
 
 const style = {
     position: "absolute",
@@ -15,8 +18,9 @@ const style = {
     transform: "translate(-50%, -50%)",
     width: 400,
     bgcolor: "background.paper",
-    boxShadow: 24,
-    p: 4,
+    boxShadow: 1,
+    borderRadius: 2,
+    p: 5,
 };
 
 const body = {
@@ -25,15 +29,50 @@ const body = {
     comments: ""
 }
 
+const options = [
+    {
+        id: 1,
+        shift: "Shift 1 (12am - 8am)"
+    },
+    {
+        id: 2,
+        shift: "Shift 2 (8am - 4pm)"
+    },
+    {
+        id: 3,
+        shift: "Shift 3 (4pm - 12am)"
+    },
+    {
+        id: 4,
+        shift: "24 Hour Shift (12am - 11.59pm)"
+    },
+]
+
 function AddShift({ username, open, handleClose, date }) {
     const [reqBody, setReqBody] = useState(body);
+    const [selectedShift, setSelectedShift] = useState(1);
+    const [errorMsg, setErrorMsg] = useState();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         const newReqBody = reqBody;
-        newReqBody.startTime = moment(date + ' ' + reqBody.startTime, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
-        newReqBody.endTime = moment(date + ' ' + reqBody.endTime, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
-        console.log(newReqBody)
+        let start;
+        let end;
+        if (selectedShift === 1) {
+            start = date + ' ' + "00:00";
+            end = date + ' ' + "08:00";
+        } else if (selectedShift === 2) {
+            start = date + ' ' + "08:00";
+            end = date + ' ' + "16:00";
+        } else if (selectedShift === 2) {
+            start = date + ' ' + "16:00";
+            end = date + ' ' + "23:59";
+        } else {
+            start = date + ' ' + "00:00";
+            end = date + ' ' + "23:59";
+        }
+        newReqBody.startTime = moment(start, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
+        newReqBody.endTime = moment(end, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         try {
             const response = await axios.post(`http://localhost:8080/shift/createShift/${username}`, newReqBody, {
                 headers: {
@@ -41,9 +80,15 @@ function AddShift({ username, open, handleClose, date }) {
                 }
             });
             handleClose();
+            setErrorMsg(null);
         } catch (error) {
-            console.error(error);
+            console.log(error)
+            setErrorMsg(error.response.data);
         }
+    }
+
+    const handleDropdownChange = (event) => {
+        setSelectedShift(event.target.value);
     }
 
     const handleChange = (event) => {
@@ -55,6 +100,7 @@ function AddShift({ username, open, handleClose, date }) {
 
     const handleExit = () => {
         handleClose();
+        setErrorMsg(null);
     }
 
     return (
@@ -73,25 +119,41 @@ function AddShift({ username, open, handleClose, date }) {
                             {/* <Typography variant="h6">Role: </Typography> */}
                             {/* <Typography variant="h6">Department: </Typography> */}
                             <br/>
+                            <InputLabel id="shift-select-label">Select shift:</InputLabel>
+                            <Select
+                                labelId="shift-select-label"
+                                id="shift-select"
+                                value={selectedShift}
+                                onChange={handleDropdownChange}
+                            >
+                                {options.map((option) => (
+                                    <MenuItem key={option.id} value={option.id}>
+                                        {option.shift}
+                                    </MenuItem>
+                                ))}
+                            </Select><br/><br/>
                             <TextField
                                 InputLabelProps={{ shrink: true }} 
                                 fullWidth
-                                label="Start"
-                                name="startTime"
-                                type="time"
+                                label="Comments"
+                                name="comments"
                                 onChange={handleChange}
-                                value={reqBody.startTime}
+                                value={reqBody.comments}
                             /><br/><br/>
-                            <TextField
-                                InputLabelProps={{ shrink: true }} 
-                                fullWidth
-                                label="End"
-                                name="endTime"
-                                type="time"
-                                onChange={handleChange}
-                                value={reqBody.endTime}
-                            /><br/><br/>
-                            
+                            <InputLabel id="facility-select-label">Select facility:</InputLabel>
+                            <Select
+                                labelId="facility-select-label"
+                                id="facility-select"
+                                value={selectedShift}
+                                onChange={handleDropdownChange}
+                            >
+                                {options.map((option) => (
+                                    <MenuItem key={option.id} value={option.id}>
+                                        {option.shift}
+                                    </MenuItem>
+                                ))}
+                            </Select><br/><br/>
+                            {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
                             <Button 
                                 variant="contained" 
                                 onClick={handleSubmit}

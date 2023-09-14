@@ -21,6 +21,8 @@ import TableRow from '@mui/material/TableRow';
 import axios from 'axios';
 import StaffShift from './staffShift';
 import CalendarRoster from './CalendarRoster';
+import { getDay } from '../utils/utils';
+import { Button } from '@mui/material';
 
 const dummyStaffs = [
     {
@@ -36,45 +38,83 @@ const dummyStaffs = [
 function Rostering() {
 
     const [staffs, setStaffs] = useState(dummyStaffs);
-    const [today, setToday] = useState();
-    const [weekDates, setWeekDates] = useState();
-    
-    // const columns = [
-    //     { id: 'username', label: 'Staff', minWidth: 170 },
-    //     { id: 'mon', label: 'Monday', minWidth: 170 },
-    //     { id: 'tues', label: 'Tuesday', minWidth: 170 },
-    //     { id: 'wed', label: 'Wednesday', minWidth: 170 },
-    //     { id: 'thurs', label: 'Thursday', minWidth: 170 },
-    //     { id: 'fri', label: 'Friday', minWidth: 170 },
-    //     { id: 'sat', label: 'Saturday', minWidth: 170 },
-    //     { id: 'sun', label: 'Sunday', minWidth: 170 }
-    //   ];
+    const [weekDates, setWeekDates] = useState([]);
+    const [monthDates, setMonthDates] = useState([]);
+    const [prevDisable, setPrevDisable] = useState(true);
+    const [nextDisable, setNextDisable] = useState(false);
+
+    const today = moment().format('YYYY-MM-DD');
 
     const getWeekDates = (dateString) => {
         const currDate = moment(dateString);
-        const currDayOfWeek = currDate.day();
-        setToday(currDate.format('YYYY-MM-DD'));
 
         // Get date of Monday (start of the week)
-        const startDate = moment(currDate).subtract(currDayOfWeek, 'days').startOf('day');
+        const startDate = currDate.clone().startOf('week').add(1, 'day');
 
         // Get date of Sunday (end of the week)
-        const endDate = moment(currDate).add(6 - currDayOfWeek, 'days').endOf('day');
+        const endDate = currDate.clone().endOf('week').add(1, 'day');
 
         const dates = [];
-        let i = 1;
+        let i = 0;
         while (startDate.isSameOrBefore(endDate)) {
-            dates.push({ id: i, date: startDate.format('YYYY-MM-DD') });
+            dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i) });
             startDate.add(1, 'days');
             i++;
+        }
+
+        for (let i=0; i<dates.length; i++) {
+            if (dates[i].date === today) {
+                setPrevDisable(true);
+                break;
+            }
+            if (dates[i].date === monthDates[monthDates.length-1]?.date) {
+                setNextDisable(true);
+                break;
+            }
+            setPrevDisable(false);
+            setNextDisable(false);
         }
         setWeekDates(dates);
     }
 
+    const getMonthDates = (dateString) => {
+        const currDate = moment(dateString);
+
+        // Get date of Monday (start of the week)
+        const startDate = currDate.clone().startOf('week').add(1, 'day');
+
+        // Get date of exactly 1 month from Monday
+        const endDate = currDate.add(1, 'months');
+
+        const dates = [];
+        let i = 0;
+        while (startDate.isSameOrBefore(endDate)) {
+            dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i) });
+            startDate.add(1, 'days');
+            i++;
+            i = i % 7;
+        }
+        setMonthDates(dates);
+    }
+
+    const handleNext = () => {
+        const lastDateOfWeek = moment(weekDates[weekDates.length-1].date);
+        lastDateOfWeek.add(1, 'days');
+        getWeekDates(lastDateOfWeek);
+    }
+
+    const handlePrev = () => {
+        const firstDateOfWeek = moment(weekDates[0].date);
+        firstDateOfWeek.subtract(2, 'days');
+        getWeekDates(firstDateOfWeek);
+    }
+
     useEffect(() => {
         // getAllStaff();
-        getWeekDates(moment().format('YYYY-MM-DD'));
-        // getAllShifts();
+        getMonthDates(today);
+        if (weekDates.length === 0) {
+            getWeekDates(today);
+        }
     },[])
 
     return(
@@ -99,22 +139,25 @@ function Rostering() {
                 </MDTypography>
               </MDBox>
               <MDBox pt={3}>
+              <Button disabled={prevDisable} onClick={handlePrev}>Prev</Button>
+                <Button disabled={nextDisable} onClick={handleNext}>Next</Button>
               <TableContainer sx={{ maxHeight: 1000 }}>
                 <Table stickyHeader aria-label="sticky table">
                     <TableHead>
                         <TableRow>
                             <TableCell
                                 key={1000}
-                                style={{ minWidth: 170 }}
+                                style={{ minWidth: 160 }}
                             >
                             Staff
                             </TableCell>
                         {weekDates?.map((column) => (
                             <TableCell
                                 key={column.id}
+                                align="center"
                                 style={{ minWidth: 170, color: column.date === today ? 'brown' : 'black'}}
                             >
-                            {column.date}
+                            {column.day}<br/>{column.date}
                             </TableCell>
                         ))}
                         </TableRow>
@@ -124,8 +167,8 @@ function Rostering() {
                             return (
                             <StaffShift 
                                 username={staff.username}
-                                dateToday={moment().format('YYYY-MM-DD')}
-                                dateList={weekDates}>
+                                dateList={weekDates}
+                                weekStartDate={weekDates.length > 0 ? weekDates[0].date : today}>
                             </StaffShift>)
                         })}
                     </TableBody>
