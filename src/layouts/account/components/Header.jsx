@@ -6,10 +6,6 @@ import PropTypes from "prop-types";
 // @mui material components
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
-import AppBar from "@mui/material/AppBar";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
-import Icon from "@mui/material/Icon";
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
@@ -21,10 +17,10 @@ import breakpoints from "assets/theme/base/breakpoints";
 
 // Images
 import burceMars from "assets/images/bruce-mars.jpg";
-import backgroundImage from "assets/images/bg-profile.jpeg";
 
 import { useSelector } from "react-redux";
 import { selectStaff } from "../../../store/slices/staffSlice";
+import ResetPasswordModal from "./ResetPasswordModal";
 
 function Header({ children }) {
   const staff = useSelector(selectStaff);
@@ -41,7 +37,7 @@ function Header({ children }) {
           px: 2,
         }}
       >
-        <Grid container spacing={3} alignItems="center">
+        <Grid container spacing={5} alignItems="center">
           <Grid item justifyContent="center">
             <MDAvatar
               src={burceMars}
@@ -53,11 +49,15 @@ function Header({ children }) {
           <Grid item>
             <MDBox height="100%" mt={0.5} lineHeight={1}>
               <MDTypography variant="h5" fontWeight="medium">
-                {staff.firstname} <bold>{staff.lastname}</bold>
+                {staff.firstname} {staff.lastname}
               </MDTypography>
-              {/* <MDTypography variant="button" color="text" fontWeight="regular">
-                Doctor / Internal Medicine
-              </MDTypography> */}
+            </MDBox>
+          </Grid>
+          <Grid item>
+            <MDBox height="100%" mt={0.5} lineHeight={1}>
+              <MDTypography variant="h5" fontWeight="medium">
+                <ResetPasswordModal username={staff.username} />
+              </MDTypography>
             </MDBox>
           </Grid>
         </Grid>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 // @mui material components
 import Card from "@mui/material/Card";
@@ -6,7 +6,6 @@ import Card from "@mui/material/Card";
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 
 // Authentication layout components
@@ -16,7 +15,7 @@ import BasicLayout from "layouts/authentication/components/BasicLayout";
 import bgImage from "assets/images/loginbgimage2.png";
 
 import Logo from "../components/Logo/Logo";
-import { Alert, Box, Grid, Paper, Snackbar, TextField } from "@mui/material";
+import { Grid, TextField } from "@mui/material";
 import useInput from "hooks/use-input";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -24,6 +23,7 @@ import { hasExpired } from "utility/Utility";
 import jwt_decode from "jwt-decode";
 import { login, postLogin, logout } from "../../../store/slices/staffSlice";
 import { authApi } from "../../../api/Api";
+import { displayMessage } from "../../../store/slices/snackbarSlice";
 
 function SignInPage() {
   const {
@@ -43,7 +43,7 @@ function SignInPage() {
     reset: resetPasswordInput,
   } = useInput((value) => value.trim() !== "" && value.length >= 6, "");
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const reduxDispatch = useDispatch();
 
   useEffect(() => {
     if (localStorage.getItem("isLoggedIn")) {
@@ -54,14 +54,14 @@ function SignInPage() {
         new Date(decodedAccessToken.exp * 1000)
       );
       if (hasAccessTokenExpired) {
-        dispatch(logout());
+        reduxDispatch(logout());
         navigate("/");
       } else {
         const fetchData = async () => {
           const details = {
             username: localStorage.getItem("staffUsername"),
           };
-          const userResponse = dispatch(postLogin(details));
+          const userResponse = reduxDispatch(postLogin(details));
           await userResponse.unwrap();
         };
         fetchData().catch(console.error).then(navigate("/home"));
@@ -74,20 +74,28 @@ function SignInPage() {
 
     if (!enteredUsernameIsValid || !enteredPasswordIsValid) {
       if (!enteredUsernameIsValid) {
-        handleOpen({
-          message: "Error: Username should be 6 characters or more",
-          severity: "error",
-        });
+        reduxDispatch(
+          displayMessage({
+            color: "warning",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Username should be 6 characters or more",
+          })
+        );
       } else {
-        handleOpen({
-          message: "Error: Password should be 6 characters or more",
-          severity: "error",
-        });
+        reduxDispatch(
+          displayMessage({
+            color: "warning",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Password should be 6 characters or more",
+          })
+        );
       }
       return;
     } else {
       try {
-        const response = dispatch(
+        const response = reduxDispatch(
           login({ username: enteredUsername, password: enteredPassword })
         );
         const data = await response.unwrap();
@@ -95,54 +103,37 @@ function SignInPage() {
         const details = {
           username: enteredUsername,
         };
-        const userResponse = dispatch(postLogin(details));
+        const userResponse = reduxDispatch(postLogin(details));
         await userResponse.unwrap();
-        handleOpen({ message: "Successfully Logged In", severity: "success" });
+        reduxDispatch(
+          displayMessage({
+            color: "success",
+            icon: "notification",
+            title: "Successfully Logged In!",
+            content: "Welcome To Heart2Hub",
+          })
+        );
 
         resetUsernameInput();
         resetPasswordInput();
         if (localStorage.getItem("isLoggedIn")) {
           navigate("/home");
         }
-      } catch (exception) {}
-      handleOpen({ message: "Error: Unable to find user", severity: "error" });
+      } catch (exception) {
+        reduxDispatch(
+          displayMessage({
+            color: "warning",
+            icon: "notification",
+            title: "Error Encountered",
+            content: exception.message,
+          })
+        );
+      }
     }
-  };
-
-  //For Snackbar
-  const [snackBarState, setSnackBarState] = useState({
-    open: false,
-    vertical: "bottom",
-    horizontal: "left",
-    message: "",
-    severity: "info",
-  });
-  const { vertical, horizontal, open, message, severity } = snackBarState;
-  const handleOpen = (newSnackBarState) => {
-    setSnackBarState({
-      ...newSnackBarState,
-      vertical: "bottom",
-      horizontal: "left",
-      open: true,
-    });
-  };
-  const handleClose = () => {
-    setSnackBarState({ ...snackBarState, open: false });
   };
 
   return (
     <BasicLayout image={bgImage}>
-      <Snackbar
-        anchorOrigin={{ vertical, horizontal }}
-        open={open}
-        autoHideDuration={6000}
-        onClose={handleClose}
-      >
-        <Alert onClose={handleClose} severity={severity} sx={{ width: "100%" }}>
-          {message}
-        </Alert>
-      </Snackbar>
-
       <Grid
         container
         spacing={3}
@@ -178,7 +169,6 @@ function SignInPage() {
                   id="username"
                   label="Username"
                   name="username"
-                  autoComplete="username"
                   autoFocus
                   fullWidth
                   value={enteredUsername}
@@ -193,7 +183,6 @@ function SignInPage() {
                   label="Password"
                   type="password"
                   id="password"
-                  autoComplete="current-password"
                   fullWidth
                   value={enteredPassword}
                   onBlur={passwordBlurHandler}

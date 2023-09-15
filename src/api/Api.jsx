@@ -19,6 +19,11 @@ export const authApi = {
       "Authorization"
     ] = `Bearer ${accessToken}`;
   },
+  changePassword(username, oldPassword, newPassword) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/staff/changePassword?username=${username}&oldPassword=${oldPassword}&newPassword=${newPassword}`
+    );
+  },
 };
 
 export const staffApi = {
