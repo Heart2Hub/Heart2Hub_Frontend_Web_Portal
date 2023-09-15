@@ -10,14 +10,13 @@ import moment from 'moment';
 import axios from 'axios';
 import { Button } from '@mui/material';
 import AddShift from './addShift';
-import { getShiftName } from '../utils/utils';
+import { getShiftName, getTime } from '../utils/utils';
 import ViewShift from './ViewShift';
 
 
 const cardStyles = {
     backgroundColor: "#ffdc7a",
-    maxWidth: 150, 
-    height: 120,
+    maxWidth: 150,
     alignContent: "center",
     borderRadius: 3
 }
@@ -25,23 +24,25 @@ const cardStyles = {
 const buttonStyles = {
     backgroundColor: "white",
     border: "1px dashed grey",
-    borderStyle: "dotted",
-    color: "grey"
+    borderStyle: "dashed",
+    color: "grey",
+    height: 25,
+    minWidth: 100,
+    fontSize: "1.3rem"
 }
 
 function StaffShift({ username, dateList, weekStartDate }) {
 
-    const [staffUsername, setStaffUsername] = useState(username);
     const [listOfDates, setListOfDates] = useState(dateList);
     const [addShiftDate, setAddShiftDate] = useState(weekStartDate);
     const [shifts, setShifts] = useState([]);
+    const [currShift, setCurrShift] = useState();
     const [addShiftOpen, setAddShiftOpen] = useState(false);
     const [viewShiftOpen, setViewShiftOpen] = useState(false);
-    const [currShift, setCurrShift] = useState();
     let i = 0;
 
     const getAllShiftsForStaff = async () => {
-        const response = await axios.get(`http://localhost:8080/shift/viewWeeklyRoster/${staffUsername}?date=${weekStartDate}`, {
+        const response = await axios.get(`http://localhost:8080/shift/viewWeeklyRoster/${username}?date=${weekStartDate}`, {
             headers: {
                 'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJET0NUT1IiXSwic3ViIjoic3RhZmYyIiwiaWF0IjoxNjk0NzA3Mjg5LCJleHAiOjE2OTUzMTIwODl9.QXMJSDpR68FLpjwlm49aU9CZlHemJhpBqsllDIt0Kuo'}`
             }
@@ -49,18 +50,15 @@ function StaffShift({ username, dateList, weekStartDate }) {
         setShifts(response.data);
     }
 
-    const getTime = (dateTime) => {
-        return moment(dateTime).format('HH:mm');
-    }
-
     const handleOpen = (date, shift) => {
         if (shift) {
             setCurrShift(shift);
             setViewShiftOpen(true);
         } else {
-            setAddShiftDate(date);
             setAddShiftOpen(true);
         }
+        console.log(date)
+        setAddShiftDate(date);
     }
 
     const handleClose = () => {
@@ -69,15 +67,14 @@ function StaffShift({ username, dateList, weekStartDate }) {
     }
 
     useEffect(() => {
-        setStaffUsername(username);
         setListOfDates(dateList);
         getAllShiftsForStaff();
     }, [shifts?.length, dateList, viewShiftOpen, addShiftOpen, weekStartDate])
 
     return (
-        <TableRow role="checkbox" tabIndex={-1} key={staffUsername} sx={{ display: 'flex'}}>
-            <TableCell sx={{ minWidth: 178, paddingLeft: "30px", marginTop: "10px"  }} align="left">
-                {staffUsername}
+        <TableRow role="checkbox" tabIndex={-1} key={username} sx={{ display: 'flex'}}>
+            <TableCell sx={{ minWidth: 176, paddingLeft: "30px", marginTop: "10px"  }} align="left">
+                {username}
             </TableCell>
             {listOfDates?.map(date => {   
                 if (i < shifts?.length && moment(shifts[i]?.startTime).day() === moment(date.date).day()) {
@@ -87,15 +84,12 @@ function StaffShift({ username, dateList, weekStartDate }) {
                         <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={shift.id}>
                             <Card sx={cardStyles} onClick={() => handleOpen(date.date, shift)}>
                                 <CardActionArea>    
-                                    <CardContent>
+                                    <CardContent sx={{ padding: "0.5rem 1.2rem" }}>
                                         <Typography variant="h6">
                                             {getShiftName(getTime(shift.startTime), getTime(shift.endTime))}
                                         </Typography>
                                         <Typography variant="h6" color="text.secondary">
-                                            Start: {getTime(shift.startTime)}
-                                        </Typography>
-                                        <Typography variant="h6" color="text.secondary">
-                                            End: {getTime(shift.endTime)}
+                                            {getTime(shift.startTime)} - {getTime(shift.endTime)}
                                         </Typography>
                                         <Typography variant="h6">
                                             Facility:
@@ -107,6 +101,7 @@ function StaffShift({ username, dateList, weekStartDate }) {
                                 open={viewShiftOpen}
                                 shift={currShift}
                                 handleClose={handleClose}
+                                username={username}
                                 />
                         </TableCell>
                     );
@@ -117,10 +112,10 @@ function StaffShift({ username, dateList, weekStartDate }) {
                                 variant="contained"
                                 style={buttonStyles}
                                 onClick={() => handleOpen(date.date)}>
-                                    Add shift
+                                    + 
                             </Button>
                             <AddShift 
-                                username={staffUsername}
+                                username={username}
                                 open={addShiftOpen}
                                 handleClose={handleClose}
                                 date={addShiftDate}

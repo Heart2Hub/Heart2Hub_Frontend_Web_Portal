@@ -6,6 +6,8 @@ import moment from 'moment';
 // @mui material components
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
@@ -23,8 +25,15 @@ import StaffShift from './staffShift';
 import CalendarRoster from './CalendarRoster';
 import { getDay } from '../utils/utils';
 import { Button } from '@mui/material';
+import AddShiftConstraint from './AddShiftConstraint';
+import { getTime, getShiftName } from '../utils/utils';
+import ViewUpdateShiftConstraint from './ViewUpdateShiftConstraint';
 
 const dummyStaffs = [
+    {
+        staffId: 1,
+        username: "staff1"
+    },
     {
         staffId: 2,
         username: "staff2"
@@ -35,17 +44,57 @@ const dummyStaffs = [
     }
 ]
 
+const cardStyles = {
+    backgroundColor: "#ffffff",
+    margin: 2,
+    maxWidth: 300,
+    alignContent: "center",
+    borderRadius: 3
+}
+
 function Rostering() {
 
+    const [loading, setLoading] = useState(false);
     const [staffs, setStaffs] = useState(dummyStaffs);
     const [weekDates, setWeekDates] = useState([]);
     const [monthDates, setMonthDates] = useState([]);
     const [prevDisable, setPrevDisable] = useState(true);
     const [nextDisable, setNextDisable] = useState(false);
+    const [scOpen, setScOpen] = useState(false);
+    const [updateScOpen, setUpdateScOpen] = useState(false);
+    const [currSc, setCurrSc] = useState();
+    const [scList, setScList] = useState([]);
 
     const today = moment().format('YYYY-MM-DD');
 
-    const getWeekDates = (dateString) => {
+    const isValidWorkDate = async (date, role) => {
+        try {
+            const response = await axios.get(`http://localhost:8080/shiftConstraints/checkIsValidWorkday?role=${role}&date=${date}`, {
+                headers: {
+                    'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJET0NUT1IiXSwic3ViIjoic3RhZmYyIiwiaWF0IjoxNjk0NzA3Mjg5LCJleHAiOjE2OTUzMTIwODl9.QXMJSDpR68FLpjwlm49aU9CZlHemJhpBqsllDIt0Kuo'}`
+                }
+            }); 
+            return response.data;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const getShiftConstraints = async (role) => {
+        try {
+            const response = await axios.get(`http://localhost:8080/shiftConstraints/getAllShiftConstraints/${role}`, {
+                headers: {
+                    'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJET0NUT1IiXSwic3ViIjoic3RhZmYyIiwiaWF0IjoxNjk0NzA3Mjg5LCJleHAiOjE2OTUzMTIwODl9.QXMJSDpR68FLpjwlm49aU9CZlHemJhpBqsllDIt0Kuo'}`
+                }
+            }); 
+            console.log(response)
+            setScList(response.data);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const getWeekDates = async (dateString) => {
         const currDate = moment(dateString);
 
         // Get date of Monday (start of the week)
@@ -57,7 +106,11 @@ function Rostering() {
         const dates = [];
         let i = 0;
         while (startDate.isSameOrBefore(endDate)) {
-            dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i) });
+            if (await isValidWorkDate(startDate.format('YYYY-MM-DD'), "DOCTOR")) {
+                dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: "valid" });
+            } else {
+                dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: "nope" });
+            }
             startDate.add(1, 'days');
             i++;
         }
@@ -89,7 +142,11 @@ function Rostering() {
         const dates = [];
         let i = 0;
         while (startDate.isSameOrBefore(endDate)) {
-            dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i) });
+            if (isValidWorkDate(startDate.format('YYYY-MM-DD'), "DOCTOR")) {
+                dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: "valid" });
+            } else {
+                dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: "nope" });
+            }
             startDate.add(1, 'days');
             i++;
             i = i % 7;
@@ -109,13 +166,29 @@ function Rostering() {
         getWeekDates(firstDateOfWeek);
     }
 
+    const handleScOpen = (sc) => {
+        if (sc) {
+            setCurrSc(sc);
+            setUpdateScOpen(true);
+        } else {
+            setScOpen(true);
+        }
+    }
+
+    const handleScClose = () => {
+        setScOpen(false);
+        setUpdateScOpen(false);
+        setCurrSc(null);
+    }
+
     useEffect(() => {
         // getAllStaff();
         getMonthDates(today);
         if (weekDates.length === 0) {
             getWeekDates(today);
-        }
-    },[])
+        } 
+        getShiftConstraints("DOCTOR");
+    },[scOpen, updateScOpen])
 
     return(
         <DashboardLayout>
@@ -138,9 +211,35 @@ function Rostering() {
                     Staff Roster
                 </MDTypography>
               </MDBox>
-              <MDBox pt={3}>
+              <MDBox pt={3}> 
+              <Grid container>
+                {scList.map(sc => {return (
+                    <Card sx={cardStyles} onClick={() => handleScOpen(sc)}>
+                        <CardContent sx={{ padding: "0.5rem 1.2rem" }}>
+                            <Typography variant="h6">
+                                {getShiftName(moment(sc.startTime, 'HH:mm:ss').format('HH:mm'), moment(sc.endTime, 'HH:mm:ss').format('HH:mm'))}
+                            </Typography>
+                            <Typography variant="h6" color="text.secondary">
+                                {sc.startTime} - {sc.endTime}
+                            </Typography>
+                            <Typography variant="h6">
+                                Min pax: {sc.minPax}
+                            </Typography>
+                            <Typography variant="h6">
+                                Role: {sc.roleEnum}
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                )})}
+                <ViewUpdateShiftConstraint 
+                    open={updateScOpen}
+                    shiftConstraint={currSc}
+                    handleClose={handleScClose}
+                    />
+                </Grid>
               <Button disabled={prevDisable} onClick={handlePrev}>Prev</Button>
-                <Button disabled={nextDisable} onClick={handleNext}>Next</Button>
+            <Button disabled={nextDisable} onClick={(handleNext)}>Next</Button>
+            <Button onClick={() => handleScOpen()}>Add Shift Constraint</Button>
               <TableContainer sx={{ maxHeight: 1000 }}>
                 <Table stickyHeader aria-label="sticky table">
                     <TableHead>
@@ -157,7 +256,7 @@ function Rostering() {
                                 align="center"
                                 style={{ minWidth: 170, color: column.date === today ? 'brown' : 'black'}}
                             >
-                            {column.day}<br/>{column.date}
+                            {column.day}<br/>{column.date}<br/>{column.valid}
                             </TableCell>
                         ))}
                         </TableRow>
@@ -174,6 +273,10 @@ function Rostering() {
                     </TableBody>
                     </Table>
                 </TableContainer>
+                <AddShiftConstraint 
+                    open={scOpen}
+                    handleClose={handleScClose}
+                    />
               </MDBox>
             </Card>
           </Grid>

@@ -10,6 +10,7 @@ import Typography from '@mui/material/Typography';
 import axios from 'axios';
 import moment from 'moment';
 import { MenuItem } from '@mui/material';
+import { getShiftName, getShiftId, getShiftTime } from '../utils/utils';
 
 const style = {
     position: "absolute",
@@ -52,6 +53,7 @@ function AddShift({ username, open, handleClose, date }) {
     const [reqBody, setReqBody] = useState(body);
     const [selectedShift, setSelectedShift] = useState(1);
     const [errorMsg, setErrorMsg] = useState();
+    const [shiftPref, setShiftPref] = useState(0);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -64,7 +66,7 @@ function AddShift({ username, open, handleClose, date }) {
         } else if (selectedShift === 2) {
             start = date + ' ' + "08:00";
             end = date + ' ' + "16:00";
-        } else if (selectedShift === 2) {
+        } else if (selectedShift === 3) {
             start = date + ' ' + "16:00";
             end = date + ' ' + "23:59";
         } else {
@@ -76,14 +78,31 @@ function AddShift({ username, open, handleClose, date }) {
         try {
             const response = await axios.post(`http://localhost:8080/shift/createShift/${username}`, newReqBody, {
                 headers: {
-                    'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJET0NUT1IiXSwic3ViIjoic3RhZmYyIiwiaWF0IjoxNjk0MTAyMzQ1LCJleHAiOjE2OTQ3MDcxNDV9.z1WgASSDpdrK9JLoGywGFZlisCLeb-MDugKpO0NYVnw'}`
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 }
             });
             handleClose();
             setErrorMsg(null);
         } catch (error) {
-            console.log(error)
+            console.log(error);
             setErrorMsg(error.response.data);
+        }
+    }
+
+    const getShiftPreference = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8080/shiftPreference/getShiftPreference/${username}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            });
+            if (response.data) {
+                setShiftPref(getShiftId(moment(response.data.startTime, 'HH:mm:ss').format('HH:mm'), moment(response.data.endTime, 'HH:mm:ss').format('HH:mm')))
+            } else {
+                setShiftPref(0);
+            }
+        } catch (error) {
+            console.error(error);
         }
     }
 
@@ -102,6 +121,10 @@ function AddShift({ username, open, handleClose, date }) {
         handleClose();
         setErrorMsg(null);
     }
+
+    useEffect(() => {
+        getShiftPreference();
+    }, [])
 
     return (
         <Modal
@@ -131,7 +154,12 @@ function AddShift({ username, open, handleClose, date }) {
                                         {option.shift}
                                     </MenuItem>
                                 ))}
-                            </Select><br/><br/>
+                            </Select>
+                            <Typography variant="body2">
+                                <i>{username}'s shift preference: {shiftPref === 0 ? "No preference" 
+                                    : getShiftName(moment(getShiftTime(shiftPref)[0], 'HH:mm:ss').format('HH:mm'), moment(getShiftTime(shiftPref)[1], 'HH:mm:ss').format('HH:mm'))}
+                                </i>
+                            </Typography><br/>
                             <TextField
                                 InputLabelProps={{ shrink: true }} 
                                 fullWidth
