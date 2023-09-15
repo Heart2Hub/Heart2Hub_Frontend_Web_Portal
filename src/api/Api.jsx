@@ -33,3 +33,12 @@ export const staffApi = {
     );
   },
 };
+
+export const leaveApi = {
+  getAllManagedLeaves(staffId) {
+    console.log(staffId);
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/api/getAllManagedLeaves?staffId=${staffId}`
+    );
+  }
+}
