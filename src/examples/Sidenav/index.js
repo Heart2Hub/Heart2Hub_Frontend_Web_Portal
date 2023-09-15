@@ -34,6 +34,7 @@ import {
 
 import { useDispatch } from "react-redux";
 import { logout } from "../../store/slices/staffSlice";
+import { displayMessage } from "store/slices/snackbarSlice";
 function Sidenav({ color, brand, brandName, routes, ...rest }) {
   const navigate = useNavigate();
   const reduxDispatch = useDispatch();
@@ -87,6 +88,14 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
   }, [dispatch, location]);
 
   const logoutHandler = () => {
+    reduxDispatch(
+      displayMessage({
+        color: "success",
+        icon: "notification",
+        title: "Successfully Logged Out",
+        content: "Good Bye!",
+      })
+    );
     reduxDispatch(logout());
     navigate("/");
   };
