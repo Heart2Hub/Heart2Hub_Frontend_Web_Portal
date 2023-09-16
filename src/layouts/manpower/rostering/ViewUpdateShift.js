@@ -10,7 +10,7 @@ import Typography from '@mui/material/Typography';
 import axios from 'axios';
 import moment from 'moment';
 import { MenuItem } from '@mui/material';
-import { getShiftName, getShiftId, getShiftTime } from '../utils/utils';
+import { getShiftName, getShiftId, getShiftTime, options, facilities } from '../utils/utils';
 
 const style = {
     position: "absolute",
@@ -24,28 +24,10 @@ const style = {
     p: 5,
 };
 
-const options = [
-    {
-        id: 1,
-        shift: "Shift 1 (12am - 8am)"
-    },
-    {
-        id: 2,
-        shift: "Shift 2 (8am - 4pm)"
-    },
-    {
-        id: 3,
-        shift: "Shift 3 (4pm - 12am)"
-    },
-    {
-        id: 4,
-        shift: "24 Hour Shift (12am - 11.59pm)"
-    },
-]
-
-function ViewShift({open, handleClose, shift, username}) {
+function ViewShift({open, handleClose, staff, shift, username, updateAddShift, setUpdateAddShift}) {
     const [reqBody, setReqBody] = useState();
     const [selectedShift, setSelectedShift] = useState();
+    const [selectedFacility, setSelectedFacility] = useState();
     const [errorMsg, setErrorMsg] = useState();
     const [shiftPref, setShiftPref] = useState(0);
 
@@ -78,9 +60,10 @@ function ViewShift({open, handleClose, shift, username}) {
         try {
             const response = await axios.put(`http://localhost:8080/shift/updateShift/${shift.shiftId}`, newReqBody, {
                 headers: {
-                    'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJET0NUT1IiXSwic3ViIjoic3RhZmYyIiwiaWF0IjoxNjk0NzA3Mjg5LCJleHAiOjE2OTUzMTIwODl9.QXMJSDpR68FLpjwlm49aU9CZlHemJhpBqsllDIt0Kuo'}`
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 }
             });
+            setUpdateAddShift(updateAddShift+1);
             handleClose();
             setErrorMsg(null);
         } catch (error) {
@@ -93,9 +76,11 @@ function ViewShift({open, handleClose, shift, username}) {
         try {
             const response = await axios.delete(`http://localhost:8080/shift/deleteShift/${shift.shiftId}`, {
                 headers: {
-                    'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJET0NUT1IiXSwic3ViIjoic3RhZmYyIiwiaWF0IjoxNjk0NzA3Mjg5LCJleHAiOjE2OTUzMTIwODl9.QXMJSDpR68FLpjwlm49aU9CZlHemJhpBqsllDIt0Kuo'}`
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 }
             });
+            console.log(response)
+            setUpdateAddShift(updateAddShift+1);
             handleClose();
         } catch (error) {
             console.log(error)
@@ -123,6 +108,10 @@ function ViewShift({open, handleClose, shift, username}) {
         setSelectedShift(event.target.value);
     }
 
+    const handleFacilityDropdownChange = (event) => {
+        setSelectedFacility(event.target.value);
+    }
+
     const handleChange = (event) => {
         setReqBody((prevState) => ({
             ...prevState,
@@ -137,6 +126,7 @@ function ViewShift({open, handleClose, shift, username}) {
 
     useEffect(() => {
         setReqBody(shift);
+        setSelectedFacility(shift?.facilityBooking.facility.facilityId);
         setSelectedShift(getShiftId(moment(shift?.startTime, 'YYYY-MM-DD HH:mm:ss').format('HH:mm'), moment(shift?.endTime, 'YYYY-MM-DD HH:mm:ss').format('HH:mm')));
         getShiftPreference();
     }, [shift])
@@ -147,12 +137,22 @@ function ViewShift({open, handleClose, shift, username}) {
             onClose={handleExit}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
+            slotProps={{
+                backdrop: {
+                  sx: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                  },
+                },
+              }}
         >
             <Box sx={style}>
                 <Grid container spacing={3}>
                     {/* if is rosterer */}
+                    {username ? 
                     <Grid md={12}>
                         <Typography variant="h5">Update Shift</Typography>
+                        <Typography variant="h6">Staff: {staff.firstname + " " + staff.lastname}</Typography>
+                        <Typography variant="h6">Date: {moment(shift?.startTime, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD')}</Typography><br/>
                         <InputLabel id="shift-select-label">Shift:</InputLabel>
                         <Select
                             labelId="shift-select-label"
@@ -167,7 +167,7 @@ function ViewShift({open, handleClose, shift, username}) {
                             ))}
                         </Select>
                         <Typography variant="body2">
-                            <i>{username}'s shift preference: {shiftPref === 0 ? "No preference" 
+                            <i>{staff.firstname + " " + staff.lastname}'s shift preference: {shiftPref === 0 ? "No preference" 
                                 : getShiftName(moment(getShiftTime(shiftPref)[0], 'HH:mm:ss').format('HH:mm'), moment(getShiftTime(shiftPref)[1], 'HH:mm:ss').format('HH:mm'))}
                             </i>
                         </Typography><br/>
@@ -183,12 +183,12 @@ function ViewShift({open, handleClose, shift, username}) {
                         <Select
                             labelId="facility-select-label"
                             id="facility-select"
-                            value={selectedShift}
-                            onChange={handleDropdownChange}
+                            value={selectedFacility}
+                            onChange={handleFacilityDropdownChange}
                         >
-                            {options.map((option) => (
+                            {facilities.map((option) => (
                                 <MenuItem key={option.id} value={option.id}>
-                                    {option.shift}
+                                    {option.name}
                                 </MenuItem>
                             ))}
                         </Select><br/><br/>
@@ -197,7 +197,7 @@ function ViewShift({open, handleClose, shift, username}) {
                             variant="contained" 
                             onClick={handleSubmit}
                             style={{color: 'white'}}>
-                            Ok
+                            Update
                         </Button>&nbsp;&nbsp;
                         <Button 
                             variant="contained" 
@@ -205,20 +205,19 @@ function ViewShift({open, handleClose, shift, username}) {
                             style={{backgroundColor: 'red', color: 'white'}}>
                             Delete
                         </Button>
-                    </Grid>
-                    {/* if is not rosterer */}
-                    {/* <Grid md={12}>
+                    </Grid> :
+                    <Grid md={12}>
                         <Typography variant="h6">Start: {shift?.startTime}</Typography>
                         <Typography variant="h6">End: {shift?.endTime}</Typography>
-                        <Typography variant="h6">Facility: </Typography>
-                        <Typography variant="h6">Comments: {shift?.comments ? shift?.comments : "NIL"}</Typography>
+                        <Typography variant="h6">Facility: {shift?.facilityBooking.facility.name}</Typography>
+                        <Typography variant="h6">Comments: {shift?.comments ? shift?.comments : "NA"}</Typography><br/>
                         <Button 
                             variant="contained" 
                             onClick={handleExit}
                             style={{color: 'white'}}>
                             Close
                         </Button>
-                    </Grid> */}
+                    </Grid>}
                 </Grid>
             </Box>
         </Modal>

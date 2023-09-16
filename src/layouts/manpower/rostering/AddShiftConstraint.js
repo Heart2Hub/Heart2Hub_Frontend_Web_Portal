@@ -4,13 +4,12 @@ import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import InputLabel from '@mui/material/InputLabel';
 import Modal from "@mui/material/Modal";
+import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import { options } from '../utils/utils';
 import axios from 'axios';
-import moment from 'moment';
-import { MenuItem } from '@mui/material';
-import { getShiftId } from '../utils/utils';
 
 const style = {
     position: "absolute",
@@ -24,33 +23,14 @@ const style = {
     p: 5,
 };
 
-const options = [
-    {
-        id: 1,
-        shift: "Shift 1 (12am - 8am)"
-    },
-    {
-        id: 2,
-        shift: "Shift 2 (8am - 4pm)"
-    },
-    {
-        id: 3,
-        shift: "Shift 3 (4pm - 12am)"
-    },
-    {
-        id: 4,
-        shift: "24 Hour Shift (12am - 11.59pm)"
-    },
-]
+function AddShiftConstraint({open, handleClose, role}) {
+    const body = {
+        startTime: "",
+        endTime: "",
+        minPax: 0,
+        roleEnum: ""
+    }
 
-const body = {
-    startTime: "",
-    endTime: "",
-    minPax: 0,
-    roleEnum: "DOCTOR"
-}
-
-function AddShiftConstraint({open, handleClose}) {
     const [reqBody, setReqBody] = useState(body);
     const [selectedShift, setSelectedShift] = useState(1);
     const [errorMsg, setErrorMsg] = useState();
@@ -78,7 +58,7 @@ function AddShiftConstraint({open, handleClose}) {
         try {
             const response = await axios.post(`http://localhost:8080/shiftConstraints/createShiftConstraints`, newReqBody, {
                 headers: {
-                    'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJET0NUT1IiXSwic3ViIjoic3RhZmYyIiwiaWF0IjoxNjk0NzA3Mjg5LCJleHAiOjE2OTUzMTIwODl9.QXMJSDpR68FLpjwlm49aU9CZlHemJhpBqsllDIt0Kuo'}`
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 }
             });
             handleClose();
@@ -105,18 +85,31 @@ function AddShiftConstraint({open, handleClose}) {
         setErrorMsg(null);
     }
 
+    useEffect(() => {
+        let temp = body;
+        temp.roleEnum = role;
+        setReqBody(temp);
+    }, [role])
+
     return (
         <Modal
             open={open}
             onClose={handleExit}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
+            slotProps={{
+                backdrop: {
+                  sx: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                  },
+                },
+              }}
         >
             <Box sx={style}>
                 <Grid container spacing={3}>
                     {/* if is rosterer */}
                     <Grid md={12}>
-                        <Typography variant="h5">Add Shift Constraint</Typography>
+                        <Typography variant="h5">Add Shift Constraint</Typography><br/>
                         <InputLabel id="shift-select-label">Shift:</InputLabel>
                         <Select
                             labelId="shift-select-label"
@@ -139,7 +132,7 @@ function AddShiftConstraint({open, handleClose}) {
                             onChange={handleChange}
                             value={reqBody.minPax}
                         /><br/><br/>
-                        <Typography variant="h6">Role: {reqBody.roleEnum}</Typography><br/><br/>
+                        <Typography variant="h6">Role: {reqBody.roleEnum}</Typography><br/>
                         {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
                         <Button 
                             variant="contained" 

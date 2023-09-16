@@ -1,5 +1,35 @@
 import moment from 'moment';
 
+export const options = [
+    {
+        id: 1,
+        shift: "Shift 1 (12am - 8am)"
+    },
+    {
+        id: 2,
+        shift: "Shift 2 (8am - 4pm)"
+    },
+    {
+        id: 3,
+        shift: "Shift 3 (4pm - 12am)"
+    },
+    {
+        id: 4,
+        shift: "24 Hour Shift (12am - 11.59pm)"
+    },
+]
+
+export const facilities = [
+    {
+        id: 1,
+        name: "Operating Room"
+    },
+    {
+        id: 2,
+        name: "Emergency Room"
+    }
+]
+
 export const getDay = (index) => {
     switch (index){
         case 0:

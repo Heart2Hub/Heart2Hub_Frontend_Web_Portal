@@ -2,13 +2,14 @@ import React, { useEffect, useState} from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import ViewShift from './ViewUpdateShift';
 import moment from 'moment';
 
 // @mui material components
 import Grid from "@mui/material/Grid";
-import Card from "@mui/material/Card";
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -22,7 +23,6 @@ import FormLabel from '@mui/material/FormLabel';
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
 import { getShiftTime } from '../utils/utils';
 import { Button } from '@mui/material';
 import { getShiftId } from '../utils/utils';
@@ -30,9 +30,12 @@ import { getShiftId } from '../utils/utils';
 function CalendarRoster() {
 
     const [roster, setRoster] = useState([]);
+    const [staffDetails, setStaffDetails] = useState();
     const [shift, setShift] = useState(0);
     const [currPref, setCurrPref] = useState();
     const [loading, setLoading] = useState(false);
+    const [viewShiftOpen, setViewShiftOpen] = useState(false);
+    const [event, setEvent] = useState();
 
     moment.locale('ko', {
         week: {
@@ -41,11 +44,14 @@ function CalendarRoster() {
         },
     });
     const localizer = momentLocalizer(moment);
+    const year = moment().format('YYYY');
+    const month = moment().format('M');
+    const navigate = useNavigate();
 
     const getMyMonthlyRoster = async () => {
-        const response = await axios.get(`http://localhost:8080/shift/viewMonthlyRoster/staff2?year=2023&month=9`, {
+        const response = await axios.get(`http://localhost:8080/shift/viewMonthlyRoster/${localStorage.getItem('staffUsername')}?year=${year}&month=${month}`, {
             headers: {
-                'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJET0NUT1IiXSwic3ViIjoic3RhZmYyIiwiaWF0IjoxNjk0NzA3Mjg5LCJleHAiOjE2OTUzMTIwODl9.QXMJSDpR68FLpjwlm49aU9CZlHemJhpBqsllDIt0Kuo'}`
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
             }
         });
         let data = [];
@@ -54,7 +60,8 @@ function CalendarRoster() {
                 id: response.data[i].shiftId,
                 title: 'Shift',
                 start: moment(response.data[i].startTime).toDate(),
-                end: moment(response.data[i].endTime).toDate()
+                end: moment(response.data[i].endTime).toDate(),
+                data: response.data[i]
             })
         }
         setRoster(data);
@@ -62,7 +69,7 @@ function CalendarRoster() {
 
     const getShiftPreference = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/shiftPreference/getShiftPreference/staff1`, {
+            const response = await axios.get(`http://localhost:8080/shiftPreference/getShiftPreference/${localStorage.getItem('staffUsername')}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 }
@@ -121,11 +128,38 @@ function CalendarRoster() {
         }
     }
 
+    const getStaffByUsername = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8080/staff/getStaffByUsername?username=${localStorage.getItem('staffUsername')}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            });
+            setStaffDetails(response.data);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const handleSelect = (data) => {
+        setEvent(data.data);
+        handleOpen();  
+    }
+
+    const handleOpen = () => {
+        setViewShiftOpen(true);
+    }
+
+    const handleClose = () => {
+        setViewShiftOpen(false);
+    }
+
     const handleChange = (event) => {
         setShift(event.target.value);
       };
 
     useEffect(() => {
+        getStaffByUsername();
         getShiftPreference();
         getMyMonthlyRoster();
     },[loading])
@@ -133,9 +167,21 @@ function CalendarRoster() {
     return (
         <DashboardLayout>
             <DashboardNavbar />
-            <MDBox pt={6} pb={3}>
+            <MDBox pt={3} pb={3}>
         <Grid container spacing={6}>
         <Grid item xs={12}>
+            {staffDetails?.isHead ? 
+            <>
+            <Button 
+                variant="contained"
+                sx={{
+                    fontSize: "1.2rem",
+                    width: "250px",
+                    height: "50px",
+                    color: '#ffffff'
+                }}
+                onClick={() => navigate("/manpower/rostering/shifts")}
+            >+ Allocate shifts</Button><br/><br/></> : <></>}
             <Accordion>
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
@@ -146,7 +192,6 @@ function CalendarRoster() {
                 </AccordionSummary>
                 <AccordionDetails>
                     <FormControl>
-                        <FormLabel id="demo-radio-buttons-group-label">Select shift preference</FormLabel>
                         <Typography variant="h6">Your current shift preference: {currPref ? currPref.startTime + " - " + currPref.endTime : "No preference"} </Typography>
                         <RadioGroup
                             aria-labelledby="demo-radio-buttons-group-label"
@@ -163,8 +208,8 @@ function CalendarRoster() {
                         <Button 
                             variant="contained" 
                             onClick={handleSubmit}
-                            style={{color: 'white'}}>
-                            Ok
+                            style={{color: 'white', width: '100px'}}>
+                            Save
                         </Button>
                     </FormControl>
                 </AccordionDetails>
@@ -173,10 +218,23 @@ function CalendarRoster() {
             <Calendar
                 localizer={localizer}
                 events={roster}
+                onSelectEvent={handleSelect}
                 startAccessor="start"
                 endAccessor="end"
                 views={["month", "week"]}
-                style={{ height: 500 }}
+                style={{ height: 1200 }}
+                eventPropGetter={(event) => {
+                    const backgroundColor = '#ffdc7a';
+                    const fontSize = '14px';
+                    const color = 'black';
+                    return { style: { backgroundColor, fontSize, color } }
+                  }}
+                  
+                />
+            <ViewShift 
+                open={viewShiftOpen}
+                shift={event}
+                handleClose={handleClose}
                 />
             </MDBox>
           </Grid>

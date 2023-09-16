@@ -10,7 +10,7 @@ import Typography from '@mui/material/Typography';
 import axios from 'axios';
 import moment from 'moment';
 import { MenuItem } from '@mui/material';
-import { getShiftName, getShiftId, getShiftTime } from '../utils/utils';
+import { getShiftName, getShiftId, getShiftTime, options, facilities } from '../utils/utils';
 
 const style = {
     position: "absolute",
@@ -30,28 +30,10 @@ const body = {
     comments: ""
 }
 
-const options = [
-    {
-        id: 1,
-        shift: "Shift 1 (12am - 8am)"
-    },
-    {
-        id: 2,
-        shift: "Shift 2 (8am - 4pm)"
-    },
-    {
-        id: 3,
-        shift: "Shift 3 (4pm - 12am)"
-    },
-    {
-        id: 4,
-        shift: "24 Hour Shift (12am - 11.59pm)"
-    },
-]
-
-function AddShift({ username, open, handleClose, date }) {
+function AddShift({ username, open, staff, handleClose, date, updateAddShift, setUpdateAddShift }) {
     const [reqBody, setReqBody] = useState(body);
     const [selectedShift, setSelectedShift] = useState(1);
+    const [selectedFacility, setSelectedFacility] = useState(1);
     const [errorMsg, setErrorMsg] = useState();
     const [shiftPref, setShiftPref] = useState(0);
 
@@ -76,11 +58,12 @@ function AddShift({ username, open, handleClose, date }) {
         newReqBody.startTime = moment(start, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         newReqBody.endTime = moment(end, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         try {
-            const response = await axios.post(`http://localhost:8080/shift/createShift/${username}`, newReqBody, {
+            const response = await axios.post(`http://localhost:8080/shift/createShift/${username}/${selectedFacility}`, newReqBody, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 }
             });
+            setUpdateAddShift(updateAddShift+1);
             handleClose();
             setErrorMsg(null);
         } catch (error) {
@@ -110,6 +93,10 @@ function AddShift({ username, open, handleClose, date }) {
         setSelectedShift(event.target.value);
     }
 
+    const handleFacilityDropdownChange = (event) => {
+        setSelectedFacility(event.target.value);
+    }
+
     const handleChange = (event) => {
         setReqBody((prevState) => ({
             ...prevState,
@@ -132,15 +119,21 @@ function AddShift({ username, open, handleClose, date }) {
             onClose={handleExit}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
+            slotProps={{
+                backdrop: {
+                  sx: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                  },
+                },
+              }}
         >
             <Box sx={style}>
                 <form autoComplete="off" noValidate onSubmit={handleSubmit}>
                     <Grid container spacing={3}>
                         <Grid md={12}>
-                            <Typography variant="h6">Staff: {username}</Typography>
+                            <Typography variant="h5">Add Shift</Typography>
+                            <Typography variant="h6">Staff: {staff.firstname + " " + staff.lastname}</Typography>
                             <Typography variant="h6">Date: {date}</Typography>
-                            {/* <Typography variant="h6">Role: </Typography> */}
-                            {/* <Typography variant="h6">Department: </Typography> */}
                             <br/>
                             <InputLabel id="shift-select-label">Select shift:</InputLabel>
                             <Select
@@ -156,7 +149,7 @@ function AddShift({ username, open, handleClose, date }) {
                                 ))}
                             </Select>
                             <Typography variant="body2">
-                                <i>{username}'s shift preference: {shiftPref === 0 ? "No preference" 
+                                <i>{staff.firstname + " " + staff.lastname}'s shift preference: {shiftPref === 0 ? "No preference" 
                                     : getShiftName(moment(getShiftTime(shiftPref)[0], 'HH:mm:ss').format('HH:mm'), moment(getShiftTime(shiftPref)[1], 'HH:mm:ss').format('HH:mm'))}
                                 </i>
                             </Typography><br/>
@@ -172,12 +165,12 @@ function AddShift({ username, open, handleClose, date }) {
                             <Select
                                 labelId="facility-select-label"
                                 id="facility-select"
-                                value={selectedShift}
-                                onChange={handleDropdownChange}
+                                value={selectedFacility}
+                                onChange={handleFacilityDropdownChange}
                             >
-                                {options.map((option) => (
+                                {facilities.map((option) => (
                                     <MenuItem key={option.id} value={option.id}>
-                                        {option.shift}
+                                        {option.name}
                                     </MenuItem>
                                 ))}
                             </Select><br/><br/>

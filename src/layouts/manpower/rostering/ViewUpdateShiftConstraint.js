@@ -10,7 +10,7 @@ import Typography from '@mui/material/Typography';
 import axios from 'axios';
 import moment from 'moment';
 import { MenuItem } from '@mui/material';
-import { getShiftId } from '../utils/utils';
+import { getShiftId, options } from '../utils/utils';
 
 const style = {
     position: "absolute",
@@ -23,25 +23,6 @@ const style = {
     borderRadius: 2,
     p: 5,
 };
-
-const options = [
-    {
-        id: 1,
-        shift: "Shift 1 (12am - 8am)"
-    },
-    {
-        id: 2,
-        shift: "Shift 2 (8am - 4pm)"
-    },
-    {
-        id: 3,
-        shift: "Shift 3 (4pm - 12am)"
-    },
-    {
-        id: 4,
-        shift: "24 Hour Shift (12am - 11.59pm)"
-    },
-]
 
 const body = {
     startTime: "",
@@ -75,7 +56,6 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
         }
         newReqBody.startTime = start;
         newReqBody.endTime = end;
-        console.log(newReqBody)
         try {
             const response = await axios.put(`http://localhost:8080/shiftConstraints/updateShiftConstraints/${shiftConstraint.shiftConstraintsId}`, newReqBody, {
                 headers: {
@@ -97,7 +77,6 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 }
             });
-            console.log(localStorage.getItem('accessToken'))
             handleClose();
         } catch (error) {
             console.log(error)
@@ -136,7 +115,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
                 <Grid container spacing={3}>
                     {/* if is rosterer */}
                     <Grid md={12}>
-                        <Typography variant="h5">Update Shift Constraint</Typography>
+                        <Typography variant="h5">Update Shift Constraint</Typography><br/>
                         <InputLabel id="shift-select-label">Shift:</InputLabel>
                         <Select
                             labelId="shift-select-label"
@@ -159,8 +138,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
                             onChange={handleChange}
                             value={reqBody?.minPax}
                         /><br/><br/>
-                        <InputLabel id="role-select-label">Facility:</InputLabel>
-                        <Typography variant="h6">Role: {reqBody?.roleEnum}</Typography><br/><br/>
+                        <Typography variant="h6">Role: {reqBody?.roleEnum}</Typography><br/>
                         {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
                         <Button 
                             variant="contained" 

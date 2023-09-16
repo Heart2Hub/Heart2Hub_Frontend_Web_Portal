@@ -1,6 +1,5 @@
 import React, { useEffect, useState} from 'react';
 import Card from "@mui/material/Card";
-import CardActions from '@mui/material/CardActions';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
 import TableRow from '@mui/material/TableRow';
@@ -9,10 +8,9 @@ import Typography from '@mui/material/Typography';
 import moment from 'moment';
 import axios from 'axios';
 import { Button } from '@mui/material';
-import AddShift from './addShift';
 import { getShiftName, getTime } from '../utils/utils';
-import ViewShift from './ViewShift';
-
+import ViewShift from './ViewUpdateShift';
+import AddShift from './AllocateShift';
 
 const cardStyles = {
     backgroundColor: "#ffdc7a",
@@ -31,7 +29,7 @@ const buttonStyles = {
     fontSize: "1.3rem"
 }
 
-function StaffShift({ username, dateList, weekStartDate }) {
+function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, setUpdateAddShift }) {
 
     const [listOfDates, setListOfDates] = useState(dateList);
     const [addShiftDate, setAddShiftDate] = useState(weekStartDate);
@@ -44,7 +42,7 @@ function StaffShift({ username, dateList, weekStartDate }) {
     const getAllShiftsForStaff = async () => {
         const response = await axios.get(`http://localhost:8080/shift/viewWeeklyRoster/${username}?date=${weekStartDate}`, {
             headers: {
-                'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJET0NUT1IiXSwic3ViIjoic3RhZmYyIiwiaWF0IjoxNjk0NzA3Mjg5LCJleHAiOjE2OTUzMTIwODl9.QXMJSDpR68FLpjwlm49aU9CZlHemJhpBqsllDIt0Kuo'}`
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
             }
         });
         setShifts(response.data);
@@ -57,7 +55,6 @@ function StaffShift({ username, dateList, weekStartDate }) {
         } else {
             setAddShiftOpen(true);
         }
-        console.log(date)
         setAddShiftDate(date);
     }
 
@@ -73,8 +70,8 @@ function StaffShift({ username, dateList, weekStartDate }) {
 
     return (
         <TableRow role="checkbox" tabIndex={-1} key={username} sx={{ display: 'flex'}}>
-            <TableCell sx={{ minWidth: 176, paddingLeft: "30px", marginTop: "10px"  }} align="left">
-                {username}
+            <TableCell key={username} sx={{ minWidth: 176, paddingLeft: "30px", marginTop: "10px"  }} align="left">
+                {staff.firstname + " " + staff.lastname} 
             </TableCell>
             {listOfDates?.map(date => {   
                 if (i < shifts?.length && moment(shifts[i]?.startTime).day() === moment(date.date).day()) {
@@ -85,14 +82,14 @@ function StaffShift({ username, dateList, weekStartDate }) {
                             <Card sx={cardStyles} onClick={() => handleOpen(date.date, shift)}>
                                 <CardActionArea>    
                                     <CardContent sx={{ padding: "0.5rem 1.2rem" }}>
-                                        <Typography variant="h6">
+                                        <Typography variant="body2">
                                             {getShiftName(getTime(shift.startTime), getTime(shift.endTime))}
                                         </Typography>
                                         <Typography variant="h6" color="text.secondary">
                                             {getTime(shift.startTime)} - {getTime(shift.endTime)}
                                         </Typography>
-                                        <Typography variant="h6">
-                                            Facility:
+                                        <Typography variant="body3">
+                                            {shift.facilityBooking.facility.name}
                                         </Typography>
                                     </CardContent>
                                 </CardActionArea>
@@ -102,12 +99,15 @@ function StaffShift({ username, dateList, weekStartDate }) {
                                 shift={currShift}
                                 handleClose={handleClose}
                                 username={username}
+                                staff={staff}
+                                updateAddShift={updateAddShift}
+                                setUpdateAddShift={setUpdateAddShift}
                                 />
                         </TableCell>
                     );
                 } else {
                     return (
-                        <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
+                        <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={i}>
                             <Button 
                                 variant="contained"
                                 style={buttonStyles}
@@ -116,9 +116,12 @@ function StaffShift({ username, dateList, weekStartDate }) {
                             </Button>
                             <AddShift 
                                 username={username}
+                                staff={staff}
                                 open={addShiftOpen}
                                 handleClose={handleClose}
                                 date={addShiftDate}
+                                updateAddShift={updateAddShift}
+                                setUpdateAddShift={setUpdateAddShift}
                                 />
                         </TableCell>
                     )
