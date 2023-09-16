@@ -38,6 +38,8 @@ import MDSnackbar from "components/MDSnackbar";
 // redux
 import { useDispatch, useSelector } from "react-redux";
 import { selectSnackbar, closeMessage } from "./store/slices/snackbarSlice";
+import GlobalSnackbar from "examples/GlobalSnackbar";
+import LoadingOverlay from "examples/LoadingOverlay";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -103,28 +105,12 @@ export default function App() {
       return null;
     });
 
-  //snackbar message
-  const snackbar = useSelector(selectSnackbar);
-  const reduxDispatch = useDispatch();
-
-  const handleCloseSnackbar = () => {
-    reduxDispatch(closeMessage());
-  };
-
   return (
     <ThemeProvider theme={theme}>
-      <MDSnackbar
-        color={snackbar.color}
-        icon={snackbar.icon}
-        title={snackbar.title}
-        content={snackbar.content}
-        dateTime={snackbar.dateTime}
-        open={snackbar.isOpen}
-        onClose={handleCloseSnackbar}
-        close={handleCloseSnackbar}
-      />
+      <GlobalSnackbar />
+      <LoadingOverlay />
       <CssBaseline />
-      {!(location.pathname == "/error" || location.pathname == "/") && (
+      {!(location.pathname === "/error" || location.pathname === "/") && (
         <Sidenav
           color={sidenavColor}
           brand={brandWhite}

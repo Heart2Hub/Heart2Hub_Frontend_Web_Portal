@@ -8,7 +8,6 @@ const initialState = {
     content: "",
     dateTime: new Date().toLocaleTimeString(),
     isOpen: false,
-    // autoHideDuration: 5000,
   },
 };
 
@@ -29,11 +28,6 @@ export const snackbarSlice = createSlice({
     },
     closeMessage: (state) => {
       state.snackbarSliceData.isOpen = false;
-      // state.snackbarSliceData.color = "info";
-      // state.snackbarSliceData.icon = "notification";
-      // state.snackbarSliceData.title = "default";
-      // state.snackbarSliceData.content = "default";
-      // state.snackbarSliceData.dateTime = "1";
     },
   },
 });

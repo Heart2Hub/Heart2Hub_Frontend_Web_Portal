@@ -21,6 +21,7 @@ function Account() {
       <MDBox mb={2} />
       <Header>
         <Divider orientation="horizontal" sx={{ ml: -2, mr: 1 }} />
+
         <MDBox mt={3} mb={3}>
           <ProfileInfoCard
             title="profile information"

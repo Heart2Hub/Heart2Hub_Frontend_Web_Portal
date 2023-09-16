@@ -77,7 +77,7 @@ export const staffSlice = createSlice({
 export const selectStaff = (state) => state.staff.staffSliceData.staff;
 export const selectUsername = (state) => state.staff.staffSliceData.username;
 export const selectAccessToken = (state) =>
-  state.user.staffSliceData.accessToken;
+  state.staff.staffSliceData.accessToken;
 
 // Action creators are generated for each case reducer function
 export const { logout } = staffSlice.actions;
