@@ -24,10 +24,10 @@ const style = {
     p: 5,
 };
 
-function ViewShift({open, handleClose, staff, shift, username, updateAddShift, setUpdateAddShift}) {
+function ViewShift({open, handleClose, staff, shift, username, updateAddShift, setUpdateAddShift, facilityId}) {
     const [reqBody, setReqBody] = useState();
     const [selectedShift, setSelectedShift] = useState();
-    const [selectedFacility, setSelectedFacility] = useState();
+    const [selectedFacility, setSelectedFacility] = useState(facilityId);
     const [errorMsg, setErrorMsg] = useState();
     const [shiftPref, setShiftPref] = useState(0);
 
@@ -58,7 +58,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
         newReqBody.endTime = moment(end, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         newReqBody.comments = reqBody.comments;
         try {
-            const response = await axios.put(`http://localhost:8080/shift/updateShift/${shift.shiftId}`, newReqBody, {
+            const response = await axios.put(`http://localhost:8080/shift/updateShift/${shift.shiftId}/${selectedFacility}`, newReqBody, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 }

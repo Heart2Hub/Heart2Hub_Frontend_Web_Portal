@@ -57,6 +57,13 @@ function Rostering() {
     const [page, setPage] = useState(0);
     const navigate = useNavigate();
 
+    moment.updateLocale('en', {
+        week: {
+          dow: 1, // Monday is the first day of the week.
+        }
+      });
+      
+
     const today = moment().format('YYYY-MM-DD');
 
     const isValidWorkDate = async (date, role) => {
@@ -116,10 +123,11 @@ function Rostering() {
         const currDate = moment(dateString);
 
         // Get date of Monday (start of the week)
-        const startDate = currDate.clone().startOf('week').add(1, 'day');
+        const startDate = currDate.clone().startOf('week');
 
         // Get date of Sunday (end of the week)
-        const endDate = currDate.clone().endOf('week').add(1, 'day');
+        const endDate = currDate.clone().endOf('week');
+        console.log(startDate.format('YYYY-MM-DD' + " " + endDate.format('YYYY-MM-DD')))
 
         const dates = [];
         let i = 0;
@@ -152,7 +160,7 @@ function Rostering() {
         const currDate = moment(dateString);
 
         // Get date of Monday (start of the week)
-        const startDate = currDate.clone().startOf('week').add(1, 'day');
+        const startDate = currDate.clone().startOf('week')
 
         // Get date of exactly 1 month from Monday
         const endDate = currDate.add(1, 'months');

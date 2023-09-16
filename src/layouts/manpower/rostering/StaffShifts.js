@@ -97,6 +97,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                             <ViewShift 
                                 open={viewShiftOpen}
                                 shift={currShift}
+                                facilityId={currShift?.facilityBooking.facility.facilityId}
                                 handleClose={handleClose}
                                 username={username}
                                 staff={staff}
@@ -107,7 +108,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                     );
                 } else {
                     return (
-                        <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={i}>
+                        <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
                             <Button 
                                 variant="contained"
                                 style={buttonStyles}
