@@ -12,6 +12,8 @@ import DataTable from "examples/Tables/DataTable";
 import React, { useState, useEffect } from 'react';
 
 import axios from 'axios';
+import moment from 'moment';
+
 
 // Data
 import authorsTableData from "layouts/tables/data/authorsTableData";
@@ -24,15 +26,13 @@ import { leaveApi } from "api/Api";
 
 function LeaveApproval() {
 
-    const { columns, rows } = staffTableData();
-
     const staff = useSelector(selectStaff);
     console.log(staff);
 
     const staffId = 3;
-    const [leaves, setLeaves] = useState([]);
+    const [leaves, setLeaves] = useState({});
 
-    const [data, setData] = useState([]);
+    const [data, setData] = useState({});
     const [loading, setLoading] = useState(true);
   
     
@@ -41,6 +41,8 @@ function LeaveApproval() {
       leaveApi.getAllManagedLeaves(3)
         .then((response) => {
          console.log(response);
+         setLeaves(response.data);
+         console.log('leaves: '+ leaves);
         })
         .catch((error) => {
           console.log(error);
@@ -48,10 +50,33 @@ function LeaveApproval() {
 
     };
 
+    const columns = [
+      { Header: "Staff Name", accessor: "name", width: "20%" },
+      { Header: "Start Date", accessor: "startDate", width: "20%"},
+      { Header: "End Date", accessor: "endDate", width: "20%"},
+      { Header: "Leave Type", accessor: "leaveType", width: "20%" },
+      { Header: "Approval Status", accessor: "approvalStatus", width: "20%" },
+    ]
+    
+    const rows = leaves.map((leave) => ({
+      name: leave.staff.firstname + ' ' + leave.staff.lastname,
+      startDate: moment(leave.startDate, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY'),
+      endDate: moment(leave.endDate, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY'),
+      leaveType: leave.leaveTypeEnum,
+      approvalStatus: leave.approvalStatusEnum,
+    }));
+    // const rows =[]
+    console.log(rows);
+
     useEffect(() => {
       getResponse();
 }, []);
 
+// const transformedData = leaves?.map((leaves) => ({
+//   name: leaves.staff,
+// }))
+
+// console.log(transformedData);
 
     // const response = leaveApi.getAllManagedLeaves(staffId);
     // console.log(response);
@@ -87,49 +112,49 @@ function LeaveApproval() {
 //   getAllManagedLeaves();
 // })
 
-    return (
-       <table>
-    <tr>
-    <th>First Name</th>
-    <th>Last Name</th>
-    <th>Description</th>
-</tr>
-{data}
-</table>
-      );
-            }
-//   return (
+//     return (
+//        <table>
+//     <tr>
+//     <th>First Name</th>
+//     <th>Last Name</th>
+//     <th>Description</th>
+// </tr>
+// {data}
+// </table>
+//       );
+//             }
+  return (
     
-//     <DashboardLayout>
-//       <DashboardNavbar />
-//       <MDBox pt={6} pb={3}>
-//         <Grid container spacing={6}>
-//           <Grid item xs={12}>
-//             <Card>
-//               <MDBox
-//                 mx={2}
-//                 mt={-3}
-//                 py={3}
-//                 px={2}
-//                 variant="gradient"
-//                 bgColor="info"
-//                 borderRadius="lg"
-//                 coloredShadow="info"
-//               >
-//                 <MDTypography variant="h6" color="white">
-//                   Managed Leaves
-//                 </MDTypography>
-//               </MDBox>
-//               <MDBox pt={3}>
-//                 <DataTable canSearch={true} table={{ columns, rows }} />
-//               </MDBox>
-//             </Card>
-//           </Grid>
-//         </Grid>
-//       </MDBox>
-//     </DashboardLayout>
-//   );
-// }
+    <DashboardLayout>
+      <DashboardNavbar />
+      <MDBox pt={6} pb={3}>
+        <Grid container spacing={6}>
+          <Grid item xs={12}>
+            <Card>
+              <MDBox
+                mx={2}
+                mt={-3}
+                py={3}
+                px={2}
+                variant="gradient"
+                bgColor="info"
+                borderRadius="lg"
+                coloredShadow="info"
+              >
+                <MDTypography variant="h6" color="white">
+                  Managed Leaves
+                </MDTypography>
+              </MDBox>
+              <MDBox pt={3}>
+                <DataTable canSearch={true} table={{ columns,rows }} />
+              </MDBox>
+            </Card>
+          </Grid>
+        </Grid>
+      </MDBox>
+    </DashboardLayout>
+  );
+}
 
 export default LeaveApproval;
 
