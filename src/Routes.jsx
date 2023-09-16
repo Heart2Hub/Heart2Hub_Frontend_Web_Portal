@@ -19,6 +19,8 @@ import FacilityManagement from "layouts/administration/facility-management";
 import Home from "layouts/home";
 import Account from "layouts/account";
 import ErrorPage from "layouts/error";
+import ProtectedRoute from "examples/ProtectedRoute";
+import { StaffRoleEnum } from "constants/StaffRoleEnum";
 
 const routes = [
   {
@@ -31,7 +33,11 @@ const routes = [
     name: "Home",
     key: "home",
     route: "/home",
-    component: <Home />,
+    component: (
+      <ProtectedRoute authorizedRoles={[StaffRoleEnum.ALL]}>
+        <Home />
+      </ProtectedRoute>
+    ),
   },
   {
     type: "collapse",
@@ -39,7 +45,11 @@ const routes = [
     key: "account",
     icon: <Icon fontSize="small">account_circle</Icon>,
     route: "/account",
-    component: <Account />,
+    component: (
+      <ProtectedRoute authorizedRoles={[StaffRoleEnum.ADMIN]}>
+        <Account />
+      </ProtectedRoute>
+    ),
   },
   {
     type: "collapse",
