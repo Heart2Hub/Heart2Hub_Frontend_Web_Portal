@@ -40,5 +40,23 @@ export const leaveApi = {
     return axiosFetch.get(
       `${REST_ENDPOINT}/api/getAllManagedLeaves?staffId=${staffId}`
     );
+  },
+  getLeaveBalance(staffId) {
+    console.log(staffId);
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/api/getLeaveBalance?staffId=${staffId}`
+    );
+  },
+  approveLeaveDate(leaveId) {
+    console.log(leaveId);
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/api/approveLeaveDate?leaveId=${leaveId}`
+    );
+  },
+  rejectLeaveDate(leaveId) {
+    console.log(leaveId);
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/api/rejectLeaveDate?leaveId=${leaveId}`
+    );
   }
 }
