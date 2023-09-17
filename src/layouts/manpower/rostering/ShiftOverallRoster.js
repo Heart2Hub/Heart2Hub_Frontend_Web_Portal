@@ -134,7 +134,6 @@ function Rostering() {
 
         // Get date of Sunday (end of the week)
         const endDate = currDate.clone().endOf('week');
-        console.log(startDate.format('YYYY-MM-DD' + " " + endDate.format('YYYY-MM-DD')))
 
         const dates = [];
         let i = 0;

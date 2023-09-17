@@ -79,7 +79,6 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 }
             });
-            console.log(response)
             setUpdateAddShift(updateAddShift+1);
             handleClose();
         } catch (error) {
@@ -197,7 +196,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                             variant="contained" 
                             onClick={handleSubmit}
                             style={{color: 'white'}}>
-                            Update {console.log(selectedFacility)}
+                            Update
                         </Button>&nbsp;&nbsp;
                         <Button 
                             variant="contained" 

@@ -52,7 +52,7 @@ function Breadcrumbs({ icon, title, route, light }) {
           >
             <Icon>{icon}</Icon>
           </MDTypography>
-        </Link>{console.log(routes)}
+        </Link>
         {routes.map((el) => (
           <Link to={`/${el}`} key={el}>
             <MDTypography
