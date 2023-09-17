@@ -19,6 +19,8 @@ import FacilityManagement from "layouts/administration/facility-management";
 import Home from "layouts/home";
 import Account from "layouts/account";
 import ErrorPage from "layouts/error";
+import ProtectedRoute from "examples/ProtectedRoute";
+import { StaffRoleEnum } from "constants/StaffRoleEnum";
 
 const routes = [
   {
@@ -31,7 +33,11 @@ const routes = [
     name: "Home",
     key: "home",
     route: "/home",
-    component: <Home />,
+    component: (
+      <ProtectedRoute authorizedRoles={[StaffRoleEnum.ALL]}>
+        <Home />
+      </ProtectedRoute>
+    ),
   },
   {
     type: "collapse",
@@ -39,7 +45,12 @@ const routes = [
     key: "account",
     icon: <Icon fontSize="small">account_circle</Icon>,
     route: "/account",
-    component: <Account />,
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute authorizedRoles={[StaffRoleEnum.ALL]}>
+        <Account />
+      </ProtectedRoute>
+    ),
   },
   {
     type: "collapse",
@@ -47,6 +58,7 @@ const routes = [
     key: "outpatient",
     icon: <Icon fontSize="small">local_hospital</Icon>,
     route: "/outpatient",
+    authorizedRoles: [StaffRoleEnum.ALL],
     component: <Outpatient />,
   },
   {
@@ -55,6 +67,7 @@ const routes = [
     key: "inpatient",
     icon: <Icon fontSize="small">bed</Icon>,
     route: "/inpatient",
+    authorizedRoles: [StaffRoleEnum.ALL],
     component: <Inpatient />,
   },
   {
@@ -63,6 +76,7 @@ const routes = [
     key: "ehr",
     icon: <Icon fontSize="small">receipt_long</Icon>,
     route: "/ehr",
+    authorizedRoles: [StaffRoleEnum.ALL],
     component: <EHR />,
   },
   {
@@ -71,6 +85,7 @@ const routes = [
     key: "administration",
     icon: <Icon fontSize="small">build</Icon>,
     route: "/administration",
+    authorizedRoles: [StaffRoleEnum.ALL],
     component: <Administration />,
   },
   {
@@ -91,6 +106,7 @@ const routes = [
     key: "manpower",
     icon: <Icon fontSize="small">group</Icon>,
     route: "/manpower",
+    authorizedRoles: [StaffRoleEnum.ALL],
     component: <Manpower />,
   },
   {
@@ -99,6 +115,7 @@ const routes = [
     key: "finance",
     icon: <Icon fontSize="small">attach_money</Icon>,
     route: "/finance",
+    authorizedRoles: [StaffRoleEnum.ALL],
     component: <Finance />,
   },
   {

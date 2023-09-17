@@ -15,7 +15,6 @@ import { selectStaff } from "../../store/slices/staffSlice";
 function Account() {
   const staff = useSelector(selectStaff);
   console.log(staff);
-
   return (
     <DashboardLayout>
       <DashboardNavbar />

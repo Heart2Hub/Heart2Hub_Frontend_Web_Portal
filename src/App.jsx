@@ -110,7 +110,7 @@ export default function App() {
       <GlobalSnackbar />
       <LoadingOverlay />
       <CssBaseline />
-      {!(location.pathname === "/error" || location.pathname === "/") && (
+      {!(location.pathname === "/") && (
         <Sidenav
           color={sidenavColor}
           brand={brandWhite}
