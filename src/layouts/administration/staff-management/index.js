@@ -17,68 +17,27 @@ import projectsTableData from "layouts/tables/data/projectsTableData";
 import staffTableData from "layouts/administration/staff-management/data/staffTableData";
 import { staffApi } from "api/Api";
 import AddStaff from "./AddStaff";
+import StaffTable from "./StaffTable";
 
 function StaffManagement() {
-  //const { rows } = staffTableData();
-  const [rows, setRows] = useState([]);
-  const columns = [
-    { Header: "id", accessor: "staffId", width: "8%" },
-    { Header: "first name", accessor: "firstname", width: "15%" },
-    { Header: "last name", accessor: "lastname", width: "15%" },
-    { Header: "username", accessor: "username", width: "15%" },
-    { Header: "role", accessor: "staffRoleEnum", width: "15%" },
-    { Header: "department", accessor: "department" },
-    { Header: "mobile", accessor: "mobileNumber", width: "12%" },
-  ];
+  const [tableView, setTableView] = useState(true);
 
-  const processStaffData = (listOfStaff) => {
-    const newListOfStaff = listOfStaff.map((staff) => {
-      const departmentName = staff.department.departmentName;
-      staff.department = departmentName;
-      return staff;
-    });
-
-    return newListOfStaff;
+  const addStaffHandler = () => {
+    setTableView(!tableView);
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await staffApi.getAllStaff();
-        setRows(processStaffData(response.data));
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchData();
-  }, []);
 
   return (
     <DashboardLayout>
-      {console.log(rows)}
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
         <Grid container spacing={6}>
           <Grid item xs={12}>
             <Card>
-              {/* <MDBox
-                mx={2}
-                mt={-3}
-                py={3}
-                px={2}
-                variant="gradient"
-                bgColor="info"
-                borderRadius="lg"
-                coloredShadow="info"
-              >
-                <MDTypography variant="h6" color="white">
-                  Staff Table
-                </MDTypography>
-              </MDBox>
-              <MDBox pt={3}>
-                <DataTable canSearch={true} table={{ columns, rows }} />
-              </MDBox> */}
-              <AddStaff />
+              {tableView ? (
+                <StaffTable addStaffHandler={addStaffHandler} />
+              ) : (
+                <AddStaff addStaffHandler={addStaffHandler} />
+              )}
             </Card>
           </Grid>
         </Grid>

@@ -30,4 +30,27 @@ export const staffApi = {
       `${REST_ENDPOINT}/staff/getStaffByUsername?username=${username}`
     );
   },
+  createStaff(staff, subDepartment) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/staff/createStaff/${subDepartment}`,
+      staff
+    );
+  },
+  getStaffRoles() {
+    return axiosFetch.get(`${REST_ENDPOINT}/staff/getStaffRoles`);
+  },
+};
+
+export const departmentApi = {
+  getAllDepartments() {
+    return axiosFetch.get(`${REST_ENDPOINT}/department/getAllDepartments`);
+  },
+};
+
+export const subDepartmentApi = {
+  getSubDepartmentsByDepartment(department) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/sub-department/getSubDepartmentsByDepartment/${department}`
+    );
+  },
 };

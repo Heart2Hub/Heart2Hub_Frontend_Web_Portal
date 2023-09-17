@@ -54,6 +54,7 @@ function DataTable({
   pagination,
   isSorted,
   noEndBorder,
+  changeView,
 }) {
   const defaultValue = entriesPerPage.defaultValue
     ? entriesPerPage.defaultValue
@@ -204,7 +205,7 @@ function DataTable({
 
             <MDBox width="12rem" ml="auto" display="flex">
               {/* Added button for creating new rows */}
-              <MDButton variant="gradient" color="dark">
+              <MDButton variant="gradient" color="dark" onClick={changeView}>
                 <Icon sx={{ fontWeight: "bold" }}>add</Icon>
                 &nbsp;add new staff
               </MDButton>
