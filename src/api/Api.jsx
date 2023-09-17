@@ -28,3 +28,33 @@ export const staffApi = {
     );
   },
 };
+
+export const facilityApi = {
+  getAllFacilitiesByStatus(status){
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facility/getAllFacilitiesByFacilityStatus?facilityStatus=${status}`
+    );
+  },
+  getAllFacilitiesByName(name){
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facility/getAllFacilitiesByName?name=${name}`
+    );
+  },
+  createFacility(subDepartmentId, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/facility/createFacility?subDepartmentId=${subDepartmentId}`,
+      requestBody
+    );
+  },
+  deleteFacility(facilityId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/facility/deleteFacility?facilityId=${facilityId}`
+    );
+  },
+  updateFacility(facilityId, requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/facility/updateFacility?facilityId=${facilityId}`,
+      requestBody
+    );
+  }
+};
