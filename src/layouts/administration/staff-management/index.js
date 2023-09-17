@@ -19,11 +19,53 @@ import { staffApi } from "api/Api";
 import AddStaff from "./AddStaff";
 import StaffTable from "./StaffTable";
 
+const INITIAL_FORM_STATE = {
+  username: "",
+  password: "",
+  firstname: "",
+  lastname: "",
+  mobileNumber: 0,
+  staffRoleEnum: "",
+  isHead: false,
+  departmentName: "",
+  subDepartmentName: "",
+};
+
 function StaffManagement() {
   const [tableView, setTableView] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [formState, setFormState] = useState(INITIAL_FORM_STATE);
+
+  const processStaffObj = (staffObj) => {
+    const formFields = Object.keys(formState);
+
+    const newStaffObj = Object.keys(staffObj)
+      .filter((key) => formFields.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = staffObj[key];
+        return obj;
+      }, {});
+
+    return newStaffObj;
+  };
 
   const addStaffHandler = () => {
-    setTableView(!tableView);
+    setEditing(false);
+    setFormState(INITIAL_FORM_STATE);
+    setTableView(false);
+  };
+
+  const editStaffHandler = (staff) => {
+    setEditing(true);
+    console.log(processStaffObj(staff));
+    setFormState(processStaffObj(staff));
+    setTableView(false);
+  };
+
+  const returnToTableHandler = () => {
+    setEditing(false);
+    setFormState(INITIAL_FORM_STATE);
+    setTableView(true);
   };
 
   return (
@@ -34,9 +76,16 @@ function StaffManagement() {
           <Grid item xs={12}>
             <Card>
               {tableView ? (
-                <StaffTable addStaffHandler={addStaffHandler} />
+                <StaffTable
+                  addStaffHandler={addStaffHandler}
+                  editStaffHandler={editStaffHandler}
+                />
               ) : (
-                <AddStaff addStaffHandler={addStaffHandler} />
+                <AddStaff
+                  returnToTableHandler={returnToTableHandler}
+                  formState={formState}
+                  editing={editing}
+                />
               )}
             </Card>
           </Grid>

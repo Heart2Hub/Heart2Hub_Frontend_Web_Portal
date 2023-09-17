@@ -6,28 +6,17 @@ import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Grid,
-  TextField,
-} from "@mui/material";
+import { Grid, TextField } from "@mui/material";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import InputLabel from "@mui/material/InputLabel";
 
-import { Formik, Form, useFormikContext, Field } from "formik";
+import { Formik, Form, useFormikContext } from "formik";
 import * as yup from "yup";
 import { staffApi, departmentApi } from "api/Api";
 import { subDepartmentApi } from "api/Api";
 import TextfieldWrapper from "components/Textfield";
 import SelectWrapper from "components/Select";
-import CheckBox from "@mui/material/Checkbox";
-import CheckboxWrapper from "components/Checkbox";
 
 const INITIAL_FORM_STATE = {
   username: "",
@@ -41,31 +30,35 @@ const INITIAL_FORM_STATE = {
 };
 
 const validationSchema = yup.object({
-  username: yup
-    .string()
-    .min(6, "Username should be of minimum 6 characters length")
-    .required("Username is required"),
+  username: yup.string("Enter your username").required("Username is required"),
   password: yup
-    .string()
+    .string("Enter your password")
     .min(8, "Password should be of minimum 8 characters length")
     .required("Password is required"),
-  firstname: yup.string().required("First name is required"),
-  lastname: yup.string().required("Last name is required"),
+  firstname: yup
+    .string("Enter your first name")
+    .required("First name is required"),
+  lastname: yup
+    .string("Enter your last name")
+    .required("Last name is required"),
   mobileNumber: yup
-    .number()
-    .min(80000000, "Invalid mobile number")
-    .max(99999999, "Invalid mobile number")
+    .number("Enter your mobile number")
     .required("Mobile number is required"),
-  staffRoleEnum: yup.string().required("Staff role is required"),
-  departmentName: yup.string().required("Department is required"),
-  subDepartmentName: yup.string().required("Sub-Department is required"),
+  staffRoleEnum: yup
+    .string("Enter your staff role")
+    .required("Staff role is required"),
+  departmentName: yup
+    .string("Enter your staff role")
+    .required("Department is required"),
+  subDepartmentName: yup
+    .string("Enter your staff role")
+    .required("Sub-Department is required"),
 });
 
-function AddStaff({ returnToTableHandler, formState, editing }) {
+function EditStaff({ backToTable, staff }) {
   const [staffRoles, setStaffRoles] = useState([]);
   const [departmentNames, setDepartmentNames] = useState([]);
   const [subDepartmentNames, setSubDepartmentNames] = useState([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   const processDepartmentData = (departments) => {
     const departmentNames = departments.map(
@@ -82,18 +75,6 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
   };
 
   useEffect(() => {
-    const getStaffRoles = async () => {
-      try {
-        const response = await staffApi.getStaffRoles();
-        setStaffRoles(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    getStaffRoles();
-  }, []);
-
-  useEffect(() => {
     const getDepartments = async () => {
       try {
         const response = await departmentApi.getAllDepartments();
@@ -105,13 +86,25 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
     getDepartments();
   }, []);
 
+  useEffect(() => {
+    const getStaffRoles = async () => {
+      try {
+        const response = await staffApi.getStaffRoles();
+        setStaffRoles(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getStaffRoles();
+  }, []);
+
   const FormObserver = () => {
     const { values } = useFormikContext();
     useEffect(() => {
       const getSubDepartments = async () => {
         try {
           const response = await subDepartmentApi.getSubDepartmentsByDepartment(
-            values.departmentName
+            values.department
           );
           setSubDepartmentNames(processSubDepartmentData(response.data));
         } catch (error) {
@@ -119,61 +112,23 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
         }
       };
       getSubDepartments();
-    }, [values.departmentName]);
-  };
-
-  const postStaff = async (values, actions) => {
-    try {
-      const response = await staffApi.createStaff(
-        values,
-        values.subDepartmentName
-      );
-      returnToTableHandler();
-    } catch (error) {
-      actions.setStatus(error.response.data);
-    }
-  };
-
-  const putStaff = async (values, actions) => {
-    try {
-      const response = await staffApi.updateStaff(
-        values,
-        values.subDepartmentName
-      );
-      returnToTableHandler();
-    } catch (error) {
-      actions.setStatus(error.response.data);
-    }
+    }, [values.department]);
   };
 
   const handleSubmit = (values, actions) => {
-    if (editing) {
-      console.log("Updated staff");
-      putStaff(values, actions);
-    } else {
-      console.log("Creating staff");
-      postStaff(values, actions);
-    }
-  };
-
-  const handleOpenDialog = () => {
-    setDialogOpen(true);
-  };
-
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
-  };
-
-  const handleDisableStaff = (username) => {
-    const disableStaff = async (username) => {
+    const postData = async () => {
       try {
-        const response = await staffApi.disableStaff(username);
-        returnToTableHandler();
+        const response = await staffApi.createStaff(
+          values,
+          values.subDepartment
+        );
+        backToTable();
       } catch (error) {
-        console.log(error);
+        actions.setStatus(error.response.data);
       }
     };
-    disableStaff(username);
+    console.log("This is a staff: ", values);
+    postData();
   };
 
   return (
@@ -189,16 +144,16 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
         coloredShadow="info"
       >
         <MDTypography variant="h6" color="white">
-          {editing ? "Update Staff Details" : "Enter New Staff Details"}
+          Update Staff Details
         </MDTypography>
       </MDBox>
       <MDBox p={5}>
         <Formik
-          initialValues={{ ...formState }}
+          initialValues={{ ...staff }}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          {({ status, values }) => (
+          {({ status }) => (
             <Form>
               <FormObserver />
               <Grid container spacing={6}>
@@ -285,7 +240,7 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                     Department
                   </MDTypography>
                   <SelectWrapper
-                    name="departmentName"
+                    name="department"
                     hiddenlabel
                     options={departmentNames}
                   />
@@ -299,83 +254,18 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                     Sub-Department
                   </MDTypography>
                   <SelectWrapper
-                    name="subDepartmentName"
+                    name="subDepartment"
                     hiddenlabel
                     options={subDepartmentNames}
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <MDBox>
-                    <MDTypography
-                      variant="button"
-                      fontWeight="bold"
-                      textTransform="capitalize"
-                    >
-                      Rosterer
-                    </MDTypography>
-                    <CheckboxWrapper name="isHead" />
-                  </MDBox>
-                </Grid>
-                <Grid item xs={4}>
-                  <MDButton
-                    variant="contained"
-                    color="info"
-                    onClick={returnToTableHandler}
-                    fullWidth
-                  >
-                    Cancel
-                  </MDButton>
-                </Grid>
-                <Grid item xs={4}>
-                  <MDButton
-                    variant="contained"
-                    color="info"
-                    type="submit"
-                    fullWidth
-                  >
-                    Save
-                  </MDButton>
-                </Grid>
-                <Grid item xs={4}>
-                  {editing ? (
-                    <>
-                      <MDButton
-                        variant="contained"
-                        color="warning"
-                        fullWidth
-                        onClick={handleOpenDialog}
-                      >
-                        Disable
-                      </MDButton>
-                      <Dialog
-                        open={dialogOpen}
-                        onClose={handleCloseDialog}
-                        aria-labelledby="alert-dialog-title"
-                        aria-describedby="alert-dialog-description"
-                      >
-                        <DialogTitle id="alert-dialog-title">
-                          {"Are you sure you want to disable this staff?"}
-                        </DialogTitle>
-                        <DialogContent>
-                          <DialogContentText id="alert-dialog-description">
-                            This action is irreversible. The disabled staff will
-                            no longer be able to login, and you will not be able
-                            to view the disabled staff
-                          </DialogContentText>
-                        </DialogContent>
-                        <DialogActions>
-                          <Button onClick={handleCloseDialog}>Disagree</Button>
-                          <Button
-                            onClick={() => handleDisableStaff(values.username)}
-                          >
-                            Agree
-                          </Button>
-                        </DialogActions>
-                      </Dialog>
-                    </>
-                  ) : null}
-                </Grid>
               </Grid>
+              <MDButton variant="contained" color="info" onClick={backToTable}>
+                Cancel
+              </MDButton>
+              <MDButton variant="contained" color="info" type="submit">
+                Save
+              </MDButton>
             </Form>
           )}
         </Formik>
@@ -384,4 +274,4 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
   );
 }
 
-export default AddStaff;
+export default EditStaff;

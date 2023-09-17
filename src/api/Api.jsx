@@ -30,14 +30,23 @@ export const staffApi = {
       `${REST_ENDPOINT}/staff/getStaffByUsername?username=${username}`
     );
   },
+  getStaffRoles() {
+    return axiosFetch.get(`${REST_ENDPOINT}/staff/getStaffRoles`);
+  },
   createStaff(staff, subDepartment) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/staff/createStaff/${subDepartment}`,
       staff
     );
   },
-  getStaffRoles() {
-    return axiosFetch.get(`${REST_ENDPOINT}/staff/getStaffRoles`);
+  updateStaff(staff, subDepartment) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/staff/updateStaff/${subDepartment}`,
+      staff
+    );
+  },
+  disableStaff(username) {
+    return axiosFetch.put(`${REST_ENDPOINT}/staff/disableStaff/${username}`);
   },
 };
 

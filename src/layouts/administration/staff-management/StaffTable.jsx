@@ -7,29 +7,34 @@ import MDTypography from "components/MDTypography";
 import DataTable from "examples/Tables/DataTable";
 
 import { staffApi } from "api/Api";
+import Checkbox from "@mui/material/Checkbox";
 
-function StaffTable({ addStaffHandler }) {
+function StaffTable({ addStaffHandler, editStaffHandler }) {
   const [rows, setRows] = useState([]);
 
   const columns = [
     { Header: "id", accessor: "staffId", width: "5%" },
-    { Header: "first name", accessor: "firstname", width: "15%" },
-    { Header: "last name", accessor: "lastname", width: "15%" },
-    { Header: "username", accessor: "username", width: "15%" },
+    { Header: "first name", accessor: "firstname", width: "10%" },
+    { Header: "last name", accessor: "lastname", width: "10%" },
+    { Header: "username", accessor: "username", width: "10%" },
     { Header: "role", accessor: "staffRoleEnum", width: "10%" },
-    //{ Header: "department", accessor: "department" },
-    { Header: "sub-department", accessor: "subDepartment", width: "15%" },
-    { Header: "mobile", accessor: "mobileNumber" },
+    { Header: "department", accessor: "departmentName", width: "15%" },
+    { Header: "sub-department", accessor: "subDepartmentName", width: "15%" },
+    { Header: "mobile", accessor: "mobileNumber", width: "10%" },
+    { Header: "rosterer", accessor: "isHeadCheckbox" },
   ];
 
   const processStaffData = (listOfStaff) => {
-    const newListOfStaff = listOfStaff.map((staff) => {
-      const subDepartmentName = staff.subDepartment.subDepartmentName;
-      //const departmentName = staff.subDepartment.department.departmentName;
-      staff.subDepartment = subDepartmentName;
-      //staff.department = departmentName;
-      return staff;
-    });
+    const newListOfStaff = listOfStaff
+      .filter((staff) => !staff.disabled)
+      .map((staff) => {
+        const subDepartmentName = staff.subDepartment.subDepartmentName;
+        const departmentName = staff.subDepartment.department.departmentName;
+        staff.subDepartmentName = subDepartmentName;
+        staff.departmentName = departmentName;
+        staff.isHeadCheckbox = <Checkbox disabled checked={staff.isHead} />;
+        return staff;
+      });
 
     return newListOfStaff;
   };
@@ -67,7 +72,8 @@ function StaffTable({ addStaffHandler }) {
         <DataTable
           canSearch={true}
           table={{ columns, rows }}
-          changeView={addStaffHandler}
+          addRow={addStaffHandler}
+          editRow={editStaffHandler}
         />
       </MDBox>
     </>
