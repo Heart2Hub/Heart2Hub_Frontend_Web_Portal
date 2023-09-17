@@ -19,6 +19,9 @@ import FacilityManagement from "layouts/administration/facility-management";
 import Home from "layouts/home";
 import Account from "layouts/account";
 import ErrorPage from "layouts/error";
+import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves"
+import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave"
+
 
 const routes = [
   {
@@ -92,6 +95,18 @@ const routes = [
     icon: <Icon fontSize="small">group</Icon>,
     route: "/manpower",
     component: <Manpower />,
+  },
+  {
+    name: "ViewAllLeaves",
+    key: "ViewAllLeaves",
+    route: "/manpower/viewAllLeaves",
+    component: <ViewAllLeaves />,
+  },
+  {
+    name: "CreateLeave",
+    key: "CreateLeave",
+    route: "/manpower/createLeave",
+    component: <CreateLeave />,
   },
   {
     type: "collapse",
