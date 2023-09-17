@@ -86,3 +86,15 @@ export const getShiftTime = (id) => {
 export const getTime = (dateTime) => {
     return moment(dateTime).format('HH:mm');
 }
+
+export const getColor = (startTime, endTime) => {
+    if (getTime(startTime) == "00:00" && getTime(endTime) == "08:00") {
+        return "#ffdc7a";
+    } else if (getTime(startTime) == "08:00" && getTime(endTime) == "16:00") {
+        return "#baffb3";
+    } else if (getTime(startTime) == "16:00" && getTime(endTime) == "23:59") {
+        return "#b3ccff";
+    } else {
+        return "#ffb5b3";
+    }
+}

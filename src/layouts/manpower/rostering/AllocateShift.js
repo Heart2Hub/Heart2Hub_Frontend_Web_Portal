@@ -122,7 +122,7 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
                   },
                 },
               }}

@@ -23,7 +23,7 @@ import FormLabel from '@mui/material/FormLabel';
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
-import { getShiftTime } from '../utils/utils';
+import { getColor, getShiftName, getShiftTime, getTime } from '../utils/utils';
 import { Button } from '@mui/material';
 import { getShiftId } from '../utils/utils';
 
@@ -58,7 +58,7 @@ function CalendarRoster() {
         for (let i=0; i<response.data.length; i++) {
             data.push({
                 id: response.data[i].shiftId,
-                title: 'Shift',
+                title: getShiftName(getTime(response.data[i].startTime), getTime(response.data[i].endTime)),
                 start: moment(response.data[i].startTime).toDate(),
                 end: moment(response.data[i].endTime).toDate(),
                 data: response.data[i]
@@ -224,22 +224,22 @@ function CalendarRoster() {
                 views={["month", "week"]}
                 style={{ height: 1200 }}
                 eventPropGetter={(event) => {
-                    const backgroundColor = '#ffdc7a';
+                    const backgroundColor = getColor(event.start, event.end);
                     const fontSize = '14px';
                     const color = 'black';
                     return { style: { backgroundColor, fontSize, color } }
                   }}
                   
                 />
-            <ViewShift 
-                open={viewShiftOpen}
-                shift={event}
-                handleClose={handleClose}
-                />
             </MDBox>
           </Grid>
         </Grid>
       </MDBox>
+      <ViewShift 
+        open={viewShiftOpen}
+        shift={event}
+        handleClose={handleClose}
+        />
     </DashboardLayout>
        
     )

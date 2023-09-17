@@ -113,6 +113,13 @@ function Rostering() {
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 }
             });
+            const sortedArray = response.data.sort((a,b) => {
+                if (a.username === localStorage.getItem('staffUsername')) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            })
             setStaffs(response.data);
         } catch (error) {
             console.log(error);
@@ -284,7 +291,7 @@ function Rostering() {
                     />
                 </Grid>
                 <Grid container spacing={1}>
-                    <Grid item md={9}>
+                    <Grid item md={10}>
                         <Button 
                             onClick={() => handleScOpen()} 
                             variant="contained"
@@ -350,17 +357,17 @@ function Rostering() {
                     onPageChange={handleChangePage}
                     onRowsPerPageChange={handleChangeRowsPerPage}
                 />
-                <AddShiftConstraint 
-                    open={scOpen}
-                    handleClose={handleScClose}
-                    role={currStaffDetails ? currStaffDetails.roleEnum : "temp"}
-                    />
               </MDBox>
             </Card>
           </Grid>
         </Grid>
       </MDBox>
-        </DashboardLayout>
+      <AddShiftConstraint 
+        open={scOpen}
+        handleClose={handleScClose}
+        role={currStaffDetails ? currStaffDetails.roleEnum : "temp"}
+        />
+    </DashboardLayout>
     )
 }
 

@@ -8,16 +8,9 @@ import Typography from '@mui/material/Typography';
 import moment from 'moment';
 import axios from 'axios';
 import { Button } from '@mui/material';
-import { getShiftName, getTime } from '../utils/utils';
+import { getShiftName, getTime, getColor } from '../utils/utils';
 import ViewShift from './ViewUpdateShift';
 import AddShift from './AllocateShift';
-
-const cardStyles = {
-    backgroundColor: "#ffdc7a",
-    maxWidth: 150,
-    alignContent: "center",
-    borderRadius: 3
-}
 
 const buttonStyles = {
     backgroundColor: "white",
@@ -71,7 +64,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
     return (
         <TableRow role="checkbox" tabIndex={-1} key={username} sx={{ display: 'flex'}}>
             <TableCell key={username} sx={{ minWidth: 176, paddingLeft: "30px", marginTop: "10px"  }} align="left">
-                {staff.firstname + " " + staff.lastname} 
+                {username === localStorage.getItem('staffUsername') ? <b>{staff.firstname + " " + staff.lastname + " (You)"}</b> : staff.firstname + " " + staff.lastname}
             </TableCell>
             {listOfDates?.map(date => {   
                 if (i < shifts?.length && moment(shifts[i]?.startTime).day() === moment(date.date).day()) {
@@ -79,9 +72,16 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                     i++;
                     return (
                         <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={shift.id}>
-                            <Card sx={cardStyles} onClick={() => handleOpen(date.date, shift)}>
+                            <Card sx={{
+                                backgroundColor: getColor(shift.startTime, shift.endTime),
+                                width: 130,
+                                alignContent: "center",
+                                marginLeft: 1,
+                                padding: 0,
+                                borderRadius: 3
+                            }} onClick={() => handleOpen(date.date, shift)}>
                                 <CardActionArea>    
-                                    <CardContent sx={{ padding: "0.5rem 1.2rem" }}>
+                                    <CardContent sx={{ padding: "0.5rem 0.8rem" }}>
                                         <Typography variant="body2">
                                             {getShiftName(getTime(shift.startTime), getTime(shift.endTime))}
                                         </Typography>
@@ -94,16 +94,6 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                                     </CardContent>
                                 </CardActionArea>
                             </Card>
-                            <ViewShift 
-                                open={viewShiftOpen}
-                                shift={currShift}
-                                facilityId={currShift?.facilityBooking.facility.facilityId}
-                                handleClose={handleClose}
-                                username={username}
-                                staff={staff}
-                                updateAddShift={updateAddShift}
-                                setUpdateAddShift={setUpdateAddShift}
-                                />
                         </TableCell>
                     );
                 } else {
@@ -115,20 +105,30 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                                 onClick={() => handleOpen(date.date)}>
                                     + 
                             </Button>
-                            <AddShift 
-                                username={username}
-                                staff={staff}
-                                open={addShiftOpen}
-                                handleClose={handleClose}
-                                date={addShiftDate}
-                                updateAddShift={updateAddShift}
-                                setUpdateAddShift={setUpdateAddShift}
-                                />
                         </TableCell>
                     )
                 }
                 
             })}
+            <ViewShift 
+                open={viewShiftOpen}
+                shift={currShift}
+                facilityId={currShift ? currShift.facilityBooking.facility.facilityId : 1}
+                handleClose={handleClose}
+                username={username}
+                staff={staff}
+                updateAddShift={updateAddShift}
+                setUpdateAddShift={setUpdateAddShift}
+                />
+            <AddShift 
+                username={username}
+                staff={staff}
+                open={addShiftOpen}
+                handleClose={handleClose}
+                date={addShiftDate}
+                updateAddShift={updateAddShift}
+                setUpdateAddShift={setUpdateAddShift}
+                />
         </TableRow>
     );
 }

@@ -27,7 +27,7 @@ function AddShiftConstraint({open, handleClose, role}) {
     const body = {
         startTime: "",
         endTime: "",
-        minPax: 0,
+        minPax: 1,
         roleEnum: ""
     }
 
@@ -100,7 +100,7 @@ function AddShiftConstraint({open, handleClose, role}) {
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
                   },
                 },
               }}

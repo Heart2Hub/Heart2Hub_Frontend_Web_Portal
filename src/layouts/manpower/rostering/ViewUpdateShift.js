@@ -27,7 +27,7 @@ const style = {
 function ViewShift({open, handleClose, staff, shift, username, updateAddShift, setUpdateAddShift, facilityId}) {
     const [reqBody, setReqBody] = useState();
     const [selectedShift, setSelectedShift] = useState();
-    const [selectedFacility, setSelectedFacility] = useState(facilityId);
+    const [selectedFacility, setSelectedFacility] = useState(facilityId ? facilityId : 1);
     const [errorMsg, setErrorMsg] = useState();
     const [shiftPref, setShiftPref] = useState(0);
 
@@ -126,10 +126,10 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
 
     useEffect(() => {
         setReqBody(shift);
-        setSelectedFacility(shift?.facilityBooking.facility.facilityId);
+        setSelectedFacility(facilityId);
         setSelectedShift(getShiftId(moment(shift?.startTime, 'YYYY-MM-DD HH:mm:ss').format('HH:mm'), moment(shift?.endTime, 'YYYY-MM-DD HH:mm:ss').format('HH:mm')));
         getShiftPreference();
-    }, [shift])
+    }, [shift, facilityId])
 
     return (
         <Modal
@@ -197,7 +197,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                             variant="contained" 
                             onClick={handleSubmit}
                             style={{color: 'white'}}>
-                            Update
+                            Update {console.log(selectedFacility)}
                         </Button>&nbsp;&nbsp;
                         <Button 
                             variant="contained" 
