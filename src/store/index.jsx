@@ -1,10 +1,5 @@
-import {
-  combineReducers,
-  configureStore,
-  getDefaultMiddleware,
-} from "@reduxjs/toolkit";
-// import { persistStore, persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage"; // Default: localStorage for web
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import storage from "redux-persist/lib/storage";
 import {
   persistStore,
   persistReducer,
@@ -32,12 +27,6 @@ const rootReducer = combineReducers({
   loadingOverlay: loadingOverlayReducer,
 });
 
-// const persistedReducer = {};
-// for (let key in rootReducer) {
-//   persistedReducer[key] = persistReducer(persistConfig, rootReducer[key]);
-// }
-// console.log(persistedReducer);
-
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 const store = configureStore({
@@ -53,16 +42,3 @@ const store = configureStore({
 let persistor = persistStore(store);
 
 export { store, persistor };
-
-// import { configureStore } from "@reduxjs/toolkit";
-// import staffReducer from "./slices/staffSlice";
-// import snackbarReducer from "./slices/snackbarSlice";
-// import loadingOverlayReducer from "./slices/loadingOverlaySlice";
-
-// export default configureStore({
-//   reducer: {
-//     staff: staffReducer,
-//     snackbar: snackbarReducer,
-//     loadingOverlay: loadingOverlayReducer,
-//   },
-// });
