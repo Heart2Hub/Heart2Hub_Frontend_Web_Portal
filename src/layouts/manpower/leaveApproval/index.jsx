@@ -85,6 +85,14 @@ function LeaveApproval() {
             >
               View Details
             </MDButton>
+            <ViewLeave
+              isOpen={isModalOpen}
+              onRequestClose={() => setIsModalOpen(false)}
+              rowData={selectedRowData}
+              approvalStatus={approvalStatus}
+              onApproval={handleApproval} // Pass the approval handler function
+              onRejection={handleRejection}
+            />
           </MDBox>
 
         );
@@ -112,25 +120,41 @@ function LeaveApproval() {
     approvalStatus: leave.approvalStatusEnum,
   }));
 
-  const handleApproval = (row) => {
-    // Perform the approval logic
-    // Update the approval status when needed
-    setApprovalStatus(JSON.stringify(row.approvalStatus));
-    console.log(approvalStatus);
+  const handleApproval = async (row) => {
+    try {
+      // Make the API call to approve the leave
+      const response = await leaveApi.approveLeaveDate(row.leaveId);
+      console.log(response);
+
+      // Update the list of leaves by fetching the updated data
+      const updatedLeaves = await leaveApi.getAllManagedLeaves(3);
+      setLeaves(updatedLeaves.data);
+
+      setIsLoading(false);
+      setIsModalOpen(false); // Close the modal
+    } catch (error) {
+      console.error(error);
+      setIsLoading(false);
+    }
   };
 
-  const handleRejection = (row) => {
-    // Perform the rejection logic
-    // Update the approval status when needed
-    setApprovalStatus(JSON.stringify(row.approvalStatus));
-    console.log(approvalStatus);
-  };
+  const handleRejection = async (row) => {
+    try {
+      // Make the API call to reject the leave
+      const response = await leaveApi.rejectLeaveDate(row.leaveId);
+      console.log(response);
 
-  // const [openModal, setOpenModal] = useState(false);
-  // const handleOpenModal = () => setOpenModal(true);
-  // const handleCloseModal = () => {
-  //   setOpenModal(false);
-  // };
+      // Update the list of leaves by fetching the updated data
+      const updatedLeaves = await leaveApi.getAllManagedLeaves(3);
+      setLeaves(updatedLeaves.data);
+
+      setIsLoading(false);
+      setIsModalOpen(false); // Close the modal
+    } catch (error) {
+      console.error(error);
+      setIsLoading(false);
+    }
+  };
 
 
   return (
@@ -161,42 +185,9 @@ function LeaveApproval() {
             </Card>
           </Grid>
         </Grid>
-        <ViewLeave
-          isOpen={isModalOpen}
-          onRequestClose={() => setIsModalOpen(false)}
-          rowData={selectedRowData}
-          approvalStatus={approvalStatus}
-        // onApproval={handleApproval}
-        // onRejection={handleRejection}
-        />
       </MDBox>
     </DashboardLayout>
   );
 }
 
 export default LeaveApproval;
-
-// import React, { useState, useEffect } from 'react';
-
-// function App() {
-//   const [items, setItems] = useState([]);
-
-//   useEffect(() => {
-//     fetch('/api/items') // Replace with the actual backend API URL
-//       .then((response) => response.json())
-//       .then((data) => setItems(data));
-//   }, []);
-
-//   return (
-//     <div>
-//       <h1>Items</h1>
-//       <ul>
-//         {items.map((item) => (
-//           <li key={item.id}>{item.name}</li>
-//         ))}
-//       </ul>
-//     </div>
-//   );
-// }
-
-// export default App;

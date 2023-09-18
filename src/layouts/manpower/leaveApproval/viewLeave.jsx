@@ -19,7 +19,7 @@ const style = {
     p: 4,
 };
 
-const ViewLeave = ({ isOpen, onRequestClose, rowData }) => {
+const ViewLeave = ({ isOpen, onRequestClose, rowData, onApproval, onRejection }) => {
 
     const { leaveId, name, startDate, endDate, leaveType, approvalStatus } = rowData;
     const [leaveBalance, setleaveBalance] = useState([]);
@@ -46,6 +46,7 @@ const ViewLeave = ({ isOpen, onRequestClose, rowData }) => {
             setIsLoading(false);
             console.log("Annual leave", leaveBalance.annualLeave); // Add this line
             setAction("approved"); // Set the action to 'approved'
+            await onApproval(rowData);
         } catch (error) {
             console.error(error);
             setIsLoading(false); // Handle errors and mark loading as complete
@@ -60,6 +61,7 @@ const ViewLeave = ({ isOpen, onRequestClose, rowData }) => {
             setIsLoading(false);
             console.log("Annual leave", leaveBalance.annualLeave); // Add this line
             setAction("rejected"); // Set the action to 'rejected'
+            await onRejection(rowData);
         } catch (error) {
             console.error(error);
             setIsLoading(false); // Handle errors and mark loading as complete
