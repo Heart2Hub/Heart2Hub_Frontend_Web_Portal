@@ -10,7 +10,8 @@ import SignIn from "layouts/authentication/sign-in";
 import Icon from "@mui/material/Icon";
 import Outpatient from "layouts/outpatient";
 import Inpatient from "layouts/inpatient";
-import EHR from "layouts/EHR";
+import EHR from "layouts/ehr";
+import EHRRecord from "layouts/ehr/record";
 import Administration from "layouts/administration";
 import Manpower from "layouts/manpower";
 import Finance from "layouts/finance";
@@ -67,6 +68,14 @@ const routes = [
     route: "/ehr",
     component: <EHR />,
   },
+  // {
+  //   type: "collapse",
+  //   name: "EHR",
+  //   key: "ehr",
+  //   icon: <Icon fontSize="small">receipt_long</Icon>,
+  //   route: "/ehr/record",
+  //   component: <EHRRecord />,
+  // },
   {
     type: "collapse",
     name: "Administration",
