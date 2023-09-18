@@ -8,6 +8,7 @@ function ProtectedRoute(props) {
   const staff = useSelector(selectStaff);
   const staffRole = staff.staffRoleEnum;
   const authorizedRoles = props.authorizedRoles;
+  const forHeadsOnly = props.forHeadsOnly;
 
   //check staff is logged in
   // if (staff.staffId !== "") {
@@ -18,7 +19,12 @@ function ProtectedRoute(props) {
       //if all authorized just continue and
       //check role in authorized list
       if (authRole === StaffRoleEnum.ALL || staffRole === authRole) {
-        return props.children;
+        console.log(forHeadsOnly);
+        console.log(staff.isHead);
+
+        if (forHeadsOnly && staff.isHead === forHeadsOnly) {
+          return props.children;
+        }
       }
     }
     //user is logged in but has not rights to access the page
