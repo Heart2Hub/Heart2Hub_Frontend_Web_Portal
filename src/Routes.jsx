@@ -22,6 +22,7 @@ import ErrorPage from "layouts/error";
 import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves"
 import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave"
 
+import LeaveApproval from "layouts/manpower/leaveApproval";
 
 const routes = [
   {
@@ -107,6 +108,12 @@ const routes = [
     key: "CreateLeave",
     route: "/manpower/createLeave",
     component: <CreateLeave />,
+  },
+  {
+    name: "Leave Approval",
+    key: "leaveApproval",
+    route: "/manpower/leaveApproval",
+    component: <LeaveApproval />,
   },
   {
     type: "collapse",

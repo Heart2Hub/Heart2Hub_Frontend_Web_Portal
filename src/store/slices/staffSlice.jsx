@@ -68,14 +68,15 @@ export const staffSlice = createSlice({
     });
     builder.addCase(postLogin.fulfilled, (state, action) => {
       state.staffSliceData.staff = action.payload;
+      console.log(action.payload);
       state.staffSliceData.staff.password = null;
       localStorage.setItem("isLoggedIn", true);
     });
   },
 });
 
-export const selectStaff = (state) => state.user.staffSliceData.staff;
-export const selectUsername = (state) => state.user.staffSliceData.username;
+export const selectStaff = (state) => state.staff.staffSliceData.staff;
+export const selectUsername = (state) => state.staff.staffSliceData.username;
 export const selectAccessToken = (state) =>
   state.user.staffSliceData.accessToken;
 
