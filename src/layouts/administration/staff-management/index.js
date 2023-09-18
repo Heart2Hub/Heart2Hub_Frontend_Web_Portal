@@ -9,15 +9,64 @@ import MDTypography from "components/MDTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 // Data
 import authorsTableData from "layouts/tables/data/authorsTableData";
 import projectsTableData from "layouts/tables/data/projectsTableData";
 import staffTableData from "layouts/administration/staff-management/data/staffTableData";
+import { staffApi } from "api/Api";
+import AddStaff from "./AddStaff";
+import StaffTable from "./StaffTable";
+
+const INITIAL_FORM_STATE = {
+  username: "",
+  password: "",
+  firstname: "",
+  lastname: "",
+  mobileNumber: 0,
+  staffRoleEnum: "",
+  isHead: false,
+  departmentName: "",
+  subDepartmentName: "",
+};
 
 function StaffManagement() {
-  const { columns, rows } = staffTableData();
+  const [tableView, setTableView] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [formState, setFormState] = useState(INITIAL_FORM_STATE);
+
+  const processStaffObj = (staffObj) => {
+    const formFields = Object.keys(formState);
+
+    const newStaffObj = Object.keys(staffObj)
+      .filter((key) => formFields.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = staffObj[key];
+        return obj;
+      }, {});
+
+    return newStaffObj;
+  };
+
+  const addStaffHandler = () => {
+    setEditing(false);
+    setFormState(INITIAL_FORM_STATE);
+    setTableView(false);
+  };
+
+  const editStaffHandler = (staff) => {
+    setEditing(true);
+    console.log(processStaffObj(staff));
+    setFormState(processStaffObj(staff));
+    setTableView(false);
+  };
+
+  const returnToTableHandler = () => {
+    setEditing(false);
+    setFormState(INITIAL_FORM_STATE);
+    setTableView(true);
+  };
 
   return (
     <DashboardLayout>
@@ -26,23 +75,18 @@ function StaffManagement() {
         <Grid container spacing={6}>
           <Grid item xs={12}>
             <Card>
-              <MDBox
-                mx={2}
-                mt={-3}
-                py={3}
-                px={2}
-                variant="gradient"
-                bgColor="info"
-                borderRadius="lg"
-                coloredShadow="info"
-              >
-                <MDTypography variant="h6" color="white">
-                  Staff Table
-                </MDTypography>
-              </MDBox>
-              <MDBox pt={3}>
-                <DataTable canSearch={true} table={{ columns, rows }} />
-              </MDBox>
+              {tableView ? (
+                <StaffTable
+                  addStaffHandler={addStaffHandler}
+                  editStaffHandler={editStaffHandler}
+                />
+              ) : (
+                <AddStaff
+                  returnToTableHandler={returnToTableHandler}
+                  formState={formState}
+                  editing={editing}
+                />
+              )}
             </Card>
           </Grid>
         </Grid>
