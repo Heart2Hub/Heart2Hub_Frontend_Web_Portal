@@ -43,11 +43,7 @@ export default function data() {
       { Header: "first name", accessor: "firstname", width: "12%" },
       { Header: "last name", accessor: "lastname", width: "10%" },
       { Header: "username", accessor: "username", width: "12%" },
-      { Header: "password", accessor: "password", width: "12%" },
-      { Header: "role", accessor: "role", width: "10%" },
-      { Header: "department", accessor: "department", width: "18%" },
-      { Header: "sub-department", accessor: "subdepartment", width: "15%" },
-      { Header: "head", accessor: "head" },
+      { Header: "password", accessor: "password" },
     ],
     rows: [
       {
