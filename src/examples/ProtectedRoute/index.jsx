@@ -19,10 +19,9 @@ function ProtectedRoute(props) {
       //if all authorized just continue and
       //check role in authorized list
       if (authRole === StaffRoleEnum.ALL || staffRole === authRole) {
-        console.log(forHeadsOnly);
-        console.log(staff.isHead);
-
-        if (forHeadsOnly && staff.isHead === forHeadsOnly) {
+        if (forHeadsOnly) {
+          if (staff.isHead) return props.children;
+        } else {
           return props.children;
         }
       }
