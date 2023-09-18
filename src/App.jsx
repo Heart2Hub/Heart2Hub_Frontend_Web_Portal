@@ -19,7 +19,7 @@ import rtlPlugin from "stylis-plugin-rtl";
 import createCache from "@emotion/cache";
 
 // Material Dashboard 2 React routes
-import routes from "routes";
+import routes from "Routes";
 
 // Material Dashboard 2 React contexts
 import {
