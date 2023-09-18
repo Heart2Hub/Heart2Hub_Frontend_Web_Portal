@@ -11,6 +11,7 @@ import axios from 'axios';
 import moment from 'moment';
 import { MenuItem } from '@mui/material';
 import { getShiftId, options } from '../utils/utils';
+import { shiftConstraintsApi } from 'api/Api';
 
 const style = {
     position: "absolute",
@@ -28,7 +29,7 @@ const body = {
     startTime: "",
     endTime: "",
     minPax: 0,
-    roleEnum: "DOCTOR"
+    staffRoleEnum: "DOCTOR"
 }
 
 function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
@@ -57,11 +58,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
         newReqBody.startTime = start;
         newReqBody.endTime = end;
         try {
-            const response = await axios.put(`http://localhost:8080/shiftConstraints/updateShiftConstraints/${shiftConstraint.shiftConstraintsId}`, newReqBody, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await shiftConstraintsApi.updateShiftConstraints(shiftConstraint.shiftConstraintsId, newReqBody);
             handleClose();
             setErrorMsg(null);
         } catch (error) {
@@ -72,11 +69,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
 
     const handleCancel = async () => {
         try {
-            const response = await axios.delete(`http://localhost:8080/shiftConstraints/deleteShiftConstraints/${shiftConstraint.shiftConstraintsId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await shiftConstraintsApi.deleteShiftConstraints(shiftConstraint.shiftConstraintsId);
             handleClose();
         } catch (error) {
             console.log(error)
@@ -138,7 +131,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
                             onChange={handleChange}
                             value={reqBody?.minPax}
                         /><br/><br/>
-                        <Typography variant="h6">Role: {reqBody?.roleEnum}</Typography><br/>
+                        <Typography variant="h6">Role: {reqBody?.staffRoleEnum}</Typography><br/>
                         {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
                         <Button 
                             variant="contained" 

@@ -53,6 +53,9 @@ export const staffApi = {
   disableStaff(username) {
     return axiosFetch.put(`${REST_ENDPOINT}/staff/disableStaff/${username}`);
   },
+  getStaffListByRole(role) {
+    return axiosFetch.get(`${REST_ENDPOINT}/staff/getStaffByRole?role=${role}`);
+  }
 };
 
 export const departmentApi = {
@@ -141,3 +144,82 @@ export const leaveApi = {
     );
   }
 }
+
+export const shiftApi = {
+  viewWeeklyRoster(username, date) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shift/viewWeeklyRoster/${username}?date=${date}`
+    );
+  },
+  viewMonthlyRoster(username, year, month) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shift/viewMonthlyRoster/${username}?year=${year}&month=${month}`
+    );
+  },
+  createShift(username, facility, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/shift/createShift/${username}/${facility}`,
+      requestBody
+    );
+  },
+  updateShift(shiftId, facility, requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/shift/updateShift/${shiftId}/${facility}`,
+      requestBody
+    );
+  },
+  deleteShift(shiftId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/shift/deleteShift/${shiftId}`
+    );
+  },
+};
+
+export const shiftConstraintsApi = {
+  getAllShiftConstraints(role) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shiftConstraints/getAllShiftConstraints/${role}`
+    )
+  },
+  checkIsValidWorkDay(role, date) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shiftConstraints/checkIsValidWorkday?role=${role}&date=${date}`
+    )
+  },
+  createShiftConstraints(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/shiftConstraints/createShiftConstraints`,
+      requestBody
+    );
+  },
+  updateShiftConstraints(id, requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/shiftConstraints/updateShiftConstraints/${id}`,
+      requestBody
+    );
+  },
+  deleteShiftConstraints(id) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/shiftConstraints/deleteShiftConstraints/${id}`
+    );
+  },
+};
+
+export const shiftPreferenceApi = {
+  getShiftPreference(username) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shiftPreference/getShiftPreference/${username}`
+    );
+  },
+  createShiftPreference(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/shiftPreference/createShiftPreference`,
+      requestBody
+    );
+  },
+  deleteShiftPreference(id) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/shiftPreference/deleteShiftPreference/${id}`
+    );
+  },
+};
