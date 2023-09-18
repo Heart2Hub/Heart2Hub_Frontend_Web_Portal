@@ -10,8 +10,8 @@ import SignIn from "layouts/authentication/sign-in";
 import Icon from "@mui/material/Icon";
 import Outpatient from "layouts/outpatient";
 import Inpatient from "layouts/inpatient";
-import EHR from "layouts/ehr";
-import EHRRecord from "layouts/ehr/record";
+import EHR from "layouts/EHR";
+//import EHRRecord from "layouts/ehr/record";
 import Administration from "layouts/administration";
 import Manpower from "layouts/manpower";
 import Finance from "layouts/finance";
@@ -22,6 +22,10 @@ import Account from "layouts/account";
 import ErrorPage from "layouts/error";
 import Rostering from "layouts/manpower/rostering/ShiftOverallRoster";
 import CalendarRoster from "layouts/manpower/rostering/CalendarRoster";
+import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
+import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
+
+import LeaveApproval from "layouts/manpower/leaveApproval";
 
 const routes = [
   {
@@ -115,6 +119,24 @@ const routes = [
     key: "shift-allocation",
     route: "/manpower/rostering/shifts",
     component: <Rostering />,
+  },
+  {
+    name: "ViewAllLeaves",
+    key: "ViewAllLeaves",
+    route: "/manpower/viewAllLeaves",
+    component: <ViewAllLeaves />,
+  },
+  {
+    name: "CreateLeave",
+    key: "CreateLeave",
+    route: "/manpower/createLeave",
+    component: <CreateLeave />,
+  },
+  {
+    name: "Leave Approval",
+    key: "leaveApproval",
+    route: "/manpower/leaveApproval",
+    component: <LeaveApproval />,
   },
   {
     type: "collapse",
