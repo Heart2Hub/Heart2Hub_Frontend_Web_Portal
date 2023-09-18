@@ -28,7 +28,7 @@ const body = {
     startTime: "",
     endTime: "",
     minPax: 0,
-    roleEnum: "DOCTOR"
+    staffRoleEnum: "DOCTOR"
 }
 
 function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
@@ -138,7 +138,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
                             onChange={handleChange}
                             value={reqBody?.minPax}
                         /><br/><br/>
-                        <Typography variant="h6">Role: {reqBody?.roleEnum}</Typography><br/>
+                        <Typography variant="h6">Role: {reqBody?.staffRoleEnum}</Typography><br/>
                         {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
                         <Button 
                             variant="contained" 

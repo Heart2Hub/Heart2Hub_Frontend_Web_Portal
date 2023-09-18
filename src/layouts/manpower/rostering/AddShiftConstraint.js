@@ -28,7 +28,7 @@ function AddShiftConstraint({open, handleClose, role}) {
         startTime: "",
         endTime: "",
         minPax: 1,
-        roleEnum: ""
+        staffRoleEnum: ""
     }
 
     const [reqBody, setReqBody] = useState(body);
@@ -87,7 +87,7 @@ function AddShiftConstraint({open, handleClose, role}) {
 
     useEffect(() => {
         let temp = body;
-        temp.roleEnum = role;
+        temp.staffRoleEnum = role;
         setReqBody(temp);
     }, [role])
 
@@ -132,7 +132,7 @@ function AddShiftConstraint({open, handleClose, role}) {
                             onChange={handleChange}
                             value={reqBody.minPax}
                         /><br/><br/>
-                        <Typography variant="h6">Role: {reqBody.roleEnum}</Typography><br/>
+                        <Typography variant="h6">Role: {reqBody.staffRoleEnum}</Typography><br/>
                         {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
                         <Button 
                             variant="contained" 

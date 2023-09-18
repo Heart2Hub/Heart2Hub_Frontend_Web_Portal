@@ -1,5 +1,5 @@
 import { Backdrop, Fade, Typography, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { Close } from '@mui/icons-material';
 import MDBox from 'components/MDBox';
 import MDButton from 'components/MDButton';
 import MDTypography from 'components/MDTypography';
@@ -113,7 +113,7 @@ const ViewLeave = ({ isOpen, onRequestClose, rowData }) => {
                             onClick={onRequestClose} // Close the modal when X button is clicked
                             aria-label="close"
                         >
-                            <CloseIcon />
+                            <Close />
                         </IconButton>
                     </div>
                     <h2>Leave Details</h2>

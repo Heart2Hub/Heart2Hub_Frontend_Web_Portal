@@ -56,6 +56,10 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
         setViewShiftOpen(false);
     }
 
+    const truncate = (str, n) => {
+        return str.length > n ? `${str.substring(0, n-1)}...` : str;
+      };
+
     useEffect(() => {
         setListOfDates(dateList);
         getAllShiftsForStaff();
@@ -63,8 +67,8 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
 
     return (
         <TableRow role="checkbox" tabIndex={-1} key={username} sx={{ display: 'flex'}}>
-            <TableCell key={username} sx={{ minWidth: 176, paddingLeft: "30px", marginTop: "10px"  }} align="left">
-                {username === localStorage.getItem('staffUsername') ? <b>{staff.firstname + " " + staff.lastname + " (You)"}</b> : staff.firstname + " " + staff.lastname}
+            <TableCell key={username} sx={{ width: 210, paddingLeft: "30px", marginTop: "10px"  }} align="left">
+                {username === localStorage.getItem('staffUsername') ? <b>{truncate(staff.firstname + " " + staff.lastname, 15) + " (You)"}</b> : truncate(staff.firstname + " " + staff.lastname, 15)}
             </TableCell>
             {listOfDates?.map(date => {   
                 if (i < shifts?.length && moment(shifts[i]?.startTime).day() === moment(date.date).day()) {

@@ -100,7 +100,7 @@ function Rostering() {
                 }
             });
             setCurrStaffDetails(response.data);
-            getStaffListByRole(response.data.roleEnum);
+            getStaffListByRole(response.data.staffRoleEnum);
         } catch (error) {
             console.log(error);
         }
@@ -138,7 +138,7 @@ function Rostering() {
         const dates = [];
         let i = 0;
         while (startDate.isSameOrBefore(endDate)) {
-            if (await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.roleEnum)) {
+            if (await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum)) {
                 dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: true });
             } else {
                 dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: false });
@@ -174,7 +174,7 @@ function Rostering() {
         const dates = [];
         let i = 0;
         while (startDate.isSameOrBefore(endDate)) {
-            if (isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.roleEnum)) {
+            if (isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum)) {
                 dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: true });
             } else {
                 dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: false });
@@ -227,8 +227,8 @@ function Rostering() {
         if (!currStaffDetails) {
             getStaffByUsername();
         } else {
-            getStaffListByRole(currStaffDetails.roleEnum);
-            getShiftConstraints(currStaffDetails.roleEnum);
+            getStaffListByRole(currStaffDetails.staffRoleEnum);
+            getShiftConstraints(currStaffDetails.staffRoleEnum);
             getMonthDates(today);
             if (weekDates.length === 0) {
                 getWeekDates(today);
@@ -260,11 +260,11 @@ function Rostering() {
                 coloredShadow="info"
               >
                 <MDTypography variant="h6" color="white">
-                    Staff Roster (Role: {currStaffDetails?.roleEnum})
+                    Staff Roster (Role: {currStaffDetails?.staffRoleEnum})
                 </MDTypography>
               </MDBox>
               <MDBox pt={3}> 
-                {scList.length > 0 ? <Typography variant="h6" paddingLeft={2}>Shift constraints for {currStaffDetails?.roleEnum}:</Typography> : <></>}
+                {scList.length > 0 ? <Typography variant="h6" paddingLeft={2}>Shift constraints for {currStaffDetails?.staffRoleEnum}:</Typography> : <></>}
               <Grid container>
                 {scList.map(sc => {return (
                     <Card key={sc.shiftConstraintsId} sx={cardStyles} onClick={() => handleScOpen(sc)}>
@@ -312,7 +312,7 @@ function Rostering() {
                             <TableRow>
                                 <TableCell
                                     key={1000}
-                                    style={{ minWidth: 160 }}
+                                    style={{ width: 195 }}
                                 >
                             Staff
                                 </TableCell>
@@ -364,7 +364,7 @@ function Rostering() {
       <AddShiftConstraint 
         open={scOpen}
         handleClose={handleScClose}
-        role={currStaffDetails ? currStaffDetails.roleEnum : "temp"}
+        role={currStaffDetails ? currStaffDetails.staffRoleEnum : "temp"}
         />
     </DashboardLayout>
     )

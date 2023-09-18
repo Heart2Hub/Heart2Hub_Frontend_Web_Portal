@@ -7,7 +7,7 @@ import Grid from "@mui/material/Grid";
 import Divider from "@mui/material/Divider";
 
 // @mui icons
-import FacebookIcon from "@mui/icons-material/Facebook";
+import { Facebook } from "@mui/icons-material";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import InstagramIcon from "@mui/icons-material/Instagram";
 
@@ -50,7 +50,7 @@ function Account() {
             social={[
               {
                 link: "https://www.facebook.com/CreativeTim/",
-                icon: <FacebookIcon />,
+                icon: <Facebook />,
                 color: "facebook",
               },
               {
