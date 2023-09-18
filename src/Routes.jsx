@@ -19,6 +19,8 @@ import FacilityManagement from "layouts/administration/facility-management";
 import Home from "layouts/home";
 import Account from "layouts/account";
 import ErrorPage from "layouts/error";
+import Rostering from "layouts/manpower/rostering/ShiftOverallRoster";
+import CalendarRoster from "layouts/manpower/rostering/CalendarRoster";
 
 const routes = [
   {
@@ -92,6 +94,18 @@ const routes = [
     icon: <Icon fontSize="small">group</Icon>,
     route: "/manpower",
     component: <Manpower />,
+  },
+  {
+    name: "Rostering",
+    key: "rostering",
+    route: "/manpower/rostering",
+    component: <CalendarRoster />,
+  },
+  {
+    name: "Shift Allocation",
+    key: "shift-allocation",
+    route: "/manpower/rostering/shifts",
+    component: <Rostering />,
   },
   {
     type: "collapse",
