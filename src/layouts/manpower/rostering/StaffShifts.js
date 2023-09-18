@@ -11,6 +11,7 @@ import { Button } from '@mui/material';
 import { getShiftName, getTime, getColor } from '../utils/utils';
 import ViewShift from './ViewUpdateShift';
 import AddShift from './AllocateShift';
+import { shiftApi } from 'api/Api';
 
 const buttonStyles = {
     backgroundColor: "white",
@@ -33,12 +34,12 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
     let i = 0;
 
     const getAllShiftsForStaff = async () => {
-        const response = await axios.get(`http://localhost:8080/shift/viewWeeklyRoster/${username}?date=${weekStartDate}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            }
-        });
-        setShifts(response.data);
+        try {
+            const response = await shiftApi.viewWeeklyRoster(username,weekStartDate);
+            setShifts(response.data);
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     const handleOpen = (date, shift) => {
@@ -56,6 +57,10 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
         setViewShiftOpen(false);
     }
 
+    const truncate = (input) => {
+      return input?.length > 15 ? `${input.substring(0, 20)}...` : input;
+    }
+
     useEffect(() => {
         setListOfDates(dateList);
         getAllShiftsForStaff();
@@ -63,8 +68,8 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
 
     return (
         <TableRow role="checkbox" tabIndex={-1} key={username} sx={{ display: 'flex'}}>
-            <TableCell key={username} sx={{ minWidth: 176, paddingLeft: "30px", marginTop: "10px"  }} align="left">
-                {username === localStorage.getItem('staffUsername') ? <b>{staff.firstname + " " + staff.lastname + " (You)"}</b> : staff.firstname + " " + staff.lastname}
+            <TableCell key={username} sx={{ width: 230, paddingLeft: "30px", marginTop: "10px"  }} align="left">
+                {username === localStorage.getItem('staffUsername') ? <b>{truncate(staff.firstname + " " + staff.lastname) + " (You)"}</b> : truncate(staff.firstname + " " + staff.lastname)}
             </TableCell>
             {listOfDates?.map(date => {   
                 if (i < shifts?.length && moment(shifts[i]?.startTime).day() === moment(date.date).day()) {

@@ -26,6 +26,7 @@ import MDBox from "components/MDBox";
 import { getColor, getShiftName, getShiftTime, getTime } from '../utils/utils';
 import { Button } from '@mui/material';
 import { getShiftId } from '../utils/utils';
+import { shiftApi, shiftPreferenceApi, staffApi } from 'api/Api';
 
 function CalendarRoster() {
 
@@ -49,11 +50,7 @@ function CalendarRoster() {
     const navigate = useNavigate();
 
     const getMyMonthlyRoster = async () => {
-        const response = await axios.get(`http://localhost:8080/shift/viewMonthlyRoster/${localStorage.getItem('staffUsername')}?year=${year}&month=${month}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            }
-        });
+        const response = await shiftApi.viewMonthlyRoster(localStorage.getItem('staffUsername'), year, month);
         let data = [];
         for (let i=0; i<response.data.length; i++) {
             data.push({
@@ -69,11 +66,7 @@ function CalendarRoster() {
 
     const getShiftPreference = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/shiftPreference/getShiftPreference/${localStorage.getItem('staffUsername')}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await shiftPreferenceApi.getShiftPreference(localStorage.getItem('staffUsername'));
             setCurrPref(response.data);
             if (response.data) {
                 setShift(getShiftId(moment(response.data.startTime, 'HH:mm:ss').format('HH:mm'), moment(response.data.endTime, 'HH:mm:ss').format('HH:mm')))
@@ -100,11 +93,7 @@ function CalendarRoster() {
             newReqBody.startTime = getShiftTime(shift)[0];
             newReqBody.endTime = getShiftTime(shift)[1];
             try {
-                const response = await axios.post(`http://localhost:8080/shiftPreference/createShiftPreference`, newReqBody, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+                const response = await shiftPreferenceApi.createShiftPreference(newReqBody);
             } catch (error) {
                 console.log(error)
             } finally {
@@ -116,11 +105,7 @@ function CalendarRoster() {
     const deleteShiftPreference = async (id) => {
         setLoading(true);
         try {
-            const response = await axios.delete(`http://localhost:8080/shiftPreference/deleteShiftPreference/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await shiftPreferenceApi.deleteShiftPreference(id);
         } catch (error) {
             console.log(error)
         } finally {
@@ -130,11 +115,7 @@ function CalendarRoster() {
 
     const getStaffByUsername = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/staff/getStaffByUsername?username=${localStorage.getItem('staffUsername')}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await staffApi.getStaffByUsername(localStorage.getItem('staffUsername'));
             setStaffDetails(response.data);
         } catch (error) {
             console.log(error);

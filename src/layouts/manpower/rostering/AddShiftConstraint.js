@@ -9,7 +9,7 @@ import Select from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { options } from '../utils/utils';
-import axios from 'axios';
+import { shiftConstraintsApi } from 'api/Api';
 
 const style = {
     position: "absolute",
@@ -28,7 +28,7 @@ function AddShiftConstraint({open, handleClose, role}) {
         startTime: "",
         endTime: "",
         minPax: 1,
-        roleEnum: ""
+        staffRoleEnum: ""
     }
 
     const [reqBody, setReqBody] = useState(body);
@@ -56,11 +56,8 @@ function AddShiftConstraint({open, handleClose, role}) {
         newReqBody.startTime = start;
         newReqBody.endTime = end;
         try {
-            const response = await axios.post(`http://localhost:8080/shiftConstraints/createShiftConstraints`, newReqBody, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            console.log(newReqBody)
+            const response = await shiftConstraintsApi.createShiftConstraints(newReqBody);
             handleClose();
             setErrorMsg(null);
         } catch (error) {
@@ -87,7 +84,7 @@ function AddShiftConstraint({open, handleClose, role}) {
 
     useEffect(() => {
         let temp = body;
-        temp.roleEnum = role;
+        temp.staffRoleEnum = role;
         setReqBody(temp);
     }, [role])
 
@@ -132,7 +129,7 @@ function AddShiftConstraint({open, handleClose, role}) {
                             onChange={handleChange}
                             value={reqBody.minPax}
                         /><br/><br/>
-                        <Typography variant="h6">Role: {reqBody.roleEnum}</Typography><br/>
+                        <Typography variant="h6">Role: {reqBody.staffRoleEnum}</Typography><br/>
                         {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
                         <Button 
                             variant="contained" 
