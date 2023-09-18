@@ -127,11 +127,11 @@ const routes = [
     key: "administration",
     icon: <Icon fontSize="small">build</Icon>,
     route: "/administration",
-    authorizedRoles: [StaffRoleEnum.DOCTOR],
+    authorizedRoles: [StaffRoleEnum.ALL],
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.DOCTOR]}
-        forHeadsOnly={true}
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
       >
         <Administration />
       </ProtectedRoute>
