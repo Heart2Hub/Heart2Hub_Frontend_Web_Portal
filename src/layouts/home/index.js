@@ -1,10 +1,11 @@
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import UploadImage from "examples/UploadImage";
 import React from "react";
 
 function Home() {
   return (
     <DashboardLayout>
-      <h1>HOME</h1>
+      <UploadImage />
     </DashboardLayout>
   );
 }
