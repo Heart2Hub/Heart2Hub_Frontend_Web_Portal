@@ -12,12 +12,10 @@ const initialStaff = {
 };
 
 const initialState = {
-  staffSliceData: {
-    staff: initialStaff,
-    accessToken: localStorage.getItem("accessToken")
-      ? localStorage.getItem("accessToken")
-      : "",
-  },
+  staff: initialStaff,
+  accessToken: localStorage.getItem("accessToken")
+    ? localStorage.getItem("accessToken")
+    : "",
 };
 
 export const login = createAsyncThunk(
@@ -56,29 +54,27 @@ export const staffSlice = createSlice({
       localStorage.removeItem("accessToken");
       localStorage.removeItem("staffUsername");
       localStorage.removeItem("isLoggedIn");
-      state.staffSliceData.staff = initialStaff;
-      state.staffSliceData.username = "";
-      state.staffSliceData.accessToken = "";
+      state.staff = initialStaff;
+      state.username = "";
+      state.accessToken = "";
     },
   },
   extraReducers(builder) {
     builder.addCase(login.fulfilled, (state, action) => {
-      state.staffSliceData.accessToken = action.payload;
+      state.accessToken = action.payload;
       localStorage.setItem("accessToken", action.payload);
     });
     builder.addCase(postLogin.fulfilled, (state, action) => {
-      state.staffSliceData.staff = action.payload;
-      console.log(action.payload);
-      state.staffSliceData.staff.password = null;
+      state.staff = action.payload;
+      state.staff.password = null;
       localStorage.setItem("isLoggedIn", true);
     });
   },
 });
 
-export const selectStaff = (state) => state.staff.staffSliceData.staff;
-export const selectUsername = (state) => state.staff.staffSliceData.username;
-export const selectAccessToken = (state) =>
-  state.user.staffSliceData.accessToken;
+export const selectStaff = (state) => state.staff.staff;
+export const selectUsername = (state) => state.staff.username;
+export const selectAccessToken = (state) => state.staff.accessToken;
 
 // Action creators are generated for each case reducer function
 export const { logout } = staffSlice.actions;
