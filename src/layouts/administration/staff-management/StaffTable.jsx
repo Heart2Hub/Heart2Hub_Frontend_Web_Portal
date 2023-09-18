@@ -26,10 +26,11 @@ function StaffTable({ addStaffHandler, editStaffHandler }) {
 
   const processStaffData = (listOfStaff) => {
     const newListOfStaff = listOfStaff
+      .sort((staff1, staff2) => staff1.staffId - staff2.staffId)
       .filter((staff) => !staff.disabled)
       .map((staff) => {
-        const subDepartmentName = staff.subDepartment.subDepartmentName;
-        const departmentName = staff.subDepartment.department.departmentName;
+        const subDepartmentName = staff.subDepartment.name;
+        const departmentName = staff.subDepartment.department.name;
         staff.subDepartmentName = subDepartmentName;
         staff.departmentName = departmentName;
         staff.isHeadCheckbox = <Checkbox disabled checked={staff.isHead} />;

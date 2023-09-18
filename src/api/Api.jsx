@@ -51,26 +51,28 @@ export const staffApi = {
 };
 
 export const departmentApi = {
-  getAllDepartments() {
-    return axiosFetch.get(`${REST_ENDPOINT}/department/getAllDepartments`);
+  getAllDepartments(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/department/getAllDepartments?name=${name}`
+    );
   },
 };
 
 export const subDepartmentApi = {
-  getSubDepartmentsByDepartment(department) {
+  getAllSubDepartments(name) {
     return axiosFetch.get(
-      `${REST_ENDPOINT}/subDepartment/getSubDepartmentsByDepartment/${department}`
+      `${REST_ENDPOINT}/subDepartment/getAllSubDepartments?name=${name}`
     );
   },
 };
 
 export const facilityApi = {
-  getAllFacilitiesByStatus(status){
+  getAllFacilitiesByStatus(status) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/facility/getAllFacilitiesByFacilityStatus?facilityStatus=${status}`
     );
   },
-  getAllFacilitiesByName(name){
+  getAllFacilitiesByName(name) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/facility/getAllFacilitiesByName?name=${name}`
     );
@@ -91,7 +93,7 @@ export const facilityApi = {
       `${REST_ENDPOINT}/facility/updateFacility?facilityId=${facilityId}`,
       requestBody
     );
-  }
+  },
 };
 
 export const patientApi = {
@@ -103,7 +105,10 @@ export const patientApi = {
 };
 
 export const ehrApi = {
-  getElectronicHealthRecordByIdAndDateOfBirth(electronicHealthRecordId,dateOfBirth) {
+  getElectronicHealthRecordByIdAndDateOfBirth(
+    electronicHealthRecordId,
+    dateOfBirth
+  ) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordByIdAndDateOfBirth?electronicHealthRecordId=${electronicHealthRecordId}&dateOfBirth=${dateOfBirth}`
     );

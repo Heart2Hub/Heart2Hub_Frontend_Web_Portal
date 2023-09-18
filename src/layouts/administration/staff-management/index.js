@@ -21,7 +21,7 @@ import StaffTable from "./StaffTable";
 
 const INITIAL_FORM_STATE = {
   username: "",
-  password: "",
+  password: "password",
   firstname: "",
   lastname: "",
   mobileNumber: 0,
