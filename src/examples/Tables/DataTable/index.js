@@ -45,6 +45,7 @@ import MDPagination from "components/MDPagination";
 // Material Dashboard 2 React example components
 import DataTableHeadCell from "examples/Tables/DataTable/DataTableHeadCell";
 import DataTableBodyCell from "examples/Tables/DataTable/DataTableBodyCell";
+import { IconButton } from "@mui/material";
 
 function DataTable({
   entriesPerPage,
@@ -54,6 +55,8 @@ function DataTable({
   pagination,
   isSorted,
   noEndBorder,
+  addRow,
+  editRow,
 }) {
   const defaultValue = entriesPerPage.defaultValue
     ? entriesPerPage.defaultValue
@@ -204,7 +207,7 @@ function DataTable({
 
             <MDBox width="12rem" ml="auto" display="flex">
               {/* Added button for creating new rows */}
-              <MDButton variant="gradient" color="dark">
+              <MDButton variant="gradient" color="dark" onClick={addRow}>
                 <Icon sx={{ fontWeight: "bold" }}>add</Icon>
                 &nbsp;add new staff
               </MDButton>
@@ -248,6 +251,11 @@ function DataTable({
                     {cell.render("Cell")}
                   </DataTableBodyCell>
                 ))}
+                <DataTableBodyCell>
+                  <IconButton onClick={() => editRow(row.original)}>
+                    <Icon>edit</Icon>
+                  </IconButton>
+                </DataTableBodyCell>
               </TableRow>
             );
           })}
