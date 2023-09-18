@@ -11,6 +11,7 @@ import Icon from "@mui/material/Icon";
 import Outpatient from "layouts/outpatient";
 import Inpatient from "layouts/inpatient";
 import EHR from "layouts/EHR";
+//import EHRRecord from "layouts/ehr/record";
 import Administration from "layouts/administration";
 import Manpower from "layouts/manpower";
 import Finance from "layouts/finance";
@@ -19,6 +20,12 @@ import FacilityManagement from "layouts/administration/facility-management";
 import Home from "layouts/home";
 import Account from "layouts/account";
 import ErrorPage from "layouts/error";
+import Rostering from "layouts/manpower/rostering/ShiftOverallRoster";
+import CalendarRoster from "layouts/manpower/rostering/CalendarRoster";
+import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
+import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
+
+import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
 import { StaffRoleEnum } from "constants/StaffRoleEnum";
 
@@ -79,6 +86,14 @@ const routes = [
     authorizedRoles: [StaffRoleEnum.ALL],
     component: <EHR />,
   },
+  // {
+  //   type: "collapse",
+  //   name: "EHR",
+  //   key: "ehr",
+  //   icon: <Icon fontSize="small">receipt_long</Icon>,
+  //   route: "/ehr/record",
+  //   component: <EHRRecord />,
+  // },
   {
     type: "collapse",
     name: "Administration",
@@ -108,6 +123,36 @@ const routes = [
     route: "/manpower",
     authorizedRoles: [StaffRoleEnum.ALL],
     component: <Manpower />,
+  },
+  {
+    name: "Rostering",
+    key: "rostering",
+    route: "/manpower/rostering",
+    component: <CalendarRoster />,
+  },
+  {
+    name: "Shift Allocation",
+    key: "shift-allocation",
+    route: "/manpower/rostering/shifts",
+    component: <Rostering />,
+  },
+  {
+    name: "ViewAllLeaves",
+    key: "ViewAllLeaves",
+    route: "/manpower/viewAllLeaves",
+    component: <ViewAllLeaves />,
+  },
+  {
+    name: "CreateLeave",
+    key: "CreateLeave",
+    route: "/manpower/createLeave",
+    component: <CreateLeave />,
+  },
+  {
+    name: "Leave Approval",
+    key: "leaveApproval",
+    route: "/manpower/leaveApproval",
+    component: <LeaveApproval />,
   },
   {
     type: "collapse",
