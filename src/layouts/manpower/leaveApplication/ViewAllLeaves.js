@@ -17,7 +17,9 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import UpdateLeaveForm from "./UpdateLeaveForm";
-
+import { useSelector } from "react-redux";
+import { selectStaff } from "store/slices/staffSlice";
+import { Link } from 'react-router-dom';
 
 
 
@@ -30,14 +32,16 @@ import MDTypography from "components/MDTypography";
 import axios from 'axios';
 
 function ViewAllLeaves() {
+
+	const staff = useSelector(selectStaff);
+
+	console.log(staff);
 	const [leaveList, setLeaveList] = useState([]);
 	const [leaveBalance, setLeaveBalance] = useState([]);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [rowToDelete, setRowToDelete] = useState(null);
 	const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState(null);
-
-	const id = 1;
 
 	const handleDeleteDialogOpen = (rowId) => {
 		setRowToDelete(rowId);
@@ -69,7 +73,7 @@ function ViewAllLeaves() {
 
 	const handleUpdateLeave = (updatedLeaveData) => {
 		axios
-			.put(`http://localhost:8080/leave/updateLeave/${selectedRow.leaveId}/1`, updatedLeaveData, {
+			.put(`http://localhost:8080/leave/updateLeave/${selectedRow.leaveId}/${staff.staffId}`, updatedLeaveData, {
 				headers: {
 					'Content-Type': 'application/json',
 					'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
@@ -90,7 +94,7 @@ function ViewAllLeaves() {
 
 
 	const getLeaveBalance = async () => {
-		const response = await axios.get('http://localhost:8080/leave/getLeaveBalance?staffId=1', {
+		const response = await axios.get(`http://localhost:8080/leave/getLeaveBalance?staffId=${staff.staffId}`, {
 			headers: {
 				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
 			}
@@ -100,7 +104,7 @@ function ViewAllLeaves() {
 	}
 
 	const getLeaveList = async () => {
-		const response = await axios.get('http://localhost:8080/leave/getAllStaffLeaves/1', {
+		const response = await axios.get(`http://localhost:8080/leave/getAllStaffLeaves/${staff.staffId}`, {
 			headers: {
 				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
 			}
@@ -237,20 +241,7 @@ function ViewAllLeaves() {
 			<DashboardNavbar />
 			<MDBox py={3}>
 				<Grid container spacing={3}>
-					<Grid item xs={12} md={6} lg={3}>
-						<MDBox mb={1.5}>
-							<SimpleBlogCard
-								image="https://bit.ly/3Hlw1MQ"
-								title="Leave Management"
-								action={{
-									type: "internal",
-									route: "/manpower/createLeave",
-									color: "info",
-									label: "Apply Leave",
-								}}
-							/>{" "}
-						</MDBox>
-					</Grid>
+					
 					<Grid item xs={12} md={6} lg={3}>
 						<Card>
 							<MDBox
@@ -276,6 +267,14 @@ function ViewAllLeaves() {
 								</div>
 								<div>
 									<strong>Parental Leave:</strong> {leaveBalance.parentalLeave}
+								</div>
+								<div>
+									<br></br>
+									<Link to="/manpower/createLeave" style={{ textDecoration: 'none' }}>
+										<Button variant="contained" color="primary" style={{ color: 'white' }}>
+											Apply for Leave
+										</Button>
+									</Link>
 								</div>
 							</CardContent>
 						</Card>

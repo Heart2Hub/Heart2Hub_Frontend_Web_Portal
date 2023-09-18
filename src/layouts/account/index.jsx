@@ -16,6 +16,8 @@ import { departmentApi } from "../../api/Api";
 
 function Account() {
   const staff = useSelector(selectStaff);
+
+  console.log(staff);
   const [listOfDepartments, setListOfDepartments] = useState([]);
   const [departmentName, setDepartmentName] = useState("");
 

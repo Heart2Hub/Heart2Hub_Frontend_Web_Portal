@@ -139,7 +139,7 @@ const routes = [
   {
     name: "ViewAllLeaves",
     key: "ViewAllLeaves",
-    route: "/manpower/viewAllLeaves",
+    route: "/manpower/leaveApplication",
     component: <ViewAllLeaves />,
   },
   {

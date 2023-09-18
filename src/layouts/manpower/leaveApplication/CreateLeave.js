@@ -31,10 +31,16 @@ import MDInput from "components/MDInput";
 import FormCard from "examples/Cards/FormCards";
 import SimpleBlogCard from "examples/Cards/BlogCards/SimpleBlogCard";
 import CardContent from '@mui/material/CardContent';
+import { useSelector } from "react-redux";
+import { selectStaff } from "store/slices/staffSlice";
+import { Link } from 'react-router-dom';
 
 
 
 function CreateLeave() {
+
+	const staff = useSelector(selectStaff);
+	const staffId = staff.staffId;
 
 	const [startDate, setStartDate] = useState('');
 	const [endDate, setEndDate] = useState('');
@@ -66,11 +72,10 @@ function CreateLeave() {
 	}
 
 	//Remember to edit
-	const staffId = '1';
 
 
 	const getLeaveBalance = async () => {
-		const response = await axios.get('http://localhost:8080/leave/getLeaveBalance?staffId=1', {
+		const response = await axios.get(`http://localhost:8080/leave/getLeaveBalance?staffId=${staff.staffId}`, {
 			headers: {
 				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
 			}
@@ -209,20 +214,6 @@ function CreateLeave() {
 			<MDBox mb={2} />
 			<Grid container spacing={3}>
 				<Grid item xs={12} md={6} lg={3}>
-					<MDBox mb={1.5}>
-						<SimpleBlogCard
-							image="https://bit.ly/3Hlw1MQ"
-							title="Leave Management"
-							action={{
-								type: "internal",
-								route: "/manpower/viewAllLeaves",
-								color: "info",
-								label: "View My Leaves",
-							}}
-						/>{" "}
-					</MDBox>
-				</Grid>
-				<Grid item xs={12} md={6} lg={3}>
 					<Card>
 						<MDBox
 							mx={2}
@@ -248,11 +239,20 @@ function CreateLeave() {
 							<div>
 								<strong>Parental Leave:</strong> {leaveBalance.parentalLeave}
 							</div>
+							<div>
+								<br></br>
+								<Link to="/manpower/leaveApplication" style={{ textDecoration: 'none' }}>
+									<Button variant="contained" color="primary" style={{ color: 'white' }}>
+										View My Leaves
+									</Button>
+								</Link>
+							</div>
 						</CardContent>
 					</Card>
 
 				</Grid>
 			</Grid>
+			<br/>
 			<MDBox mt={3} mb={3}>
 				<Card>
 					<MDBox
@@ -309,6 +309,7 @@ function CreateLeave() {
 											value={selectedLeaveTypeEnum}
 											onChange={(e) => setSelectedLeaveTypeEnum(e.target.value)}
 											required
+											sx={{lineHeight: "2.5em"}}
 										>
 											{leaveTypes.map((enumItem, index) => (
 												<MenuItem key={index} value={enumItem}>
@@ -326,10 +327,12 @@ function CreateLeave() {
 											value={selectedStaff}
 											onChange={(e) => setSelectedStaff(e.target.value)}
 											required
+											sx={{lineHeight: "2.5em"}}
+
 										>
 											{staffList.map((staffItem, index) => (
 												<MenuItem key={index} value={staffItem.staffId}>
-													{staffItem.username}
+													{staffItem.firstname + " " + staffItem.lastname}
 												</MenuItem>
 											))}
 										</Select>
@@ -362,7 +365,7 @@ function CreateLeave() {
 							)}
 
 							<Grid item xs={12}>
-								<Button variant="contained" color="primary" type="submit" style={{ backgroundColor: 'blue', color: 'white' }}
+								<Button variant="contained" color="primary" type="submit" style={{ backgroundColor: 'green', color: 'white' }}
 								>
 									Create Leave
 								</Button>
