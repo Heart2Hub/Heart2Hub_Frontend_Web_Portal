@@ -208,15 +208,8 @@ const routes = [
   {
     name: "ViewAllLeaves",
     key: "ViewAllLeaves",
-    route: "/manpower/viewAllLeaves",
-    component: (
-      <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
-        forHeadsOnly={false}
-      >
-        <ViewAllLeaves />
-      </ProtectedRoute>
-    ),
+    route: "/manpower/leaveApplication",
+    component: <ViewAllLeaves />,
   },
   {
     name: "CreateLeave",
