@@ -11,7 +11,6 @@ import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
@@ -24,13 +23,15 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import axios from 'axios';
 import StaffShift from './StaffShifts';
 import { getDay } from '../utils/utils';
 import { Button, Icon } from '@mui/material';
 import AddShiftConstraint from './AddShiftConstraint';
 import { getShiftName } from '../utils/utils';
 import ViewUpdateShiftConstraint from './ViewUpdateShiftConstraint';
+
+import { staffApi } from 'api/Api';
+import { shiftConstraintsApi } from 'api/Api';
 
 const cardStyles = {
     backgroundColor: "#ffffff",
@@ -62,30 +63,21 @@ function Rostering() {
           dow: 1, // Monday is the first day of the week.
         }
       });
-      
 
     const today = moment().format('YYYY-MM-DD');
 
     const isValidWorkDate = async (date, role) => {
         try {
-            const response = await axios.get(`http://localhost:8080/shiftConstraints/checkIsValidWorkday?role=${role}&date=${date}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            }); 
+            const response = await shiftConstraintsApi.checkIsValidWorkDay(role,date);
             return response.data;
         } catch (error) {
             console.log(error);
         }
     }
 
-    const getShiftConstraints = async (role) => {
+    const getAllShiftConstraints = async (role) => {
         try {
-            const response = await axios.get(`http://localhost:8080/shiftConstraints/getAllShiftConstraints/${role}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            }); 
+            const response = await shiftConstraintsApi.getAllShiftConstraints(role);
             setScList(response.data);
         } catch (error) {
             console.log(error);
@@ -94,13 +86,9 @@ function Rostering() {
 
     const getStaffByUsername = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/staff/getStaffByUsername?username=${localStorage.getItem('staffUsername')}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await staffApi.getStaffByUsername(localStorage.getItem('staffUsername'));
             setCurrStaffDetails(response.data);
-            getStaffListByRole(response.data.roleEnum);
+            getStaffListByRole(response.data.staffRoleEnum);
         } catch (error) {
             console.log(error);
         }
@@ -108,11 +96,7 @@ function Rostering() {
 
     const getStaffListByRole = async (role) => {
         try {
-            const response = await axios.get(`http://localhost:8080/staff/getStaffByRole?role=${role}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await staffApi.getStaffListByRole(role);
             const sortedArray = response.data.sort((a,b) => {
                 if (a.username === localStorage.getItem('staffUsername')) {
                     return -1;
@@ -120,7 +104,7 @@ function Rostering() {
                     return 0;
                 }
             })
-            setStaffs(response.data);
+            setStaffs(sortedArray);
         } catch (error) {
             console.log(error);
         }
@@ -138,7 +122,7 @@ function Rostering() {
         const dates = [];
         let i = 0;
         while (startDate.isSameOrBefore(endDate)) {
-            if (await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.roleEnum)) {
+            if (await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum)) {
                 dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: true });
             } else {
                 dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: false });
@@ -162,7 +146,7 @@ function Rostering() {
         setWeekDates(dates);
     }
 
-    const getMonthDates = (dateString) => {
+    const getMonthDates = async (dateString) => {
         const currDate = moment(dateString);
 
         // Get date of Monday (start of the week)
@@ -174,7 +158,7 @@ function Rostering() {
         const dates = [];
         let i = 0;
         while (startDate.isSameOrBefore(endDate)) {
-            if (isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.roleEnum)) {
+            if (await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum)) {
                 dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: true });
             } else {
                 dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: false });
@@ -223,12 +207,11 @@ function Rostering() {
     };
 
     useEffect(() => {
-        // getAllStaffWithSameRole();
         if (!currStaffDetails) {
             getStaffByUsername();
         } else {
-            getStaffListByRole(currStaffDetails.roleEnum);
-            getShiftConstraints(currStaffDetails.roleEnum);
+            getStaffListByRole(currStaffDetails.staffRoleEnum);
+            getAllShiftConstraints(currStaffDetails.staffRoleEnum);
             getMonthDates(today);
             if (weekDates.length === 0) {
                 getWeekDates(today);
@@ -260,11 +243,11 @@ function Rostering() {
                 coloredShadow="info"
               >
                 <MDTypography variant="h6" color="white">
-                    Staff Roster (Role: {currStaffDetails?.roleEnum})
+                    Staff Roster (Role: {currStaffDetails?.staffRoleEnum})
                 </MDTypography>
               </MDBox>
               <MDBox pt={3}> 
-                {scList.length > 0 ? <Typography variant="h6" paddingLeft={2}>Shift constraints for {currStaffDetails?.roleEnum}:</Typography> : <></>}
+                {scList.length > 0 ? <Typography variant="h6" paddingLeft={2}>Shift constraints for {currStaffDetails?.staffRoleEnum}:</Typography> : <></>}
               <Grid container>
                 {scList.map(sc => {return (
                     <Card key={sc.shiftConstraintsId} sx={cardStyles} onClick={() => handleScOpen(sc)}>
@@ -312,7 +295,7 @@ function Rostering() {
                             <TableRow>
                                 <TableCell
                                     key={1000}
-                                    style={{ minWidth: 160 }}
+                                    style={{ minWidth: 215 }}
                                 >
                             Staff
                                 </TableCell>
@@ -364,7 +347,7 @@ function Rostering() {
       <AddShiftConstraint 
         open={scOpen}
         handleClose={handleScClose}
-        role={currStaffDetails ? currStaffDetails.roleEnum : "temp"}
+        role={currStaffDetails ? currStaffDetails.staffRoleEnum : "temp"}
         />
     </DashboardLayout>
     )

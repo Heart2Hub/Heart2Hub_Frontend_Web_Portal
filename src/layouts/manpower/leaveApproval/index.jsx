@@ -38,7 +38,7 @@ function LeaveApproval() {
   const staff = useSelector(selectStaff);
   console.log(staff);
 
-  const staffId = 3;
+  const staffId = staff.staffId;
   const [leaves, setLeaves] = useState([]);
 
   const [data, setData] = useState({});
@@ -52,7 +52,7 @@ function LeaveApproval() {
 
   const getResponse = async () => {
     try {
-      const response = await leaveApi.getAllManagedLeaves(3);
+      const response = await leaveApi.getAllManagedLeaves(staffId);
       console.log(response);
       setLeaves(response.data);
       setIsLoading(false);
@@ -123,11 +123,10 @@ function LeaveApproval() {
       console.log(response);
 
       // Update the list of leaves by fetching the updated data
-      const updatedLeaves = await leaveApi.getAllManagedLeaves(3);
+      const updatedLeaves = await leaveApi.getAllManagedLeaves(staffId);
       setLeaves(updatedLeaves.data);
 
       setIsLoading(false);
-      setIsModalOpen(false); // Close the modal
     } catch (error) {
       console.error(error);
       setIsLoading(false);
@@ -141,11 +140,10 @@ function LeaveApproval() {
       console.log(response);
 
       // Update the list of leaves by fetching the updated data
-      const updatedLeaves = await leaveApi.getAllManagedLeaves(3);
+      const updatedLeaves = await leaveApi.getAllManagedLeaves(staffId);
       setLeaves(updatedLeaves.data);
 
       setIsLoading(false);
-      setIsModalOpen(false); // Close the modal
     } catch (error) {
       console.error(error);
       setIsLoading(false);
