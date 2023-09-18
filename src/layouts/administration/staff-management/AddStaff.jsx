@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 
 import {
@@ -14,31 +13,15 @@ import {
   DialogContentText,
   DialogTitle,
   Grid,
-  TextField,
 } from "@mui/material";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import InputLabel from "@mui/material/InputLabel";
 
-import { Formik, Form, useFormikContext, Field } from "formik";
+import { Formik, Form, useFormikContext } from "formik";
 import * as yup from "yup";
 import { staffApi, departmentApi } from "api/Api";
 import { subDepartmentApi } from "api/Api";
 import TextfieldWrapper from "components/Textfield";
 import SelectWrapper from "components/Select";
-import CheckBox from "@mui/material/Checkbox";
 import CheckboxWrapper from "components/Checkbox";
-
-const INITIAL_FORM_STATE = {
-  username: "",
-  password: "",
-  firstname: "",
-  lastname: "",
-  mobileNumber: 0,
-  staffRoleEnum: "",
-  departmentName: "",
-  subDepartmentName: "",
-};
 
 const validationSchema = yup.object({
   username: yup
@@ -328,6 +311,7 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                     name="subDepartmentName"
                     hiddenlabel
                     options={subDepartmentsByDepartment}
+                    disabled={subDepartmentsByDepartment.length === 0}
                   />
                 </Grid>
                 <Grid item xs={12}>
