@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import Backdrop from "@mui/material/Backdrop";
-import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 import Fade from "@mui/material/Fade";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import MDButton from "components/MDButton";
 import MDBox from "components/MDBox";
@@ -11,12 +9,15 @@ import useInput from "hooks/use-input";
 import { TextField } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
+import {
+  openLoadingOverlay,
+  closeLoadingOverlay,
+} from "../../../store/slices/loadingOverlaySlice";
 import { authApi } from "api/Api";
 import { delay } from "../../../utility/Utility";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../../store/slices/staffSlice";
 import MDTypography from "components/MDTypography";
-import { South } from "@mui/icons-material";
 
 const style = {
   position: "absolute",
@@ -35,9 +36,12 @@ function ResetPasswordModal(props) {
   const currUsername = props.username;
 
   const [openModal, setOpenModal] = useState(false);
+  const [buttonDisabled, setButtonDisabled] = useState(false);
+
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => {
     setOpenModal(false);
+    setButtonDisabled(false);
     resetOldPasswordInput();
     resetOldPasswordCheckInput();
     resetNewPasswordInput();
@@ -83,6 +87,7 @@ function ResetPasswordModal(props) {
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
+    setButtonDisabled(true);
     if (
       enteredOldPasswordIsValid &&
       enteredOldPasswordCheckIsValid &&
@@ -109,12 +114,16 @@ function ResetPasswordModal(props) {
               "Please re-login with your new credentials after the refresh",
           })
         );
-
+        handleCloseModal();
+        reduxDispatch(openLoadingOverlay());
         await delay(3000);
+
         reduxDispatch(logout());
+        reduxDispatch(closeLoadingOverlay());
         navigate("/");
       } catch (exception) {
         //password fail to pass backend
+        setButtonDisabled(false);
         reduxDispatch(
           displayMessage({
             color: "warning",
@@ -165,6 +174,7 @@ function ResetPasswordModal(props) {
           })
         );
       }
+      setButtonDisabled(false);
     }
   };
 
@@ -263,6 +273,7 @@ function ResetPasswordModal(props) {
                 color="primary"
                 type="submit"
                 fullWidth
+                disabled={buttonDisabled}
                 sx={{ marginTop: "10px" }}
               >
                 <MDTypography variant="h4" fontWeight="medium" color="white">
