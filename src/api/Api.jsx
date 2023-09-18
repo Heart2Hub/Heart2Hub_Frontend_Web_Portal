@@ -58,3 +58,19 @@ export const facilityApi = {
     );
   }
 };
+
+export const patientApi = {
+  getAllPatientsWithElectronicHealthRecordSummaryByName(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/patient/getAllPatientsWithElectronicHealthRecordSummaryByName?name=${name}`
+    );
+  },
+};
+
+export const ehrApi = {
+  getElectronicHealthRecordByIdAndDateOfBirth(electronicHealthRecordId,dateOfBirth) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordByIdAndDateOfBirth?electronicHealthRecordId=${electronicHealthRecordId}&dateOfBirth=${dateOfBirth}`
+    );
+  },
+};
