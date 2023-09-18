@@ -70,7 +70,7 @@ function CreateLeave() {
 
 
 	const getLeaveBalance = async () => {
-		const response = await axios.get('http://localhost:8080/leave/getLeaveBalance/1', {
+		const response = await axios.get('http://localhost:8080/leave/getLeaveBalance?staffId=1', {
 			headers: {
 				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
 			}
