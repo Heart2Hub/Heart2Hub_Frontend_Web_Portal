@@ -59,7 +59,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 		setSixMonthsLater(sixMonthsDate);
 	}, [open], [selectedRow], startDate, endDate);
 
-	const handleUpdate = () => {
+	const handleUpdate = async() => {
 
 		setErrorMessages([]);
 		setSuccessMessage("");
@@ -84,13 +84,16 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 				endDate,
 			};
 
-			const response = axios.put(`http://localhost:8080/leave/updateLeave/${selectedRow.leaveId}/1`, updatedLeaveData, {
+			const response = await axios.put(`http://localhost:8080/leave/updateLeave/${selectedRow.leaveId}/1`, updatedLeaveData, {
 				headers: {
 					'Content-Type': 'application/json',
 					'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
 
 				},
 			});
+
+			console.log('Leave created:', response.data);
+			
 			setIsSuccessMessageVisible(true);
 
 			setSuccessMessage("Leave updated successfully.");
@@ -99,7 +102,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 			}, 3000);
 
 
-			onClose();
+			// onClose();
 			onUpdate(updatedLeaveData);
 
 
@@ -116,7 +119,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 					setErrorMessages([errorData.message || "Error Updating Leave"]);
 				}
 			} else {
-				setErrorMessages(["Something wrong"]);
+				setErrorMessages(["Please Enter a Start and End Date"]);
 			}
 		}
 
@@ -174,11 +177,11 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 					</Alert>
 				)}
 
-				{/* {successMessage && (
+				{successMessage && (
 					<Alert severity="success">
 						{successMessage}
 					</Alert>
-				)} */}
+				)}
 
 			</DialogContent>
 			<div style={{ padding: '16px' }}>
