@@ -8,10 +8,11 @@ import Typography from '@mui/material/Typography';
 import moment from 'moment';
 import axios from 'axios';
 import { Button } from '@mui/material';
-import { getShiftName, getTime, getColor } from '../utils/utils';
+import { getShiftName, getTime, getColor, getColorLeave } from '../utils/utils';
 import ViewShift from './ViewUpdateShift';
 import AddShift from './AllocateShift';
-import { shiftApi } from 'api/Api';
+import { shiftApi, leaveApi } from 'api/Api';
+import data from 'layouts/tables/data/authorsTableData';
 
 const buttonStyles = {
     backgroundColor: "white",
@@ -28,6 +29,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
     const [listOfDates, setListOfDates] = useState(dateList);
     const [addShiftDate, setAddShiftDate] = useState(weekStartDate);
     const [shifts, setShifts] = useState([]);
+    const [leaves, setLeaves] = useState([]);
     const [currShift, setCurrShift] = useState();
     const [addShiftOpen, setAddShiftOpen] = useState(false);
     const [viewShiftOpen, setViewShiftOpen] = useState(false);
@@ -37,6 +39,28 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
         try {
             const response = await shiftApi.viewWeeklyRoster(username,weekStartDate);
             setShifts(response.data);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const getAllStaffLeaves = async () => {
+        try {
+            const response = await leaveApi.getAllStaffLeaves(staff.staffId);
+            for (let i=0; i<response.data.length; i++) {
+                let leave = response.data[i];
+                if (leave.approvalStatusEnum !== 'REJECTED') {
+                    let start = leave.startDate[0] + '-' + leave.startDate[1] + '-' + leave.startDate[2];
+                    let end = leave.endDate[0] + '-' + leave.endDate[1] + '-' + leave.endDate[2];
+                    for (let j=0; j<dateList.length; j++) {
+                        if (moment(dateList[j].date).isBetween(moment(start), moment(end), null, '[]')) {
+                            dateList[j]['leave'] = leave;
+                        }
+                    }
+                }
+            }
+            setListOfDates(dateList);
+            setLeaves(response.data);
         } catch (error) {
             console.log(error);
         }
@@ -64,6 +88,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
     useEffect(() => {
         setListOfDates(dateList);
         getAllShiftsForStaff();
+        getAllStaffLeaves();
     }, [shifts?.length, dateList, viewShiftOpen, addShiftOpen, weekStartDate])
 
     return (
@@ -72,7 +97,32 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                 {username === localStorage.getItem('staffUsername') ? <b>{truncate(staff.firstname + " " + staff.lastname) + " (You)"}</b> : truncate(staff.firstname + " " + staff.lastname)}
             </TableCell>
             {listOfDates?.map(date => {   
-                if (i < shifts?.length && moment(shifts[i]?.startTime).day() === moment(date.date).day()) {
+                if (date.leave) {
+                    return (
+                        <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
+                            <Card sx={{
+                                backgroundColor: getColorLeave(date.leave.approvalStatusEnum),
+                                width: 130,
+                                alignContent: "center",
+                                marginLeft: 1,
+                                padding: 0,
+                                borderRadius: 3
+                            }}> 
+                                <CardActionArea>    
+                                    <CardContent sx={{ padding: "0.5rem 0.5rem" }}>
+                                        <Typography variant="body2" color="#ffffff">
+                                            <b>{date.leave.leaveTypeEnum + " leave"}</b>
+                                        </Typography><br/>
+                                        <Typography variant="body3" color="#ffffff">
+                                            {date.leave.approvalStatusEnum}
+                                        </Typography>
+                                    </CardContent>
+                                </CardActionArea>
+                            </Card>
+                        </TableCell>
+                    )
+                }
+                else if (i < shifts?.length && moment(shifts[i]?.startTime).day() === moment(date.date).day()) {
                     const shift = shifts[i];
                     i++;
                     return (

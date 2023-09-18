@@ -101,3 +101,11 @@ export const getColor = (startTime, endTime) => {
         return "#ffb5b3";
     }
 }
+
+export const getColorLeave = (status) => {
+    if (status === "APPROVED") {
+        return "#5e5e5e";
+    } else if (status === "PENDING") {
+        return "#c2c2c2";
+    }
+}

@@ -130,6 +130,11 @@ export const leaveApi = {
       `${REST_ENDPOINT}/leave/getAllManagedLeaves?staffId=${staffId}`
     );
   },
+  getAllStaffLeaves(staffId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/leave/getAllStaffLeaves/${staffId}`
+    );
+  },
   getLeaveBalance(staffId) {
     console.log(staffId);
     return axiosFetch.get(

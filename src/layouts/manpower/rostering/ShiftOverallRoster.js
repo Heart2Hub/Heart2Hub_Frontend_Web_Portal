@@ -153,7 +153,7 @@ function Rostering() {
         const startDate = currDate.clone().startOf('week')
 
         // Get date of exactly 1 month from Monday
-        const endDate = currDate.add(1, 'months');
+        const endDate = currDate.add(2, 'months');
 
         const dates = [];
         let i = 0;
