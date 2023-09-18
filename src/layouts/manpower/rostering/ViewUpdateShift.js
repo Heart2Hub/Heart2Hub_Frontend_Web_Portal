@@ -126,7 +126,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
         setReqBody(shift);
         setSelectedFacility(facilityId);
         setSelectedShift(getShiftId(moment(shift?.startTime, 'YYYY-MM-DD HH:mm:ss').format('HH:mm'), moment(shift?.endTime, 'YYYY-MM-DD HH:mm:ss').format('HH:mm')));
-        getShiftPreference();
+        if (username) getShiftPreference();
         getFacilities();
     }, [shift, facilityId])
 
@@ -148,7 +148,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                 <Grid container spacing={3}>
                     {/* if is rosterer */}
                     {username ? 
-                    <Grid md={12}>
+                    <Grid>
                         <Typography variant="h5">Update Shift</Typography>
                         <Typography variant="h6">Staff: {staff.firstname + " " + staff.lastname}</Typography>
                         <Typography variant="h6">Date: {moment(shift?.startTime, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD')}</Typography><br/>
@@ -207,7 +207,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                             Delete
                         </Button>
                     </Grid> :
-                    <Grid md={12}>
+                    <Grid>
                         <Typography variant="body3">{getShiftNameWithTime(shift?.startTime, shift?.endTime)}</Typography>
                         <Typography variant="body2"><b>Facility:</b> {shift?.facilityBooking.facility.name}</Typography>
                         <Typography variant="body2"><b>Comments:</b> {shift?.comments ? shift?.comments : "-"}</Typography><br/>

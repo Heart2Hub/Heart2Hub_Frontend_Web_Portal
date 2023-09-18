@@ -107,7 +107,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
             <Box sx={style}>
                 <Grid container spacing={3}>
                     {/* if is rosterer */}
-                    <Grid md={12}>
+                    <Grid>
                         <Typography variant="h5">Update Shift Constraint</Typography><br/>
                         <InputLabel id="shift-select-label">Shift:</InputLabel>
                         <Select
