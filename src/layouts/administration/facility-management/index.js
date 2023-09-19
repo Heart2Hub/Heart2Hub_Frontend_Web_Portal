@@ -283,6 +283,7 @@ function FacilityManagement() {
               name="subDepartmentId"
               value={formData.subDepartmentId}
               onChange={handleChange}
+              sx={{lineHeight: "2.5em"}}
             >
               <MenuItem value={1}>Cardiology</MenuItem>
               {/* Add more status options as needed */}
@@ -294,6 +295,7 @@ function FacilityManagement() {
               name="facilityStatusEnum"
               value={formData.facilityStatusEnum}
               onChange={handleChange}
+              sx={{lineHeight: "2.5em"}}
             >
               <MenuItem value="AVAILABLE">Available</MenuItem>
               <MenuItem value="UNAVAILABLE">Unavailable</MenuItem>
@@ -306,6 +308,7 @@ function FacilityManagement() {
               name="facilityTypeEnum"
               value={formData.facilityTypeEnum}
               onChange={handleChange}
+              sx={{lineHeight: "2.5em"}}
             >
               <MenuItem value="WARD_BED">Ward Bed</MenuItem>
               <MenuItem value="CONSULTATION_ROOM">Consultation Room</MenuItem>
@@ -359,10 +362,12 @@ function FacilityManagement() {
             onChange={handleUpdateChange}
             margin="dense"
           />
-          <FormControl fullWidth margin="dense">
+          
+          <FormControl>
             <InputLabel>Sub Department</InputLabel>
             <Select
               name="subDepartmentId"
+              sx={{lineHeight: "2.5em"}}
               value={updateFormData.subDepartmentId}
               onChange={handleUpdateChange}
             >
@@ -376,6 +381,7 @@ function FacilityManagement() {
               name="facilityStatusEnum"
               value={updateFormData.facilityStatusEnum}
               onChange={handleUpdateChange}
+              sx={{lineHeight: "2.5em"}}
             >
               <MenuItem value="AVAILABLE">Available</MenuItem>
               <MenuItem value="UNAVAILABLE">Unavailable</MenuItem>
@@ -388,6 +394,7 @@ function FacilityManagement() {
               name="facilityTypeEnum"
               value={updateFormData.facilityTypeEnum}
               onChange={handleUpdateChange}
+              sx={{lineHeight: "2.5em"}}
             >
               <MenuItem value="WARD_BED">Ward Bed</MenuItem>
               <MenuItem value="CONSULTATION_ROOM">Consultation Room</MenuItem>

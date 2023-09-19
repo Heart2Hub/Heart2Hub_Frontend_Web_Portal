@@ -10,7 +10,8 @@ import Typography from '@mui/material/Typography';
 import axios from 'axios';
 import moment from 'moment';
 import { MenuItem } from '@mui/material';
-import { getShiftName, getShiftId, getShiftTime, options, facilities } from '../utils/utils';
+import { getShiftName, getShiftId, getShiftTime, options } from '../utils/utils';
+import { shiftApi, shiftPreferenceApi, facilityApi } from 'api/Api';
 
 const style = {
     position: "absolute",
@@ -36,6 +37,7 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
     const [selectedFacility, setSelectedFacility] = useState(1);
     const [errorMsg, setErrorMsg] = useState();
     const [shiftPref, setShiftPref] = useState(0);
+    const [facilities, setFacilities] = useState([]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -58,11 +60,7 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
         newReqBody.startTime = moment(start, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         newReqBody.endTime = moment(end, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         try {
-            const response = await axios.post(`http://localhost:8080/shift/createShift/${username}/${selectedFacility}`, newReqBody, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await shiftApi.createShift(username, selectedFacility, newReqBody);
             setUpdateAddShift(updateAddShift+1);
             handleClose();
             setErrorMsg(null);
@@ -74,16 +72,21 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
 
     const getShiftPreference = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/shiftPreference/getShiftPreference/${username}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await shiftPreferenceApi.getShiftPreference(username);
             if (response.data) {
                 setShiftPref(getShiftId(moment(response.data.startTime, 'HH:mm:ss').format('HH:mm'), moment(response.data.endTime, 'HH:mm:ss').format('HH:mm')))
             } else {
                 setShiftPref(0);
             }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const getFacilities = async () => {
+        try {
+            const response = await facilityApi.getAllFacilitiesByName("");
+            setFacilities(response.data)
         } catch (error) {
             console.error(error);
         }
@@ -111,6 +114,7 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
 
     useEffect(() => {
         getShiftPreference();
+        getFacilities();
     }, [])
 
     return (
@@ -141,6 +145,7 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
                                 id="shift-select"
                                 value={selectedShift}
                                 onChange={handleDropdownChange}
+                                sx={{ lineHeight: "2.5em"}}
                             >
                                 {options.map((option) => (
                                     <MenuItem key={option.id} value={option.id}>
@@ -149,7 +154,7 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
                                 ))}
                             </Select>
                             <Typography variant="body2">
-                                <i>{staff.firstname + " " + staff.lastname}'s shift preference: {shiftPref === 0 ? "No preference" 
+                                <i>Shift preference: {shiftPref === 0 ? "No preference" 
                                     : getShiftName(moment(getShiftTime(shiftPref)[0], 'HH:mm:ss').format('HH:mm'), moment(getShiftTime(shiftPref)[1], 'HH:mm:ss').format('HH:mm'))}
                                 </i>
                             </Typography><br/>
@@ -167,9 +172,10 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
                                 id="facility-select"
                                 value={selectedFacility}
                                 onChange={handleFacilityDropdownChange}
+                                sx={{ lineHeight: "2.5em"}}
                             >
-                                {facilities.map((option) => (
-                                    <MenuItem key={option.id} value={option.id}>
+                                {facilities?.map((option) => (
+                                    <MenuItem key={option.facilityId} value={option.facilityId}>
                                         {option.name}
                                     </MenuItem>
                                 ))}

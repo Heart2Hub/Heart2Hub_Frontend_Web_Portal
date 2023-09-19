@@ -29,7 +29,8 @@ import {
 } from "context";
 
 // Images
-import brandWhite from "assets/images/logo-ct.png";
+import heartLogoWhite from "assets/projectImages/heartLogoWhite.png";
+import heartSmall from "assets/projectImages/heartSmall.png";
 import Outpatient from "layouts/outpatient";
 import Home from "layouts/home";
 import ErrorPage from "layouts/error";
@@ -121,7 +122,7 @@ export default function App() {
       {!(location.pathname === "/") && (
         <Sidenav
           color={sidenavColor}
-          brand={brandWhite}
+          brand={heartLogoWhite}
           brandName="Heart2Hub"
           routes={routes}
           onMouseEnter={handleOnMouseEnter}

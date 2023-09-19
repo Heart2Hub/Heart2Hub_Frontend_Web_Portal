@@ -12,9 +12,14 @@ import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import ViewAllLeaves from './ViewAllLeaves';
+import { useSelector } from "react-redux";
+import { selectStaff } from "store/slices/staffSlice";
 
 
 function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
+
+	const staff = useSelector(selectStaff);
+
 	const [comments, setComments] = useState('');
 	const [startDate, setStartDate] = useState('');
 	const [endDate, setEndDate] = useState('');
@@ -84,7 +89,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 				endDate,
 			};
 
-			const response = await axios.put(`http://localhost:8080/leave/updateLeave/${selectedRow.leaveId}/1`, updatedLeaveData, {
+			const response = await axios.put(`http://localhost:8080/leave/updateLeave/${selectedRow.leaveId}/${staff.staffId}`, updatedLeaveData, {
 				headers: {
 					'Content-Type': 'application/json',
 					'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
