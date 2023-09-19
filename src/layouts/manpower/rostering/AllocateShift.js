@@ -71,7 +71,7 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
                   color: "success",
                   icon: "notification",
                   title: "Shift successfully created!",
-                  content: "Shift has been created for " + username + "!",
+                  content: "Shift has been created for " + staff.firstname + " " + staff.lastname + "!",
                 })
               );
         } catch (error) {

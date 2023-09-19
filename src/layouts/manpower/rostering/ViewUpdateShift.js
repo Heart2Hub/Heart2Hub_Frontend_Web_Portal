@@ -71,7 +71,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                   color: "success",
                   icon: "notification",
                   title: "Shift successfully updated!",
-                  content: "Shift has been updated for staff " + username + "!",
+                  content: "Shift has been updated for staff " + staff.firstname + " " + staff.lastname + "!",
                 })
               );
         } catch (error) {
