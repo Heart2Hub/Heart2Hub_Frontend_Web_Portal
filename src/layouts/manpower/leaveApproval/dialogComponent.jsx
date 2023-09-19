@@ -3,6 +3,10 @@ import { leaveApi } from 'api/Api';
 import MDButton from 'components/MDButton';
 import MDTypography from 'components/MDTypography';
 import React, { useEffect, useState } from 'react'
+import { displayMessage } from "store/slices/snackbarSlice";
+import { useDispatch } from "react-redux";
+
+
 
 function DialogComponent({ rowData, onApproval, onRejection }) {
   const [open, setOpen] = React.useState(false);
@@ -10,6 +14,8 @@ function DialogComponent({ rowData, onApproval, onRejection }) {
   const [leaveBalance, setleaveBalance] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [action, setAction] = useState(null);
+  const reduxDispatch = useDispatch();
+
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -32,8 +38,15 @@ function DialogComponent({ rowData, onApproval, onRejection }) {
       const response = leaveApi.approveLeaveDate(leaveId);
       console.log(response);
       setIsLoading(false);
-      console.log("Annual leave", leaveBalance.annualLeave); // Add this line
       setAction("approved"); // Set the action to 'approved'
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Leave Approval",
+          content: "Leave has been APPROVED!",
+        })
+      );
       await onApproval(rowData);
     } catch (error) {
       console.error(error);
@@ -47,8 +60,15 @@ function DialogComponent({ rowData, onApproval, onRejection }) {
       const response = leaveApi.rejectLeaveDate(leaveId);
       console.log(response);
       setIsLoading(false);
-      console.log("Annual leave", leaveBalance.annualLeave); // Add this line
       setAction("rejected"); // Set the action to 'rejected'
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Leave Approval",
+          content: "Leave has been REJECTED!",
+        })
+      );
       await onRejection(rowData);
     } catch (error) {
       console.error(error);
