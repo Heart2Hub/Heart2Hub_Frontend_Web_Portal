@@ -159,10 +159,22 @@ function EHR() {
     if (isDetailsCorrect & isPictureCorrect) {
       try {
         const { electronicHealthRecordId, dateOfBirth } = formData;
+        if (dateOfBirth == null) {
+          reduxDispatch(
+            displayMessage({
+              color: "error",
+              icon: "notification",
+              title: "Error Encountered",
+              content: "Date must be present",
+            })
+          );
+        return
+        }
+        const dateOfBirthFormatted = dateOfBirth + "T00:00:00";
         ehrApi
           .getElectronicHealthRecordByIdAndDateOfBirth(
             electronicHealthRecordId,
-            dateOfBirth
+            dateOfBirthFormatted
           )
           .then((response) => {
             console.log(response);
@@ -352,7 +364,7 @@ function EHR() {
           />
           <TextField
             fullWidth
-            label="Date of Birth"
+            type="date"
             name="dateOfBirth"
             value={formData.dateOfBirth}
             onChange={handleChange}

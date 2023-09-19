@@ -131,6 +131,67 @@ function FacilityManagement() {
   const handleCreateFacility = () => {
     try {
       const { subDepartmentId, ...requestBody } = formData;
+      if (subDepartmentId == null) {
+        setFormData({
+          subDepartmentId: null,
+          name: "",
+          location: "",
+          description: "",
+          capacity: "",
+          facilityStatusEnum: "",
+          facilityTypeEnum: "",
+        });
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Sub department cannot be null",
+          })
+        );
+      return
+      }
+      console.log(requestBody.facilityStatusEnum)
+      if (requestBody.facilityStatusEnum == "") {
+        setFormData({
+          subDepartmentId: null,
+          name: "",
+          location: "",
+          description: "",
+          capacity: "",
+          facilityStatusEnum: "",
+          facilityTypeEnum: "",
+        });
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Facility status cannot be null",
+          })
+        );
+      return
+      }
+      if (requestBody.facilityTypeEnum == "") {
+        setFormData({
+          subDepartmentId: null,
+          name: "",
+          location: "",
+          description: "",
+          capacity: "",
+          facilityStatusEnum: "",
+          facilityTypeEnum: "",
+        });
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Facility type cannot be null",
+          })
+        );
+      return
+      }
       facilityApi
         .createFacility(subDepartmentId, requestBody)
         .then(() => {
@@ -185,7 +246,6 @@ function FacilityManagement() {
             );
           }
           console.log(err.response.data.detail)
-          handleCloseModal();
         });
     } catch (ex) {
       console.log(ex);
@@ -271,7 +331,6 @@ function FacilityManagement() {
             })
           );
           console.log(err)
-          handleCloseUpdateModal();
         });
     } catch (ex) {
       console.log(ex);
