@@ -47,23 +47,10 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
     const getAllStaffLeaves = async (s) => {
         try {
             const response = await leaveApi.getAllStaffLeaves(s.staffId);
-            // for (let i=0; i<response.data.length; i++) {
-            //     let leave = response.data[i];
-            //     if (leave.approvalStatusEnum === 'APPROVED') {
-            //         let start = leave.startDate[0] + '-' + leave.startDate[1] + '-' + leave.startDate[2];
-            //         let end = leave.endDate[0] + '-' + leave.endDate[1] + '-' + leave.endDate[2];
-            //         for (let j=0; j<dateList.length; j++) {
-            //             if (moment(dateList[j].date).isBetween(moment(start), moment(end), null, '[]')) {
-            //                 dateList[j]['leave'] = leave;
-            //             }
-            //         }
-            //     }
-            // }
-            // setListOfDates(dateList);
-            const filteredLeaves = response.data.filter(leave => leave.approvalStatusEnum === 'APPROVED');
+            const filteredLeaves = response.data.filter(leave => leave.approvalStatusEnum === "APPROVED");
             const object = {};
             for (let i=0; i<filteredLeaves.length; i++) {
-                let leave = response.data[i];
+                let leave = filteredLeaves[i];
                 let start = moment(leave.startDate[0] + '-' + leave.startDate[1] + '-' + leave.startDate[2]);
                 let end = moment(leave.endDate[0] + '-' + leave.endDate[1] + '-' + leave.endDate[2]);
                 let curr = start.clone()
@@ -72,6 +59,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                     curr.add(1,'days');
                 }
             }
+            console.log(object)
             setLeaves(object);
         } catch (error) {
             console.log(error);
@@ -139,7 +127,6 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                     );
                 } 
                 else if (leaves && leaves[date.date] != null) {
-                    console.log(date)
                     return (
                         <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
                             <Card sx={{
