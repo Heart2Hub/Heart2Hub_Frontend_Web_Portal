@@ -164,13 +164,13 @@ function EHR() {
             dateOfBirth
           )
           .then((response) => {
-            console.log(response)
+            console.log(response);
           });
       } catch (ex) {
         console.log(ex);
       }
     } else {
-      throw new Error("Check details and check picture!")
+      throw new Error("Check details and check picture!");
     }
   };
 

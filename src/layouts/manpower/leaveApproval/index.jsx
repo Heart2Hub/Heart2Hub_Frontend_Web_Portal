@@ -8,22 +8,17 @@ import MDTypography from "components/MDTypography";
 
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
-import axios from 'axios';
-import moment from 'moment';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-
-// Data
-import authorsTableData from "layouts/tables/data/authorsTableData";
-import projectsTableData from "layouts/tables/data/projectsTableData";
-import staffTableData from "layouts/administration/staff-management/data/staffTableData";
+import axios from "axios";
+import moment from "moment";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TablePagination from "@mui/material/TablePagination";
+import TableRow from "@mui/material/TableRow";
 
 import { useSelector } from "react-redux";
 import { selectStaff } from "../../../store/slices/staffSlice";
@@ -34,7 +29,6 @@ import DialogComponent from "./dialogComponent";
 import DataTable from "examples/Tables/DataTable";
 
 function LeaveApproval() {
-
   const staff = useSelector(selectStaff);
   console.log(staff);
 
@@ -47,8 +41,7 @@ function LeaveApproval() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRowData, setSelectedRowData] = useState({});
 
-  const [approvalStatus, setApprovalStatus] = useState(''); // Initialize with an initial status
-
+  const [approvalStatus, setApprovalStatus] = useState(""); // Initialize with an initial status
 
   const getResponse = async () => {
     try {
@@ -75,7 +68,10 @@ function LeaveApproval() {
     { Header: "Leave Type", accessor: "leaveType", width: "20%" },
     { Header: "Approval Status", accessor: "approvalStatus", width: "20%" },
     {
-      Header: "View", accessor: "view", width: "20%", Cell: ({ row }) => {
+      Header: "View",
+      accessor: "view",
+      width: "20%",
+      Cell: ({ row }) => {
         // setSelectedRowData(row);
 
         return (
@@ -86,35 +82,33 @@ function LeaveApproval() {
               onRejection={handleRejection}
             />
             {/* </MDButton> */}
-
           </MDBox>
-
         );
       },
-    }
-
-  ]
+    },
+  ];
   const handleViewClick = (row) => {
-    console.log('Selected Original Row Data:', row)
+    console.log("Selected Original Row Data:", row);
     setSelectedRowData(row);
     // setIsModalOpen(true);
   };
 
   useEffect(() => {
-    console.log('Selected Row Data:', selectedRowData);
+    console.log("Selected Row Data:", selectedRowData);
   }, [selectedRowData]);
 
   // const rows = []
   const rows = leaves?.map((leave) => ({
     leaveId: leave.leaveId,
-    name: leave.staff.firstname + ' ' + leave.staff.lastname,
+    name: leave.staff.firstname + " " + leave.staff.lastname,
     staffId: leave.staff.staffId,
-    startDate: moment(leave.startDate, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY'),
-    endDate: moment(leave.endDate, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY'),
+    startDate: moment(leave.startDate, "YYYY-MM-DD HH:mm:ss").format(
+      "DD/MM/YYYY"
+    ),
+    endDate: moment(leave.endDate, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY"),
     leaveType: leave.leaveTypeEnum,
     approvalStatus: leave.approvalStatusEnum,
   }));
-
 
   const handleApproval = async (row) => {
     try {
@@ -160,9 +154,7 @@ function LeaveApproval() {
     }
   };
 
-
   return (
-
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
