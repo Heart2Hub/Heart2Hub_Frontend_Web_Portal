@@ -30,6 +30,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import axios from 'axios';
+import moment from 'moment';
 
 function ViewAllLeaves() {
 
@@ -76,7 +77,7 @@ function ViewAllLeaves() {
 			.put(`http://localhost:8080/leave/updateLeave/${selectedRow.leaveId}/${staff.staffId}`, updatedLeaveData, {
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+					'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 
 				},
 			})
@@ -96,7 +97,7 @@ function ViewAllLeaves() {
 	const getLeaveBalance = async () => {
 		const response = await axios.get(`http://localhost:8080/leave/getLeaveBalance?staffId=${staff.staffId}`, {
 			headers: {
-				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+				'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 			}
 		});
 
@@ -106,7 +107,7 @@ function ViewAllLeaves() {
 	const getLeaveList = async () => {
 		const response = await axios.get(`http://localhost:8080/leave/getAllStaffLeaves/${staff.staffId}`, {
 			headers: {
-				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+				'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 			}
 		});
 
@@ -115,12 +116,8 @@ function ViewAllLeaves() {
 
 	function formatDateToDdMmYyyy(inputDate) {
 		try {
-			inputDate = inputDate.toString();
-
-			const year = inputDate.slice(0, 4);
-			const month = inputDate.slice(5, 7);
-			const day = inputDate.slice(8, 10);
-			return `${day}/${month}/${year}`;
+			const newDate = new Date(inputDate[0], inputDate[1]-1, inputDate[2])
+			return moment(newDate).format('DD/MM/YYYY')
 
 		} catch (error) {
 			console.error(`Error formatting date: ${error}`);
@@ -221,7 +218,7 @@ function ViewAllLeaves() {
 
 		axios.delete(`http://localhost:8080/leave/deleteLeave/${id}`, {
 			headers: {
-				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+				'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 			}
 		})
 			.then(() => {

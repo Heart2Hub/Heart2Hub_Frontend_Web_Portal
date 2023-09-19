@@ -50,7 +50,14 @@ export const getShiftName = (startTime, endTime) => {
     return "24-hour Shift";
 }
 
-export const getShiftNameWithTime = (startTime, endTime) => {
+export const getShiftNameWithTime = (startTime, endTime, shift) => {
+    if (shift) {
+        let str = shift.leaveTypeEnum + " leave";
+        if (shift.approvalStatusEnum === "PENDING") {
+            str += " (PENDING)";
+        }
+        return str;
+    }
     let start = moment(startTime, 'YYYY-MM-DD, HH:mm:ss').format('HH:mm');
     let end = moment(endTime, 'YYYY-MM-DD, HH:mm:ss').format('HH:mm');
     if (start == "00:00" && end == "08:00") {
@@ -90,7 +97,10 @@ export const getTime = (dateTime) => {
     return moment(dateTime).format('HH:mm');
 }
 
-export const getColor = (startTime, endTime) => {
+export const getColor = (startTime, endTime, data) => {
+    if (data && data.leaveTypeEnum) {
+        return getColorLeave(data.approvalStatusEnum)
+    }
     if (getTime(startTime) == "00:00" && getTime(endTime) == "08:00") {
         return "#ffdc7a";
     } else if (getTime(startTime) == "08:00" && getTime(endTime) == "16:00") {

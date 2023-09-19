@@ -208,8 +208,8 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                         </Button>
                     </Grid> :
                     <Grid>
-                        <Typography variant="body3">{getShiftNameWithTime(shift?.startTime, shift?.endTime)}</Typography>
-                        <Typography variant="body2"><b>Facility:</b> {shift?.facilityBooking.facility.name}</Typography>
+                        <Typography variant="body3">{shift && shift.leaveTypeEnum ? getShiftNameWithTime(null, null, shift) : getShiftNameWithTime(shift?.startTime, shift?.endTime)}</Typography>
+                        <Typography variant="body2">{shift && shift.facilityBooking ? <><b>Facility:</b> {shift?.facilityBooking.facility.name} </>:<></>}</Typography>
                         <Typography variant="body2"><b>Comments:</b> {shift?.comments ? shift?.comments : "-"}</Typography><br/>
                         <Button 
                             variant="contained" 

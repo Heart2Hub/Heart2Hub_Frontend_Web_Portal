@@ -166,6 +166,11 @@ export const shiftApi = {
       `${REST_ENDPOINT}/shift/viewMonthlyRoster/${username}?year=${year}&month=${month}`
     );
   },
+  viewOverallRoster(username) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shift/viewOverallRoster/${username}`
+    );
+  },
   createShift(username, facility, requestBody) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/shift/createShift/${username}/${facility}`,
@@ -181,6 +186,12 @@ export const shiftApi = {
   deleteShift(shiftId) {
     return axiosFetch.delete(
       `${REST_ENDPOINT}/shift/deleteShift/${shiftId}`
+    );
+  },
+  getAllShiftsFromDate(username, start, end) {
+    console.log(`${REST_ENDPOINT}/shift/getAllShiftsFromDate/${username}?startDate=${start}&endDate=${end}`)
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shift/getAllShiftsFromDate/${username}?startDate=${start}&endDate=${end}`
     );
   },
 };

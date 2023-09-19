@@ -29,7 +29,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
     const [listOfDates, setListOfDates] = useState(dateList);
     const [addShiftDate, setAddShiftDate] = useState(weekStartDate);
     const [shifts, setShifts] = useState([]);
-    const [leaves, setLeaves] = useState([]);
+    const [leaves, setLeaves] = useState();
     const [currShift, setCurrShift] = useState();
     const [addShiftOpen, setAddShiftOpen] = useState(false);
     const [viewShiftOpen, setViewShiftOpen] = useState(false);
@@ -44,23 +44,23 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
         }
     }
 
-    const getAllStaffLeaves = async () => {
+    const getAllStaffLeaves = async (s) => {
         try {
-            const response = await leaveApi.getAllStaffLeaves(staff.staffId);
-            for (let i=0; i<response.data.length; i++) {
-                let leave = response.data[i];
-                if (leave.approvalStatusEnum !== 'REJECTED') {
-                    let start = leave.startDate[0] + '-' + leave.startDate[1] + '-' + leave.startDate[2];
-                    let end = leave.endDate[0] + '-' + leave.endDate[1] + '-' + leave.endDate[2];
-                    for (let j=0; j<dateList.length; j++) {
-                        if (moment(dateList[j].date).isBetween(moment(start), moment(end), null, '[]')) {
-                            dateList[j]['leave'] = leave;
-                        }
-                    }
+            const response = await leaveApi.getAllStaffLeaves(s.staffId);
+            const filteredLeaves = response.data.filter(leave => leave.approvalStatusEnum === "APPROVED");
+            const object = {};
+            for (let i=0; i<filteredLeaves.length; i++) {
+                let leave = filteredLeaves[i];
+                let start = moment(leave.startDate[0] + '-' + leave.startDate[1] + '-' + leave.startDate[2]);
+                let end = moment(leave.endDate[0] + '-' + leave.endDate[1] + '-' + leave.endDate[2]);
+                let curr = start.clone()
+                while (curr.isSameOrBefore(end)) {
+                    object[curr.format('YYYY-MM-DD')] = leave;
+                    curr.add(1,'days');
                 }
             }
-            setListOfDates(dateList);
-            setLeaves(response.data);
+            console.log(object)
+            setLeaves(object);
         } catch (error) {
             console.log(error);
         }
@@ -87,9 +87,9 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
 
     useEffect(() => {
         setListOfDates(dateList);
+        getAllStaffLeaves(staff);
         getAllShiftsForStaff();
-        getAllStaffLeaves();
-    }, [shifts?.length, dateList, viewShiftOpen, addShiftOpen, weekStartDate])
+    }, [shifts?.length, dateList, viewShiftOpen, addShiftOpen, weekStartDate, staff])
 
     return (
         <TableRow role="checkbox" tabIndex={-1} key={username} sx={{ display: 'flex'}}>
@@ -97,34 +97,8 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                 {username === localStorage.getItem('staffUsername') ? <b>{truncate(staff.firstname + " " + staff.lastname) + " (You)"}</b> : truncate(staff.firstname + " " + staff.lastname)}
             </TableCell>
             {listOfDates?.map(date => {   
-                if (date.leave && date.leave.staff.username === username) {
-                    return (
-                        <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
-                            <Card sx={{
-                                backgroundColor: getColorLeave(date.leave.approvalStatusEnum),
-                                width: 130,
-                                alignContent: "center",
-                                marginLeft: 1,
-                                padding: 0,
-                                borderRadius: 3
-                            }}> {console.log(date.leave)}
-                                <CardActionArea>    
-                                    <CardContent sx={{ padding: "0.5rem 0.5rem" }}>
-                                        <Typography variant="body2" color="#ffffff">
-                                            <b>{date.leave.leaveTypeEnum + " leave"}</b>
-                                        </Typography><br/>
-                                        <Typography variant="body3" color="#ffffff">
-                                            {date.leave.approvalStatusEnum}
-                                        </Typography>
-                                    </CardContent>
-                                </CardActionArea>
-                            </Card>
-                        </TableCell>
-                    )
-                }
-                else if (i < shifts?.length && moment(shifts[i]?.startTime).day() === moment(date.date).day()) {
-                    const shift = shifts[i];
-                    i++;
+                if (i < shifts?.length && moment(shifts[i]?.startTime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD") === date.date) {
+                    const shift = shifts[i++];
                     return (
                         <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={shift.id}>
                             <Card sx={{
@@ -136,14 +110,14 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                                 borderRadius: 3
                             }} onClick={() => handleOpen(date.date, shift)}>
                                 <CardActionArea>    
-                                    <CardContent sx={{ padding: "0.5rem 0.8rem" }}>
+                                    <CardContent sx={{ padding: "0.5rem 0.3rem" }}>
                                         <Typography variant="body2">
                                             {getShiftName(getTime(shift.startTime), getTime(shift.endTime))}
                                         </Typography>
                                         <Typography variant="h6" color="text.secondary">
                                             {getTime(shift.startTime)} - {getTime(shift.endTime)}
                                         </Typography>
-                                        <Typography variant="body3">
+                                        <Typography variant="body3" sx={{fontSize: 11}}>
                                             {shift.facilityBooking.facility.name}
                                         </Typography>
                                     </CardContent>
@@ -151,7 +125,32 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                             </Card>
                         </TableCell>
                     );
-                } else {
+                } 
+                else if (leaves && leaves[date.date] != null) {
+                    return (
+                        <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
+                            <Card sx={{
+                                backgroundColor: getColorLeave(leaves[date.date].approvalStatusEnum),
+                                width: 130,
+                                height: 80,
+                                alignContent: "center",
+                                marginLeft: 1,
+                                padding: 0,
+                                borderRadius: 3
+                            }}> 
+                                <CardContent sx={{ padding: "0.5rem 0.5rem" }}>
+                                    <Typography variant="body2" color="#ffffff">
+                                        <b>{leaves[date.date].leaveTypeEnum + " leave"}</b>
+                                    </Typography>
+                                    <Typography variant="body3" color="#ffffff">
+                                        {leaves[date.date].approvalStatusEnum}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </TableCell>
+                    )
+                }
+                else {
                     return (
                         <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
                             <Button 
