@@ -23,6 +23,9 @@ import TextfieldWrapper from "components/Textfield";
 import SelectWrapper from "components/Select";
 import CheckboxWrapper from "components/Checkbox";
 
+import { displayMessage } from "../../../store/slices/snackbarSlice";
+import { useDispatch } from "react-redux";
+
 const validationSchema = yup.object({
   username: yup
     .string()
@@ -52,6 +55,7 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
     []
   );
   const [dialogOpen, setDialogOpen] = useState(false);
+  const reduxDispatch = useDispatch();
 
   const processDepartmentData = (departments) => {
     const departmentNames = departments.map((department) => department.name);
@@ -115,7 +119,23 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
         values.subDepartmentName
       );
       returnToTableHandler();
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Success!",
+          content: "Staff has been created",
+        })
+      );
     } catch (error) {
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error!",
+          content: error.response.data,
+        })
+      );
       actions.setStatus(error.response.data);
     }
   };
@@ -126,8 +146,24 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
         values,
         values.subDepartmentName
       );
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Success!",
+          content: "Staff has been updated",
+        })
+      );
       returnToTableHandler();
     } catch (error) {
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error!",
+          content: error.response.data,
+        })
+      );
       actions.setStatus(error.response.data);
     }
   };
@@ -154,8 +190,24 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
     const disableStaff = async (username) => {
       try {
         const response = await staffApi.disableStaff(username);
+        reduxDispatch(
+          displayMessage({
+            color: "success",
+            icon: "notification",
+            title: "Success!",
+            content: "Succesfully disabled staff",
+          })
+        );
         returnToTableHandler();
       } catch (error) {
+        reduxDispatch(
+          displayMessage({
+            color: "warning",
+            icon: "notification",
+            title: "Error!",
+            content: error.response.data,
+          })
+        );
         console.log(error);
       }
     };
