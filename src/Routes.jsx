@@ -143,7 +143,7 @@ const routes = [
     route: "/administration/staff-management",
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
       >
         <StaffManagement />
@@ -197,10 +197,7 @@ const routes = [
     key: "shift-allocation",
     route: "/manpower/rostering/shifts",
     component: (
-      <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
-        forHeadsOnly={false}
-      >
+      <ProtectedRoute authorizedRoles={[StaffRoleEnum.ALL]} forHeadsOnly={true}>
         <Rostering />
       </ProtectedRoute>
     ),
@@ -209,7 +206,14 @@ const routes = [
     name: "ViewAllLeaves",
     key: "ViewAllLeaves",
     route: "/manpower/leaveApplication",
-    component: <ViewAllLeaves />,
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <ViewAllLeaves />
+      </ProtectedRoute>
+    ),
   },
   {
     name: "CreateLeave",
@@ -229,10 +233,7 @@ const routes = [
     key: "leaveApproval",
     route: "/manpower/leaveApproval",
     component: (
-      <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
-        forHeadsOnly={false}
-      >
+      <ProtectedRoute authorizedRoles={[StaffRoleEnum.ALL]} forHeadsOnly={true}>
         <LeaveApproval />
       </ProtectedRoute>
     ),

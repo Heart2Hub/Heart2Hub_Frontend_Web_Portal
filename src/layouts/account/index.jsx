@@ -12,7 +12,7 @@ import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
 import { useSelector } from "react-redux";
 import { selectStaff } from "../../store/slices/staffSlice";
 
-import { departmentApi } from "../../api/Api";
+import { departmentApi, staffApi } from "../../api/Api";
 
 function Account() {
   const staff = useSelector(selectStaff);
@@ -20,6 +20,7 @@ function Account() {
   console.log(staff);
   const [listOfDepartments, setListOfDepartments] = useState([]);
   const [departmentName, setDepartmentName] = useState("");
+  const [displayStaff, setDisplayStaff] = useState(null);
 
   const getDepartmentName = async () => {
     if (staff.subDepartment !== null) {
@@ -30,7 +31,18 @@ function Account() {
         console.log(error);
       }
     }
-  };
+
+  //   if (staff.subDepartment !== null) {
+  //     try {
+  //       const response = await staffApi.getStaffByUsername(staff.username);
+  //       console.log("qweqweqw");
+  //       console.log(response);
+  //       setListOfDepartments(response.data);
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   }
+  // };
 
   useEffect(() => {
     getDepartmentName();
