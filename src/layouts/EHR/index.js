@@ -31,6 +31,13 @@ import { displayMessage } from "../../store/slices/snackbarSlice";
 import { Label } from "@mui/icons-material";
 
 function EHR() {
+  const MaskedNRIC = ({ value }) => {
+    // Mask the NRIC to display only the first and last characters
+    const maskedValue = value ? value.charAt(0) + 'XXXX' + value.slice(-4) : '';
+  
+    return <span>{maskedValue}</span>;
+  };
+
   const reduxDispatch = useDispatch();
   const [data, setData] = useState({
     columns: [
@@ -45,7 +52,7 @@ function EHR() {
         width: "20%",
         Cell: ({ value }) => <Avatar alt="Profile Picture" src={value} />,
       },
-      { Header: "NRIC", accessor: "nric", width: "20%" },
+      { Header: "NRIC", accessor: "nric", width: "20%", Cell: ({ value }) => <MaskedNRIC value={value} />, },
       { Header: "First Name", accessor: "firstName", width: "20%" },
       { Header: "Last Name", accessor: "lastName", width: "20%" },
       { Header: "Sex", accessor: "sex", width: "10%" },
