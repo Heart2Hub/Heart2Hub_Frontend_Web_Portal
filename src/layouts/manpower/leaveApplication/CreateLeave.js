@@ -141,8 +141,11 @@ function CreateLeave() {
 
 	const handleStartDateChange = (e) => {
 		const newStartDate = e.target.value;
-		setStartDate(newStartDate);
+		updateStartEndDate(newStartDate);
+	};
 
+	const updateStartEndDate = (newStartDate) => {
+		setStartDate(newStartDate);
 		// If the startDate has been selected, update endDate to a day after startDate
 		if (newStartDate) {
 			const startDateObj = new Date(newStartDate);
@@ -154,7 +157,7 @@ function CreateLeave() {
 			// If startDate is cleared, clear endDate as well
 			setEndDate('');
 		}
-	};
+	}
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -271,6 +274,26 @@ function CreateLeave() {
 					</MDBox>
 					<MDBox pt={3} style={{ padding: '20px' }}>
 						<form onSubmit={handleSubmit}>
+							<Grid item xs={6} sx={{ marginBottom: "10px"}}>
+								<InputLabel sx={{ paddingBottom: "8px"}}>Select Leave Type</InputLabel>
+									<Select
+										value={selectedLeaveTypeEnum}
+										onChange={(e) => {setSelectedLeaveTypeEnum(e.target.value); 
+											if (e.target.value === 'ANNUAL' || e.target.value === 'PARENTAL') {
+												updateStartEndDate(oneMonthLater.toISOString().slice(0, 10));
+											} else {
+												updateStartEndDate(new Date().toISOString().slice(0, 10))
+											}}}
+										required
+										sx={{lineHeight: "2.5em", width: "30%"}}
+									>
+										{leaveTypes.map((enumItem, index) => (
+											<MenuItem key={index} value={enumItem}>
+												{enumItem}
+											</MenuItem>
+										))}
+									</Select>
+							</Grid><br/>
 							<Grid container spacing={8}>
 								<Grid item xs={6}>
 									<TextField
@@ -282,7 +305,7 @@ function CreateLeave() {
 										fullWidth
 										InputLabelProps={{ shrink: true }}
 										inputProps={{
-											min: oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : "",
+											min: (selectedLeaveTypeEnum === 'ANNUAL' || selectedLeaveTypeEnum === 'PARENTAL') ? (oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10),
 											max: sixMonthsLater ? sixMonthsLater.toISOString().slice(0, 10) : "",
 										}}
 									/>
@@ -297,58 +320,37 @@ function CreateLeave() {
 										fullWidth
 										InputLabelProps={{ shrink: true }}
 										inputProps={{
-											min: oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : "",
+											min: (selectedLeaveTypeEnum === 'ANNUAL' || selectedLeaveTypeEnum === 'PARENTAL') ? (oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10),
 											max: sixMonthsLater ? sixMonthsLater.toISOString().slice(0, 10) : "",
 										}}
 									/>
 								</Grid>
-								<Grid item xs={6}>
-									<InputLabel >Select Leave Type</InputLabel>
-									<FormControl fullWidth>
-										<Select
-											value={selectedLeaveTypeEnum}
-											onChange={(e) => setSelectedLeaveTypeEnum(e.target.value)}
-											required
-											sx={{lineHeight: "2.5em"}}
-										>
-											{leaveTypes.map((enumItem, index) => (
-												<MenuItem key={index} value={enumItem}>
-													{enumItem}
-												</MenuItem>
-											))}
-										</Select>
-									</FormControl>
-								</Grid>
-								<Grid item xs={6}>
-									<InputLabel >Select Head Staff</InputLabel>
-									<FormControl fullWidth>
+							</Grid><br/>
+							<Grid item xs={6}>
+								<InputLabel sx={{ marginBottom: "8px"}}>Select Head Staff</InputLabel>
+									<Select
+										value={selectedStaff}
+										onChange={(e) => setSelectedStaff(e.target.value)}
+										required
+										sx={{lineHeight: "2.5em", width: "30%"}}
 
-										<Select
-											value={selectedStaff}
-											onChange={(e) => setSelectedStaff(e.target.value)}
-											required
-											sx={{lineHeight: "2.5em"}}
-
-										>
-											{staffList.map((staffItem, index) => (
-												<MenuItem key={index} value={staffItem.staffId}>
-													{staffItem.firstname + " " + staffItem.lastname}
-												</MenuItem>
-											))}
-										</Select>
-									</FormControl>
-								</Grid>
-								<Grid item xs={12}>
-									<InputLabel>Comments</InputLabel>
-									<TextareaAutosize
-										rowsMin={3}
-										value={comments}
-										onChange={(e) => setComments(e.target.value)}
-										fullWidth
-										style={{ width: "100%", minHeight: "150px" }}
-									/>
-								</Grid>
-
+									>
+										{staffList.filter(user => user.username !== localStorage.getItem('staffUsername')).map((staffItem, index) => (
+											<MenuItem key={index} value={staffItem.staffId}>
+												{staffItem.firstname + " " + staffItem.lastname}
+											</MenuItem>
+										))}
+									</Select>
+							</Grid><br/>
+							<Grid item xs={12}>
+								<InputLabel sx={{ marginBottom: "8px"}}>Comments</InputLabel>
+								<TextareaAutosize
+									rowsMin={3}
+									value={comments}
+									onChange={(e) => setComments(e.target.value)}
+									fullWidth
+									style={{ width: "100%", minHeight: "150px", borderColor: "gainsboro", borderRadius: "6px", fontFamily: 'Arial', padding: "10px", fontSize: "15px" }}
+								/>
 							</Grid>
 							{errorMessages.length > 0 && (
 								<Alert severity="error">

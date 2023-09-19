@@ -27,7 +27,7 @@ import staffTableData from "layouts/administration/staff-management/data/staffTa
 
 import { useSelector } from "react-redux";
 import { selectStaff } from "../../../store/slices/staffSlice";
-import { leaveApi } from "api/Api";
+import { leaveApi, shiftApi } from "api/Api";
 import MDButton from "components/MDButton";
 
 import DialogComponent from "./dialogComponent";
@@ -121,6 +121,16 @@ function LeaveApproval() {
       // Make the API call to approve the leave
       const response = await leaveApi.approveLeaveDate(row.leaveId);
       console.log(response);
+
+      const username = response.data.staff.username;
+      const leaveStart = new Date(response.data.startDate[0], response.data.startDate[1]-1, response.data.startDate[2])
+      const leaveEnd = new Date(response.data.endDate[0], response.data.endDate[1]-1, response.data.endDate[2])
+      // delete shifts if there is any coinciding with the date
+      const shiftList = await shiftApi.getAllShiftsFromDate(username, moment(leaveStart).format('YYYY-MM-DD'), moment(leaveEnd).format('YYYY-MM-DD'));
+      for (let i=0; i<shiftList.data.length; i++) {
+        let shift = shiftList.data[i];
+        const deleteResponse = await shiftApi.deleteShift(shift.shiftId);
+      }
 
       // Update the list of leaves by fetching the updated data
       const updatedLeaves = await leaveApi.getAllManagedLeaves(staffId);

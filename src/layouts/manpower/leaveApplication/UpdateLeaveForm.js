@@ -14,6 +14,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import ViewAllLeaves from './ViewAllLeaves';
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
+import moment from 'moment'
 
 
 function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
@@ -23,6 +24,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 	const [comments, setComments] = useState('');
 	const [startDate, setStartDate] = useState('');
 	const [endDate, setEndDate] = useState('');
+	const [leaveType, setLeaveType] = useState('');
 
 	const [oneMonthLater, setOneMonthLater] = useState(null);
 	const [sixMonthsLater, setSixMonthsLater] = useState(null);
@@ -43,13 +45,15 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 			setEndDate('');
 			setErrorMessages([]);
 			setSuccessMessage('');
+			setLeaveType('');
 		};
 
 
 		if (selectedRow) {
 			setComments(selectedRow.comments);
-			setStartDate(selectedRow.startDate);
-			setEndDate(selectedRow.endDate);
+			setStartDate(moment(selectedRow.startDate[0] + "-" + selectedRow.startDate[1] + "-" + selectedRow.startDate[2], 'YYYY-MM-DD'). format('YYYY-MM-DD'))
+			setEndDate(moment(selectedRow.endDate[0] + "-" + selectedRow.endDate[1] + "-" + selectedRow.endDate[2], 'YYYY-MM-DD').format('YYYY-MM-DD'));
+			setLeaveType(selectedRow.leaveTypeEnum);
 		}
 		const currentDate = new Date();
 		const oneMonthDate = new Date(currentDate);
@@ -62,7 +66,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 
 		setOneMonthLater(oneMonthDate);
 		setSixMonthsLater(sixMonthsDate);
-	}, [open], [selectedRow], startDate, endDate);
+	}, [open], selectedRow, startDate, endDate);
 
 	const handleUpdate = async() => {
 
@@ -92,7 +96,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 			const response = await axios.put(`http://localhost:8080/leave/updateLeave/${selectedRow.leaveId}/${staff.staffId}`, updatedLeaveData, {
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+					'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 
 				},
 			});
@@ -153,7 +157,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 							onChange={(e) => setStartDate(e.target.value)}
 							InputLabelProps={{ shrink: true }}
 							inputProps={{
-								min: oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : "",
+								min: (leaveType === 'ANNUAL' || leaveType === 'PARENTAL') ? (oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10),
 								max: sixMonthsLater ? sixMonthsLater.toISOString().slice(0, 10) : "",
 							}}
 
@@ -168,7 +172,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 							onChange={(e) => setEndDate(e.target.value)}
 							InputLabelProps={{ shrink: true }}
 							inputProps={{
-								min: oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : "",
+								min: (leaveType === 'ANNUAL' || leaveType === 'PARENTAL') ? (oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10),
 								max: sixMonthsLater ? sixMonthsLater.toISOString().slice(0, 10) : "",
 							}}
 						/>
@@ -192,7 +196,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 			<div style={{ padding: '16px' }}>
 				<Button variant="contained" color="primary" style={{ backgroundColor: 'green', color: 'white' }} onClick={handleUpdate}>
 					Update
-				</Button>
+				</Button>&nbsp;&nbsp;
 				<Button variant="outlined" color="secondary" style={{ backgroundColor: 'red', color: 'white' }} onClick={onClose}>
 					Cancel
 				</Button>
