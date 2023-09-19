@@ -33,6 +33,13 @@ import brandWhite from "assets/images/logo-ct.png";
 import Outpatient from "layouts/outpatient";
 import Home from "layouts/home";
 import ErrorPage from "layouts/error";
+import MDSnackbar from "components/MDSnackbar";
+
+// redux
+import { useDispatch, useSelector } from "react-redux";
+import { selectSnackbar, closeMessage } from "./store/slices/snackbarSlice";
+import GlobalSnackbar from "examples/GlobalSnackbar";
+import LoadingOverlay from "examples/LoadingOverlay";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -98,10 +105,20 @@ export default function App() {
       return null;
     });
 
+  //snackbar message
+  const snackbar = useSelector(selectSnackbar);
+  const reduxDispatch = useDispatch();
+
+  const handleCloseSnackbar = () => {
+    reduxDispatch(closeMessage());
+  };
+
   return (
     <ThemeProvider theme={theme}>
+      <GlobalSnackbar />
+      <LoadingOverlay />
       <CssBaseline />
-      {!(location.pathname == "/error" || location.pathname == "/") && (
+      {!(location.pathname === "/") && (
         <Sidenav
           color={sidenavColor}
           brand={brandWhite}

@@ -1,0 +1,21 @@
+.leave-type-indicator {
+	width: 12px; /* Adjust the width as needed */
+	height: 12px; /* Adjust the height as needed */
+	display: inline-block;
+	margin-right: 8px; /* Adjust the spacing as needed */
+	border-radius: 50%; /* Makes it a circle */
+	/* Additional styles for spacing, border, or other decorations */
+      }
+      
+      /* Define colors for each leave type */
+      .leave-type-indicator.ANNUAL {
+	background-color: #e6f7ff;
+      }
+      
+      .leave-type-indicator.SICK {
+	background-color: #ffcccc;
+      }
+      
+      .leave-type-indicator.PARENTAL {
+	background-color: #ffd699;
+      }

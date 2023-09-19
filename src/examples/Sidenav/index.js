@@ -1,4 +1,7 @@
 import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { selectStaff } from "../../store/slices/staffSlice";
+import { StaffRoleEnum } from "../../constants/StaffRoleEnum";
 
 // react-router-dom components
 import { useLocation, NavLink, useNavigate } from "react-router-dom";
@@ -34,9 +37,12 @@ import {
 
 import { useDispatch } from "react-redux";
 import { logout } from "../../store/slices/staffSlice";
+import { displayMessage } from "store/slices/snackbarSlice";
 function Sidenav({ color, brand, brandName, routes, ...rest }) {
   const navigate = useNavigate();
   const reduxDispatch = useDispatch();
+  const staff = useSelector(selectStaff);
+  const staffRole = staff.staffRoleEnum;
 
   const [controller, dispatch] = useMaterialUIController();
   const {
@@ -87,40 +93,74 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
   }, [dispatch, location]);
 
   const logoutHandler = () => {
+    reduxDispatch(
+      displayMessage({
+        color: "success",
+        icon: "notification",
+        title: "Successfully Logged Out",
+        content: "Good Bye!",
+      })
+    );
     reduxDispatch(logout());
     navigate("/");
   };
 
   // Render all the routes from the routes.js (All the visible items on the Sidenav)
   const renderRoutes = routes.map(
-    ({ type, name, icon, title, noCollapse, key, href, route }) => {
+    ({
+      type,
+      name,
+      icon,
+      title,
+      noCollapse,
+      key,
+      href,
+      route,
+      authorizedRoles,
+    }) => {
       let returnValue;
 
       if (type === "collapse") {
-        returnValue = href ? (
-          <Link
-            href={href}
-            key={key}
-            target="_blank"
-            rel="noreferrer"
-            sx={{ textDecoration: "none" }}
-          >
-            <SidenavCollapse
-              name={name}
-              icon={icon}
-              active={key === collapseName}
-              noCollapse={noCollapse}
-            />
-          </Link>
-        ) : (
-          <NavLink key={key} to={route}>
-            <SidenavCollapse
-              name={name}
-              icon={icon}
-              active={key === collapseName}
-            />
-          </NavLink>
-        );
+        let checkRoleAuthorized = false;
+
+        //to conditionally render sidenav options
+        for (let index = 0; index < authorizedRoles.length; index++) {
+          const authRole = authorizedRoles[index];
+          //if all authorized just continue and
+          //check role in authorized list
+          if (authRole === StaffRoleEnum.ALL || staffRole === authRole) {
+            checkRoleAuthorized = true;
+            break;
+          }
+        }
+        if (checkRoleAuthorized) {
+          returnValue = href ? (
+            <Link
+              href={href}
+              key={key}
+              target="_blank"
+              rel="noreferrer"
+              sx={{ textDecoration: "none" }}
+            >
+              <SidenavCollapse
+                name={name}
+                icon={icon}
+                active={key === collapseName}
+                noCollapse={noCollapse}
+              />
+            </Link>
+          ) : (
+            <NavLink key={key} to={route}>
+              <SidenavCollapse
+                name={name}
+                icon={icon}
+                active={key === collapseName}
+              />
+            </NavLink>
+          );
+        } else {
+          returnValue = null;
+        }
       } else if (type === "title") {
         returnValue = (
           <MDTypography
