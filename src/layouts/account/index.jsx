@@ -17,54 +17,55 @@ import { departmentApi, staffApi } from "../../api/Api";
 function Account() {
   const staff = useSelector(selectStaff);
 
-  console.log(staff);
-  const [listOfDepartments, setListOfDepartments] = useState([]);
+  // console.log(staff);
+  // const [listOfDepartments, setListOfDepartments] = useState([]);
   const [departmentName, setDepartmentName] = useState("");
-  const [displayStaff, setDisplayStaff] = useState(null);
+  // const [displayStaff, setDisplayStaff] = useState(null);
 
   const getDepartmentName = async () => {
+    // if (staff.subDepartment !== null) {
+    //   try {
+    //     const response = await departmentApi.getAllDepartments("");
+    //     setListOfDepartments(response.data);
+    //   } catch (error) {
+    //     console.log(error);
+    //   }
+    // }
+
     if (staff.subDepartment !== null) {
       try {
-        const response = await departmentApi.getAllDepartments("");
-        setListOfDepartments(response.data);
+        const response = await staffApi.getStaffByUsername(staff.username);
+        setDepartmentName(response.data.subDepartment.department.name);
+        // console.log("qweqweqw");
+        // console.log(response);
+        // setListOfDepartments(response.data);
       } catch (error) {
         console.log(error);
       }
     }
-
-  //   if (staff.subDepartment !== null) {
-  //     try {
-  //       const response = await staffApi.getStaffByUsername(staff.username);
-  //       console.log("qweqweqw");
-  //       console.log(response);
-  //       setListOfDepartments(response.data);
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   }
-  // };
+  };
 
   useEffect(() => {
     getDepartmentName();
   }, [staff.subDepartment]);
 
-  useEffect(() => {
-    if (listOfDepartments.length > 0) {
-      for (let index = 0; index < listOfDepartments.length; index++) {
-        const department = listOfDepartments[index];
-        for (let idx = 0; idx < department.listOfSubDepartments.length; idx++) {
-          const subDepartment = department.listOfSubDepartments[idx];
-          if (subDepartment.name === staff.subDepartment.name) {
-            setDepartmentName(department.name);
-            break;
-          }
-        }
-        if (departmentName !== "") {
-          break;
-        }
-      }
-    }
-  }, [listOfDepartments]);
+  // useEffect(() => {
+  //   if (listOfDepartments.length > 0) {
+  //     for (let index = 0; index < listOfDepartments.length; index++) {
+  //       const department = listOfDepartments[index];
+  //       for (let idx = 0; idx < department.listOfSubDepartments.length; idx++) {
+  //         const subDepartment = department.listOfSubDepartments[idx];
+  //         if (subDepartment.name === staff.subDepartment.name) {
+  //           setDepartmentName(department.name);
+  //           break;
+  //         }
+  //       }
+  //       if (departmentName !== "") {
+  //         break;
+  //       }
+  //     }
+  //   }
+  // }, [listOfDepartments]);
 
   return (
     <DashboardLayout>
