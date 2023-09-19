@@ -114,7 +114,6 @@ const routes = [
     ),
   },
   // {
-  //   type: "collapse",
   //   name: "EHR",
   //   key: "ehr",
   //   icon: <Icon fontSize="small">receipt_long</Icon>,

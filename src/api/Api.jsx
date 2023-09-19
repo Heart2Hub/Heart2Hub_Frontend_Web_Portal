@@ -67,9 +67,9 @@ export const departmentApi = {
 };
 
 export const subDepartmentApi = {
-  getSubDepartmentsByDepartment(department) {
+  getAllSubDepartments(name) {
     return axiosFetch.get(
-      `${REST_ENDPOINT}/subDepartment/getSubDepartmentsByDepartment/${department}`
+      `${REST_ENDPOINT}/subDepartment/getAllSubDepartments?name=${name}`
     );
   },
 };

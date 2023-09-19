@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 
 import {
@@ -14,31 +13,15 @@ import {
   DialogContentText,
   DialogTitle,
   Grid,
-  TextField,
 } from "@mui/material";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import InputLabel from "@mui/material/InputLabel";
 
-import { Formik, Form, useFormikContext, Field } from "formik";
+import { Formik, Form, useFormikContext } from "formik";
 import * as yup from "yup";
 import { staffApi, departmentApi } from "api/Api";
 import { subDepartmentApi } from "api/Api";
 import TextfieldWrapper from "components/Textfield";
 import SelectWrapper from "components/Select";
-import CheckBox from "@mui/material/Checkbox";
 import CheckboxWrapper from "components/Checkbox";
-
-const INITIAL_FORM_STATE = {
-  username: "",
-  password: "",
-  firstname: "",
-  lastname: "",
-  mobileNumber: 0,
-  staffRoleEnum: "",
-  departmentName: "",
-  subDepartmentName: "",
-};
 
 const validationSchema = yup.object({
   username: yup
@@ -64,21 +47,15 @@ const validationSchema = yup.object({
 function AddStaff({ returnToTableHandler, formState, editing }) {
   const [staffRoles, setStaffRoles] = useState([]);
   const [departmentNames, setDepartmentNames] = useState([]);
-  const [subDepartmentNames, setSubDepartmentNames] = useState([]);
+  const [subDepartments, setSubDepartments] = useState([]);
+  const [subDepartmentsByDepartment, setSubDepartmentsByDepartment] = useState(
+    []
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const processDepartmentData = (departments) => {
-    const departmentNames = departments.map(
-      (department) => department.departmentName
-    );
+    const departmentNames = departments.map((department) => department.name);
     return departmentNames;
-  };
-
-  const processSubDepartmentData = (subDepartments) => {
-    const subDepartmentNames = subDepartments.map(
-      (subDepartment) => subDepartment.subDepartmentName
-    );
-    return subDepartmentNames;
   };
 
   useEffect(() => {
@@ -96,7 +73,7 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
   useEffect(() => {
     const getDepartments = async () => {
       try {
-        const response = await departmentApi.getAllDepartments();
+        const response = await departmentApi.getAllDepartments("");
         setDepartmentNames(processDepartmentData(response.data));
       } catch (error) {
         console.log(error);
@@ -105,20 +82,29 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
     getDepartments();
   }, []);
 
+  useEffect(() => {
+    const getSubDepartments = async () => {
+      try {
+        const response = await subDepartmentApi.getAllSubDepartments("");
+        setSubDepartments(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getSubDepartments();
+  }, []);
+
   const FormObserver = () => {
     const { values } = useFormikContext();
     useEffect(() => {
-      const getSubDepartments = async () => {
-        try {
-          const response = await subDepartmentApi.getSubDepartmentsByDepartment(
-            values.departmentName
-          );
-          setSubDepartmentNames(processSubDepartmentData(response.data));
-        } catch (error) {
-          console.log(error);
-        }
-      };
-      getSubDepartments();
+      setSubDepartmentsByDepartment(
+        subDepartments
+          .filter(
+            (subDepartment) =>
+              subDepartment.department.name === values.departmentName
+          )
+          .map((subDepartment) => subDepartment.name)
+      );
     }, [values.departmentName]);
   };
 
@@ -210,7 +196,12 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                   >
                     First Name
                   </MDTypography>
-                  <TextfieldWrapper name="firstname" hiddenlabel size="small" />
+                  <TextfieldWrapper
+                    name="firstname"
+                    hiddenlabel
+                    size="small"
+                    disabled={editing}
+                  />
                 </Grid>
                 <Grid item xs={6}>
                   <MDTypography
@@ -220,33 +211,14 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                   >
                     Last Name
                   </MDTypography>
-                  <TextfieldWrapper name="lastname" hiddenlabel size="small" />
-                </Grid>
-                <Grid item xs={6}>
-                  <MDTypography
-                    variant="button"
-                    fontWeight="bold"
-                    textTransform="capitalize"
-                  >
-                    Username
-                  </MDTypography>
                   <TextfieldWrapper
-                    name="username"
+                    name="lastname"
                     hiddenlabel
                     size="small"
-                    status={status}
+                    disabled={editing}
                   />
                 </Grid>
-                <Grid item xs={6}>
-                  <MDTypography
-                    variant="button"
-                    fontWeight="bold"
-                    textTransform="capitalize"
-                  >
-                    Password
-                  </MDTypography>
-                  <TextfieldWrapper name="password" hiddenlabel size="small" />
-                </Grid>
+
                 <Grid item xs={6}>
                   <MDTypography
                     variant="button"
@@ -282,6 +254,43 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                     fontWeight="bold"
                     textTransform="capitalize"
                   >
+                    Username
+                  </MDTypography>
+                  <TextfieldWrapper
+                    name="username"
+                    hiddenlabel
+                    size="small"
+                    status={status}
+                    disabled={editing}
+                  />
+                </Grid>
+
+                <Grid item xs={6}>
+                  {editing ? null : (
+                    <>
+                      <MDTypography
+                        variant="button"
+                        fontWeight="bold"
+                        textTransform="capitalize"
+                      >
+                        Password
+                      </MDTypography>
+                      <TextfieldWrapper
+                        name="password"
+                        disabled
+                        hiddenlabel
+                        size="small"
+                      />
+                    </>
+                  )}
+                </Grid>
+
+                <Grid item xs={6}>
+                  <MDTypography
+                    variant="button"
+                    fontWeight="bold"
+                    textTransform="capitalize"
+                  >
                     Department
                   </MDTypography>
                   <SelectWrapper
@@ -301,7 +310,8 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                   <SelectWrapper
                     name="subDepartmentName"
                     hiddenlabel
-                    options={subDepartmentNames}
+                    options={subDepartmentsByDepartment}
+                    disabled={subDepartmentsByDepartment.length === 0}
                   />
                 </Grid>
                 <Grid item xs={12}>
