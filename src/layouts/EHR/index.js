@@ -25,9 +25,12 @@ import DataTable from "examples/Tables/DataTable";
 import React, { useState, useEffect, useRef } from "react";
 
 import { patientApi, ehrApi } from "api/Api";
+import { useDispatch } from "react-redux";
+import { displayMessage } from "../../store/slices/snackbarSlice";
 import { Label } from "@mui/icons-material";
 
 function EHR() {
+  const reduxDispatch = useDispatch();
   const [data, setData] = useState({
     columns: [
       {
@@ -117,9 +120,10 @@ function EHR() {
   const [isPictureCorrect, setIsPictureCorrect] = useState(false);
 
   const handleOpenModal = (electronicHealthRecordId) => {
-    const patientWithElectronicHealthRecordSummary = dataRef.current.rows.find(
+
+    const patientWithElectronicHealthRecordSummary = dataRef.current.rows[0].find(
       (patientWithElectronicHealthRecordSummary) =>
-        patientWithElectronicHealthRecordSummary[0].electronicHealthRecordId ===
+        patientWithElectronicHealthRecordSummary.electronicHealthRecordId ===
         electronicHealthRecordId
     );
 
@@ -127,12 +131,12 @@ function EHR() {
       setFormData({
         electronicHealthRecordId: electronicHealthRecordId,
         profilePicture:
-          patientWithElectronicHealthRecordSummary[0].profilePicture,
-        nric: patientWithElectronicHealthRecordSummary[0].nric,
-        firstName: patientWithElectronicHealthRecordSummary[0].firstName,
-        lastName: patientWithElectronicHealthRecordSummary[0].lastName,
-        sex: patientWithElectronicHealthRecordSummary[0].sex,
-        username: patientWithElectronicHealthRecordSummary[0].username,
+          patientWithElectronicHealthRecordSummary.profilePicture,
+        nric: patientWithElectronicHealthRecordSummary.nric,
+        firstName: patientWithElectronicHealthRecordSummary.firstName,
+        lastName: patientWithElectronicHealthRecordSummary.lastName,
+        sex: patientWithElectronicHealthRecordSummary.sex,
+        username: patientWithElectronicHealthRecordSummary.username,
       });
 
       setIsModalOpen(true);
@@ -152,9 +156,6 @@ function EHR() {
   };
 
   const handleGetElectronicHealthRecordByIdAndDateOfBirth = () => {
-    console.log(isDetailsCorrect);
-    console.log(isPictureCorrect);
-    console.log(formData);
     if (isDetailsCorrect & isPictureCorrect) {
       try {
         const { electronicHealthRecordId, dateOfBirth } = formData;
@@ -165,12 +166,38 @@ function EHR() {
           )
           .then((response) => {
             console.log(response);
+            reduxDispatch(
+              displayMessage({
+                color: "success",
+                icon: "notification",
+                title: "Validation Success!",
+                content: "Retrieved Electronic Health Record With ID: " + electronicHealthRecordId,
+              })
+            );
+            setIsModalOpen(false);
+            // ROUTE HERE
+          }).catch((err) => {
+            reduxDispatch(
+              displayMessage({
+                color: "error",
+                icon: "notification",
+                title: "Validation Failed!",
+                content: err.message,
+              })
+            );
           });
       } catch (ex) {
         console.log(ex);
       }
     } else {
-      throw new Error("Check details and check picture!");
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Validation Failed!",
+          content: "Please check details & Picture",
+        })
+      );
     }
   };
 
