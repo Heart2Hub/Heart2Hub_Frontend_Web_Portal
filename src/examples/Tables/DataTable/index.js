@@ -55,7 +55,6 @@ function DataTable({
   pagination,
   isSorted,
   noEndBorder,
-  addRow,
 }) {
   const defaultValue = entriesPerPage.defaultValue
     ? entriesPerPage.defaultValue
@@ -187,7 +186,7 @@ function DataTable({
               </MDTypography>
             </MDBox>
           )}
-          
+
           <MDBox width="28rem" ml="auto" display="flex">
             {canSearch && (
               <MDBox width="12rem" ml="auto" display="flex">

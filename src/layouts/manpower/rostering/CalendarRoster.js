@@ -23,10 +23,12 @@ import FormLabel from '@mui/material/FormLabel';
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
-import { getColor, getShiftName, getShiftTime, getTime } from '../utils/utils';
+import { getColor, getShiftName, getShiftNameWithTime, getShiftTime, getTime } from '../utils/utils';
 import { Button } from '@mui/material';
 import { getShiftId } from '../utils/utils';
-import { shiftApi, shiftPreferenceApi, staffApi } from 'api/Api';
+import { shiftApi, shiftPreferenceApi, staffApi, leaveApi } from 'api/Api';
+import { displayMessage } from "store/slices/snackbarSlice";
+import { useDispatch } from "react-redux";
 
 function CalendarRoster() {
 
@@ -37,7 +39,8 @@ function CalendarRoster() {
     const [loading, setLoading] = useState(false);
     const [viewShiftOpen, setViewShiftOpen] = useState(false);
     const [event, setEvent] = useState();
-
+    const reduxDispatch = useDispatch();
+ 
     moment.locale('ko', {
         week: {
             dow: 1,
@@ -45,23 +48,40 @@ function CalendarRoster() {
         },
     });
     const localizer = momentLocalizer(moment);
-    const year = moment().format('YYYY');
-    const month = moment().format('M');
     const navigate = useNavigate();
 
-    const getMyMonthlyRoster = async () => {
-        const response = await shiftApi.viewMonthlyRoster(localStorage.getItem('staffUsername'), year, month);
-        let data = [];
-        for (let i=0; i<response.data.length; i++) {
-            data.push({
-                id: response.data[i].shiftId,
-                title: getShiftName(getTime(response.data[i].startTime), getTime(response.data[i].endTime)),
-                start: moment(response.data[i].startTime).toDate(),
-                end: moment(response.data[i].endTime).toDate(),
-                data: response.data[i]
-            })
+    const getOverallRoster = async (id) => {
+        try {
+            const response = await shiftApi.viewOverallRoster(localStorage.getItem('staffUsername'));
+            let data = [];
+            for (let i=0; i<response.data.length; i++) {
+                console.log(moment(response.data[i].startTime).toDate())
+                data.push({
+                    id: response.data[i].shiftId,
+                    title: getShiftName(getTime(response.data[i].startTime), getTime(response.data[i].endTime)),
+                    start: moment(response.data[i].startTime).toDate(),
+                    end: moment(response.data[i].endTime).toDate(),
+                    data: response.data[i]
+                })
+            }
+            const responseLeaves = await leaveApi.getAllStaffLeaves(id);
+            console.log(responseLeaves)
+            for (let i=0; i<responseLeaves.data.length; i++) {
+                if (responseLeaves.data[i].approvalStatusEnum !== 'REJECTED') {
+                    data.push({
+                        id: responseLeaves.data[i].leaveId,
+                        title: getShiftNameWithTime(null, null, responseLeaves.data[i]),
+                        start: new Date(responseLeaves.data[i].startDate[0], responseLeaves.data[i].startDate[1]-1, responseLeaves.data[i].startDate[2], 0, 0, 0, 0),
+                        end: new Date(responseLeaves.data[i].endDate[0], responseLeaves.data[i].endDate[1]-1, responseLeaves.data[i].endDate[2], 23, 59, 0, 0),
+                        data: responseLeaves.data[i]
+                    })
+                }
+            }
+            console.log(data)
+            setRoster(data);
+        } catch (error) {
+            console.log(error)
         }
-        setRoster(data);
     }
 
     const getShiftPreference = async () => {
@@ -94,6 +114,14 @@ function CalendarRoster() {
             newReqBody.endTime = getShiftTime(shift)[1];
             try {
                 const response = await shiftPreferenceApi.createShiftPreference(newReqBody);
+                reduxDispatch(
+                    displayMessage({
+                      color: "success",
+                      icon: "notification",
+                      title: "Shift preference added!",
+                      content: "Shift preference with start time " + newReqBody.startTime + " and end time " + newReqBody.endTime + " has been added!",
+                    })
+                  );
             } catch (error) {
                 console.log(error)
             } finally {
@@ -106,6 +134,14 @@ function CalendarRoster() {
         setLoading(true);
         try {
             const response = await shiftPreferenceApi.deleteShiftPreference(id);
+            reduxDispatch(
+                displayMessage({
+                  color: "success",
+                  icon: "notification",
+                  title: "Shift preference removed!",
+                  content: "Shift preference reverted back to no preference",
+                })
+              );
         } catch (error) {
             console.log(error)
         } finally {
@@ -116,6 +152,7 @@ function CalendarRoster() {
     const getStaffByUsername = async () => {
         try {
             const response = await staffApi.getStaffByUsername(localStorage.getItem('staffUsername'));
+            getOverallRoster(response.data.staffId);
             setStaffDetails(response.data);
         } catch (error) {
             console.log(error);
@@ -142,7 +179,6 @@ function CalendarRoster() {
     useEffect(() => {
         getStaffByUsername();
         getShiftPreference();
-        getMyMonthlyRoster();
     },[loading])
 
     return (
@@ -205,9 +241,9 @@ function CalendarRoster() {
                 views={["month", "week"]}
                 style={{ height: 1200 }}
                 eventPropGetter={(event) => {
-                    const backgroundColor = getColor(event.start, event.end);
+                    const backgroundColor = getColor(event.start, event.end, event.data);
                     const fontSize = '14px';
-                    const color = 'black';
+                    const color = getColor(event.start, event.end, event.data) === '#5e5e5e' ? 'white' : 'black';
                     return { style: { backgroundColor, fontSize, color } }
                   }}
                   

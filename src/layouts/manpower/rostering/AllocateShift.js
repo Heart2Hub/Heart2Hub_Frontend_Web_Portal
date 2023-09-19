@@ -7,11 +7,12 @@ import Modal from "@mui/material/Modal";
 import Select from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import axios from 'axios';
 import moment from 'moment';
 import { MenuItem } from '@mui/material';
 import { getShiftName, getShiftId, getShiftTime, options } from '../utils/utils';
 import { shiftApi, shiftPreferenceApi, facilityApi } from 'api/Api';
+import { displayMessage } from "store/slices/snackbarSlice";
+import { useDispatch } from "react-redux";
 
 const style = {
     position: "absolute",
@@ -38,6 +39,7 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
     const [errorMsg, setErrorMsg] = useState();
     const [shiftPref, setShiftPref] = useState(0);
     const [facilities, setFacilities] = useState([]);
+    const reduxDispatch = useDispatch();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -64,8 +66,24 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
             setUpdateAddShift(updateAddShift+1);
             handleClose();
             setErrorMsg(null);
+            reduxDispatch(
+                displayMessage({
+                  color: "success",
+                  icon: "notification",
+                  title: "Shift successfully created!",
+                  content: "Shift has been created for " + username + "!",
+                })
+              );
         } catch (error) {
             console.log(error);
+            reduxDispatch(
+                displayMessage({
+                  color: "warning",
+                  icon: "notification",
+                  title: "Error creating shift!",
+                  content: error.response.data,
+                })
+              );
             setErrorMsg(error.response.data);
         }
     }
@@ -180,7 +198,7 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
                                     </MenuItem>
                                 ))}
                             </Select><br/><br/>
-                            {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
+                            {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                             <Button 
                                 variant="contained" 
                                 onClick={handleSubmit}

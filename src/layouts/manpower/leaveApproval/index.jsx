@@ -8,33 +8,27 @@ import MDTypography from "components/MDTypography";
 
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
-import axios from 'axios';
-import moment from 'moment';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-
-// Data
-import authorsTableData from "layouts/tables/data/authorsTableData";
-import projectsTableData from "layouts/tables/data/projectsTableData";
-import staffTableData from "layouts/administration/staff-management/data/staffTableData";
+import axios from "axios";
+import moment from "moment";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TablePagination from "@mui/material/TablePagination";
+import TableRow from "@mui/material/TableRow";
 
 import { useSelector } from "react-redux";
 import { selectStaff } from "../../../store/slices/staffSlice";
-import { leaveApi } from "api/Api";
+import { leaveApi, shiftApi } from "api/Api";
 import MDButton from "components/MDButton";
 
 import DialogComponent from "./dialogComponent";
 import DataTable from "examples/Tables/DataTable";
 
 function LeaveApproval() {
-
   const staff = useSelector(selectStaff);
   console.log(staff);
 
@@ -47,8 +41,7 @@ function LeaveApproval() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRowData, setSelectedRowData] = useState({});
 
-  const [approvalStatus, setApprovalStatus] = useState(''); // Initialize with an initial status
-
+  const [approvalStatus, setApprovalStatus] = useState(""); // Initialize with an initial status
 
   const getResponse = async () => {
     try {
@@ -75,7 +68,10 @@ function LeaveApproval() {
     { Header: "Leave Type", accessor: "leaveType", width: "20%" },
     { Header: "Approval Status", accessor: "approvalStatus", width: "20%" },
     {
-      Header: "View", accessor: "view", width: "20%", Cell: ({ row }) => {
+      Header: "View",
+      accessor: "view",
+      width: "20%",
+      Cell: ({ row }) => {
         // setSelectedRowData(row);
 
         return (
@@ -86,9 +82,7 @@ function LeaveApproval() {
               onRejection={handleRejection}
             />
             {/* </MDButton> */}
-
           </MDBox>
-
         );
       },
     }
@@ -97,21 +91,32 @@ function LeaveApproval() {
 
   const rows = leaves?.map((leave) => ({
     leaveId: leave.leaveId,
-    name: leave.staff.firstname + ' ' + leave.staff.lastname,
+    name: leave.staff.firstname + " " + leave.staff.lastname,
     staffId: leave.staff.staffId,
-    startDate: moment(leave.startDate, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY'),
-    endDate: moment(leave.endDate, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY'),
+    startDate: moment(leave.startDate, "YYYY-MM-DD HH:mm:ss").format(
+      "DD/MM/YYYY"
+    ),
+    endDate: moment(leave.endDate, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY"),
     leaveType: leave.leaveTypeEnum,
     approvalStatus: leave.approvalStatusEnum,
     comments: leave.comments,
   }));
-
 
   const handleApproval = async (row) => {
     try {
       // Make the API call to approve the leave
       const response = await leaveApi.approveLeaveDate(row.leaveId);
       console.log(response);
+
+      const username = response.data.staff.username;
+      const leaveStart = new Date(response.data.startDate[0], response.data.startDate[1] - 1, response.data.startDate[2])
+      const leaveEnd = new Date(response.data.endDate[0], response.data.endDate[1] - 1, response.data.endDate[2])
+      // delete shifts if there is any coinciding with the date
+      const shiftList = await shiftApi.getAllShiftsFromDate(username, moment(leaveStart).format('YYYY-MM-DD'), moment(leaveEnd).format('YYYY-MM-DD'));
+      for (let i = 0; i < shiftList.data.length; i++) {
+        let shift = shiftList.data[i];
+        const deleteResponse = await shiftApi.deleteShift(shift.shiftId);
+      }
 
       // Update the list of leaves by fetching the updated data
       const updatedLeaves = await leaveApi.getAllManagedLeaves(staffId);
@@ -141,9 +146,7 @@ function LeaveApproval() {
     }
   };
 
-
   return (
-
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>

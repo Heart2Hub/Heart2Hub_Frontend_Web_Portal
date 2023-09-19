@@ -4,24 +4,21 @@ import Card from "@mui/material/Card";
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
 
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import DataTable from "examples/Tables/DataTable";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
-// Data
-import authorsTableData from "layouts/tables/data/authorsTableData";
-import projectsTableData from "layouts/tables/data/projectsTableData";
-import staffTableData from "layouts/administration/staff-management/data/staffTableData";
-import { staffApi } from "api/Api";
 import AddStaff from "./AddStaff";
 import StaffTable from "./StaffTable";
+import { displayMessage } from "../../../store/slices/snackbarSlice";
+import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
+import { selectStaff } from "../../../store/slices/staffSlice";
 
 const INITIAL_FORM_STATE = {
   username: "",
-  password: "",
+  password: "password",
   firstname: "",
   lastname: "",
   mobileNumber: 0,
@@ -35,6 +32,8 @@ function StaffManagement() {
   const [tableView, setTableView] = useState(true);
   const [editing, setEditing] = useState(false);
   const [formState, setFormState] = useState(INITIAL_FORM_STATE);
+  const reduxDispatch = useDispatch();
+  const loggedInStaff = useSelector(selectStaff);
 
   const processStaffObj = (staffObj) => {
     const formFields = Object.keys(formState);
@@ -46,6 +45,9 @@ function StaffManagement() {
         return obj;
       }, {});
 
+    //NEED PROFILE PHOTO
+    newStaffObj.profilePicture = staffObj.profilePicture?.imageLink;
+
     return newStaffObj;
   };
 
@@ -56,10 +58,34 @@ function StaffManagement() {
   };
 
   const editStaffHandler = (staff) => {
-    setEditing(true);
-    console.log(processStaffObj(staff));
-    setFormState(processStaffObj(staff));
-    setTableView(false);
+    if (staff.isHead && staff.staffRoleEnum === "ADMIN") {
+      //staff is superadmin (CANNOT EDIT)
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Action not allowed!",
+          content: "Cannot edit super admin",
+        })
+      );
+    } else if (staff.staffId === loggedInStaff.staffId) {
+      //staff is ownself
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Action not allowed!",
+          content: "Cannot edit self",
+        })
+      );
+    } else {
+      setEditing(true);
+      console.log(processStaffObj(staff));
+      setFormState(processStaffObj(staff));
+      setTableView(false);
+    }
+    // console.log("the staff to be editted is: ");
+    // console.log(staff);
   };
 
   const returnToTableHandler = () => {
