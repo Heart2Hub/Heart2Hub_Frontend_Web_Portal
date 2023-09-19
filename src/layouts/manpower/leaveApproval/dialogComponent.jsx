@@ -5,17 +5,36 @@ import MDTypography from 'components/MDTypography';
 import React, { useEffect, useState } from 'react'
 import { displayMessage } from "store/slices/snackbarSlice";
 import { useDispatch } from "react-redux";
+import { Link } from 'react-router-dom';
+import { staffApi, departmentApi, imageServerApi } from "api/Api";
+import moment from "moment";
+import { IMAGE_SERVER } from "constants/RestEndPoint";
 
 
 
 function DialogComponent({ rowData, onApproval, onRejection }) {
   const [open, setOpen] = React.useState(false);
-  const { leaveId, name, staffId, startDate, endDate, leaveType, approvalStatus } = rowData;
+  const { leaveId, name, staffId, startDate, endDate, leaveType, approvalStatus, comments, imageDocuments } = rowData;
   const [leaveBalance, setleaveBalance] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [action, setAction] = useState(null);
   const reduxDispatch = useDispatch();
+  const [openImageDialog, setOpenImageDialog] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
 
+  const handleViewImage = (leave) => {
+    console.log('leave image: ' + leave.imageDocuments);
+    if (leave.imageDocuments?.imageLink) {
+      console.log("View Image button clicked.");
+      setSelectedImage(`${IMAGE_SERVER}/images/id/${leave.imageDocuments.imageLink}`);
+      setOpenImageDialog(true);
+    }
+  };
+
+  const handleCloseImageDialog = () => {
+    setOpenImageDialog(false);
+    setSelectedImage('');
+  };
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -84,6 +103,7 @@ function DialogComponent({ rowData, onApproval, onRejection }) {
         setleaveBalance(response.data);
         setIsLoading(false);
         console.log("Approval:" + approvalStatus);
+        console.log(rowData);
 
       } catch (error) {
         console.error(error);
@@ -125,6 +145,9 @@ function DialogComponent({ rowData, onApproval, onRejection }) {
             <Typography variant="subtitle1">
               Approval Status: {approvalStatus}
             </Typography>
+            <Typography variant="subtitle1">
+              Comments: {comments}
+            </Typography>
             <br />
             <Typography variant="h6">
               Leave Balance:
@@ -138,6 +161,16 @@ function DialogComponent({ rowData, onApproval, onRejection }) {
             <Typography variant="subtitle1">
               Parental leave: {leaveBalance.parentalLeave}
             </Typography>
+            {imageDocuments && (
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => handleViewImage(rowData)}
+                style={{ backgroundColor: 'orange', color: 'white' }}
+              >
+                View Image
+              </Button>
+            )}
             <DialogActions>
               <Button
                 onClick={handleApproval}
@@ -153,6 +186,14 @@ function DialogComponent({ rowData, onApproval, onRejection }) {
 
 
         </DialogContent>
+      </Dialog>
+      <Dialog open={openImageDialog} onClose={handleCloseImageDialog} style={{ maxWidth: '100%', maxHeight: '100%' }}>
+        <DialogContent style={{ width: '100vw' }}>
+          <img src={selectedImage} alt="Leave Image" style={{ maxWidth: '100%', maxHeight: '100%' }} />
+        </DialogContent>
+        <Button onClick={handleCloseImageDialog} color="primary">
+          Close
+        </Button>
       </Dialog>
     </div >
   );

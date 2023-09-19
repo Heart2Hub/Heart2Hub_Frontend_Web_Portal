@@ -27,6 +27,10 @@ import MDButton from "components/MDButton";
 
 import DialogComponent from "./dialogComponent";
 import DataTable from "examples/Tables/DataTable";
+import { Button } from "@mui/material";
+
+import { IMAGE_SERVER } from "constants/RestEndPoint";
+
 
 function LeaveApproval() {
   const staff = useSelector(selectStaff);
@@ -42,6 +46,9 @@ function LeaveApproval() {
   const [selectedRowData, setSelectedRowData] = useState({});
 
   const [approvalStatus, setApprovalStatus] = useState(""); // Initialize with an initial status
+  const [selectedImage, setSelectedImage] = useState('');
+  const [openImageDialog, setOpenImageDialog] = useState(false);
+
 
   const getResponse = async () => {
     try {
@@ -102,12 +109,12 @@ function LeaveApproval() {
     leaveId: leave.leaveId,
     name: leave.staff.firstname + " " + leave.staff.lastname,
     staffId: leave.staff.staffId,
-    startDate: moment(leave.startDate, "YYYY-MM-DD HH:mm:ss").format(
-      "DD/MM/YYYY"
-    ),
+    startDate: moment(leave.startDate, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY"),
     endDate: moment(leave.endDate, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY"),
     leaveType: leave.leaveTypeEnum,
     approvalStatus: leave.approvalStatusEnum,
+    comments: leave.comments,
+    imageDocuments: leave.imageDocuments,
   }));
 
   const handleApproval = async (row) => {
@@ -117,11 +124,11 @@ function LeaveApproval() {
       console.log(response);
 
       const username = response.data.staff.username;
-      const leaveStart = new Date(response.data.startDate[0], response.data.startDate[1]-1, response.data.startDate[2])
-      const leaveEnd = new Date(response.data.endDate[0], response.data.endDate[1]-1, response.data.endDate[2])
+      const leaveStart = new Date(response.data.startDate[0], response.data.startDate[1] - 1, response.data.startDate[2])
+      const leaveEnd = new Date(response.data.endDate[0], response.data.endDate[1] - 1, response.data.endDate[2])
       // delete shifts if there is any coinciding with the date
       const shiftList = await shiftApi.getAllShiftsFromDate(username, moment(leaveStart).format('YYYY-MM-DD'), moment(leaveEnd).format('YYYY-MM-DD'));
-      for (let i=0; i<shiftList.data.length; i++) {
+      for (let i = 0; i < shiftList.data.length; i++) {
         let shift = shiftList.data[i];
         const deleteResponse = await shiftApi.deleteShift(shift.shiftId);
       }
