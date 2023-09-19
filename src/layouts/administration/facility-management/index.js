@@ -289,6 +289,41 @@ function FacilityManagement() {
   const handleUpdateFacility = () => {
     try {
       const { facilityId, ...requestBody } = updateFormData;
+      console.log(requestBody.name)
+      if (requestBody.name == "") {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Name cannot be null",
+          })
+        );
+      return
+      }
+      console.log(requestBody.location)
+      if (requestBody.location == "") {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Location cannot be null",
+          })
+        );
+      return
+      }
+      if (requestBody.capacity < 0) {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Capacity cannot be less than 0",
+          })
+        );
+      return
+      }
       facilityApi
         .updateFacility(facilityId, requestBody)
         .then(() => {
@@ -313,15 +348,6 @@ function FacilityManagement() {
           handleCloseUpdateModal();
         })
         .catch((err) => {
-          setUpdateFormData({
-            facilityId: null,
-            name: "",
-            location: "",
-            description: "",
-            capacity: "",
-            facilityStatusEnum: "",
-            facilityTypeEnum: "",
-          });
           reduxDispatch(
             displayMessage({
               color: "error",
