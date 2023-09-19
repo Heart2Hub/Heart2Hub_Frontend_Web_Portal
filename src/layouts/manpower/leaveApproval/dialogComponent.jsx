@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid, TextField, Typography } from '@mui/material';
 import { leaveApi } from 'api/Api';
 import MDButton from 'components/MDButton';
 import MDTypography from 'components/MDTypography';
@@ -10,11 +10,12 @@ import { useDispatch } from "react-redux";
 
 function DialogComponent({ rowData, onApproval, onRejection }) {
   const [open, setOpen] = React.useState(false);
-  const { leaveId, name, staffId, startDate, endDate, leaveType, approvalStatus } = rowData;
+  const { leaveId, name, staffId, startDate, endDate, leaveType, approvalStatus, comments } = rowData;
   const [leaveBalance, setleaveBalance] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [action, setAction] = useState(null);
   const reduxDispatch = useDispatch();
+  const [comment, setComment] = useState('');
 
 
   const handleClickOpen = () => {
@@ -49,7 +50,14 @@ function DialogComponent({ rowData, onApproval, onRejection }) {
       );
       await onApproval(rowData);
     } catch (error) {
-      console.error(error);
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error Encountered",
+          content: "Leave not approved",
+        })
+      );
       setIsLoading(false); // Handle errors and mark loading as complete
     }
   };
@@ -71,7 +79,14 @@ function DialogComponent({ rowData, onApproval, onRejection }) {
       );
       await onRejection(rowData);
     } catch (error) {
-      console.error(error);
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error Encountered",
+          content: "Leave not rejected ",
+        })
+      );
       setIsLoading(false); // Handle errors and mark loading as complete
     }
   };
@@ -124,6 +139,9 @@ function DialogComponent({ rowData, onApproval, onRejection }) {
             </Typography>
             <Typography variant="subtitle1">
               Approval Status: {approvalStatus}
+            </Typography>
+            <Typography variant="subtitle1">
+              Comments: {comments}
             </Typography>
             <br />
             <Typography variant="h6">

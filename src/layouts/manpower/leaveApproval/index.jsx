@@ -94,17 +94,7 @@ function LeaveApproval() {
     }
 
   ]
-  const handleViewClick = (row) => {
-    console.log('Selected Original Row Data:', row)
-    setSelectedRowData(row);
-    // setIsModalOpen(true);
-  };
 
-  useEffect(() => {
-    console.log('Selected Row Data:', selectedRowData);
-  }, [selectedRowData]);
-
-  // const rows = []
   const rows = leaves?.map((leave) => ({
     leaveId: leave.leaveId,
     name: leave.staff.firstname + ' ' + leave.staff.lastname,
@@ -113,6 +103,7 @@ function LeaveApproval() {
     endDate: moment(leave.endDate, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY'),
     leaveType: leave.leaveTypeEnum,
     approvalStatus: leave.approvalStatusEnum,
+    comments: leave.comments,
   }));
 
 
