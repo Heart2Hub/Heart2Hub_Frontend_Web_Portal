@@ -121,12 +121,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 
 
 			if (error.response && error.response.data) {
-				const errorData = error.response.data;
-				if (errorData.message === "Start date and end date must be within allowed date ranges.") {
-					setErrorMessages(["Start date and end date must be within allowed date ranges."]);
-				} else {
-					setErrorMessages([errorData.message || "Error Updating Leave"]);
-				}
+				setErrorMessages([error.response.data]);
 			} else {
 				setErrorMessages(["Please Enter a Start and End Date"]);
 			}
