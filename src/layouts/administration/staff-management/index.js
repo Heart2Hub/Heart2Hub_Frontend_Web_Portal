@@ -45,6 +45,9 @@ function StaffManagement() {
         return obj;
       }, {});
 
+    //NEED PROFILE PHOTO
+    newStaffObj.profilePicture = staffObj.profilePicture?.imageLink;
+
     return newStaffObj;
   };
 
@@ -81,8 +84,8 @@ function StaffManagement() {
       setFormState(processStaffObj(staff));
       setTableView(false);
     }
-    console.log("the staff to be editted is: ");
-    console.log(staff);
+    // console.log("the staff to be editted is: ");
+    // console.log(staff);
   };
 
   const returnToTableHandler = () => {

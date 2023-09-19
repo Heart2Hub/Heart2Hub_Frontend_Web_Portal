@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
@@ -27,6 +27,8 @@ import moment from "moment";
 
 import { displayMessage } from "../../../store/slices/snackbarSlice";
 import { useDispatch } from "react-redux";
+import MDAvatar from "components/MDAvatar";
+import { IMAGE_SERVER } from "constants/RestEndPoint";
 
 const validationSchema = yup.object({
   username: yup
@@ -50,6 +52,8 @@ const validationSchema = yup.object({
 });
 
 function AddStaff({ returnToTableHandler, formState, editing }) {
+  const existingPhoto = IMAGE_SERVER + "/images/id/" + formState.profilePicture;
+
   const [staffRoles, setStaffRoles] = useState([]);
   const [departmentNames, setDepartmentNames] = useState([]);
   const [subDepartments, setSubDepartments] = useState([]);
@@ -58,8 +62,10 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
   );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(null);
-  //const [imageDocument, setImageDocument] = useState({})
+  const [imageSrc, setImageSrc] = useState("");
+  const [editImageSrc, setEditImageSrc] = useState(existingPhoto);
   const reduxDispatch = useDispatch();
+  const photoInputRef = useRef(null);
 
   const processDepartmentData = (departments) => {
     const departmentNames = departments.map((department) => department.name);
@@ -166,6 +172,7 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
         })
       );
     } catch (error) {
+      console.log(error);
       reduxDispatch(
         displayMessage({
           color: "warning",
@@ -174,11 +181,11 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
           content: error.response.data,
         })
       );
-      actions.setStatus(error.response.data);
+      //actions.setStatus(error.response.data);
     }
   };
 
-  const putStaff = async (staffBody, subDepartmentName, actions) => {
+  const putStaff = async (staffBody, subDepartmentName) => {
     try {
       const response = await staffApi.updateStaff(staffBody, subDepartmentName);
       reduxDispatch(
@@ -199,7 +206,49 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
           content: error.response.data,
         })
       );
-      actions.setStatus(error.response.data);
+    }
+  };
+
+  const putStaffWithImage = async (staffBody, subDepartmentName) => {
+    try {
+      const imageServerResponse = await imageServerApi.uploadProfilePhoto(
+        "id",
+        profilePhoto
+      );
+
+      const requestBody = {
+        staff: staffBody,
+        imageDocument: {
+          imageLink: imageServerResponse.data.filename,
+          createdDate: moment().format("YYYY-MM-DDTHH:mm:ss"),
+        },
+      };
+
+      console.log(requestBody);
+
+      const response = await staffApi.updateStaffWithImage(
+        requestBody,
+        subDepartmentName
+      );
+      returnToTableHandler();
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Success!",
+          content: "Staff has been updated",
+        })
+      );
+    } catch (error) {
+      console.log(error);
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error!",
+          content: error.response.data,
+        })
+      );
     }
   };
 
@@ -208,7 +257,11 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
     const staffBody = createStaffBody(values);
     if (editing) {
       console.log("Updated staff");
-      putStaff(staffBody, subDepartmentName, actions);
+      if (profilePhoto) {
+        putStaffWithImage(staffBody, subDepartmentName);
+      } else {
+        putStaff(staffBody, subDepartmentName);
+      }
     } else {
       console.log("Creating staff");
       postStaff(staffBody, subDepartmentName, actions);
@@ -253,9 +306,34 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
 
   const handlePhotoUpload = (e) => {
     console.log(e.target.files[0]);
+    const file = e.target.files[0];
+
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        // const uploadedImage = document.getElementById("uploadedImage");
+        // uploadedImage.src = e.target.result;
+        if (editing) {
+          setEditImageSrc(e.target.result);
+        } else {
+          setImageSrc(e.target.result);
+        }
+      };
+
+      reader.readAsDataURL(file);
+    }
+
     const formData = new FormData();
     formData.append("image", e.target.files[0], e.target.files[0].name);
     setProfilePhoto(formData);
+  };
+
+  const handleClearSelection = (e) => {
+    e.preventDefault();
+    setEditImageSrc(existingPhoto);
+    setProfilePhoto(null);
+    photoInputRef.current.value = null;
   };
 
   return (
@@ -356,7 +434,6 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                     name="username"
                     hiddenlabel
                     size="small"
-                    status={status}
                     disabled={editing}
                   />
                 </Grid>
@@ -423,21 +500,36 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                   </MDBox>
                 </Grid>
                 <Grid item xs={6}>
-                  {editing ? null : (
-                    <MDBox>
-                      <MDTypography
-                        variant="button"
-                        fontWeight="bold"
-                        textTransform="capitalize"
+                  <MDBox>
+                    <MDTypography
+                      variant="button"
+                      fontWeight="bold"
+                      textTransform="capitalize"
+                    >
+                      Profile Photo
+                    </MDTypography>
+                    <input
+                      ref={photoInputRef}
+                      style={{ marginLeft: "10px" }}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                    />
+                  </MDBox>
+                  {editing ? (
+                    <>
+                      <button
+                        style={{ marginLeft: "100px", padding: "2px" }}
+                        onClick={handleClearSelection}
                       >
-                        Profile Photo
-                      </MDTypography>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoUpload}
-                      />
-                    </MDBox>
+                        Clear Selection
+                      </button>
+                      <MDAvatar src={editImageSrc} size="xxl" />
+                    </>
+                  ) : (
+                    <>
+                      <MDAvatar src={imageSrc} size="xxl" />
+                    </>
                   )}
                 </Grid>
                 <Grid item xs={4}>

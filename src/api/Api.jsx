@@ -56,6 +56,12 @@ export const staffApi = {
       staff
     );
   },
+  updateStaffWithImage(requestBody, subDepartment) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/staff/updateStaffWithImage/${subDepartment}`,
+      requestBody
+    );
+  },
   disableStaff(username) {
     return axiosFetch.put(`${REST_ENDPOINT}/staff/disableStaff/${username}`);
   },
@@ -193,7 +199,9 @@ export const shiftApi = {
     return axiosFetch.delete(`${REST_ENDPOINT}/shift/deleteShift/${shiftId}`);
   },
   getAllShiftsFromDate(username, start, end) {
-    console.log(`${REST_ENDPOINT}/shift/getAllShiftsFromDate/${username}?startDate=${start}&endDate=${end}`)
+    console.log(
+      `${REST_ENDPOINT}/shift/getAllShiftsFromDate/${username}?startDate=${start}&endDate=${end}`
+    );
     return axiosFetch.get(
       `${REST_ENDPOINT}/shift/getAllShiftsFromDate/${username}?startDate=${start}&endDate=${end}`
     );
