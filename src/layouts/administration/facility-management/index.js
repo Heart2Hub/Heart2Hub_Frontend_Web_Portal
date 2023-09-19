@@ -164,14 +164,27 @@ function FacilityManagement() {
             facilityStatusEnum: "",
             facilityTypeEnum: "",
           });
-          reduxDispatch(
-            displayMessage({
-              color: "error",
-              icon: "notification",
-              title: "Error Encountered",
-              content: err.message,
-            })
-          );
+          // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
+          if (err.response.data.detail) {
+            reduxDispatch(
+              displayMessage({
+                color: "error",
+                icon: "notification",
+                title: "Error Encountered",
+                content: err.response.data.detail,
+              })
+            );
+          } else {
+            reduxDispatch(
+              displayMessage({
+                color: "error",
+                icon: "notification",
+                title: "Error Encountered",
+                content: err.response.data,
+              })
+            );
+          }
+          console.log(err.response.data.detail)
           handleCloseModal();
         });
     } catch (ex) {
@@ -254,10 +267,11 @@ function FacilityManagement() {
               color: "error",
               icon: "notification",
               title: "Error Encountered",
-              content: err.message,
+              content: err.response.data,
             })
           );
-          handleCloseModal();
+          console.log(err)
+          handleCloseUpdateModal();
         });
     } catch (ex) {
       console.log(ex);
@@ -285,9 +299,10 @@ function FacilityManagement() {
               color: "error",
               icon: "notification",
               title: "Error Encountered",
-              content: err.message,
+              content: err.response.data,
             })
           );
+          console.log(err);
         });
     } catch (ex) {
       console.error(ex);
