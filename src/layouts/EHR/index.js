@@ -14,6 +14,7 @@ import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { IconButton, Icon } from "@mui/material";
+// import DatePicker from "@mui/x-date-pickers";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -120,18 +121,17 @@ function EHR() {
   const [isPictureCorrect, setIsPictureCorrect] = useState(false);
 
   const handleOpenModal = (electronicHealthRecordId) => {
-
-    const patientWithElectronicHealthRecordSummary = dataRef.current.rows[0].find(
-      (patientWithElectronicHealthRecordSummary) =>
-        patientWithElectronicHealthRecordSummary.electronicHealthRecordId ===
-        electronicHealthRecordId
-    );
+    const patientWithElectronicHealthRecordSummary =
+      dataRef.current.rows[0].find(
+        (patientWithElectronicHealthRecordSummary) =>
+          patientWithElectronicHealthRecordSummary.electronicHealthRecordId ===
+          electronicHealthRecordId
+      );
 
     if (patientWithElectronicHealthRecordSummary) {
       setFormData({
         electronicHealthRecordId: electronicHealthRecordId,
-        profilePicture:
-          patientWithElectronicHealthRecordSummary.profilePicture,
+        profilePicture: patientWithElectronicHealthRecordSummary.profilePicture,
         nric: patientWithElectronicHealthRecordSummary.nric,
         firstName: patientWithElectronicHealthRecordSummary.firstName,
         lastName: patientWithElectronicHealthRecordSummary.lastName,
@@ -171,20 +171,36 @@ function EHR() {
                 color: "success",
                 icon: "notification",
                 title: "Validation Success!",
-                content: "Retrieved Electronic Health Record With ID: " + electronicHealthRecordId,
+                content:
+                  "Retrieved Electronic Health Record With ID: " +
+                  electronicHealthRecordId,
               })
             );
             setIsModalOpen(false);
             // ROUTE HERE
-          }).catch((err) => {
-            reduxDispatch(
-              displayMessage({
-                color: "error",
-                icon: "notification",
-                title: "Validation Failed!",
-                content: err.message,
-              })
-            );
+          })
+          .catch((err) => {
+            // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with redux.
+            if (err.response.data.detail) {
+              reduxDispatch(
+                displayMessage({
+                  color: "error",
+                  icon: "notification",
+                  title: "Validation Failed!",
+                  content: err.response.data.detail,
+                })
+              );
+            } else {
+              reduxDispatch(
+                displayMessage({
+                  color: "error",
+                  icon: "notification",
+                  title: "Validation Failed!",
+                  content: err.response.data,
+                })
+              );
+            }
+            console.log(err);
           });
       } catch (ex) {
         console.log(ex);
@@ -195,13 +211,14 @@ function EHR() {
           color: "error",
           icon: "notification",
           title: "Validation Failed!",
-          content: "Please check details & Picture",
+          content: "Please check details & picture",
         })
       );
     }
   };
 
   const fetchData = async () => {
+    // Consider adding buffering to load API data. Cause this part may get quite huge
     patientApi
       .getAllPatientsWithElectronicHealthRecordSummaryByName("")
       .then((response) => {
