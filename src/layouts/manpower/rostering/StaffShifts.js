@@ -97,7 +97,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                 {username === localStorage.getItem('staffUsername') ? <b>{truncate(staff.firstname + " " + staff.lastname) + " (You)"}</b> : truncate(staff.firstname + " " + staff.lastname)}
             </TableCell>
             {listOfDates?.map(date => {   
-                if (date.leave) {
+                if (date.leave && date.leave.staff.username === username) {
                     return (
                         <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
                             <Card sx={{
@@ -107,7 +107,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                                 marginLeft: 1,
                                 padding: 0,
                                 borderRadius: 3
-                            }}> 
+                            }}> {console.log(date.leave)}
                                 <CardActionArea>    
                                     <CardContent sx={{ padding: "0.5rem 0.5rem" }}>
                                         <Typography variant="body2" color="#ffffff">
