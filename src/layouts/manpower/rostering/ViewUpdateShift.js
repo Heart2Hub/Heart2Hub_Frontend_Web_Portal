@@ -7,10 +7,12 @@ import Modal from "@mui/material/Modal";
 import Select from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import axios from 'axios';
 import moment from 'moment';
 import { MenuItem } from '@mui/material';
-import { getShiftName, getShiftId, getShiftTime, options, facilities } from '../utils/utils';
+import { getShiftName, getShiftId, getShiftTime, options, getShiftNameWithTime } from '../utils/utils';
+import { shiftApi, shiftPreferenceApi, facilityApi } from 'api/Api';
+import { displayMessage } from "store/slices/snackbarSlice";
+import { useDispatch } from "react-redux";
 
 const style = {
     position: "absolute",
@@ -30,6 +32,8 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
     const [selectedFacility, setSelectedFacility] = useState(facilityId ? facilityId : 1);
     const [errorMsg, setErrorMsg] = useState();
     const [shiftPref, setShiftPref] = useState(0);
+    const [facilities, setFacilities] = useState();
+    const reduxDispatch = useDispatch();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -58,29 +62,45 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
         newReqBody.endTime = moment(end, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         newReqBody.comments = reqBody.comments;
         try {
-            const response = await axios.put(`http://localhost:8080/shift/updateShift/${shift.shiftId}/${selectedFacility}`, newReqBody, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await shiftApi.updateShift(shift.shiftId, selectedFacility, newReqBody);
             setUpdateAddShift(updateAddShift+1);
             handleClose();
             setErrorMsg(null);
+            reduxDispatch(
+                displayMessage({
+                  color: "success",
+                  icon: "notification",
+                  title: "Shift successfully updated!",
+                  content: "Shift has been updated for staff " + staff.firstname + " " + staff.lastname + "!",
+                })
+              );
         } catch (error) {
             console.log(error)
+            reduxDispatch(
+                displayMessage({
+                  color: "warning",
+                  icon: "notification",
+                  title: "Error updating shift!",
+                  content: error.response.data,
+                })
+              );
             setErrorMsg(error.response.data);
         }
     }
 
     const handleCancel = async () => {
         try {
-            const response = await axios.delete(`http://localhost:8080/shift/deleteShift/${shift.shiftId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await shiftApi.deleteShift(shift.shiftId);
             setUpdateAddShift(updateAddShift+1);
             handleClose();
+            reduxDispatch(
+                displayMessage({
+                  color: "success",
+                  icon: "notification",
+                  title: "Shift successfully deleted!",
+                  content: "Shift has been deleted for staff " + username + "!",
+                })
+              );
         } catch (error) {
             console.log(error)
         }
@@ -88,16 +108,21 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
 
     const getShiftPreference = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/shiftPreference/getShiftPreference/${username}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await shiftPreferenceApi.getShiftPreference(username);
             if (response.data) {
                 setShiftPref(getShiftId(moment(response.data.startTime, 'HH:mm:ss').format('HH:mm'), moment(response.data.endTime, 'HH:mm:ss').format('HH:mm')))
             } else {
                 setShiftPref(0);
             }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const getFacilities = async () => {
+        try {
+            const response = await facilityApi.getAllFacilitiesByName("");
+            setFacilities(response.data)
         } catch (error) {
             console.error(error);
         }
@@ -127,7 +152,8 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
         setReqBody(shift);
         setSelectedFacility(facilityId);
         setSelectedShift(getShiftId(moment(shift?.startTime, 'YYYY-MM-DD HH:mm:ss').format('HH:mm'), moment(shift?.endTime, 'YYYY-MM-DD HH:mm:ss').format('HH:mm')));
-        getShiftPreference();
+        if (username) getShiftPreference();
+        getFacilities();
     }, [shift, facilityId])
 
     return (
@@ -148,7 +174,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                 <Grid container spacing={3}>
                     {/* if is rosterer */}
                     {username ? 
-                    <Grid md={12}>
+                    <Grid>
                         <Typography variant="h5">Update Shift</Typography>
                         <Typography variant="h6">Staff: {staff.firstname + " " + staff.lastname}</Typography>
                         <Typography variant="h6">Date: {moment(shift?.startTime, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD')}</Typography><br/>
@@ -158,6 +184,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                             id="shift-select"
                             value={selectedShift}
                             onChange={handleDropdownChange}
+                            sx={{ lineHeight: "2.5em"}}
                         >
                             {options.map((option) => (
                                 <MenuItem key={option.id} value={option.id}>
@@ -166,7 +193,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                             ))}
                         </Select>
                         <Typography variant="body2">
-                            <i>{staff.firstname + " " + staff.lastname}'s shift preference: {shiftPref === 0 ? "No preference" 
+                            <i>Shift preference: {shiftPref === 0 ? "No preference" 
                                 : getShiftName(moment(getShiftTime(shiftPref)[0], 'HH:mm:ss').format('HH:mm'), moment(getShiftTime(shiftPref)[1], 'HH:mm:ss').format('HH:mm'))}
                             </i>
                         </Typography><br/>
@@ -184,14 +211,15 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                             id="facility-select"
                             value={selectedFacility}
                             onChange={handleFacilityDropdownChange}
+                            sx={{ lineHeight: "2.5em"}}
                         >
-                            {facilities.map((option) => (
-                                <MenuItem key={option.id} value={option.id}>
+                            {facilities?.map((option) => (
+                                <MenuItem key={option.facilityId} value={option.facilityId}>
                                     {option.name}
                                 </MenuItem>
                             ))}
                         </Select><br/><br/>
-                        {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
+                        {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                         <Button 
                             variant="contained" 
                             onClick={handleSubmit}
@@ -205,11 +233,10 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                             Delete
                         </Button>
                     </Grid> :
-                    <Grid md={12}>
-                        <Typography variant="h6">Start: {shift?.startTime}</Typography>
-                        <Typography variant="h6">End: {shift?.endTime}</Typography>
-                        <Typography variant="h6">Facility: {shift?.facilityBooking.facility.name}</Typography>
-                        <Typography variant="h6">Comments: {shift?.comments ? shift?.comments : "NA"}</Typography><br/>
+                    <Grid>
+                        <Typography variant="body3">{shift && shift.leaveTypeEnum ? getShiftNameWithTime(null, null, shift) : getShiftNameWithTime(shift?.startTime, shift?.endTime)}</Typography>
+                        <Typography variant="body2">{shift && shift.facilityBooking ? <><b>Facility:</b> {shift?.facilityBooking.facility.name} </>:<></>}</Typography>
+                        <Typography variant="body2"><b>Comments:</b> {shift?.comments ? shift?.comments : "-"}</Typography><br/>
                         <Button 
                             variant="contained" 
                             onClick={handleExit}

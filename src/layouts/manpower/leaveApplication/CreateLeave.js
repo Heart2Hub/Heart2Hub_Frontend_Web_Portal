@@ -31,16 +31,25 @@ import MDInput from "components/MDInput";
 import FormCard from "examples/Cards/FormCards";
 import SimpleBlogCard from "examples/Cards/BlogCards/SimpleBlogCard";
 import CardContent from '@mui/material/CardContent';
+import { useSelector } from "react-redux";
+import { selectStaff } from "store/slices/staffSlice";
+import { Link } from 'react-router-dom';
+import { staffApi, departmentApi, imageServerApi } from "api/Api";
+import moment from "moment";
 
 
 
 function CreateLeave() {
+
+	const staff = useSelector(selectStaff);
+	const staffId = staff.staffId;
 
 	const [startDate, setStartDate] = useState('');
 	const [endDate, setEndDate] = useState('');
 	const [leaveBalance, setLeaveBalance] = useState([]);
 	const [selectedLeaveTypeEnum, setSelectedLeaveTypeEnum] = useState('');
 	const [selectedStaff, setSelectedStaff] = useState('');
+	const [leavePhoto, setLeavePhoto] = useState(null);
 
 	const [leaveTypes, setLeaveTypes] = useState([]);
 	const [staffList, setStaffList] = useState([]);
@@ -66,11 +75,10 @@ function CreateLeave() {
 	}
 
 	//Remember to edit
-	const staffId = '1';
 
 
 	const getLeaveBalance = async () => {
-		const response = await axios.get('http://localhost:8080/leave/getLeaveBalance?staffId=1', {
+		const response = await axios.get(`http://localhost:8080/leave/getLeaveBalance?staffId=${staff.staffId}`, {
 			headers: {
 				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
 			}
@@ -136,8 +144,11 @@ function CreateLeave() {
 
 	const handleStartDateChange = (e) => {
 		const newStartDate = e.target.value;
-		setStartDate(newStartDate);
+		updateStartEndDate(newStartDate);
+	};
 
+	const updateStartEndDate = (newStartDate) => {
+		setStartDate(newStartDate);
 		// If the startDate has been selected, update endDate to a day after startDate
 		if (newStartDate) {
 			const startDateObj = new Date(newStartDate);
@@ -149,6 +160,13 @@ function CreateLeave() {
 			// If startDate is cleared, clear endDate as well
 			setEndDate('');
 		}
+	}
+
+	const handlePhotoUpload = (e) => {
+		console.log(e.target.files[0]);
+		const formData = new FormData();
+		formData.append("image", e.target.files[0], e.target.files[0].name);
+		setLeavePhoto(formData);
 	};
 
 	const handleSubmit = async (e) => {
@@ -157,16 +175,44 @@ function CreateLeave() {
 		setErrorMessages([]);
 		setSuccessMessage("");
 
-		const leaveRecord = {
-			staffId,
-			startDate,
-			endDate,
-			selectedLeaveTypeEnum,
-			selectedStaff,
-			comments
-		};
+		// const leaveRecord = {
+		// 	staffId,
+		// 	startDate,
+		// 	endDate,
+		// 	selectedLeaveTypeEnum,
+		// 	selectedStaff,
+		// 	comments
+		// };
 
 		try {
+			let imageLink = null;
+			let createdDate = null;
+
+			if (leavePhoto) {
+				// Only make the image server request if leavePhoto is provided
+				const imageServerResponse = await imageServerApi.uploadProfilePhoto(
+					"id",
+					leavePhoto
+				);
+
+				imageLink = imageServerResponse.data.filename; // Set imageLink if photo is uploaded
+				createdDate = moment().format("YYYY-MM-DDTHH:mm:ss");
+			}
+
+			const leaveRecord = {
+				staffId,
+				startDate,
+				endDate,
+				selectedLeaveTypeEnum,
+				selectedStaff,
+				comments,
+				imageLink,
+				createdDate
+
+			};
+
+			console.log(leaveRecord);
+
 			const response = await axios.post('http://localhost:8080/leave/createLeave', leaveRecord, {
 				headers: {
 					'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
@@ -180,24 +226,19 @@ function CreateLeave() {
 			setEndDate("");
 			setSelectedLeaveTypeEnum("");
 			setSelectedStaff("");
+			setComments("");
+			setLeavePhoto("");
 			getLeaveBalance();
 
 		} catch (error) {
 			console.error('Error creating leave:', error);
 
 			if (error.response && error.response.data) {
-				const errorData = error.response.data;
-				if (errorData.message === "Leave overlaps with existing leaves") {
-					setErrorMessages(["Leave overlaps with existing leaves."]);
-				} else if (errorData.message === "Start date and end date must be within allowed date ranges") {
-					setErrorMessages(["Start date and end date must be within allowed date ranges."]);
-
-				} else {
-					setErrorMessages(["Leave Dates overlap with existing leaves"]);
-				}
-			} else {
+				setErrorMessages([error.response.data]);
+				
+			      } else {
 				setErrorMessages(["Insufficient Leave Balance."]);
-			}
+			      }
 		}
 
 
@@ -208,20 +249,6 @@ function CreateLeave() {
 			<DashboardNavbar />
 			<MDBox mb={2} />
 			<Grid container spacing={3}>
-				<Grid item xs={12} md={6} lg={3}>
-					<MDBox mb={1.5}>
-						<SimpleBlogCard
-							image="https://bit.ly/3Hlw1MQ"
-							title="Leave Management"
-							action={{
-								type: "internal",
-								route: "/manpower/viewAllLeaves",
-								color: "info",
-								label: "View My Leaves",
-							}}
-						/>{" "}
-					</MDBox>
-				</Grid>
 				<Grid item xs={12} md={6} lg={3}>
 					<Card>
 						<MDBox
@@ -248,11 +275,20 @@ function CreateLeave() {
 							<div>
 								<strong>Parental Leave:</strong> {leaveBalance.parentalLeave}
 							</div>
+							<div>
+								<br></br>
+								<Link to="/manpower/leaveApplication" style={{ textDecoration: 'none' }}>
+									<Button variant="contained" color="primary" style={{ color: 'white' }}>
+										View My Leaves
+									</Button>
+								</Link>
+							</div>
 						</CardContent>
 					</Card>
 
 				</Grid>
 			</Grid>
+			<br />
 			<MDBox mt={3} mb={3}>
 				<Card>
 					<MDBox
@@ -271,6 +307,28 @@ function CreateLeave() {
 					</MDBox>
 					<MDBox pt={3} style={{ padding: '20px' }}>
 						<form onSubmit={handleSubmit}>
+							<Grid item xs={6} sx={{ marginBottom: "10px" }}>
+								<InputLabel sx={{ paddingBottom: "8px" }}>Select Leave Type</InputLabel>
+								<Select
+									value={selectedLeaveTypeEnum}
+									onChange={(e) => {
+										setSelectedLeaveTypeEnum(e.target.value);
+										if (e.target.value === 'ANNUAL' || e.target.value === 'PARENTAL') {
+											updateStartEndDate(oneMonthLater.toISOString().slice(0, 10));
+										} else {
+											updateStartEndDate(new Date().toISOString().slice(0, 10))
+										}
+									}}
+									required
+									sx={{ lineHeight: "2.5em", width: "30%" }}
+								>
+									{leaveTypes.map((enumItem, index) => (
+										<MenuItem key={index} value={enumItem}>
+											{enumItem}
+										</MenuItem>
+									))}
+								</Select>
+							</Grid><br />
 							<Grid container spacing={8}>
 								<Grid item xs={6}>
 									<TextField
@@ -282,7 +340,7 @@ function CreateLeave() {
 										fullWidth
 										InputLabelProps={{ shrink: true }}
 										inputProps={{
-											min: oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : "",
+											min: (selectedLeaveTypeEnum === 'ANNUAL' || selectedLeaveTypeEnum === 'PARENTAL') ? (oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10),
 											max: sixMonthsLater ? sixMonthsLater.toISOString().slice(0, 10) : "",
 										}}
 									/>
@@ -290,61 +348,62 @@ function CreateLeave() {
 								<Grid item xs={6}>
 									<TextField
 										type="date"
-										label="End Date"
+										label="End Date (Not Inclusive)"
 										value={endDate}
 										onChange={(e) => setEndDate(e.target.value)}
 										required
 										fullWidth
 										InputLabelProps={{ shrink: true }}
 										inputProps={{
-											min: oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : "",
+											min: (selectedLeaveTypeEnum === 'ANNUAL' || selectedLeaveTypeEnum === 'PARENTAL') ? (oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10),
 											max: sixMonthsLater ? sixMonthsLater.toISOString().slice(0, 10) : "",
 										}}
 									/>
 								</Grid>
-								<Grid item xs={6}>
-									<InputLabel >Select Leave Type</InputLabel>
-									<FormControl fullWidth>
-										<Select
-											value={selectedLeaveTypeEnum}
-											onChange={(e) => setSelectedLeaveTypeEnum(e.target.value)}
-											required
-										>
-											{leaveTypes.map((enumItem, index) => (
-												<MenuItem key={index} value={enumItem}>
-													{enumItem}
-												</MenuItem>
-											))}
-										</Select>
-									</FormControl>
-								</Grid>
-								<Grid item xs={6}>
-									<InputLabel >Select Head Staff</InputLabel>
-									<FormControl fullWidth>
+							</Grid><br />
+							<Grid item xs={6}>
+								<InputLabel sx={{ marginBottom: "8px" }}>Select Head Staff</InputLabel>
+								<Select
+									value={selectedStaff}
+									onChange={(e) => setSelectedStaff(e.target.value)}
+									required
+									sx={{ lineHeight: "2.5em", width: "30%" }}
 
-										<Select
-											value={selectedStaff}
-											onChange={(e) => setSelectedStaff(e.target.value)}
-											required
-										>
-											{staffList.map((staffItem, index) => (
-												<MenuItem key={index} value={staffItem.staffId}>
-													{staffItem.username}
-												</MenuItem>
-											))}
-										</Select>
-									</FormControl>
-								</Grid>
-								<Grid item xs={12}>
-									<InputLabel>Comments</InputLabel>
-									<TextareaAutosize
-										rowsMin={3}
-										value={comments}
-										onChange={(e) => setComments(e.target.value)}
-										fullWidth
-										style={{ width: "100%", minHeight: "150px" }}
+								>
+									{staffList.filter(user => user.username !== localStorage.getItem('staffUsername')).map((staffItem, index) => (
+										<MenuItem key={index} value={staffItem.staffId}>
+											{staffItem.firstname + " " + staffItem.lastname}
+										</MenuItem>
+									))}
+								</Select>
+							</Grid><br />
+							<Grid item xs={12}>
+								<InputLabel sx={{ marginBottom: "8px" }}>Comments</InputLabel>
+								<TextareaAutosize
+									rowsMin={3}
+									value={comments}
+									onChange={(e) => setComments(e.target.value)}
+									fullWidth
+									style={{ width: "100%", minHeight: "150px", borderColor: "gainsboro", borderRadius: "6px", fontFamily: 'Arial', padding: "10px", fontSize: "15px" }}
+								/>
+							</Grid>
+							<Grid item xs={6}>
+								<MDBox>
+									<MDTypography
+										variant="button"
+										fontWeight="bold"
+										textTransform="capitalize"
+									>
+										Upload Photo
+									</MDTypography>
+									<br></br>
+									<input
+										type="file"
+										accept="image/*"
+										onChange={handlePhotoUpload}
 									/>
-								</Grid>
+									<br></br>
+								</MDBox>
 
 							</Grid>
 							{errorMessages.length > 0 && (
@@ -361,8 +420,9 @@ function CreateLeave() {
 								</Alert>
 							)}
 
+							<br></br>
 							<Grid item xs={12}>
-								<Button variant="contained" color="primary" type="submit" style={{ backgroundColor: 'blue', color: 'white' }}
+								<Button variant="contained" color="primary" type="submit" style={{ backgroundColor: 'green', color: 'white' }}
 								>
 									Create Leave
 								</Button>

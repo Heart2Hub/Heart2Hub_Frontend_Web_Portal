@@ -8,9 +8,10 @@ import Typography from '@mui/material/Typography';
 import moment from 'moment';
 import axios from 'axios';
 import { Button } from '@mui/material';
-import { getShiftName, getTime, getColor } from '../utils/utils';
+import { getShiftName, getTime, getColor, getColorLeave } from '../utils/utils';
 import ViewShift from './ViewUpdateShift';
 import AddShift from './AllocateShift';
+import { shiftApi, leaveApi } from 'api/Api';
 
 const buttonStyles = {
     backgroundColor: "white",
@@ -27,18 +28,40 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
     const [listOfDates, setListOfDates] = useState(dateList);
     const [addShiftDate, setAddShiftDate] = useState(weekStartDate);
     const [shifts, setShifts] = useState([]);
+    const [leaves, setLeaves] = useState();
     const [currShift, setCurrShift] = useState();
     const [addShiftOpen, setAddShiftOpen] = useState(false);
     const [viewShiftOpen, setViewShiftOpen] = useState(false);
     let i = 0;
 
     const getAllShiftsForStaff = async () => {
-        const response = await axios.get(`http://localhost:8080/shift/viewWeeklyRoster/${username}?date=${weekStartDate}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        try {
+            const response = await shiftApi.viewWeeklyRoster(username,weekStartDate);
+            setShifts(response.data);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const getAllStaffLeaves = async (s) => {
+        try {
+            const response = await leaveApi.getAllStaffLeaves(s.staffId);
+            const filteredLeaves = response.data.filter(leave => leave.approvalStatusEnum === "APPROVED");
+            const object = {};
+            for (let i=0; i<filteredLeaves.length; i++) {
+                let leave = filteredLeaves[i];
+                let start = moment(leave.startDate[0] + '-' + leave.startDate[1] + '-' + leave.startDate[2]);
+                let end = moment(leave.endDate[0] + '-' + leave.endDate[1] + '-' + leave.endDate[2]);
+                let curr = start.clone()
+                while (curr.isSameOrBefore(end)) {
+                    object[curr.format('YYYY-MM-DD')] = leave;
+                    curr.add(1,'days');
+                }
             }
-        });
-        setShifts(response.data);
+            setLeaves(object);
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     const handleOpen = (date, shift) => {
@@ -56,20 +79,24 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
         setViewShiftOpen(false);
     }
 
+    const truncate = (input) => {
+      return input?.length > 15 ? `${input.substring(0, 20)}...` : input;
+    }
+
     useEffect(() => {
         setListOfDates(dateList);
+        getAllStaffLeaves(staff);
         getAllShiftsForStaff();
-    }, [shifts?.length, dateList, viewShiftOpen, addShiftOpen, weekStartDate])
+    }, [shifts?.length, dateList, viewShiftOpen, addShiftOpen, weekStartDate, staff])
 
     return (
         <TableRow role="checkbox" tabIndex={-1} key={username} sx={{ display: 'flex'}}>
-            <TableCell key={username} sx={{ minWidth: 176, paddingLeft: "30px", marginTop: "10px"  }} align="left">
-                {username === localStorage.getItem('staffUsername') ? <b>{staff.firstname + " " + staff.lastname + " (You)"}</b> : staff.firstname + " " + staff.lastname}
+            <TableCell key={username} sx={{ width: 230, paddingLeft: "30px", marginTop: "10px"  }} align="left">
+                {username === localStorage.getItem('staffUsername') ? <b>{truncate(staff.firstname + " " + staff.lastname) + " (You)"}</b> : truncate(staff.firstname + " " + staff.lastname)}
             </TableCell>
             {listOfDates?.map(date => {   
-                if (i < shifts?.length && moment(shifts[i]?.startTime).day() === moment(date.date).day()) {
-                    const shift = shifts[i];
-                    i++;
+                if (i < shifts?.length && moment(shifts[i]?.startTime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD") === date.date) {
+                    const shift = shifts[i++];
                     return (
                         <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={shift.id}>
                             <Card sx={{
@@ -81,14 +108,14 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                                 borderRadius: 3
                             }} onClick={() => handleOpen(date.date, shift)}>
                                 <CardActionArea>    
-                                    <CardContent sx={{ padding: "0.5rem 0.8rem" }}>
+                                    <CardContent sx={{ padding: "0.5rem 0.3rem" }}>
                                         <Typography variant="body2">
                                             {getShiftName(getTime(shift.startTime), getTime(shift.endTime))}
                                         </Typography>
                                         <Typography variant="h6" color="text.secondary">
                                             {getTime(shift.startTime)} - {getTime(shift.endTime)}
                                         </Typography>
-                                        <Typography variant="body3">
+                                        <Typography variant="body3" sx={{fontSize: 11}}>
                                             {shift.facilityBooking.facility.name}
                                         </Typography>
                                     </CardContent>
@@ -96,7 +123,32 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                             </Card>
                         </TableCell>
                     );
-                } else {
+                } 
+                else if (leaves && leaves[date.date] != null) {
+                    return (
+                        <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
+                            <Card sx={{
+                                backgroundColor: getColorLeave(leaves[date.date].approvalStatusEnum),
+                                width: 130,
+                                height: 80,
+                                alignContent: "center",
+                                marginLeft: 1,
+                                padding: 0,
+                                borderRadius: 3
+                            }}> 
+                                <CardContent sx={{ padding: "0.5rem 0.5rem" }}>
+                                    <Typography variant="body2" color="#ffffff">
+                                        <b>{leaves[date.date].leaveTypeEnum + " leave"}</b>
+                                    </Typography>
+                                    <Typography variant="body3" color="#ffffff">
+                                        {leaves[date.date].approvalStatusEnum}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </TableCell>
+                    )
+                }
+                else {
                     return (
                         <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
                             <Button 

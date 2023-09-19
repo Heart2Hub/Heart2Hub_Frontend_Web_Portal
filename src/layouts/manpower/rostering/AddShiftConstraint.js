@@ -9,7 +9,9 @@ import Select from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { options } from '../utils/utils';
-import axios from 'axios';
+import { shiftConstraintsApi } from 'api/Api';
+import { displayMessage } from "store/slices/snackbarSlice";
+import { useDispatch } from "react-redux";
 
 const style = {
     position: "absolute",
@@ -28,12 +30,13 @@ function AddShiftConstraint({open, handleClose, role}) {
         startTime: "",
         endTime: "",
         minPax: 1,
-        roleEnum: ""
+        staffRoleEnum: ""
     }
 
     const [reqBody, setReqBody] = useState(body);
     const [selectedShift, setSelectedShift] = useState(1);
     const [errorMsg, setErrorMsg] = useState();
+    const reduxDispatch = useDispatch();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -56,15 +59,28 @@ function AddShiftConstraint({open, handleClose, role}) {
         newReqBody.startTime = start;
         newReqBody.endTime = end;
         try {
-            const response = await axios.post(`http://localhost:8080/shiftConstraints/createShiftConstraints`, newReqBody, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            console.log(newReqBody)
+            const response = await shiftConstraintsApi.createShiftConstraints(newReqBody);
             handleClose();
             setErrorMsg(null);
+            reduxDispatch(
+                displayMessage({
+                  color: "success",
+                  icon: "notification",
+                  title: "Shift constraints successfully created!",
+                  content: "Shift constraints from " + start + " to " + end + " for " + newReqBody.minPax + " PAX created!",
+                })
+              );
         } catch (error) {
             console.log(error)
+            reduxDispatch(
+                displayMessage({
+                  color: "warning",
+                  icon: "notification",
+                  title: "Error creating shift constraints!",
+                  content: error.response.data
+                })
+              );
             setErrorMsg(error.response.data);
         }
     }
@@ -87,7 +103,7 @@ function AddShiftConstraint({open, handleClose, role}) {
 
     useEffect(() => {
         let temp = body;
-        temp.roleEnum = role;
+        temp.staffRoleEnum = role;
         setReqBody(temp);
     }, [role])
 
@@ -132,8 +148,8 @@ function AddShiftConstraint({open, handleClose, role}) {
                             onChange={handleChange}
                             value={reqBody.minPax}
                         /><br/><br/>
-                        <Typography variant="h6">Role: {reqBody.roleEnum}</Typography><br/>
-                        {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
+                        <Typography variant="h6">Role: {reqBody.staffRoleEnum}</Typography><br/>
+                        {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                         <Button 
                             variant="contained" 
                             onClick={handleSubmit}

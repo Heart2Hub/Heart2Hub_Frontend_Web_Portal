@@ -124,7 +124,7 @@ function SignInPage() {
           displayMessage({
             color: "warning",
             icon: "notification",
-            title: "Error Encountered",
+            title: "Warning",
             content: exception.message,
           })
         );
