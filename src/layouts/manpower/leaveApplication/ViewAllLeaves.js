@@ -20,6 +20,9 @@ import UpdateLeaveForm from "./UpdateLeaveForm";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import { Link } from 'react-router-dom';
+import MDAvatar from "components/MDAvatar";
+import { IMAGE_SERVER } from "constants/RestEndPoint";
+
 
 
 
@@ -43,6 +46,22 @@ function ViewAllLeaves() {
 	const [rowToDelete, setRowToDelete] = useState(null);
 	const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState(null);
+	const [openImageDialog, setOpenImageDialog] = useState(false);
+	const [selectedImage, setSelectedImage] = useState('');
+
+	const handleViewImage = (leave) => {
+		if (leave.imageDocuments?.imageLink) {
+			console.log("View Image button clicked.");
+			setSelectedImage(`${IMAGE_SERVER}/images/id/${leave.imageDocuments.imageLink}`);
+			setOpenImageDialog(true);
+		}
+	};
+
+	const handleCloseImageDialog = () => {
+		setOpenImageDialog(false);
+		setSelectedImage('');
+	};
+
 
 	const handleDeleteDialogOpen = (rowId) => {
 		setRowToDelete(rowId);
@@ -116,7 +135,7 @@ function ViewAllLeaves() {
 
 	function formatDateToDdMmYyyy(inputDate) {
 		try {
-			const newDate = new Date(inputDate[0], inputDate[1]-1, inputDate[2])
+			const newDate = new Date(inputDate[0], inputDate[1] - 1, inputDate[2])
 			return moment(newDate).format('DD/MM/YYYY')
 
 		} catch (error) {
@@ -142,7 +161,7 @@ function ViewAllLeaves() {
 	const columns = [
 		{ field: 'leaveId', headerName: 'S/N', width: 100 },
 		{ field: 'startDate', headerName: 'Start Date', width: 150, valueFormatter: (params) => formatDateToDdMmYyyy(params.value) },
-		{ field: 'endDate', headerName: 'End Date', width: 150, valueFormatter: (params) => formatDateToDdMmYyyy(params.value) },
+		{ field: 'endDate', headerName: 'End Date (Not Inclusive)', width: 150, valueFormatter: (params) => formatDateToDdMmYyyy(params.value) },
 		{ field: 'comments', headerName: 'Comments', width: 200 },
 		{ field: 'leaveTypeEnum', headerName: 'Leave Type', width: 150 },
 		{
@@ -202,6 +221,23 @@ function ViewAllLeaves() {
 					Delete
 				</Button>
 			),
+		},
+		{
+			field: 'viewImage',
+			headerName: 'View Image',
+			width: 150,
+			renderCell: (params) => (
+				params.row.imageDocuments ? (
+					<Button
+						variant="outlined"
+						color="primary"
+						onClick={() => handleViewImage(params.row)}
+						style={{ backgroundColor: 'orange', color: 'white' }}
+					>
+						View Image
+					</Button>
+				) : null
+			),
 		},];
 
 	const generateRowId = (row) => {
@@ -238,7 +274,7 @@ function ViewAllLeaves() {
 			<DashboardNavbar />
 			<MDBox py={3}>
 				<Grid container spacing={3}>
-					
+
 					<Grid item xs={12} md={6} lg={3}>
 						<Card>
 							<MDBox
@@ -327,6 +363,14 @@ function ViewAllLeaves() {
 												Delete
 											</Button>
 										</DialogActions>
+									</Dialog>
+									<Dialog open={openImageDialog} onClose={handleCloseImageDialog} style={{ maxWidth: '100%', maxHeight: '100%'}}>
+										<DialogContent style={{width: '100vw' }}>
+											<img src={selectedImage} alt="Leave Image" style={{ maxWidth: '100%', maxHeight: '100%' }} />
+										</DialogContent>
+										<Button onClick={handleCloseImageDialog} color="primary">
+											Close
+										</Button>
 									</Dialog>
 									<UpdateLeaveForm
 										open={isUpdateFormOpen}
