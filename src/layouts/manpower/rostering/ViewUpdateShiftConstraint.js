@@ -12,6 +12,8 @@ import moment from 'moment';
 import { MenuItem } from '@mui/material';
 import { getShiftId, options } from '../utils/utils';
 import { shiftConstraintsApi } from 'api/Api';
+import { displayMessage } from "store/slices/snackbarSlice";
+import { useDispatch } from "react-redux";
 
 const style = {
     position: "absolute",
@@ -36,6 +38,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
     const [reqBody, setReqBody] = useState();
     const [selectedShift, setSelectedShift] = useState();
     const [errorMsg, setErrorMsg] = useState();
+    const reduxDispatch = useDispatch();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -61,8 +64,24 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
             const response = await shiftConstraintsApi.updateShiftConstraints(shiftConstraint.shiftConstraintsId, newReqBody);
             handleClose();
             setErrorMsg(null);
+            reduxDispatch(
+                displayMessage({
+                  color: "success",
+                  icon: "notification",
+                  title: "Shift constraints successfully updated!",
+                  content: "Shift constraints from " + start + " to " + end + " updated to " + newReqBody.minPax + " PAX!",
+                })
+              );
         } catch (error) {
             console.log(error)
+            reduxDispatch(
+                displayMessage({
+                  color: "warning",
+                  icon: "notification",
+                  title: "Error updating shift constraints!",
+                  content: error.response.data
+                })
+              );
             setErrorMsg(error.response.data);
         }
     }
@@ -71,6 +90,14 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
         try {
             const response = await shiftConstraintsApi.deleteShiftConstraints(shiftConstraint.shiftConstraintsId);
             handleClose();
+            reduxDispatch(
+                displayMessage({
+                  color: "success",
+                  icon: "notification",
+                  title: "Shift constraints successfully deleted!",
+                  content: "Shift constraints with ID " + shiftConstraint.shiftConstraintsId +" has been deleted!",
+                })
+              );
         } catch (error) {
             console.log(error)
         }
@@ -132,7 +159,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
                             value={reqBody?.minPax}
                         /><br/><br/>
                         <Typography variant="h6">Role: {reqBody?.staffRoleEnum}</Typography><br/>
-                        {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
+                        {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                         <Button 
                             variant="contained" 
                             onClick={handleSubmit}

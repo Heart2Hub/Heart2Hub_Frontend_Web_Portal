@@ -27,6 +27,8 @@ import { getColor, getShiftName, getShiftNameWithTime, getShiftTime, getTime } f
 import { Button } from '@mui/material';
 import { getShiftId } from '../utils/utils';
 import { shiftApi, shiftPreferenceApi, staffApi, leaveApi } from 'api/Api';
+import { displayMessage } from "store/slices/snackbarSlice";
+import { useDispatch } from "react-redux";
 
 function CalendarRoster() {
 
@@ -37,6 +39,7 @@ function CalendarRoster() {
     const [loading, setLoading] = useState(false);
     const [viewShiftOpen, setViewShiftOpen] = useState(false);
     const [event, setEvent] = useState();
+    const reduxDispatch = useDispatch();
  
     moment.locale('ko', {
         week: {
@@ -111,6 +114,14 @@ function CalendarRoster() {
             newReqBody.endTime = getShiftTime(shift)[1];
             try {
                 const response = await shiftPreferenceApi.createShiftPreference(newReqBody);
+                reduxDispatch(
+                    displayMessage({
+                      color: "success",
+                      icon: "notification",
+                      title: "Shift preference added!",
+                      content: "Shift preference with start time " + newReqBody.startTime + " and end time " + newReqBody.endTime + " has been added!",
+                    })
+                  );
             } catch (error) {
                 console.log(error)
             } finally {
@@ -123,6 +134,14 @@ function CalendarRoster() {
         setLoading(true);
         try {
             const response = await shiftPreferenceApi.deleteShiftPreference(id);
+            reduxDispatch(
+                displayMessage({
+                  color: "success",
+                  icon: "notification",
+                  title: "Shift preference removed!",
+                  content: "Shift preference reverted back to no preference",
+                })
+              );
         } catch (error) {
             console.log(error)
         } finally {

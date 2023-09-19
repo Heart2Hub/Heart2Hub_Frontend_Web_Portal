@@ -7,11 +7,12 @@ import Modal from "@mui/material/Modal";
 import Select from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import axios from 'axios';
 import moment from 'moment';
 import { MenuItem } from '@mui/material';
 import { getShiftName, getShiftId, getShiftTime, options, getShiftNameWithTime } from '../utils/utils';
 import { shiftApi, shiftPreferenceApi, facilityApi } from 'api/Api';
+import { displayMessage } from "store/slices/snackbarSlice";
+import { useDispatch } from "react-redux";
 
 const style = {
     position: "absolute",
@@ -32,6 +33,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
     const [errorMsg, setErrorMsg] = useState();
     const [shiftPref, setShiftPref] = useState(0);
     const [facilities, setFacilities] = useState();
+    const reduxDispatch = useDispatch();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -64,8 +66,24 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
             setUpdateAddShift(updateAddShift+1);
             handleClose();
             setErrorMsg(null);
+            reduxDispatch(
+                displayMessage({
+                  color: "success",
+                  icon: "notification",
+                  title: "Shift successfully updated!",
+                  content: "Shift has been updated for staff " + username + "!",
+                })
+              );
         } catch (error) {
             console.log(error)
+            reduxDispatch(
+                displayMessage({
+                  color: "warning",
+                  icon: "notification",
+                  title: "Error updating shift!",
+                  content: error.response.data,
+                })
+              );
             setErrorMsg(error.response.data);
         }
     }
@@ -75,6 +93,14 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
             const response = await shiftApi.deleteShift(shift.shiftId);
             setUpdateAddShift(updateAddShift+1);
             handleClose();
+            reduxDispatch(
+                displayMessage({
+                  color: "success",
+                  icon: "notification",
+                  title: "Shift successfully deleted!",
+                  content: "Shift has been deleted for staff " + username + "!",
+                })
+              );
         } catch (error) {
             console.log(error)
         }
@@ -193,7 +219,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                                 </MenuItem>
                             ))}
                         </Select><br/><br/>
-                        {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
+                        {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                         <Button 
                             variant="contained" 
                             onClick={handleSubmit}

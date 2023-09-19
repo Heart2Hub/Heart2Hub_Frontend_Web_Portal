@@ -12,7 +12,6 @@ import { getShiftName, getTime, getColor, getColorLeave } from '../utils/utils';
 import ViewShift from './ViewUpdateShift';
 import AddShift from './AllocateShift';
 import { shiftApi, leaveApi } from 'api/Api';
-import data from 'layouts/tables/data/authorsTableData';
 
 const buttonStyles = {
     backgroundColor: "white",
@@ -59,7 +58,6 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                     curr.add(1,'days');
                 }
             }
-            console.log(object)
             setLeaves(object);
         } catch (error) {
             console.log(error);

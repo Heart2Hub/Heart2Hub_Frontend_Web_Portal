@@ -39,6 +39,18 @@ export const getDay = (index) => {
     }
 }
 
+export const getScColor = (name) => {
+    if (name === "Shift 1") {
+        return "#ffdc7a";
+    } else if (name === "Shift 2") {
+        return "#baffb3";
+    } else if (name === "Shift 3") {
+        return "#b3ccff";
+    } else {
+        return "#ffb5b3";
+    }
+}
+
 export const getShiftName = (startTime, endTime) => {
     if (startTime == "00:00" && endTime == "08:00") {
         return "Shift 1";

@@ -27,19 +27,11 @@ import StaffShift from './StaffShifts';
 import { getDay } from '../utils/utils';
 import { Button, Icon } from '@mui/material';
 import AddShiftConstraint from './AddShiftConstraint';
-import { getShiftName } from '../utils/utils';
+import { getShiftName, getScColor } from '../utils/utils';
 import ViewUpdateShiftConstraint from './ViewUpdateShiftConstraint';
 
 import { staffApi } from 'api/Api';
 import { shiftConstraintsApi } from 'api/Api';
-
-const cardStyles = {
-    backgroundColor: "#ffffff",
-    margin: 2,
-    maxWidth: 300,
-    alignContent: "center",
-    borderRadius: 3
-}
 
 function Rostering() {
 
@@ -250,7 +242,16 @@ function Rostering() {
                 {scList.length > 0 ? <Typography variant="h6" paddingLeft={2}>Shift constraints for {currStaffDetails?.staffRoleEnum}:</Typography> : <></>}
               <Grid container>
                 {scList.map(sc => {return (
-                    <Card key={sc.shiftConstraintsId} sx={cardStyles} onClick={() => handleScOpen(sc)}>
+                    <Card 
+                        key={sc.shiftConstraintsId} 
+                        sx={{
+                            backgroundColor: getScColor(getShiftName(moment(sc.startTime, 'HH:mm:ss').format('HH:mm'), moment(sc.endTime, 'HH:mm:ss').format('HH:mm'))),
+                            margin: 2,
+                            maxWidth: 300,
+                            alignContent: "center",
+                            borderRadius: 3
+                        }}
+                        onClick={() => handleScOpen(sc)}>
                         <CardActionArea>   
                             <CardContent sx={{ padding: "0.5rem 1.2rem" }}>
                                 <Typography variant="h6">

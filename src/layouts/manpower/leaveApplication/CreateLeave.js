@@ -188,6 +188,7 @@ function CreateLeave() {
 			setEndDate("");
 			setSelectedLeaveTypeEnum("");
 			setSelectedStaff("");
+			setComments("");
 			getLeaveBalance();
 
 		} catch (error) {
