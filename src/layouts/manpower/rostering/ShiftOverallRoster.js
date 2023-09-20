@@ -89,7 +89,8 @@ function Rostering() {
     const getStaffListByRole = async (role) => {
         try {
             const response = await staffApi.getStaffListByRole(role);
-            const sortedArray = response.data.sort((a,b) => {
+            const usernameSortedArray = response.data.sort((a,b) => a.username.localeCompare(b.username))
+            const sortedArray = usernameSortedArray.sort((a,b) => {
                 if (a.username === localStorage.getItem('staffUsername')) {
                     return -1;
                 } else {
