@@ -151,11 +151,11 @@ function CreateLeave() {
 		setStartDate(newStartDate);
 		// If the startDate has been selected, update endDate to a day after startDate
 		if (newStartDate) {
-			const startDateObj = new Date(newStartDate);
-			const nextDay = new Date(startDateObj);
-			nextDay.setDate(startDateObj.getDate() + 1);
-			const formattedNextDay = nextDay.toISOString().slice(0, 10);
-			setEndDate(formattedNextDay);
+			// const startDateObj = new Date(newStartDate);
+			// const nextDay = new Date(startDateObj);
+			// nextDay.setDate(startDateObj.getDate() + 1);
+			// const formattedNextDay = nextDay.toISOString().slice(0, 10);
+			setEndDate(newStartDate);
 		} else {
 			// If startDate is cleared, clear endDate as well
 			setEndDate('');
@@ -348,7 +348,7 @@ function CreateLeave() {
 								<Grid item xs={6}>
 									<TextField
 										type="date"
-										label="End Date (Not Inclusive)"
+										label="End Date"
 										value={endDate}
 										onChange={(e) => setEndDate(e.target.value)}
 										required

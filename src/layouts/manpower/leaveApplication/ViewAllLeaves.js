@@ -159,11 +159,23 @@ function ViewAllLeaves() {
 	}
 
 	const columns = [
-		{ field: 'leaveId', headerName: 'S/N', width: 100 },
-		{ field: 'startDate', headerName: 'Start Date', width: 150, valueFormatter: (params) => formatDateToDdMmYyyy(params.value) },
-		{ field: 'endDate', headerName: 'End Date (Not Inclusive)', width: 150, valueFormatter: (params) => formatDateToDdMmYyyy(params.value) },
+		{ field: 'leaveId', headerName: 'S/N', width: 100, sortable: true},
+		{ field: 'startDate', headerName: 'Start Date', width: 150, valueFormatter: (params) => formatDateToDdMmYyyy(params.value), sortable: true,
+		comparator: (a, b) => {
+			// Convert LocalDateTime strings to Date objects for comparison
+			const dateA = new Date(a);
+			const dateB = new Date(b);
+			return dateA - dateB;
+		      }},
+		{ field: 'endDate', headerName: 'End Date', width: 150, valueFormatter: (params) => formatDateToDdMmYyyy(params.value),sortable: true,
+		comparator: (a, b) => {
+			// Convert LocalDateTime strings to Date objects for comparison
+			const dateA = new Date(a);
+			const dateB = new Date(b);
+			return dateA - dateB;
+		      } },
 		{ field: 'comments', headerName: 'Comments', width: 200 },
-		{ field: 'leaveTypeEnum', headerName: 'Leave Type', width: 150 },
+		{ field: 'leaveTypeEnum', headerName: 'Leave Type', width: 150, sortable: true},
 		{
 			field: 'approvalStatusEnum',
 			headerName: 'Approval Status',
@@ -188,7 +200,8 @@ function ViewAllLeaves() {
 			field: 'headStaff.username',
 			headerName: 'Head Staff',
 			width: 150,
-			valueGetter: (params) => params.row.headStaff.username,
+			valueGetter: (params) => params.row.headStaff.firstname,
+			sortable: true
 		},
 		{
 			field: 'update',
