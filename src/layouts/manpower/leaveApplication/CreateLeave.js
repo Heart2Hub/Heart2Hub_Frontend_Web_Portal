@@ -80,7 +80,7 @@ function CreateLeave() {
 	const getLeaveBalance = async () => {
 		const response = await axios.get(`http://localhost:8080/leave/getLeaveBalance?staffId=${staff.staffId}`, {
 			headers: {
-				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+				'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 			}
 		});
 
@@ -90,7 +90,7 @@ function CreateLeave() {
 	const fetchLeaveTypes = async () => {
 		axios.get('http://localhost:8080/leave/getLeaveTypeEnumList', {
 			headers: {
-				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+				'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 			}
 		})
 			.then((response) => {
@@ -108,7 +108,7 @@ function CreateLeave() {
 	const fetchStaffList = async () => {
 		axios.get('http://localhost:8080/staff/getAllHeadStaff', {
 			headers: {
-				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+				'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 			}
 		})
 			.then((response) => {
@@ -151,11 +151,11 @@ function CreateLeave() {
 		setStartDate(newStartDate);
 		// If the startDate has been selected, update endDate to a day after startDate
 		if (newStartDate) {
-			const startDateObj = new Date(newStartDate);
-			const nextDay = new Date(startDateObj);
-			nextDay.setDate(startDateObj.getDate() + 1);
-			const formattedNextDay = nextDay.toISOString().slice(0, 10);
-			setEndDate(formattedNextDay);
+			// const startDateObj = new Date(newStartDate);
+			// const nextDay = new Date(startDateObj);
+			// nextDay.setDate(startDateObj.getDate() + 1);
+			// const formattedNextDay = nextDay.toISOString().slice(0, 10);
+			setEndDate(newStartDate);
 		} else {
 			// If startDate is cleared, clear endDate as well
 			setEndDate('');
@@ -215,7 +215,7 @@ function CreateLeave() {
 
 			const response = await axios.post('http://localhost:8080/leave/createLeave', leaveRecord, {
 				headers: {
-					'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+					'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 				}
 			});
 			console.log('Leave created:', response.data);
@@ -348,7 +348,7 @@ function CreateLeave() {
 								<Grid item xs={6}>
 									<TextField
 										type="date"
-										label="End Date (Not Inclusive)"
+										label="End Date"
 										value={endDate}
 										onChange={(e) => setEndDate(e.target.value)}
 										required

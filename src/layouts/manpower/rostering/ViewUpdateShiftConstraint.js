@@ -27,13 +27,6 @@ const style = {
     p: 5,
 };
 
-const body = {
-    startTime: "",
-    endTime: "",
-    minPax: 0,
-    staffRoleEnum: "DOCTOR"
-}
-
 function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
     const [reqBody, setReqBody] = useState();
     const [selectedShift, setSelectedShift] = useState();

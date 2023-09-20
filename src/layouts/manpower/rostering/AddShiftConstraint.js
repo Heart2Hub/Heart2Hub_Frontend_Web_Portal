@@ -98,6 +98,9 @@ function AddShiftConstraint({open, handleClose, role}) {
 
     const handleExit = () => {
         handleClose();
+        let temp = body;
+        temp.staffRoleEnum = role;
+        setReqBody(temp);
         setErrorMsg(null);
     }
 
