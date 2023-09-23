@@ -344,7 +344,8 @@ function Rostering() {
                                     dateList={weekDates}
                                     weekStartDate={weekDates.length > 0 ? weekDates[0].date : today}
                                     updateAddShift={updateAddShift}
-                                    setUpdateAddShift={setUpdateAddShift}>
+                                    setUpdateAddShift={setUpdateAddShift}
+                                    facilities={facilities}>
                                 </StaffShift>)
                             })}
                         </TableBody>

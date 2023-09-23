@@ -26,13 +26,12 @@ const style = {
     p: 5,
 };
 
-function ViewShift({open, handleClose, staff, shift, username, updateAddShift, setUpdateAddShift, facilityId}) {
+function ViewShift({open, handleClose, staff, shift, username, updateAddShift, setUpdateAddShift, facilityId, facilities}) {
     const [reqBody, setReqBody] = useState();
     const [selectedShift, setSelectedShift] = useState();
     const [selectedFacility, setSelectedFacility] = useState(facilityId ? facilityId : 1);
     const [errorMsg, setErrorMsg] = useState();
     const [shiftPref, setShiftPref] = useState(0);
-    const [facilities, setFacilities] = useState();
     const reduxDispatch = useDispatch();
 
     const handleSubmit = async (event) => {
@@ -119,15 +118,6 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
         }
     }
 
-    const getFacilities = async () => {
-        try {
-            const response = await facilityApi.getAllFacilitiesByName("");
-            setFacilities(response.data)
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
     const handleDropdownChange = (event) => {
         setSelectedShift(event.target.value);
     }
@@ -153,7 +143,6 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
         setSelectedFacility(facilityId);
         setSelectedShift(getShiftId(moment(shift?.startTime, 'YYYY-MM-DD HH:mm:ss').format('HH:mm'), moment(shift?.endTime, 'YYYY-MM-DD HH:mm:ss').format('HH:mm')));
         if (username) getShiftPreference();
-        getFacilities();
     }, [shift, facilityId])
 
     return (

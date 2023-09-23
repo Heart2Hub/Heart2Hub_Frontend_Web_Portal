@@ -23,7 +23,7 @@ const buttonStyles = {
     fontSize: "1.3rem"
 }
 
-function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, setUpdateAddShift }) {
+function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, setUpdateAddShift, facilities }) {
 
     const [listOfDates, setListOfDates] = useState(dateList);
     const [addShiftDate, setAddShiftDate] = useState(weekStartDate);
@@ -171,6 +171,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                 staff={staff}
                 updateAddShift={updateAddShift}
                 setUpdateAddShift={setUpdateAddShift}
+                facilities={facilities}
                 />
             <AddShift 
                 username={username}
@@ -180,6 +181,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                 date={addShiftDate}
                 updateAddShift={updateAddShift}
                 setUpdateAddShift={setUpdateAddShift}
+                facilities={facilities}
                 />
         </TableRow>
     );

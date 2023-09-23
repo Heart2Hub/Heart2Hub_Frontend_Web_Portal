@@ -32,13 +32,12 @@ const body = {
     comments: ""
 }
 
-function AddShift({ username, open, staff, handleClose, date, updateAddShift, setUpdateAddShift }) {
+function AddShift({ username, open, staff, handleClose, date, updateAddShift, setUpdateAddShift, facilities }) {
     const [reqBody, setReqBody] = useState(body);
     const [selectedShift, setSelectedShift] = useState(1);
     const [selectedFacility, setSelectedFacility] = useState(1);
     const [errorMsg, setErrorMsg] = useState();
     const [shiftPref, setShiftPref] = useState(0);
-    const [facilities, setFacilities] = useState([]);
     const reduxDispatch = useDispatch();
 
     const handleSubmit = async (event) => {
@@ -101,15 +100,6 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
         }
     }
 
-    const getFacilities = async () => {
-        try {
-            const response = await facilityApi.getAllFacilitiesByName("");
-            setFacilities(response.data)
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
     const handleDropdownChange = (event) => {
         setSelectedShift(event.target.value);
     }
@@ -132,7 +122,6 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
 
     useEffect(() => {
         getShiftPreference();
-        getFacilities();
     }, [])
 
     return (
