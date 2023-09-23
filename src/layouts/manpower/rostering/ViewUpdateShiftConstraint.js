@@ -27,9 +27,10 @@ const style = {
     p: 5,
 };
 
-function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
+function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint, facilities }) {
     const [reqBody, setReqBody] = useState();
     const [selectedShift, setSelectedShift] = useState();
+    const [selectedFacility, setSelectedFacility] = useState();
     const [errorMsg, setErrorMsg] = useState();
     const reduxDispatch = useDispatch();
 
@@ -53,8 +54,9 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
         }
         newReqBody.startTime = start;
         newReqBody.endTime = end;
+        console.log(selectedFacility)
         try {
-            const response = await shiftConstraintsApi.updateShiftConstraints(shiftConstraint.shiftConstraintsId, newReqBody);
+            const response = await shiftConstraintsApi.updateShiftConstraints(shiftConstraint.shiftConstraintsId, newReqBody, selectedFacility);
             handleClose();
             setErrorMsg(null);
             reduxDispatch(
@@ -62,7 +64,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
                   color: "success",
                   icon: "notification",
                   title: "Shift constraints successfully updated!",
-                  content: "Shift constraints from " + start + " to " + end + " updated to " + newReqBody.minPax + " PAX!",
+                  content: "Shift constraints from " + start + " to " + end + " at " + selectedFacility + " updated to " + newReqBody.minPax + " PAX!",
                 })
               );
         } catch (error) {
@@ -100,6 +102,10 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
         setSelectedShift(event.target.value);
     }
 
+    const handleFacilityDropdownChange = (event) => {
+        setSelectedFacility(event.target.value);
+    }
+
     const handleChange = (event) => {
         setReqBody((prevState) => ({
             ...prevState,
@@ -115,6 +121,11 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
     useEffect(() => {
         setReqBody(shiftConstraint);
         setSelectedShift(getShiftId(moment(shiftConstraint?.startTime, 'HH:mm:ss').format('HH:mm'), moment(shiftConstraint?.endTime, 'HH:mm:ss').format('HH:mm')));
+        if (shiftConstraint) {
+            setSelectedFacility(shiftConstraint.facility?.name);
+        } else {
+            setSelectedFacility("");
+        }
     }, [shiftConstraint])
 
     return (
@@ -151,6 +162,19 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
                             onChange={handleChange}
                             value={reqBody?.minPax}
                         /><br/><br/>
+                         <InputLabel id="shift-select-label">Facility:</InputLabel>
+                        <Select
+                            labelId="facility-select-label"
+                            id="facility-select"
+                            value={selectedFacility}
+                            onChange={handleFacilityDropdownChange}
+                        >
+                            {facilities.map((facility) => (
+                                <MenuItem key={facility.facilityId} value={facility.name}>
+                                    {facility.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
                         <Typography variant="h6">Role: {reqBody?.staffRoleEnum}</Typography><br/>
                         {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                         <Button 

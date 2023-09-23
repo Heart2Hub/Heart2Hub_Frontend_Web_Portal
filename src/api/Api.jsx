@@ -65,8 +65,8 @@ export const staffApi = {
   disableStaff(username) {
     return axiosFetch.put(`${REST_ENDPOINT}/staff/disableStaff/${username}`);
   },
-  getStaffListByRole(role) {
-    return axiosFetch.get(`${REST_ENDPOINT}/staff/getStaffByRole?role=${role}`);
+  getStaffListByRole(role, unit) {
+    return axiosFetch.get(`${REST_ENDPOINT}/staff/getStaffByRole?role=${role}&unit=${unit}`);
   },
 };
 
@@ -95,6 +95,11 @@ export const facilityApi = {
   getAllFacilitiesByName(name) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/facility/getAllFacilitiesByName?name=${name}`
+    );
+  },
+  getAllFacilitiesByDepartmentName(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facility/getAllFacilitiesByDepartmentName?name=${name}`
     );
   },
   createFacility(subDepartmentId, requestBody) {
@@ -209,25 +214,25 @@ export const shiftApi = {
 };
 
 export const shiftConstraintsApi = {
-  getAllShiftConstraints(role) {
+  getAllShiftConstraints(role, department) {
     return axiosFetch.get(
-      `${REST_ENDPOINT}/shiftConstraints/getAllShiftConstraints/${role}`
+      `${REST_ENDPOINT}/shiftConstraints/getAllShiftConstraints/${role}?department=${department}`
     );
   },
-  checkIsValidWorkDay(role, date) {
+  checkIsValidWorkDay(role, date, department) {
     return axiosFetch.get(
-      `${REST_ENDPOINT}/shiftConstraints/checkIsValidWorkday?role=${role}&date=${date}`
+      `${REST_ENDPOINT}/shiftConstraints/checkIsValidWorkday?role=${role}&date=${date}&department=${department}`
     );
   },
-  createShiftConstraints(requestBody) {
+  createShiftConstraints(requestBody, facilityName) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/shiftConstraints/createShiftConstraints`,
+      `${REST_ENDPOINT}/shiftConstraints/createShiftConstraints?facilityName=${facilityName}`,
       requestBody
     );
   },
-  updateShiftConstraints(id, requestBody) {
+  updateShiftConstraints(id, requestBody, facilityName) {
     return axiosFetch.put(
-      `${REST_ENDPOINT}/shiftConstraints/updateShiftConstraints/${id}`,
+      `${REST_ENDPOINT}/shiftConstraints/updateShiftConstraints/${id}?facilityName=${facilityName}`,
       requestBody
     );
   },
