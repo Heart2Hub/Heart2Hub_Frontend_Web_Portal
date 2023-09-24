@@ -23,6 +23,8 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
+import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
 import StaffShift from './StaffShifts';
 import { getDay } from '../utils/utils';
 import { Button, Icon } from '@mui/material';
@@ -117,10 +119,10 @@ function Rostering() {
         const dates = [];
         let i = 0;
         while (startDate.isSameOrBefore(endDate)) {
-            if (await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum, currStaffDetails?.unit.name)) {
+            if ((await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum, currStaffDetails?.unit.name)).length == 0) {
                 dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: true });
             } else {
-                dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: false });
+                dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: false, reason: (await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum, currStaffDetails?.unit.name))[0]});
             }
             startDate.add(1, 'days');
             i++;
@@ -153,10 +155,10 @@ function Rostering() {
         const dates = [];
         let i = 0;
         while (startDate.isSameOrBefore(endDate)) {
-            if (await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum, currStaffDetails?.unit.name)) {
+            if ((await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum, currStaffDetails?.unit.name)).length == 0) {
                 dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: true });
             } else {
-                dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: false });
+                dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: false, reason: (await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum, currStaffDetails?.unit.name))[0]});
             }
             startDate.add(1, 'days');
             i++;
@@ -328,8 +330,11 @@ function Rostering() {
                                         style={{ minWidth: 170, color: column.date === today ? 'brown' : 'black'}}
                                     >
                                     {column.day}<br/>{column.date}<br/>
-                                    {column.valid ? <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={'success'}>done</Icon> 
-                                    : <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={'warning'}>warning</Icon>}
+                                    {column.valid ? 
+                                    <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={'success'}>done</Icon> : 
+                                    <Tooltip title={column.reason}>
+                                        <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={'warning'}>warning</Icon>
+                                    </Tooltip>}
                                     </TableCell>
                                 ))}
                             </TableRow>

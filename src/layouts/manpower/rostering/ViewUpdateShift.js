@@ -197,7 +197,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                             name="comments"
                             onChange={handleChange}
                             value={reqBody?.comments}
-                        /><br/><br/>{console.log(staff.staffRoleEnum)}
+                        /><br/><br/>
                         {staff.staffRoleEnum === "NURSE" ? 
                             <>
                                 <Typography variant="h6">Ward: {staff.unit.name}</Typography><br/>
@@ -211,7 +211,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                                     onChange={handleFacilityDropdownChange}
                                 >
                                     {facilities.map((facility) => (
-                                        <MenuItem key={facility.facilityId} value={facility.name}>
+                                        <MenuItem key={facility.facilityId} value={facility.facilityId}>
                                             {facility?.name}
                                         </MenuItem>
                                     ))}

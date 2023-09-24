@@ -190,8 +190,8 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
                                     onChange={handleFacilityDropdownChange}
                                 >
                                     {facilities.map((facility) => (
-                                        <MenuItem key={facility.facilityId} value={facility.name}>
-                                            {facility?.name}
+                                        <MenuItem key={facility.facilityId} value={facility.facilityId}>
+                                            {facility.name ? facility.name : ""}
                                         </MenuItem>
                                     ))}
                                 </Select>

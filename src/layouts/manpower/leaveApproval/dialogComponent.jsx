@@ -127,39 +127,44 @@ function DialogComponent({ rowData, onApproval, onRejection }) {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
         style={{ size: '100px' }}
+        fullWidth
+        maxWidth="xs"
       >
         <DialogTitle id="alert-dialog-title">
           {"Leave Details"}
         </DialogTitle>
         <DialogContent>
           <>
-            <Typography variant="subtitle1">
-              Staff Name: {name}
+            <Typography variant="subtitle2">
+              <b>Staff Name:</b> {name}
             </Typography>
-            <Typography variant="subtitle1">
-              End Date: {endDate}
+            <Typography variant="subtitle2">
+              <b>Start Date:</b> {startDate}
             </Typography>
-            <Typography variant="subtitle1">
-              Leave Type: {leaveType}
+            <Typography variant="subtitle2">
+              <b>End Date:</b> {endDate}
             </Typography>
-            <Typography variant="subtitle1">
-              Approval Status: {approvalStatus}
+            <Typography variant="subtitle2">
+              <b>Leave Type:</b> {leaveType}
             </Typography>
-            <Typography variant="subtitle1">
-              Comments: {comments}
+            <Typography variant="subtitle2">
+            <b>Approval Status:</b> <b style={{ color: approvalStatus === "APPROVED" ? "green" : approvalStatus === "REJECTED" ? "red" : "grey"}}>{approvalStatus}</b>
+            </Typography>
+            <Typography variant="subtitle2">
+            <b>Comments:</b> {comments ? comments : "-"}
             </Typography>
             <br />
             <Typography variant="h6">
               Leave Balance:
             </Typography>
-            <Typography variant="subtitle1">
-              Annual leave: {leaveBalance.annualLeave}
+            <Typography variant="subtitle2">
+            <b>Annual leave:</b> {leaveBalance.annualLeave}
             </Typography>
-            <Typography variant="subtitle1">
-              Sick leave: {leaveBalance.sickLeave}
+            <Typography variant="subtitle2">
+            <b>Sick leave:</b> {leaveBalance.sickLeave}
             </Typography>
-            <Typography variant="subtitle1">
-              Parental leave: {leaveBalance.parentalLeave}
+            <Typography variant="subtitle2">
+            <b>Parental leave:</b> {leaveBalance.parentalLeave}
             </Typography>
             {imageDocuments && (
               <Button
