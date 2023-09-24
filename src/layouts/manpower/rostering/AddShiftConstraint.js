@@ -25,7 +25,7 @@ const style = {
     p: 5,
 };
 
-function AddShiftConstraint({open, handleClose, role, facilities}) {
+function AddShiftConstraint({open, handleClose, role, facilities, unit}) {
     const body = {
         startTime: "",
         endTime: "",
@@ -60,7 +60,11 @@ function AddShiftConstraint({open, handleClose, role, facilities}) {
         newReqBody.startTime = start;
         newReqBody.endTime = end;
         try {
-            const response = await shiftConstraintsApi.createShiftConstraints(newReqBody, selectedFacility);
+            if (role === "NURSE") {
+                const response = await shiftConstraintsApi.createShiftConstraints(newReqBody, unit);
+            } else {
+                const response = await shiftConstraintsApi.createShiftConstraints(newReqBody, selectedFacility);
+            }
             handleClose();
             setErrorMsg(null);
             reduxDispatch(
@@ -156,19 +160,25 @@ function AddShiftConstraint({open, handleClose, role, facilities}) {
                             onChange={handleChange}
                             value={reqBody.minPax}
                         /><br/><br/>
-                        <InputLabel id="shift-select-label">Facility:</InputLabel>
-                        <Select
-                            labelId="facility-select-label"
-                            id="facility-select"
-                            value={selectedFacility}
-                            onChange={handleFacilityDropdownChange}
-                        >
-                            {facilities.map((facility) => (
-                                <MenuItem key={facility.facilityId} value={facility.name}>
-                                    {facility?.name}
-                                </MenuItem>
-                            ))}
-                        </Select>
+                        {role === "NURSE" ? 
+                        <>
+                            <Typography variant="h6">Ward: {unit}</Typography>
+                        </> :
+                        <>
+                            <InputLabel id="shift-select-label">Facility:</InputLabel>
+                            <Select
+                                labelId="facility-select-label"
+                                id="facility-select"
+                                value={selectedFacility}
+                                onChange={handleFacilityDropdownChange}
+                            >
+                                {facilities.map((facility) => (
+                                    <MenuItem key={facility.facilityId} value={facility.name}>
+                                        {facility?.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </>}
                         <Typography variant="h6">Role: {reqBody.staffRoleEnum}</Typography><br/>
                         {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                         <Button 

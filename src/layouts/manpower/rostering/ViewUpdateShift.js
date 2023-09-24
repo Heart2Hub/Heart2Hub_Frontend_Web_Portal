@@ -61,7 +61,11 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
         newReqBody.endTime = moment(end, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         newReqBody.comments = reqBody.comments;
         try {
-            const response = await shiftApi.updateShift(shift.shiftId, selectedFacility, newReqBody);
+            if (staff.staffRoleEnum === "NURSE") {
+                const response = await shiftApi.updateShift(shift.shiftId, "1", newReqBody);
+            } else {
+                const response = await shiftApi.updateShift(shift.shiftId, selectedFacility, newReqBody);
+            }
             setUpdateAddShift(updateAddShift+1);
             handleClose();
             setErrorMsg(null);
@@ -193,21 +197,27 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                             name="comments"
                             onChange={handleChange}
                             value={reqBody?.comments}
-                        /><br/><br/>
-                        <InputLabel id="facility-select-label">Facility:</InputLabel>
-                        <Select
-                            labelId="facility-select-label"
-                            id="facility-select"
-                            value={selectedFacility}
-                            onChange={handleFacilityDropdownChange}
-                            sx={{ lineHeight: "2.5em"}}
-                        >
-                            {facilities?.map((option) => (
-                                <MenuItem key={option.facilityId} value={option.facilityId}>
-                                    {option.name}
-                                </MenuItem>
-                            ))}
-                        </Select><br/><br/>
+                        /><br/><br/>{console.log(staff.staffRoleEnum)}
+                        {staff.staffRoleEnum === "NURSE" ? 
+                            <>
+                                <Typography variant="h6">Ward: {staff.unit.name}</Typography><br/>
+                            </> :
+                            <>
+                                <InputLabel id="shift-select-label">Facility:</InputLabel>
+                                <Select
+                                    labelId="facility-select-label"
+                                    id="facility-select"
+                                    value={selectedFacility}
+                                    onChange={handleFacilityDropdownChange}
+                                >
+                                    {facilities.map((facility) => (
+                                        <MenuItem key={facility.facilityId} value={facility.name}>
+                                            {facility?.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                <br/><br/>
+                            </>}
                         {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                         <Button 
                             variant="contained" 
@@ -224,7 +234,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                     </Grid> :
                     <Grid>
                         <Typography variant="body3">{shift && shift.leaveTypeEnum ? getShiftNameWithTime(null, null, shift) : getShiftNameWithTime(shift?.startTime, shift?.endTime)}</Typography>
-                        <Typography variant="body2">{shift && shift.facilityBooking ? <><b>Facility:</b> {shift?.facilityBooking.facility.name} </>:<></>}</Typography>
+                        <Typography variant="body2">{shift && shift.facilityBooking && shift.facilityBooking.facility ? <><b>Facility:</b> {shift?.facilityBooking.facility.name} </>:<><b>Ward:</b> {staff?.unit?.name}</>}</Typography>
                         <Typography variant="body2"><b>Comments:</b> {shift?.comments ? shift?.comments : "-"}</Typography><br/>
                         <Button 
                             variant="contained" 

@@ -116,7 +116,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                                             {getTime(shift.startTime)} - {getTime(shift.endTime)}
                                         </Typography>
                                         <Typography variant="body3" sx={{fontSize: 11}}>
-                                            {shift.facilityBooking.facility.name}
+                                            {staff.staffRoleEnum === "NURSE" ? staff.unit.name : shift.facilityBooking.facility.name}
                                         </Typography>
                                     </CardContent>
                                 </CardActionArea>
@@ -165,7 +165,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
             <ViewShift 
                 open={viewShiftOpen}
                 shift={currShift}
-                facilityId={currShift ? currShift.facilityBooking.facility.facilityId : 1}
+                facilityId={currShift && currShift.facilityBooking ? currShift.facilityBooking?.facility?.facilityId : 1}
                 handleClose={handleClose}
                 username={username}
                 staff={staff}

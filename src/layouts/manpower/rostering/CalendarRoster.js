@@ -256,6 +256,7 @@ function CalendarRoster() {
         open={viewShiftOpen}
         shift={event}
         handleClose={handleClose}
+        staff={staffDetails}
         />
     </DashboardLayout>
        

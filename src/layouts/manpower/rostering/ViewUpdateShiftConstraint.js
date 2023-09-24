@@ -27,7 +27,7 @@ const style = {
     p: 5,
 };
 
-function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint, facilities }) {
+function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint, facilities, unit, role }) {
     const [reqBody, setReqBody] = useState();
     const [selectedShift, setSelectedShift] = useState();
     const [selectedFacility, setSelectedFacility] = useState();
@@ -56,7 +56,11 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint, facilit
         newReqBody.endTime = end;
         console.log(selectedFacility)
         try {
-            const response = await shiftConstraintsApi.updateShiftConstraints(shiftConstraint.shiftConstraintsId, newReqBody, selectedFacility);
+            if (role === "NURSE") {
+                const response = await shiftConstraintsApi.updateShiftConstraints(shiftConstraint.shiftConstraintsId, newReqBody, unit);
+            } else {
+                const response = await shiftConstraintsApi.updateShiftConstraints(shiftConstraint.shiftConstraintsId, newReqBody, selectedFacility);
+            }
             handleClose();
             setErrorMsg(null);
             reduxDispatch(
@@ -162,19 +166,25 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint, facilit
                             onChange={handleChange}
                             value={reqBody?.minPax}
                         /><br/><br/>
-                         <InputLabel id="shift-select-label">Facility:</InputLabel>
-                        <Select
-                            labelId="facility-select-label"
-                            id="facility-select"
-                            value={selectedFacility}
-                            onChange={handleFacilityDropdownChange}
-                        >
-                            {facilities.map((facility) => (
-                                <MenuItem key={facility.facilityId} value={facility.name}>
-                                    {facility.name}
-                                </MenuItem>
-                            ))}
-                        </Select>
+                         {role === "NURSE" ? 
+                        <>
+                            <Typography variant="h6">Ward: {unit}</Typography>
+                        </> :
+                        <>
+                            <InputLabel id="shift-select-label">Facility:</InputLabel>
+                            <Select
+                                labelId="facility-select-label"
+                                id="facility-select"
+                                value={selectedFacility}
+                                onChange={handleFacilityDropdownChange}
+                            >
+                                {facilities.map((facility) => (
+                                    <MenuItem key={facility.facilityId} value={facility.name}>
+                                        {facility?.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </>}
                         <Typography variant="h6">Role: {reqBody?.staffRoleEnum}</Typography><br/>
                         {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                         <Button 

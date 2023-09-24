@@ -61,7 +61,11 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
         newReqBody.startTime = moment(start, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         newReqBody.endTime = moment(end, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         try {
-            const response = await shiftApi.createShift(username, selectedFacility, newReqBody);
+            if (staff.staffRoleEnum === "NURSE") {
+                const response = await shiftApi.createShift(username, "1", newReqBody);
+            } else {
+                const response = await shiftApi.createShift(username, selectedFacility, newReqBody);
+            }
             setUpdateAddShift(updateAddShift+1);
             handleClose();
             setErrorMsg(null);
@@ -173,20 +177,26 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
                                 onChange={handleChange}
                                 value={reqBody.comments}
                             /><br/><br/>
-                            <InputLabel id="facility-select-label">Select facility:</InputLabel>
-                            <Select
-                                labelId="facility-select-label"
-                                id="facility-select"
-                                value={selectedFacility}
-                                onChange={handleFacilityDropdownChange}
-                                sx={{ lineHeight: "2.5em"}}
-                            >
-                                {facilities?.map((option) => (
-                                    <MenuItem key={option.facilityId} value={option.facilityId}>
-                                        {option.name}
-                                    </MenuItem>
-                                ))}
-                            </Select><br/><br/>
+                            {staff.staffRoleEnum === "NURSE" ? 
+                            <>
+                                <Typography variant="h6">Ward: {staff.unit.name}</Typography><br/>
+                            </> :
+                            <>
+                                <InputLabel id="shift-select-label">Facility:</InputLabel>
+                                <Select
+                                    labelId="facility-select-label"
+                                    id="facility-select"
+                                    value={selectedFacility}
+                                    onChange={handleFacilityDropdownChange}
+                                >
+                                    {facilities.map((facility) => (
+                                        <MenuItem key={facility.facilityId} value={facility.name}>
+                                            {facility?.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                <br/><br/>
+                            </>}
                             {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                             <Button 
                                 variant="contained" 
