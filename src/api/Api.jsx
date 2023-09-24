@@ -78,6 +78,14 @@ export const departmentApi = {
   },
 };
 
+export const wardApi = {
+  getAllWards(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/ward/getAllWards?name=${name}`
+    );
+  },
+};
+
 export const subDepartmentApi = {
   getAllSubDepartments(name) {
     return axiosFetch.get(
