@@ -22,7 +22,7 @@ import DataTable from "examples/Tables/DataTable";
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 
-import { facilityApi } from "api/Api";
+import { facilityApi, departmentApi } from "api/Api";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
 
 function FacilityManagement() {
@@ -59,6 +59,7 @@ function FacilityManagement() {
     ],
     rows: [],
   });
+  const [departments, setDepartments] = useState([]);
   const dataRef = useRef({
     columns: [
       { Header: "Facility ID", accessor: "facilityId", width: "10%" },
@@ -119,6 +120,16 @@ function FacilityManagement() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
+
+  const getDepartments = async () => {
+    try {
+      const response = await departmentApi.getAllDepartments("");
+      console.log(response)
+      setDepartments(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -430,6 +441,7 @@ function FacilityManagement() {
 
   useEffect(() => {
     fetchData();
+    getDepartments();
   }, []);
 
   return (
@@ -509,14 +521,17 @@ function FacilityManagement() {
             margin="dense"
           />
           <FormControl fullWidth margin="dense">
-            <InputLabel>Sub Department</InputLabel>
+            <InputLabel>Unit</InputLabel>
             <Select
               name="subDepartmentId"
               value={formData.subDepartmentId}
               onChange={handleChange}
               sx={{ lineHeight: "3em" }}
             >
-              <MenuItem value={1}>Interventional Cardiology</MenuItem>
+              {departments?.map(department => 
+              <MenuItem value={department.unitId}>{department.name}</MenuItem>
+                )}
+              {/* <MenuItem value={1}>Interventional Cardiology</MenuItem>
               <MenuItem value={2}>Electrophysiology (EP) Lab</MenuItem>
               <MenuItem value={3}>Cardiac Catheterization Lab</MenuItem>
               <MenuItem value={4}>Heart Failure Clinic</MenuItem>
@@ -528,7 +543,7 @@ function FacilityManagement() {
               <MenuItem value={10}>
                 Adult Congenital Heart Disease Clinic
               </MenuItem>
-              <MenuItem value={11}>Preventive Cardiology Clinic</MenuItem>
+              <MenuItem value={11}>Preventive Cardiology Clinic</MenuItem> */}
               {/* Add more status options as needed */}
             </Select>
           </FormControl>

@@ -32,10 +32,10 @@ function Account() {
     //   }
     // }
 
-    if (staff.subDepartment !== null) {
+    if (staff.unit !== null) {
       try {
         const response = await staffApi.getStaffByUsername(staff.username);
-        setDepartmentName(response.data.subDepartment.department.name);
+        setDepartmentName(response.data.unit.name);
         // console.log("qweqweqw");
         // console.log(response);
         // setListOfDepartments(response.data);
@@ -82,10 +82,10 @@ function Account() {
               role: staff.staffRoleEnum,
               department:
                 departmentName !== "" ? departmentName : "NO DEPARTMENT",
-              subDepartment:
-                staff.subDepartment !== null
-                  ? staff.subDepartment.name
-                  : "NO SUB DEPARTMENT",
+              // subDepartment:
+              //   staff.subDepartment !== null
+              //     ? staff.subDepartment.name
+              //     : "NO SUB DEPARTMENT",
               head: staff.isHead ? "TRUE" : "FALSE",
             }}
             shadow={false}
