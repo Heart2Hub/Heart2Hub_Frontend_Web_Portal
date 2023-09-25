@@ -117,7 +117,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                                             {getTime(shift.startTime)} - {getTime(shift.endTime)}
                                         </Typography>
                                         <Typography variant="body3" sx={{fontSize: 11}}>
-                                            {staff.staffRoleEnum === "NURSE" ? staff.unit.name : shift.facilityBooking.facility.name}
+                                            {staff.staffRoleEnum === "NURSE" && staff.unit.wardClass ? staff.unit.name : shift.facilityBooking?.facility?.name}
                                         </Typography>
                                     </CardContent>
                                 </CardActionArea>

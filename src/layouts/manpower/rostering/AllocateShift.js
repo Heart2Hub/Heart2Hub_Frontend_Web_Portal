@@ -35,7 +35,7 @@ const body = {
 function AddShift({ username, open, staff, handleClose, date, updateAddShift, setUpdateAddShift, facilities }) {
     const [reqBody, setReqBody] = useState(body);
     const [selectedShift, setSelectedShift] = useState(1);
-    const [selectedFacility, setSelectedFacility] = useState(1);
+    const [selectedFacility, setSelectedFacility] = useState(facilities ? 1*facilities[0]?.facilityId : 1);
     const [errorMsg, setErrorMsg] = useState();
     const [shiftPref, setShiftPref] = useState(0);
     const reduxDispatch = useDispatch();
@@ -61,8 +61,8 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
         newReqBody.startTime = moment(start, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         newReqBody.endTime = moment(end, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         try {
-            if (staff.staffRoleEnum === "NURSE") {
-                const response = await shiftApi.createShift(username, "1", newReqBody);
+            if (staff.staffRoleEnum === "NURSE" && staff.unit.wardClass) {
+                const response = await shiftApi.createShift(username, "0", newReqBody);
             } else {
                 const response = await shiftApi.createShift(username, selectedFacility, newReqBody);
             }
@@ -177,8 +177,8 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
                                 onChange={handleChange}
                                 value={reqBody.comments}
                             /><br/><br/>
-                            {staff.staffRoleEnum === "NURSE" ? 
-                            <>
+                            {staff.staffRoleEnum === "NURSE" && staff.unit.wardClass ? 
+                            <> 
                                 <Typography variant="h6">Ward: {staff.unit.name}</Typography><br/>
                             </> :
                             <>
@@ -191,7 +191,7 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
                                 >
                                     {facilities.map((facility) => (
                                         <MenuItem key={facility.facilityId} value={facility.facilityId}>
-                                            {facility.name ? facility.name : ""}
+                                            {facility.name}
                                         </MenuItem>
                                     ))}
                                 </Select>

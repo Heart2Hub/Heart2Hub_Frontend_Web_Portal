@@ -25,7 +25,7 @@ const style = {
     p: 5,
 };
 
-function AddShiftConstraint({open, handleClose, role, facilities, unit}) {
+function AddShiftConstraint({open, handleClose, role, facilities, unit, staff}) {
     const body = {
         startTime: "",
         endTime: "",
@@ -60,7 +60,7 @@ function AddShiftConstraint({open, handleClose, role, facilities, unit}) {
         newReqBody.startTime = start;
         newReqBody.endTime = end;
         try {
-            if (role === "NURSE") {
+            if (role === "NURSE" && staff.unit.wardClass) {
                 const response = await shiftConstraintsApi.createShiftConstraints(newReqBody, unit);
             } else {
                 const response = await shiftConstraintsApi.createShiftConstraints(newReqBody, selectedFacility);
@@ -160,7 +160,7 @@ function AddShiftConstraint({open, handleClose, role, facilities, unit}) {
                             onChange={handleChange}
                             value={reqBody.minPax}
                         /><br/><br/>
-                        {role === "NURSE" ? 
+                        {role === "NURSE" && staff.unit.wardClass ? 
                         <>
                             <Typography variant="h6">Ward: {unit}</Typography>
                         </> :

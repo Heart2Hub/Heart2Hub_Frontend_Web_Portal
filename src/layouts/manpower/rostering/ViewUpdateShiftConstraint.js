@@ -27,7 +27,7 @@ const style = {
     p: 5,
 };
 
-function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint, facilities, unit, role }) {
+function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint, facilities, unit, role, staff }) {
     const [reqBody, setReqBody] = useState();
     const [selectedShift, setSelectedShift] = useState();
     const [selectedFacility, setSelectedFacility] = useState();
@@ -56,7 +56,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint, facilit
         newReqBody.endTime = end;
         console.log(selectedFacility)
         try {
-            if (role === "NURSE") {
+            if (role === "NURSE" && staff.unit.wardClass) {
                 const response = await shiftConstraintsApi.updateShiftConstraints(shiftConstraint.shiftConstraintsId, newReqBody, unit);
             } else {
                 const response = await shiftConstraintsApi.updateShiftConstraints(shiftConstraint.shiftConstraintsId, newReqBody, selectedFacility);
@@ -166,7 +166,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint, facilit
                             onChange={handleChange}
                             value={reqBody?.minPax}
                         /><br/><br/>
-                         {role === "NURSE" ? 
+                         {role === "NURSE" && staff.unit.wardClass ? 
                         <>
                             <Typography variant="h6">Ward: {unit}</Typography>
                         </> :

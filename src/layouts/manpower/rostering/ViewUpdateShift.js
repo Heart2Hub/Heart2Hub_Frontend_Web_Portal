@@ -61,7 +61,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
         newReqBody.endTime = moment(end, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         newReqBody.comments = reqBody.comments;
         try {
-            if (staff.staffRoleEnum === "NURSE") {
+            if (staff.staffRoleEnum === "NURSE" && staff.unit.wardClass) {
                 const response = await shiftApi.updateShift(shift.shiftId, "1", newReqBody);
             } else {
                 const response = await shiftApi.updateShift(shift.shiftId, selectedFacility, newReqBody);
@@ -198,7 +198,7 @@ function ViewShift({open, handleClose, staff, shift, username, updateAddShift, s
                             onChange={handleChange}
                             value={reqBody?.comments}
                         /><br/><br/>
-                        {staff.staffRoleEnum === "NURSE" ? 
+                        {staff.staffRoleEnum === "NURSE" && staff.unit.wardClass? 
                             <>
                                 <Typography variant="h6">Ward: {staff.unit.name}</Typography><br/>
                             </> :

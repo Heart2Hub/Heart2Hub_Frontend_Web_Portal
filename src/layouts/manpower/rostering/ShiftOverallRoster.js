@@ -254,7 +254,7 @@ function Rostering() {
                 </MDTypography>
               </MDBox>
               <MDBox pt={3}> 
-                <Typography variant="h5" paddingLeft={2}>{currStaffDetails?.staffRoleEnum === "NURSE" ? "Ward" : "Department"}: {currStaffDetails?.unit.name}</Typography>
+                <Typography variant="h5" paddingLeft={2}>{currStaffDetails?.staffRoleEnum === "NURSE" && currStaffDetails?.unit.wardClass? "Ward" : "Department"}: {currStaffDetails?.unit.name}</Typography>
                 <Typography variant="h5" paddingLeft={2} paddingBottom={1}>Role: {currStaffDetails?.staffRoleEnum}</Typography>
                 {scList.length > 0 ? <Typography variant="h6" paddingLeft={2}>Shift constraints:</Typography> : <></>}
               <Grid container>
@@ -281,7 +281,7 @@ function Rostering() {
                                     Min pax: {sc.minPax}
                                 </Typography>
                                 <Typography variant="subtitle" fontSize="14px">
-                                    {currStaffDetails?.staffRoleEnum === "NURSE" ? currStaffDetails?.unit.name : sc.facility.name}
+                                    {currStaffDetails?.staffRoleEnum === "NURSE" && currStaffDetails?.unit.wardClass ? currStaffDetails?.unit.name : sc.facility.name}
                                 </Typography>
                             </CardContent>
                         </CardActionArea>  
@@ -294,6 +294,7 @@ function Rostering() {
                     facilities={facilities}
                     unit={currStaffDetails ? currStaffDetails.unit.name : ""}
                     role={currStaffDetails ? currStaffDetails.staffRoleEnum : ""}
+                    staff={currStaffDetails}
                     />
                 </Grid>
                 <Grid container spacing={1}>
@@ -378,6 +379,7 @@ function Rostering() {
         role={currStaffDetails ? currStaffDetails.staffRoleEnum : "temp"}
         facilities={facilities ? facilities : []}
         unit={currStaffDetails ? currStaffDetails.unit.name : ""}
+        staff={currStaffDetails}
         />
     </DashboardLayout>
     )
