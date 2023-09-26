@@ -127,6 +127,32 @@ export const facilityApi = {
       requestBody
     );
   },
+  findAllFacility() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facility/findAllFacility`
+    );
+  },
+  findAllBookingsOfAFacility(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facilityBooking/getAllBookingsOfAFacility/${id}`
+    );
+  },
+  deleteFacilityBooking(id) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/facilityBooking/deleteFacilityBooking/${id}`
+    )
+  },
+  createFacilityBooking(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/facilityBooking/createFacilityBooking`,
+      requestBody
+    )
+  },
+  getAllBookingsOfAStaff(username) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facilityBooking/getAllBookingsOfAStaff/${username}`
+    )
+  }
 };
 
 export const patientApi = {
