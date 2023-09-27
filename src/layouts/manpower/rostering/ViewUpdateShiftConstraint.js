@@ -11,6 +11,9 @@ import axios from 'axios';
 import moment from 'moment';
 import { MenuItem } from '@mui/material';
 import { getShiftId, options } from '../utils/utils';
+import { shiftConstraintsApi } from 'api/Api';
+import { displayMessage } from "store/slices/snackbarSlice";
+import { useDispatch } from "react-redux";
 
 const style = {
     position: "absolute",
@@ -24,17 +27,12 @@ const style = {
     p: 5,
 };
 
-const body = {
-    startTime: "",
-    endTime: "",
-    minPax: 0,
-    staffRoleEnum: "DOCTOR"
-}
-
-function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
+function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint, facilities, unit, role, staff }) {
     const [reqBody, setReqBody] = useState();
     const [selectedShift, setSelectedShift] = useState();
+    const [selectedFacility, setSelectedFacility] = useState();
     const [errorMsg, setErrorMsg] = useState();
+    const reduxDispatch = useDispatch();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -56,28 +54,49 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
         }
         newReqBody.startTime = start;
         newReqBody.endTime = end;
+        console.log(selectedFacility)
         try {
-            const response = await axios.put(`http://localhost:8080/shiftConstraints/updateShiftConstraints/${shiftConstraint.shiftConstraintsId}`, newReqBody, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            if (role === "NURSE" && staff.unit.wardClass) {
+                const response = await shiftConstraintsApi.updateShiftConstraints(shiftConstraint.shiftConstraintsId, newReqBody, unit);
+            } else {
+                const response = await shiftConstraintsApi.updateShiftConstraints(shiftConstraint.shiftConstraintsId, newReqBody, selectedFacility);
+            }
             handleClose();
             setErrorMsg(null);
+            reduxDispatch(
+                displayMessage({
+                  color: "success",
+                  icon: "notification",
+                  title: "Shift constraints successfully updated!",
+                  content: "Shift constraints from " + start + " to " + end + " at " + selectedFacility + " updated to " + newReqBody.minPax + " PAX!",
+                })
+              );
         } catch (error) {
             console.log(error)
+            reduxDispatch(
+                displayMessage({
+                  color: "warning",
+                  icon: "notification",
+                  title: "Error updating shift constraints!",
+                  content: error.response.data
+                })
+              );
             setErrorMsg(error.response.data);
         }
     }
 
     const handleCancel = async () => {
         try {
-            const response = await axios.delete(`http://localhost:8080/shiftConstraints/deleteShiftConstraints/${shiftConstraint.shiftConstraintsId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await shiftConstraintsApi.deleteShiftConstraints(shiftConstraint.shiftConstraintsId);
             handleClose();
+            reduxDispatch(
+                displayMessage({
+                  color: "success",
+                  icon: "notification",
+                  title: "Shift constraints successfully deleted!",
+                  content: "Shift constraints with ID " + shiftConstraint.shiftConstraintsId +" has been deleted!",
+                })
+              );
         } catch (error) {
             console.log(error)
         }
@@ -85,6 +104,10 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
 
     const handleDropdownChange = (event) => {
         setSelectedShift(event.target.value);
+    }
+
+    const handleFacilityDropdownChange = (event) => {
+        setSelectedFacility(event.target.value);
     }
 
     const handleChange = (event) => {
@@ -102,6 +125,11 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
     useEffect(() => {
         setReqBody(shiftConstraint);
         setSelectedShift(getShiftId(moment(shiftConstraint?.startTime, 'HH:mm:ss').format('HH:mm'), moment(shiftConstraint?.endTime, 'HH:mm:ss').format('HH:mm')));
+        if (shiftConstraint) {
+            setSelectedFacility(shiftConstraint.facility?.name);
+        } else {
+            setSelectedFacility("");
+        }
     }, [shiftConstraint])
 
     return (
@@ -114,7 +142,7 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
             <Box sx={style}>
                 <Grid container spacing={3}>
                     {/* if is rosterer */}
-                    <Grid md={12}>
+                    <Grid>
                         <Typography variant="h5">Update Shift Constraint</Typography><br/>
                         <InputLabel id="shift-select-label">Shift:</InputLabel>
                         <Select
@@ -138,8 +166,27 @@ function ViewUpdateShiftConstraint({ open, handleClose, shiftConstraint }) {
                             onChange={handleChange}
                             value={reqBody?.minPax}
                         /><br/><br/>
+                         {role === "NURSE" && staff.unit.wardClass ? 
+                        <>
+                            <Typography variant="h6">Ward: {unit}</Typography>
+                        </> :
+                        <>
+                            <InputLabel id="shift-select-label">Facility:</InputLabel>
+                            <Select
+                                labelId="facility-select-label"
+                                id="facility-select"
+                                value={selectedFacility}
+                                onChange={handleFacilityDropdownChange}
+                            >
+                                {facilities.map((facility) => (
+                                    <MenuItem key={facility.facilityId} value={facility.name}>
+                                        {facility?.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </>}
                         <Typography variant="h6">Role: {reqBody?.staffRoleEnum}</Typography><br/>
-                        {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>}
+                        {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                         <Button 
                             variant="contained" 
                             onClick={handleSubmit}

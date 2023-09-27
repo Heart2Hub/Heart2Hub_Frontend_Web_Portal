@@ -11,7 +11,6 @@ import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
@@ -24,21 +23,18 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import axios from 'axios';
+import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
 import StaffShift from './StaffShifts';
 import { getDay } from '../utils/utils';
 import { Button, Icon } from '@mui/material';
 import AddShiftConstraint from './AddShiftConstraint';
-import { getShiftName } from '../utils/utils';
+import { getShiftName, getScColor } from '../utils/utils';
 import ViewUpdateShiftConstraint from './ViewUpdateShiftConstraint';
 
-const cardStyles = {
-    backgroundColor: "#ffffff",
-    margin: 2,
-    maxWidth: 300,
-    alignContent: "center",
-    borderRadius: 3
-}
+import { staffApi } from 'api/Api';
+import { shiftConstraintsApi } from 'api/Api';
+import { facilityApi } from 'api/Api';
 
 function Rostering() {
 
@@ -55,6 +51,7 @@ function Rostering() {
     const [scList, setScList] = useState([]);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [page, setPage] = useState(0);
+    const [facilities, setFacilities] = useState([]);
     const navigate = useNavigate();
 
     moment.updateLocale('en', {
@@ -62,30 +59,21 @@ function Rostering() {
           dow: 1, // Monday is the first day of the week.
         }
       });
-      
 
     const today = moment().format('YYYY-MM-DD');
 
-    const isValidWorkDate = async (date, role) => {
+    const isValidWorkDate = async (date, role, department) => {
         try {
-            const response = await axios.get(`http://localhost:8080/shiftConstraints/checkIsValidWorkday?role=${role}&date=${date}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            }); 
+            const response = await shiftConstraintsApi.checkIsValidWorkDay(role,date,department);
             return response.data;
         } catch (error) {
             console.log(error);
         }
     }
 
-    const getShiftConstraints = async (role) => {
+    const getAllShiftConstraints = async (role, department) => {
         try {
-            const response = await axios.get(`http://localhost:8080/shiftConstraints/getAllShiftConstraints/${role}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            }); 
+            const response = await shiftConstraintsApi.getAllShiftConstraints(role, department);
             setScList(response.data);
         } catch (error) {
             console.log(error);
@@ -94,11 +82,7 @@ function Rostering() {
 
     const getStaffByUsername = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/staff/getStaffByUsername?username=${localStorage.getItem('staffUsername')}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
+            const response = await staffApi.getStaffByUsername(localStorage.getItem('staffUsername'));
             setCurrStaffDetails(response.data);
             getStaffListByRole(response.data.staffRoleEnum);
         } catch (error) {
@@ -106,21 +90,18 @@ function Rostering() {
         }
     }
 
-    const getStaffListByRole = async (role) => {
+    const getStaffListByRole = async (role, unit) => {
         try {
-            const response = await axios.get(`http://localhost:8080/staff/getStaffByRole?role=${role}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
-            const sortedArray = response.data.sort((a,b) => {
+            const response = await staffApi.getStaffListByRole(role, unit);
+            const usernameSortedArray = response.data.sort((a,b) => a.username.localeCompare(b.username))
+            const sortedArray = usernameSortedArray.sort((a,b) => {
                 if (a.username === localStorage.getItem('staffUsername')) {
                     return -1;
                 } else {
                     return 0;
                 }
             })
-            setStaffs(response.data);
+            setStaffs(sortedArray);
         } catch (error) {
             console.log(error);
         }
@@ -138,10 +119,10 @@ function Rostering() {
         const dates = [];
         let i = 0;
         while (startDate.isSameOrBefore(endDate)) {
-            if (await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum)) {
+            if ((await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum, currStaffDetails?.unit.name)).length == 0) {
                 dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: true });
             } else {
-                dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: false });
+                dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: false, reason: (await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum, currStaffDetails?.unit.name))[0]});
             }
             startDate.add(1, 'days');
             i++;
@@ -162,28 +143,37 @@ function Rostering() {
         setWeekDates(dates);
     }
 
-    const getMonthDates = (dateString) => {
+    const getMonthDates = async (dateString) => {
         const currDate = moment(dateString);
 
         // Get date of Monday (start of the week)
         const startDate = currDate.clone().startOf('week')
 
         // Get date of exactly 1 month from Monday
-        const endDate = currDate.add(1, 'months');
+        const endDate = currDate.add(2, 'months');
 
         const dates = [];
         let i = 0;
         while (startDate.isSameOrBefore(endDate)) {
-            if (isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum)) {
+            if ((await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum, currStaffDetails?.unit.name)).length == 0) {
                 dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: true });
             } else {
-                dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: false });
+                dates.push({ id: i, date: startDate.format('YYYY-MM-DD'), day: getDay(i), valid: false, reason: (await isValidWorkDate(startDate.format('YYYY-MM-DD'), currStaffDetails.staffRoleEnum, currStaffDetails?.unit.name))[0]});
             }
             startDate.add(1, 'days');
             i++;
             i = i % 7;
         }
         setMonthDates(dates);
+    }
+
+    const getFacilitiesByDepartment = async (unitName) => {
+        try {
+            const response = await facilityApi.getAllFacilitiesByDepartmentName(unitName);
+            setFacilities(response.data);
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     const handleNext = () => {
@@ -223,12 +213,12 @@ function Rostering() {
     };
 
     useEffect(() => {
-        // getAllStaffWithSameRole();
         if (!currStaffDetails) {
             getStaffByUsername();
         } else {
-            getStaffListByRole(currStaffDetails.staffRoleEnum);
-            getShiftConstraints(currStaffDetails.staffRoleEnum);
+            getFacilitiesByDepartment(currStaffDetails.unit?.name)
+            getStaffListByRole(currStaffDetails.staffRoleEnum, currStaffDetails.unit?.name);
+            getAllShiftConstraints(currStaffDetails.staffRoleEnum, currStaffDetails.unit?.name);
             getMonthDates(today);
             if (weekDates.length === 0) {
                 getWeekDates(today);
@@ -260,17 +250,28 @@ function Rostering() {
                 coloredShadow="info"
               >
                 <MDTypography variant="h6" color="white">
-                    Staff Roster (Role: {currStaffDetails?.staffRoleEnum})
+                    Staff Roster 
                 </MDTypography>
               </MDBox>
               <MDBox pt={3}> 
-                {scList.length > 0 ? <Typography variant="h6" paddingLeft={2}>Shift constraints for {currStaffDetails?.staffRoleEnum}:</Typography> : <></>}
+                <Typography variant="h5" paddingLeft={2}>{currStaffDetails?.staffRoleEnum === "NURSE" && currStaffDetails?.unit.wardClass? "Ward" : "Department"}: {currStaffDetails?.unit.name}</Typography>
+                <Typography variant="h5" paddingLeft={2} paddingBottom={1}>Role: {currStaffDetails?.staffRoleEnum}</Typography>
+                {scList.length > 0 ? <Typography variant="h6" paddingLeft={2}>Shift constraints:</Typography> : <></>}
               <Grid container>
                 {scList.map(sc => {return (
-                    <Card key={sc.shiftConstraintsId} sx={cardStyles} onClick={() => handleScOpen(sc)}>
+                    <Card 
+                        key={sc.shiftConstraintsId} 
+                        sx={{
+                            backgroundColor: getScColor(getShiftName(moment(sc.startTime, 'HH:mm:ss').format('HH:mm'), moment(sc.endTime, 'HH:mm:ss').format('HH:mm'))),
+                            margin: 2,
+                            maxWidth: 200,
+                            alignContent: "center",
+                            borderRadius: 3
+                        }}
+                        onClick={() => handleScOpen(sc)}>
                         <CardActionArea>   
                             <CardContent sx={{ padding: "0.5rem 1.2rem" }}>
-                                <Typography variant="h6">
+                                <Typography variant="body2">
                                     {getShiftName(moment(sc.startTime, 'HH:mm:ss').format('HH:mm'), moment(sc.endTime, 'HH:mm:ss').format('HH:mm'))}
                                 </Typography>
                                 <Typography variant="h6" color="text.secondary">
@@ -278,7 +279,10 @@ function Rostering() {
                                 </Typography>
                                 <Typography variant="h6">
                                     Min pax: {sc.minPax}
-                                </Typography> 
+                                </Typography>
+                                <Typography variant="subtitle" fontSize="14px">
+                                    {currStaffDetails?.staffRoleEnum === "NURSE" && currStaffDetails?.unit.wardClass ? currStaffDetails?.unit.name : sc.facility.name}
+                                </Typography>
                             </CardContent>
                         </CardActionArea>  
                     </Card>
@@ -287,6 +291,10 @@ function Rostering() {
                     open={updateScOpen}
                     shiftConstraint={currSc}
                     handleClose={handleScClose}
+                    facilities={facilities}
+                    unit={currStaffDetails ? currStaffDetails.unit.name : ""}
+                    role={currStaffDetails ? currStaffDetails.staffRoleEnum : ""}
+                    staff={currStaffDetails}
                     />
                 </Grid>
                 <Grid container spacing={1}>
@@ -312,7 +320,7 @@ function Rostering() {
                             <TableRow>
                                 <TableCell
                                     key={1000}
-                                    style={{ width: 195 }}
+                                    style={{ minWidth: 215 }}
                                 >
                             Staff
                                 </TableCell>
@@ -323,8 +331,11 @@ function Rostering() {
                                         style={{ minWidth: 170, color: column.date === today ? 'brown' : 'black'}}
                                     >
                                     {column.day}<br/>{column.date}<br/>
-                                    {column.valid ? <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={'success'}>done</Icon> 
-                                    : <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={'warning'}>warning</Icon>}
+                                    {column.valid ? 
+                                    <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={'success'}>done</Icon> : 
+                                    <Tooltip title={column.reason}>
+                                        <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={'warning'}>warning</Icon>
+                                    </Tooltip>}
                                     </TableCell>
                                 ))}
                             </TableRow>
@@ -341,7 +352,8 @@ function Rostering() {
                                     dateList={weekDates}
                                     weekStartDate={weekDates.length > 0 ? weekDates[0].date : today}
                                     updateAddShift={updateAddShift}
-                                    setUpdateAddShift={setUpdateAddShift}>
+                                    setUpdateAddShift={setUpdateAddShift}
+                                    facilities={facilities}>
                                 </StaffShift>)
                             })}
                         </TableBody>
@@ -365,6 +377,9 @@ function Rostering() {
         open={scOpen}
         handleClose={handleScClose}
         role={currStaffDetails ? currStaffDetails.staffRoleEnum : "temp"}
+        facilities={facilities ? facilities : []}
+        unit={currStaffDetails ? currStaffDetails.unit.name : ""}
+        staff={currStaffDetails}
         />
     </DashboardLayout>
     )

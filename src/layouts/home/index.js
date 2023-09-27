@@ -1,10 +1,13 @@
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import React from "react";
+import SimpleBanner from "./simpleBanner";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 
 function Home() {
   return (
     <DashboardLayout>
-      <h1>HOME</h1>
+      <DashboardNavbar />
+      <SimpleBanner />
     </DashboardLayout>
   );
 }

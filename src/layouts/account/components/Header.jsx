@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { IMAGE_SERVER } from "constants/RestEndPoint";
 
 // prop-types is a library for typechecking of props.
 import PropTypes from "prop-types";
@@ -37,16 +38,18 @@ function Header({ children }) {
           px: 2,
         }}
       >
-        <Grid container spacing={5} alignItems="center">
+        <Grid container spacing={5} alignItems="center" width="100%">
           <Grid item justifyContent="center">
             <MDAvatar
-              src={burceMars}
+              src={
+                IMAGE_SERVER + "/images/id/" + staff.profilePicture?.imageLink
+              }
               alt="profile-image"
               size="xxl"
               shadow="xxl"
             />
           </Grid>
-          <Grid item>
+          <Grid item xs>
             <MDBox height="100%" mt={0.5} lineHeight={1}>
               <MDTypography variant="h5" fontWeight="medium">
                 {staff.firstname} {staff.lastname}
@@ -54,7 +57,16 @@ function Header({ children }) {
             </MDBox>
           </Grid>
           <Grid item>
-            <MDBox height="100%" mt={0.5} lineHeight={1}>
+            <MDBox
+              height="100%"
+              mt={0.5}
+              lineHeight={1}
+              style={{
+                flexGrow: 1,
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
               <MDTypography variant="h5" fontWeight="medium">
                 <ResetPasswordModal username={staff.username} />
               </MDTypography>

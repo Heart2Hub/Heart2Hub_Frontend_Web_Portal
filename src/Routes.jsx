@@ -26,6 +26,8 @@ import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
 import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 
 import LeaveApproval from "layouts/manpower/leaveApproval";
+import ProtectedRoute from "examples/ProtectedRoute";
+import { StaffRoleEnum } from "constants/StaffRoleEnum";
 
 const routes = [
   {
@@ -38,7 +40,14 @@ const routes = [
     name: "Home",
     key: "home",
     route: "/home",
-    component: <Home />,
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Home />
+      </ProtectedRoute>
+    ),
   },
   {
     type: "collapse",
@@ -46,7 +55,15 @@ const routes = [
     key: "account",
     icon: <Icon fontSize="small">account_circle</Icon>,
     route: "/account",
-    component: <Account />,
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Account />
+      </ProtectedRoute>
+    ),
   },
   {
     type: "collapse",
@@ -54,7 +71,15 @@ const routes = [
     key: "outpatient",
     icon: <Icon fontSize="small">local_hospital</Icon>,
     route: "/outpatient",
-    component: <Outpatient />,
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Outpatient />
+      </ProtectedRoute>
+    ),
   },
   {
     type: "collapse",
@@ -62,7 +87,15 @@ const routes = [
     key: "inpatient",
     icon: <Icon fontSize="small">bed</Icon>,
     route: "/inpatient",
-    component: <Inpatient />,
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Inpatient />,
+      </ProtectedRoute>
+    ),
   },
   {
     type: "collapse",
@@ -70,10 +103,17 @@ const routes = [
     key: "ehr",
     icon: <Icon fontSize="small">receipt_long</Icon>,
     route: "/ehr",
-    component: <EHR />,
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <EHR />
+      </ProtectedRoute>
+    ),
   },
   // {
-  //   type: "collapse",
   //   name: "EHR",
   //   key: "ehr",
   //   icon: <Icon fontSize="small">receipt_long</Icon>,
@@ -86,19 +126,41 @@ const routes = [
     key: "administration",
     icon: <Icon fontSize="small">build</Icon>,
     route: "/administration",
-    component: <Administration />,
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Administration />
+      </ProtectedRoute>
+    ),
   },
   {
     name: "Staff Management",
     key: "staffmanagement",
     route: "/administration/staff-management",
-    component: <StaffManagement />,
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
+        forHeadsOnly={false}
+      >
+        <StaffManagement />
+      </ProtectedRoute>
+    ),
   },
   {
     name: "Facility Management",
     key: "facilitymanagement",
     route: "/administration/facility-management",
-    component: <FacilityManagement />,
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <FacilityManagement />
+      </ProtectedRoute>
+    ),
   },
   {
     type: "collapse",
@@ -106,37 +168,74 @@ const routes = [
     key: "manpower",
     icon: <Icon fontSize="small">group</Icon>,
     route: "/manpower",
-    component: <Manpower />,
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Manpower />
+      </ProtectedRoute>
+    ),
   },
   {
     name: "Rostering",
     key: "rostering",
     route: "/manpower/rostering",
-    component: <CalendarRoster />,
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <CalendarRoster />
+      </ProtectedRoute>
+    ),
   },
   {
     name: "Shift Allocation",
     key: "shift-allocation",
     route: "/manpower/rostering/shifts",
-    component: <Rostering />,
+    component: (
+      <ProtectedRoute authorizedRoles={[StaffRoleEnum.ALL]} forHeadsOnly={true}>
+        <Rostering />
+      </ProtectedRoute>
+    ),
   },
   {
     name: "ViewAllLeaves",
     key: "ViewAllLeaves",
-    route: "/manpower/viewAllLeaves",
-    component: <ViewAllLeaves />,
+    route: "/manpower/leaveApplication",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <ViewAllLeaves />
+      </ProtectedRoute>
+    ),
   },
   {
     name: "CreateLeave",
     key: "CreateLeave",
     route: "/manpower/createLeave",
-    component: <CreateLeave />,
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <CreateLeave />
+      </ProtectedRoute>
+    ),
   },
   {
     name: "Leave Approval",
     key: "leaveApproval",
     route: "/manpower/leaveApproval",
-    component: <LeaveApproval />,
+    component: (
+      <ProtectedRoute authorizedRoles={[StaffRoleEnum.ALL]} forHeadsOnly={true}>
+        <LeaveApproval />
+      </ProtectedRoute>
+    ),
   },
   {
     type: "collapse",
@@ -144,13 +243,28 @@ const routes = [
     key: "finance",
     icon: <Icon fontSize="small">attach_money</Icon>,
     route: "/finance",
-    component: <Finance />,
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Finance />
+      </ProtectedRoute>
+    ),
   },
   {
     name: "Error",
     key: "error",
     route: "*",
-    component: <ErrorPage />,
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <ErrorPage />
+      </ProtectedRoute>
+    ),
   },
 ];
 

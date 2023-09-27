@@ -29,7 +29,8 @@ import {
 } from "context";
 
 // Images
-import brandWhite from "assets/images/logo-ct.png";
+import heartLogoWhite from "assets/projectImages/heartLogoWhite.png";
+import heartSmall from "assets/projectImages/heartSmall.png";
 import Outpatient from "layouts/outpatient";
 import Home from "layouts/home";
 import ErrorPage from "layouts/error";
@@ -38,6 +39,8 @@ import MDSnackbar from "components/MDSnackbar";
 // redux
 import { useDispatch, useSelector } from "react-redux";
 import { selectSnackbar, closeMessage } from "./store/slices/snackbarSlice";
+import GlobalSnackbar from "examples/GlobalSnackbar";
+import LoadingOverlay from "examples/LoadingOverlay";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -113,21 +116,13 @@ export default function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <MDSnackbar
-        color={snackbar.color}
-        icon={snackbar.icon}
-        title={snackbar.title}
-        content={snackbar.content}
-        dateTime={snackbar.dateTime}
-        open={snackbar.isOpen}
-        onClose={handleCloseSnackbar}
-        close={handleCloseSnackbar}
-      />
+      <GlobalSnackbar />
+      <LoadingOverlay />
       <CssBaseline />
-      {!(location.pathname == "/error" || location.pathname == "/") && (
+      {!(location.pathname === "/") && (
         <Sidenav
           color={sidenavColor}
-          brand={brandWhite}
+          brand={heartLogoWhite}
           brandName="Heart2Hub"
           routes={routes}
           onMouseEnter={handleOnMouseEnter}

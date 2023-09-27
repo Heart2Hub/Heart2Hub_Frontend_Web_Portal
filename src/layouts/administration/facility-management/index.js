@@ -19,12 +19,48 @@ import MDButton from "components/MDButton";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useDispatch } from "react-redux";
 
-import { facilityApi } from "api/Api";
+import { facilityApi, departmentApi } from "api/Api";
+import { displayMessage } from "../../../store/slices/snackbarSlice";
 
 function FacilityManagement() {
+  const reduxDispatch = useDispatch();
   const [data, setData] = useState({
+    columns: [
+      { Header: "Facility ID", accessor: "facilityId", width: "10%" },
+      { Header: "Name", accessor: "name", width: "20%" },
+      { Header: "Location", accessor: "location", width: "20%" },
+      { Header: "Description", accessor: "description", width: "20%" },
+      { Header: "Capacity", accessor: "capacity", width: "10%" },
+      { Header: "Status", accessor: "status", width: "10%" },
+      { Header: "Type", accessor: "type", width: "10%" },
+      {
+        Header: "Actions",
+        Cell: ({ row }) => (
+          <MDBox>
+            <IconButton
+              color="secondary"
+              onClick={() => handleDeleteFacility(row.original.facilityId)}
+            >
+              <Icon>delete</Icon>
+            </IconButton>
+            <IconButton
+              color="secondary"
+              onClick={() => handleOpenUpdateModal(row.original.facilityId)}
+            >
+              <Icon>create</Icon>
+            </IconButton>
+          </MDBox>
+        ),
+        width: "10%",
+      },
+    ],
+    rows: [],
+  });
+  const [departments, setDepartments] = useState([]);
+  const dataRef = useRef({
     columns: [
       { Header: "Facility ID", accessor: "facilityId", width: "10%" },
       { Header: "Name", accessor: "name", width: "20%" },
@@ -58,17 +94,17 @@ function FacilityManagement() {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    subDepartmentId: 0,
+    subDepartmentId: null,
     name: "",
     location: "",
     description: "",
     capacity: "",
-    facilityStatusEnum: "AVAILABLE",
-    facilityTypeEnum: "WARD_BED",
+    facilityStatusEnum: "",
+    facilityTypeEnum: "",
   });
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [updateFormData, setUpdateFormData] = useState({
-    facilityId: 0,
+    facilityId: null,
     name: "",
     location: "",
     description: "",
@@ -85,6 +121,16 @@ function FacilityManagement() {
     setIsModalOpen(false);
   };
 
+  const getDepartments = async () => {
+    try {
+      const response = await departmentApi.getAllDepartments("");
+      console.log(response)
+      setDepartments(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prevData) => ({
@@ -96,10 +142,122 @@ function FacilityManagement() {
   const handleCreateFacility = () => {
     try {
       const { subDepartmentId, ...requestBody } = formData;
-      facilityApi.createFacility(subDepartmentId, requestBody).then(() => {
-        fetchData();
-        handleCloseModal();
-      });
+      if (subDepartmentId == null) {
+        setFormData({
+          subDepartmentId: null,
+          name: "",
+          location: "",
+          description: "",
+          capacity: "",
+          facilityStatusEnum: "",
+          facilityTypeEnum: "",
+        });
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Sub department cannot be null",
+          })
+        );
+      return
+      }
+      console.log(requestBody.facilityStatusEnum)
+      if (requestBody.facilityStatusEnum == "") {
+        setFormData({
+          subDepartmentId: null,
+          name: "",
+          location: "",
+          description: "",
+          capacity: "",
+          facilityStatusEnum: "",
+          facilityTypeEnum: "",
+        });
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Facility status cannot be null",
+          })
+        );
+      return
+      }
+      if (requestBody.facilityTypeEnum == "") {
+        setFormData({
+          subDepartmentId: null,
+          name: "",
+          location: "",
+          description: "",
+          capacity: "",
+          facilityStatusEnum: "",
+          facilityTypeEnum: "",
+        });
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Facility type cannot be null",
+          })
+        );
+      return
+      }
+      facilityApi
+        .createFacility(subDepartmentId, requestBody)
+        .then(() => {
+          fetchData();
+          setFormData({
+            subDepartmentId: null,
+            name: "",
+            location: "",
+            description: "",
+            capacity: "",
+            facilityStatusEnum: "",
+            facilityTypeEnum: "",
+          });
+          reduxDispatch(
+            displayMessage({
+              color: "success",
+              icon: "notification",
+              title: "Successfully Created Facility!",
+              content: requestBody.name + " created",
+            })
+          );
+          handleCloseModal();
+        })
+        .catch((err) => {
+          setFormData({
+            subDepartmentId: null,
+            name: "",
+            location: "",
+            description: "",
+            capacity: "",
+            facilityStatusEnum: "",
+            facilityTypeEnum: "",
+          });
+          // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
+          if (err.response.data.detail) {
+            reduxDispatch(
+              displayMessage({
+                color: "error",
+                icon: "notification",
+                title: "Error Encountered",
+                content: err.response.data.detail,
+              })
+            );
+          } else {
+            reduxDispatch(
+              displayMessage({
+                color: "error",
+                icon: "notification",
+                title: "Error Encountered",
+                content: err.response.data,
+              })
+            );
+          }
+          console.log(err.response.data.detail)
+        });
     } catch (ex) {
       console.log(ex);
     }
@@ -107,22 +265,22 @@ function FacilityManagement() {
 
   const handleOpenUpdateModal = (facilityId) => {
     // Populate update form data with the facility's current data
-    
-    // console.log(data);
 
-    // const facilityToUpdate = data.rows.find(
-    //   (facility) => facility.facilityId === facilityId
-    // );
+    const facilityToUpdate = dataRef.current.rows[0].find(
+      (facility) => facility.facilityId === facilityId
+    );
 
-    setUpdateFormData({
-      facilityId: facilityId,
-      // name: facilityToUpdate.name,
-      // location: facilityToUpdate.location,
-      // description: facilityToUpdate.description,
-      // capacity: facilityToUpdate.capacity,
-      // facilityStatusEnum: facilityToUpdate.status,
-      // facilityTypeEnum: facilityToUpdate.type,
-    });
+    if (facilityToUpdate) {
+      setUpdateFormData({
+        facilityId: facilityId,
+        name: facilityToUpdate.name,
+        location: facilityToUpdate.location,
+        description: facilityToUpdate.description,
+        capacity: facilityToUpdate.capacity,
+        facilityStatusEnum: facilityToUpdate.status,
+        facilityTypeEnum: facilityToUpdate.type,
+      });
+    }
 
     setIsUpdateModalOpen(true);
   };
@@ -142,12 +300,75 @@ function FacilityManagement() {
   const handleUpdateFacility = () => {
     try {
       const { facilityId, ...requestBody } = updateFormData;
-      console.log(facilityId);
-      console.log(updateFormData);
-      facilityApi.updateFacility(facilityId,requestBody).then(() => {
-        fetchData();
-        handleCloseUpdateModal();
-      });
+      console.log(requestBody.name)
+      if (requestBody.name == "") {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Name cannot be null",
+          })
+        );
+      return
+      }
+      console.log(requestBody.location)
+      if (requestBody.location == "") {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Location cannot be null",
+          })
+        );
+      return
+      }
+      if (requestBody.capacity < 0) {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Capacity cannot be less than 0",
+          })
+        );
+      return
+      }
+      facilityApi
+        .updateFacility(facilityId, requestBody)
+        .then(() => {
+          fetchData();
+          setUpdateFormData({
+            facilityId: null,
+            name: "",
+            location: "",
+            description: "",
+            capacity: "",
+            facilityStatusEnum: "",
+            facilityTypeEnum: "",
+          });
+          reduxDispatch(
+            displayMessage({
+              color: "success",
+              icon: "notification",
+              title: "Successfully Updated Facility!",
+              content: requestBody.name + " updated",
+            })
+          );
+          handleCloseUpdateModal();
+        })
+        .catch((err) => {
+          reduxDispatch(
+            displayMessage({
+              color: "error",
+              icon: "notification",
+              title: "Error Encountered",
+              content: err.response.data,
+            })
+          );
+          console.log(err)
+        });
     } catch (ex) {
       console.log(ex);
     }
@@ -159,9 +380,25 @@ function FacilityManagement() {
         .deleteFacility(facilityId)
         .then(() => {
           fetchData();
+          reduxDispatch(
+            displayMessage({
+              color: "success",
+              icon: "notification",
+              title: "Successfully Deleted Facility!",
+              content: "Facility with facility Id: " + facilityId + " deleted",
+            })
+          );
         })
-        .catch((ex) => {
-          console.error(ex);
+        .catch((err) => {
+          reduxDispatch(
+            displayMessage({
+              color: "error",
+              icon: "notification",
+              title: "Error Encountered",
+              content: err.response.data,
+            })
+          );
+          console.log(err);
         });
     } catch (ex) {
       console.error(ex);
@@ -186,6 +423,11 @@ function FacilityManagement() {
           // Map other columns as needed
         }));
 
+        dataRef.current = {
+          ...dataRef.current,
+          rows: [mappedRows],
+        };
+
         // Update the 'data' state with the mapped data
         setData((prevData) => ({
           ...prevData,
@@ -199,6 +441,7 @@ function FacilityManagement() {
 
   useEffect(() => {
     fetchData();
+    getDepartments();
   }, []);
 
   return (
@@ -278,13 +521,29 @@ function FacilityManagement() {
             margin="dense"
           />
           <FormControl fullWidth margin="dense">
-            <InputLabel>Sub Department</InputLabel>
+            <InputLabel>Unit</InputLabel>
             <Select
               name="subDepartmentId"
               value={formData.subDepartmentId}
               onChange={handleChange}
+              sx={{ lineHeight: "3em" }}
             >
-              <MenuItem value={1}>Cardiology</MenuItem>
+              {departments?.map(department => 
+              <MenuItem value={department.unitId}>{department.name}</MenuItem>
+                )}
+              {/* <MenuItem value={1}>Interventional Cardiology</MenuItem>
+              <MenuItem value={2}>Electrophysiology (EP) Lab</MenuItem>
+              <MenuItem value={3}>Cardiac Catheterization Lab</MenuItem>
+              <MenuItem value={4}>Heart Failure Clinic</MenuItem>
+              <MenuItem value={5}>Cardiac Rehabilitation</MenuItem>
+              <MenuItem value={6}>Echocardiography Unit</MenuItem>
+              <MenuItem value={7}>Nuclear Cardiology Unit</MenuItem>
+              <MenuItem value={8}>Cardiac Imaging Center</MenuItem>
+              <MenuItem value={9}>Cardiac Telemetry Unit</MenuItem>
+              <MenuItem value={10}>
+                Adult Congenital Heart Disease Clinic
+              </MenuItem>
+              <MenuItem value={11}>Preventive Cardiology Clinic</MenuItem> */}
               {/* Add more status options as needed */}
             </Select>
           </FormControl>
@@ -294,9 +553,12 @@ function FacilityManagement() {
               name="facilityStatusEnum"
               value={formData.facilityStatusEnum}
               onChange={handleChange}
+              sx={{ lineHeight: "3em" }}
             >
               <MenuItem value="AVAILABLE">Available</MenuItem>
               <MenuItem value="UNAVAILABLE">Unavailable</MenuItem>
+              <MenuItem value="MAINTENANCE">Maintenance</MenuItem>
+              <MenuItem value="CLOSED">Closed</MenuItem>
               {/* Add more status options as needed */}
             </Select>
           </FormControl>
@@ -306,9 +568,13 @@ function FacilityManagement() {
               name="facilityTypeEnum"
               value={formData.facilityTypeEnum}
               onChange={handleChange}
+              sx={{ lineHeight: "3em" }}
             >
               <MenuItem value="WARD_BED">Ward Bed</MenuItem>
               <MenuItem value="CONSULTATION_ROOM">Consultation Room</MenuItem>
+              <MenuItem value="TRIAGE_ROOM">Triage Room</MenuItem>
+              <MenuItem value="OPERATING_ROOM">Operating Room</MenuItem>
+              <MenuItem value="PHARMACY">Pharmacy</MenuItem>
               {/* Add more type options as needed */}
             </Select>
           </FormControl>
@@ -360,26 +626,18 @@ function FacilityManagement() {
             margin="dense"
           />
           <FormControl fullWidth margin="dense">
-            <InputLabel>Sub Department</InputLabel>
-            <Select
-              name="subDepartmentId"
-              value={updateFormData.subDepartmentId}
-              onChange={handleUpdateChange}
-            >
-              <MenuItem value={1}>Cardiology</MenuItem>
-              {/* Add more status options as needed */}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth margin="dense">
             <InputLabel>Status</InputLabel>
             <Select
               name="facilityStatusEnum"
               value={updateFormData.facilityStatusEnum}
               onChange={handleUpdateChange}
+              sx={{ lineHeight: "3em" }}
             >
               <MenuItem value="AVAILABLE">Available</MenuItem>
               <MenuItem value="UNAVAILABLE">Unavailable</MenuItem>
-              {/* Add more status options as needed */}
+              <MenuItem value="MAINTENANCE">Maintenance</MenuItem>
+              <MenuItem value="CLOSED">Closed</MenuItem>
+              {/* Refactor to pull from database */}
             </Select>
           </FormControl>
           <FormControl fullWidth margin="dense">
@@ -388,9 +646,13 @@ function FacilityManagement() {
               name="facilityTypeEnum"
               value={updateFormData.facilityTypeEnum}
               onChange={handleUpdateChange}
+              sx={{ lineHeight: "3em" }}
             >
               <MenuItem value="WARD_BED">Ward Bed</MenuItem>
               <MenuItem value="CONSULTATION_ROOM">Consultation Room</MenuItem>
+              <MenuItem value="TRIAGE_ROOM">Triage Room</MenuItem>
+              <MenuItem value="OPERATING_ROOM">Operating Room</MenuItem>
+              <MenuItem value="PHARMACY">Pharmacy</MenuItem>
               {/* Add more type options as needed */}
             </Select>
           </FormControl>

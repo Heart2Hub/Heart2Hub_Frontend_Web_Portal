@@ -1,5 +1,5 @@
 import axios from "axios";
-import { REST_ENDPOINT } from "../constants/RestEndPoint";
+import { REST_ENDPOINT, IMAGE_SERVER } from "../constants/RestEndPoint";
 
 let axiosFetch = axios.create();
 
@@ -7,6 +7,12 @@ if (localStorage.getItem("accessToken")) {
   axiosFetch.defaults.headers.common["Authorization"] =
     "Bearer " + localStorage.getItem("accessToken");
 }
+
+export const imageServerApi = {
+  uploadProfilePhoto(type, image) {
+    return axiosFetch.post(`${IMAGE_SERVER}/upload/${type}`, image);
+  },
+};
 
 export const authApi = {
   login(username, password) {
@@ -38,10 +44,10 @@ export const staffApi = {
   getStaffRoles() {
     return axiosFetch.get(`${REST_ENDPOINT}/staff/getStaffRoles`);
   },
-  createStaff(staff, subDepartment) {
+  createStaff(requestBody, subDepartment) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/staff/createStaff/${subDepartment}`,
-      staff
+      `${REST_ENDPOINT}/staff/createStaffWithImage/${subDepartment}`,
+      requestBody
     );
   },
   updateStaff(staff, subDepartment) {
@@ -50,34 +56,58 @@ export const staffApi = {
       staff
     );
   },
+  updateStaffWithImage(requestBody, subDepartment) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/staff/updateStaffWithImage/${subDepartment}`,
+      requestBody
+    );
+  },
   disableStaff(username) {
     return axiosFetch.put(`${REST_ENDPOINT}/staff/disableStaff/${username}`);
+  },
+  getStaffListByRole(role, unit) {
+    return axiosFetch.get(`${REST_ENDPOINT}/staff/getStaffByRole?role=${role}&unit=${unit}`);
   },
 };
 
 export const departmentApi = {
-  getAllDepartments() {
-    return axiosFetch.get(`${REST_ENDPOINT}/department/getAllDepartments`);
+  getAllDepartments(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/department/getAllDepartments?name=${name}`
+    );
+  },
+};
+
+export const wardApi = {
+  getAllWards(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/ward/getAllWards?name=${name}`
+    );
   },
 };
 
 export const subDepartmentApi = {
-  getSubDepartmentsByDepartment(department) {
+  getAllSubDepartments(name) {
     return axiosFetch.get(
-      `${REST_ENDPOINT}/subDepartment/getSubDepartmentsByDepartment/${department}`
+      `${REST_ENDPOINT}/subDepartment/getAllSubDepartments?name=${name}`
     );
   },
 };
 
 export const facilityApi = {
-  getAllFacilitiesByStatus(status){
+  getAllFacilitiesByStatus(status) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/facility/getAllFacilitiesByFacilityStatus?facilityStatus=${status}`
     );
   },
-  getAllFacilitiesByName(name){
+  getAllFacilitiesByName(name) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/facility/getAllFacilitiesByName?name=${name}`
+    );
+  },
+  getAllFacilitiesByDepartmentName(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facility/getAllFacilitiesByDepartmentName?name=${name}`
     );
   },
   createFacility(subDepartmentId, requestBody) {
@@ -96,7 +126,7 @@ export const facilityApi = {
       `${REST_ENDPOINT}/facility/updateFacility?facilityId=${facilityId}`,
       requestBody
     );
-  }
+  },
 };
 
 export const patientApi = {
@@ -108,7 +138,10 @@ export const patientApi = {
 };
 
 export const ehrApi = {
-  getElectronicHealthRecordByIdAndDateOfBirth(electronicHealthRecordId,dateOfBirth) {
+  getElectronicHealthRecordByIdAndDateOfBirth(
+    electronicHealthRecordId,
+    dateOfBirth
+  ) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordByIdAndDateOfBirth?electronicHealthRecordId=${electronicHealthRecordId}&dateOfBirth=${dateOfBirth}`
     );
@@ -120,6 +153,11 @@ export const leaveApi = {
     console.log(staffId);
     return axiosFetch.get(
       `${REST_ENDPOINT}/leave/getAllManagedLeaves?staffId=${staffId}`
+    );
+  },
+  getAllStaffLeaves(staffId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/leave/getAllStaffLeaves/${staffId}`
     );
   },
   getLeaveBalance(staffId) {
@@ -139,5 +177,95 @@ export const leaveApi = {
     return axiosFetch.put(
       `${REST_ENDPOINT}/leave/rejectLeaveDate?leaveId=${leaveId}`
     );
-  }
-}
+  },
+};
+
+export const shiftApi = {
+  viewWeeklyRoster(username, date) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shift/viewWeeklyRoster/${username}?date=${date}`
+    );
+  },
+  viewMonthlyRoster(username, year, month) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shift/viewMonthlyRoster/${username}?year=${year}&month=${month}`
+    );
+  },
+  viewOverallRoster(username) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shift/viewOverallRoster/${username}`
+    );
+  },
+  createShift(username, facility, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/shift/createShift/${username}/${facility}`,
+      requestBody
+    );
+  },
+  updateShift(shiftId, facility, requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/shift/updateShift/${shiftId}/${facility}`,
+      requestBody
+    );
+  },
+  deleteShift(shiftId) {
+    return axiosFetch.delete(`${REST_ENDPOINT}/shift/deleteShift/${shiftId}`);
+  },
+  getAllShiftsFromDate(username, start, end) {
+    console.log(
+      `${REST_ENDPOINT}/shift/getAllShiftsFromDate/${username}?startDate=${start}&endDate=${end}`
+    );
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shift/getAllShiftsFromDate/${username}?startDate=${start}&endDate=${end}`
+    );
+  },
+};
+
+export const shiftConstraintsApi = {
+  getAllShiftConstraints(role, department) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shiftConstraints/getAllShiftConstraints/${role}?department=${department}`
+    );
+  },
+  checkIsValidWorkDay(role, date, department) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shiftConstraints/checkIsValidWorkday?role=${role}&date=${date}&department=${department}`
+    );
+  },
+  createShiftConstraints(requestBody, facilityName) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/shiftConstraints/createShiftConstraints?facilityName=${facilityName}`,
+      requestBody
+    );
+  },
+  updateShiftConstraints(id, requestBody, facilityName) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/shiftConstraints/updateShiftConstraints/${id}?facilityName=${facilityName}`,
+      requestBody
+    );
+  },
+  deleteShiftConstraints(id) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/shiftConstraints/deleteShiftConstraints/${id}`
+    );
+  },
+};
+
+export const shiftPreferenceApi = {
+  getShiftPreference(username) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/shiftPreference/getShiftPreference/${username}`
+    );
+  },
+  createShiftPreference(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/shiftPreference/createShiftPreference`,
+      requestBody
+    );
+  },
+  deleteShiftPreference(id) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/shiftPreference/deleteShiftPreference/${id}`
+    );
+  },
+};

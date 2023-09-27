@@ -12,12 +12,19 @@ import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import ViewAllLeaves from './ViewAllLeaves';
+import { useSelector } from "react-redux";
+import { selectStaff } from "store/slices/staffSlice";
+import moment from 'moment'
 
 
 function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
+
+	const staff = useSelector(selectStaff);
+
 	const [comments, setComments] = useState('');
 	const [startDate, setStartDate] = useState('');
 	const [endDate, setEndDate] = useState('');
+	const [leaveType, setLeaveType] = useState('');
 
 	const [oneMonthLater, setOneMonthLater] = useState(null);
 	const [sixMonthsLater, setSixMonthsLater] = useState(null);
@@ -38,13 +45,15 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 			setEndDate('');
 			setErrorMessages([]);
 			setSuccessMessage('');
+			setLeaveType('');
 		};
 
 
 		if (selectedRow) {
 			setComments(selectedRow.comments);
-			setStartDate(selectedRow.startDate);
-			setEndDate(selectedRow.endDate);
+			setStartDate(moment(selectedRow.startDate[0] + "-" + selectedRow.startDate[1] + "-" + selectedRow.startDate[2], 'YYYY-MM-DD'). format('YYYY-MM-DD'))
+			setEndDate(moment(selectedRow.endDate[0] + "-" + selectedRow.endDate[1] + "-" + selectedRow.endDate[2], 'YYYY-MM-DD').format('YYYY-MM-DD'));
+			setLeaveType(selectedRow.leaveTypeEnum);
 		}
 		const currentDate = new Date();
 		const oneMonthDate = new Date(currentDate);
@@ -57,9 +66,9 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 
 		setOneMonthLater(oneMonthDate);
 		setSixMonthsLater(sixMonthsDate);
-	}, [open], [selectedRow], startDate, endDate);
+	}, [open], selectedRow, startDate, endDate);
 
-	const handleUpdate = () => {
+	const handleUpdate = async() => {
 
 		setErrorMessages([]);
 		setSuccessMessage("");
@@ -84,13 +93,16 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 				endDate,
 			};
 
-			const response = axios.put(`http://localhost:8080/leave/updateLeave/${selectedRow.leaveId}/1`, updatedLeaveData, {
+			const response = await axios.put(`http://localhost:8080/leave/updateLeave/${selectedRow.leaveId}/${staff.staffId}`, updatedLeaveData, {
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+					'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 
 				},
 			});
+
+			console.log('Leave created:', response.data);
+			
 			setIsSuccessMessageVisible(true);
 
 			setSuccessMessage("Leave updated successfully.");
@@ -99,7 +111,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 			}, 3000);
 
 
-			onClose();
+			// onClose();
 			onUpdate(updatedLeaveData);
 
 
@@ -109,14 +121,9 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 
 
 			if (error.response && error.response.data) {
-				const errorData = error.response.data;
-				if (errorData.message === "Start date and end date must be within allowed date ranges.") {
-					setErrorMessages(["Start date and end date must be within allowed date ranges."]);
-				} else {
-					setErrorMessages([errorData.message || "Error Updating Leave"]);
-				}
+				setErrorMessages([error.response.data]);
 			} else {
-				setErrorMessages(["Something wrong"]);
+				setErrorMessages(["Please Enter a Start and End Date"]);
 			}
 		}
 
@@ -145,7 +152,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 							onChange={(e) => setStartDate(e.target.value)}
 							InputLabelProps={{ shrink: true }}
 							inputProps={{
-								min: oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : "",
+								min: (leaveType === 'ANNUAL' || leaveType === 'PARENTAL') ? (oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10),
 								max: sixMonthsLater ? sixMonthsLater.toISOString().slice(0, 10) : "",
 							}}
 
@@ -160,7 +167,7 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 							onChange={(e) => setEndDate(e.target.value)}
 							InputLabelProps={{ shrink: true }}
 							inputProps={{
-								min: oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : "",
+								min: (leaveType === 'ANNUAL' || leaveType === 'PARENTAL') ? (oneMonthLater ? oneMonthLater.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10),
 								max: sixMonthsLater ? sixMonthsLater.toISOString().slice(0, 10) : "",
 							}}
 						/>
@@ -174,17 +181,17 @@ function UpdateLeaveForm({ open, onClose, selectedRow, onUpdate }) {
 					</Alert>
 				)}
 
-				{/* {successMessage && (
+				{successMessage && (
 					<Alert severity="success">
 						{successMessage}
 					</Alert>
-				)} */}
+				)}
 
 			</DialogContent>
 			<div style={{ padding: '16px' }}>
 				<Button variant="contained" color="primary" style={{ backgroundColor: 'green', color: 'white' }} onClick={handleUpdate}>
 					Update
-				</Button>
+				</Button>&nbsp;&nbsp;
 				<Button variant="outlined" color="secondary" style={{ backgroundColor: 'red', color: 'white' }} onClick={onClose}>
 					Cancel
 				</Button>

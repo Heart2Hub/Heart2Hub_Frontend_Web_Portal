@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 
 import {
@@ -14,31 +13,23 @@ import {
   DialogContentText,
   DialogTitle,
   Grid,
-  TextField,
+  Input,
 } from "@mui/material";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import InputLabel from "@mui/material/InputLabel";
 
-import { Formik, Form, useFormikContext, Field } from "formik";
+import { Formik, Form, useFormikContext } from "formik";
 import * as yup from "yup";
-import { staffApi, departmentApi } from "api/Api";
+import { staffApi, departmentApi, imageServerApi } from "api/Api";
 import { subDepartmentApi } from "api/Api";
 import TextfieldWrapper from "components/Textfield";
 import SelectWrapper from "components/Select";
-import CheckBox from "@mui/material/Checkbox";
 import CheckboxWrapper from "components/Checkbox";
+import moment from "moment";
 
-const INITIAL_FORM_STATE = {
-  username: "",
-  password: "",
-  firstname: "",
-  lastname: "",
-  mobileNumber: 0,
-  staffRoleEnum: "",
-  departmentName: "",
-  subDepartmentName: "",
-};
+import { displayMessage } from "../../../store/slices/snackbarSlice";
+import { useDispatch } from "react-redux";
+import MDAvatar from "components/MDAvatar";
+import { IMAGE_SERVER } from "constants/RestEndPoint";
+import { wardApi } from "api/Api";
 
 const validationSchema = yup.object({
   username: yup
@@ -57,28 +48,47 @@ const validationSchema = yup.object({
     .max(99999999, "Invalid mobile number")
     .required("Mobile number is required"),
   staffRoleEnum: yup.string().required("Staff role is required"),
-  departmentName: yup.string().required("Department is required"),
-  subDepartmentName: yup.string().required("Sub-Department is required"),
+  unitName: yup.string().required("Unit is required")
 });
 
 function AddStaff({ returnToTableHandler, formState, editing }) {
+  const existingPhoto = IMAGE_SERVER + "/images/id/" + formState.profilePicture;
+
   const [staffRoles, setStaffRoles] = useState([]);
   const [departmentNames, setDepartmentNames] = useState([]);
-  const [subDepartmentNames, setSubDepartmentNames] = useState([]);
+  const [wardNames, setWardNames] = useState([]);
+  const [unitsByRole, setUnitsByRole] = useState(
+    []
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [imageSrc, setImageSrc] = useState("");
+  const [editImageSrc, setEditImageSrc] = useState(existingPhoto);
+  const reduxDispatch = useDispatch();
+  const photoInputRef = useRef(null);
 
   const processDepartmentData = (departments) => {
-    const departmentNames = departments.map(
-      (department) => department.departmentName
-    );
+    const departmentNames = departments.map((department) => department.name);
     return departmentNames;
   };
 
-  const processSubDepartmentData = (subDepartments) => {
-    const subDepartmentNames = subDepartments.map(
-      (subDepartment) => subDepartment.subDepartmentName
-    );
-    return subDepartmentNames;
+  const createStaffBody = (values) => {
+    const staffBodyFields = [
+      "username",
+      "password",
+      "firstname",
+      "lastname",
+      "mobileNumber",
+      "staffRoleEnum",
+      "isHead",
+    ];
+    const staffBody = staffBodyFields.reduce((obj, key) => {
+      if (values.hasOwnProperty(key)) {
+        obj[key] = values[key];
+      }
+      return obj;
+    }, {});
+    return staffBody;
   };
 
   useEffect(() => {
@@ -96,63 +106,159 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
   useEffect(() => {
     const getDepartments = async () => {
       try {
-        const response = await departmentApi.getAllDepartments();
+        const response = await departmentApi.getAllDepartments("");
         setDepartmentNames(processDepartmentData(response.data));
       } catch (error) {
         console.log(error);
       }
     };
+    const getWards = async () => {
+      try {
+        const response = await wardApi.getAllWards("");
+        setWardNames(processDepartmentData(response.data));
+      } catch (error) {
+        console.log(error);
+      }
+    };
     getDepartments();
+    getWards();
   }, []);
+
 
   const FormObserver = () => {
     const { values } = useFormikContext();
     useEffect(() => {
-      const getSubDepartments = async () => {
-        try {
-          const response = await subDepartmentApi.getSubDepartmentsByDepartment(
-            values.departmentName
-          );
-          setSubDepartmentNames(processSubDepartmentData(response.data));
-        } catch (error) {
-          console.log(error);
-        }
-      };
-      getSubDepartments();
-    }, [values.departmentName]);
+      setUnitsByRole(
+        values.staffRoleEnum === "NURSE" ? wardNames : 
+        values.staffRoleEnum === "" ? [] : departmentNames
+      );
+    }, [values.staffRoleEnum]);
   };
 
-  const postStaff = async (values, actions) => {
+  const postStaff = async (staffBody, unitName, actions) => {
     try {
+      const imageServerResponse = await imageServerApi.uploadProfilePhoto(
+        "id",
+        profilePhoto
+      );
+
+      const requestBody = {
+        staff: staffBody,
+        imageDocument: {
+          imageLink: imageServerResponse.data.filename,
+          createdDate: moment().format("YYYY-MM-DDTHH:mm:ss"),
+        },
+      };
+
+      console.log(requestBody);
+
       const response = await staffApi.createStaff(
-        values,
-        values.subDepartmentName
+        requestBody,
+        unitName
       );
       returnToTableHandler();
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Success!",
+          content: "Staff has been created",
+        })
+      );
     } catch (error) {
-      actions.setStatus(error.response.data);
+      console.log(error);
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error!",
+          content: error.response.data,
+        })
+      );
+      //actions.setStatus(error.response.data);
     }
   };
 
-  const putStaff = async (values, actions) => {
+  const putStaff = async (staffBody, unitName) => {
     try {
-      const response = await staffApi.updateStaff(
-        values,
-        values.subDepartmentName
+      const response = await staffApi.updateStaff(staffBody, unitName);
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Success!",
+          content: "Staff has been updated",
+        })
       );
       returnToTableHandler();
     } catch (error) {
-      actions.setStatus(error.response.data);
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error!",
+          content: error.response.data,
+        })
+      );
+    }
+  };
+
+  const putStaffWithImage = async (staffBody, unitName) => {
+    try {
+      const imageServerResponse = await imageServerApi.uploadProfilePhoto(
+        "id",
+        profilePhoto
+      );
+
+      const requestBody = {
+        staff: staffBody,
+        imageDocument: {
+          imageLink: imageServerResponse.data.filename,
+          createdDate: moment().format("YYYY-MM-DDTHH:mm:ss"),
+        },
+      };
+
+      console.log(requestBody);
+
+      const response = await staffApi.updateStaffWithImage(
+        requestBody,
+        unitName
+      );
+      returnToTableHandler();
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Success!",
+          content: "Staff has been updated",
+        })
+      );
+    } catch (error) {
+      console.log(error);
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error!",
+          content: error.response.data,
+        })
+      );
     }
   };
 
   const handleSubmit = (values, actions) => {
+    const unitName = values.unitName;
+    const staffBody = createStaffBody(values);
     if (editing) {
       console.log("Updated staff");
-      putStaff(values, actions);
+      if (profilePhoto) {
+        putStaffWithImage(staffBody, unitName);
+      } else {
+        putStaff(staffBody, unitName);
+      }
     } else {
       console.log("Creating staff");
-      postStaff(values, actions);
+      postStaff(staffBody, unitName, actions);
     }
   };
 
@@ -168,12 +274,60 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
     const disableStaff = async (username) => {
       try {
         const response = await staffApi.disableStaff(username);
+        reduxDispatch(
+          displayMessage({
+            color: "success",
+            icon: "notification",
+            title: "Success!",
+            content: "Succesfully disabled staff",
+          })
+        );
         returnToTableHandler();
       } catch (error) {
+        reduxDispatch(
+          displayMessage({
+            color: "warning",
+            icon: "notification",
+            title: "Error!",
+            content: error.response.data,
+          })
+        );
         console.log(error);
       }
     };
     disableStaff(username);
+  };
+
+  const handlePhotoUpload = (e) => {
+    console.log(e.target.files[0]);
+    const file = e.target.files[0];
+
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        // const uploadedImage = document.getElementById("uploadedImage");
+        // uploadedImage.src = e.target.result;
+        if (editing) {
+          setEditImageSrc(e.target.result);
+        } else {
+          setImageSrc(e.target.result);
+        }
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    const formData = new FormData();
+    formData.append("image", e.target.files[0], e.target.files[0].name);
+    setProfilePhoto(formData);
+  };
+
+  const handleClearSelection = (e) => {
+    e.preventDefault();
+    setEditImageSrc(existingPhoto);
+    setProfilePhoto(null);
+    photoInputRef.current.value = null;
   };
 
   return (
@@ -210,7 +364,12 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                   >
                     First Name
                   </MDTypography>
-                  <TextfieldWrapper name="firstname" hiddenlabel size="small" />
+                  <TextfieldWrapper
+                    name="firstname"
+                    hiddenlabel
+                    size="small"
+                    disabled={editing}
+                  />
                 </Grid>
                 <Grid item xs={6}>
                   <MDTypography
@@ -220,33 +379,14 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                   >
                     Last Name
                   </MDTypography>
-                  <TextfieldWrapper name="lastname" hiddenlabel size="small" />
-                </Grid>
-                <Grid item xs={6}>
-                  <MDTypography
-                    variant="button"
-                    fontWeight="bold"
-                    textTransform="capitalize"
-                  >
-                    Username
-                  </MDTypography>
                   <TextfieldWrapper
-                    name="username"
+                    name="lastname"
                     hiddenlabel
                     size="small"
-                    status={status}
+                    disabled={editing}
                   />
                 </Grid>
-                <Grid item xs={6}>
-                  <MDTypography
-                    variant="button"
-                    fontWeight="bold"
-                    textTransform="capitalize"
-                  >
-                    Password
-                  </MDTypography>
-                  <TextfieldWrapper name="password" hiddenlabel size="small" />
-                </Grid>
+
                 <Grid item xs={6}>
                   <MDTypography
                     variant="button"
@@ -282,29 +422,52 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                     fontWeight="bold"
                     textTransform="capitalize"
                   >
-                    Department
+                    Username
                   </MDTypography>
-                  <SelectWrapper
-                    name="departmentName"
+                  <TextfieldWrapper
+                    name="username"
                     hiddenlabel
-                    options={departmentNames}
+                    size="small"
+                    disabled={editing}
                   />
                 </Grid>
+
                 <Grid item xs={6}>
+                  {editing ? null : (
+                    <>
+                      <MDTypography
+                        variant="button"
+                        fontWeight="bold"
+                        textTransform="capitalize"
+                      >
+                        Password
+                      </MDTypography>
+                      <TextfieldWrapper
+                        name="password"
+                        disabled
+                        hiddenlabel
+                        size="small"
+                      />
+                    </>
+                  )}
+                </Grid>
+
+                <Grid item xs={7}>
                   <MDTypography
                     variant="button"
                     fontWeight="bold"
                     textTransform="capitalize"
                   >
-                    Sub-Department
+                    Unit
                   </MDTypography>
                   <SelectWrapper
-                    name="subDepartmentName"
+                    name="unitName"
                     hiddenlabel
-                    options={subDepartmentNames}
+                    options={unitsByRole}
+                    disabled={unitsByRole.length === 0}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={6}>
                   <MDBox>
                     <MDTypography
                       variant="button"
@@ -315,6 +478,39 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                     </MDTypography>
                     <CheckboxWrapper name="isHead" />
                   </MDBox>
+                </Grid>
+                <Grid item xs={6}>
+                  <MDBox>
+                    <MDTypography
+                      variant="button"
+                      fontWeight="bold"
+                      textTransform="capitalize"
+                    >
+                      Profile Photo
+                    </MDTypography>
+                    <input
+                      ref={photoInputRef}
+                      style={{ marginLeft: "10px" }}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                    />
+                  </MDBox>
+                  {editing ? (
+                    <>
+                      <button
+                        style={{ marginLeft: "100px", padding: "2px" }}
+                        onClick={handleClearSelection}
+                      >
+                        Clear Selection
+                      </button>
+                      <MDAvatar src={editImageSrc} size="xxl" />
+                    </>
+                  ) : (
+                    <>
+                      <MDAvatar src={imageSrc} size="xxl" />
+                    </>
+                  )}
                 </Grid>
                 <Grid item xs={4}>
                   <MDButton

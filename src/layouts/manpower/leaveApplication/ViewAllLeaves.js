@@ -16,6 +16,11 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import UpdateLeaveForm from "./UpdateLeaveForm";
+import { useSelector } from "react-redux";
+import { selectStaff } from "store/slices/staffSlice";
+import { Link } from 'react-router-dom';
+import MDAvatar from "components/MDAvatar";
+import { IMAGE_SERVER } from "constants/RestEndPoint";
 
 
 
@@ -27,16 +32,35 @@ import { DataGrid } from '@mui/x-data-grid';
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import axios from 'axios';
+import moment from 'moment';
 
 function ViewAllLeaves() {
+
+	const staff = useSelector(selectStaff);
+
+	console.log(staff);
 	const [leaveList, setLeaveList] = useState([]);
 	const [leaveBalance, setLeaveBalance] = useState([]);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [rowToDelete, setRowToDelete] = useState(null);
 	const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState(null);
+	const [openImageDialog, setOpenImageDialog] = useState(false);
+	const [selectedImage, setSelectedImage] = useState('');
 
-	const id = 1;
+	const handleViewImage = (leave) => {
+		if (leave.imageDocuments?.imageLink) {
+			console.log("View Image button clicked.");
+			setSelectedImage(`${IMAGE_SERVER}/images/id/${leave.imageDocuments.imageLink}`);
+			setOpenImageDialog(true);
+		}
+	};
+
+	const handleCloseImageDialog = () => {
+		setOpenImageDialog(false);
+		setSelectedImage('');
+	};
+
 
 	const handleDeleteDialogOpen = (rowId) => {
 		setRowToDelete(rowId);
@@ -68,10 +92,10 @@ function ViewAllLeaves() {
 
 	const handleUpdateLeave = (updatedLeaveData) => {
 		axios
-			.put(`http://localhost:8080/leave/updateLeave/${selectedRow.leaveId}/1`, updatedLeaveData, {
+			.put(`http://localhost:8080/leave/updateLeave/${selectedRow.leaveId}/${staff.staffId}`, updatedLeaveData, {
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+					'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 
 				},
 			})
@@ -89,9 +113,9 @@ function ViewAllLeaves() {
 
 
 	const getLeaveBalance = async () => {
-		const response = await axios.get('http://localhost:8080/leave/getLeaveBalance?staffId=1', {
+		const response = await axios.get(`http://localhost:8080/leave/getLeaveBalance?staffId=${staff.staffId}`, {
 			headers: {
-				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+				'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 			}
 		});
 
@@ -99,9 +123,9 @@ function ViewAllLeaves() {
 	}
 
 	const getLeaveList = async () => {
-		const response = await axios.get('http://localhost:8080/leave/getAllStaffLeaves/1', {
+		const response = await axios.get(`http://localhost:8080/leave/getAllStaffLeaves/${staff.staffId}`, {
 			headers: {
-				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+				'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 			}
 		});
 
@@ -110,12 +134,8 @@ function ViewAllLeaves() {
 
 	function formatDateToDdMmYyyy(inputDate) {
 		try {
-			inputDate = inputDate.toString();
-
-			const year = inputDate.slice(0, 4);
-			const month = inputDate.slice(5, 7);
-			const day = inputDate.slice(8, 10);
-			return `${day}/${month}/${year}`;
+			const newDate = new Date(inputDate[0], inputDate[1] - 1, inputDate[2])
+			return moment(newDate).format('DD/MM/YYYY')
 
 		} catch (error) {
 			console.error(`Error formatting date: ${error}`);
@@ -138,11 +158,23 @@ function ViewAllLeaves() {
 	}
 
 	const columns = [
-		{ field: 'leaveId', headerName: 'S/N', width: 100 },
-		{ field: 'startDate', headerName: 'Start Date', width: 150, valueFormatter: (params) => formatDateToDdMmYyyy(params.value) },
-		{ field: 'endDate', headerName: 'End Date', width: 150, valueFormatter: (params) => formatDateToDdMmYyyy(params.value) },
+		{ field: 'leaveId', headerName: 'S/N', width: 100, sortable: true},
+		{ field: 'startDate', headerName: 'Start Date', width: 150, valueFormatter: (params) => formatDateToDdMmYyyy(params.value), sortable: true,
+		comparator: (a, b) => {
+			// Convert LocalDateTime strings to Date objects for comparison
+			const dateA = new Date(a);
+			const dateB = new Date(b);
+			return dateA - dateB;
+		      }},
+		{ field: 'endDate', headerName: 'End Date', width: 150, valueFormatter: (params) => formatDateToDdMmYyyy(params.value),sortable: true,
+		comparator: (a, b) => {
+			// Convert LocalDateTime strings to Date objects for comparison
+			const dateA = new Date(a);
+			const dateB = new Date(b);
+			return dateA - dateB;
+		      } },
 		{ field: 'comments', headerName: 'Comments', width: 200 },
-		{ field: 'leaveTypeEnum', headerName: 'Leave Type', width: 150 },
+		{ field: 'leaveTypeEnum', headerName: 'Leave Type', width: 150, sortable: true},
 		{
 			field: 'approvalStatusEnum',
 			headerName: 'Approval Status',
@@ -167,7 +199,8 @@ function ViewAllLeaves() {
 			field: 'headStaff.username',
 			headerName: 'Head Staff',
 			width: 150,
-			valueGetter: (params) => params.row.headStaff.username,
+			valueGetter: (params) => params.row.headStaff.firstname,
+			sortable: true
 		},
 		{
 			field: 'update',
@@ -200,6 +233,23 @@ function ViewAllLeaves() {
 					Delete
 				</Button>
 			),
+		},
+		{
+			field: 'viewImage',
+			headerName: 'View Image',
+			width: 150,
+			renderCell: (params) => (
+				params.row.imageDocuments ? (
+					<Button
+						variant="outlined"
+						color="primary"
+						onClick={() => handleViewImage(params.row)}
+						style={{ backgroundColor: 'orange', color: 'white' }}
+					>
+						View Image
+					</Button>
+				) : null
+			),
 		},];
 
 	const generateRowId = (row) => {
@@ -216,7 +266,7 @@ function ViewAllLeaves() {
 
 		axios.delete(`http://localhost:8080/leave/deleteLeave/${id}`, {
 			headers: {
-				'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJzdWIiOiJzdGFmZjEiLCJpYXQiOjE2OTQ2NjIwNzUsImV4cCI6MTY5NTI2Njg3NX0.16DmhDzY10h2YnIXgEUWE9ZqdPRFUDvcJoawlJt2_es'}`
+				'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
 			}
 		})
 			.then(() => {
@@ -236,20 +286,7 @@ function ViewAllLeaves() {
 			<DashboardNavbar />
 			<MDBox py={3}>
 				<Grid container spacing={3}>
-					<Grid item xs={12} md={6} lg={3}>
-						<MDBox mb={1.5}>
-							<SimpleBlogCard
-								image="https://bit.ly/3Hlw1MQ"
-								title="Leave Management"
-								action={{
-									type: "internal",
-									route: "/manpower/createLeave",
-									color: "info",
-									label: "Apply Leave",
-								}}
-							/>{" "}
-						</MDBox>
-					</Grid>
+
 					<Grid item xs={12} md={6} lg={3}>
 						<Card>
 							<MDBox
@@ -275,6 +312,14 @@ function ViewAllLeaves() {
 								</div>
 								<div>
 									<strong>Parental Leave:</strong> {leaveBalance.parentalLeave}
+								</div>
+								<div>
+									<br></br>
+									<Link to="/manpower/createLeave" style={{ textDecoration: 'none' }}>
+										<Button variant="contained" color="primary" style={{ color: 'white' }}>
+											Apply for Leave
+										</Button>
+									</Link>
 								</div>
 							</CardContent>
 						</Card>
@@ -330,6 +375,14 @@ function ViewAllLeaves() {
 												Delete
 											</Button>
 										</DialogActions>
+									</Dialog>
+									<Dialog open={openImageDialog} onClose={handleCloseImageDialog} style={{ maxWidth: '100%', maxHeight: '100%'}}>
+										<DialogContent style={{width: '100vw' }}>
+											<img src={selectedImage} alt="Leave Image" style={{ maxWidth: '100%', maxHeight: '100%' }} />
+										</DialogContent>
+										<Button onClick={handleCloseImageDialog} color="primary">
+											Close
+										</Button>
 									</Dialog>
 									<UpdateLeaveForm
 										open={isUpdateFormOpen}

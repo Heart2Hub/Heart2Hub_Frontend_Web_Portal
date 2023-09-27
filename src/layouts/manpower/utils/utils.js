@@ -1,3 +1,4 @@
+import { facilityApi } from 'api/Api';
 import moment from 'moment';
 
 export const options = [
@@ -19,17 +20,6 @@ export const options = [
     },
 ]
 
-export const facilities = [
-    {
-        id: 1,
-        name: "Operating Room"
-    },
-    {
-        id: 2,
-        name: "Emergency Room"
-    }
-]
-
 export const getDay = (index) => {
     switch (index){
         case 0:
@@ -49,6 +39,18 @@ export const getDay = (index) => {
     }
 }
 
+export const getScColor = (name) => {
+    if (name === "Shift 1") {
+        return "#ffdc7a";
+    } else if (name === "Shift 2") {
+        return "#baffb3";
+    } else if (name === "Shift 3") {
+        return "#b3ccff";
+    } else {
+        return "#ffb5b3";
+    }
+}
+
 export const getShiftName = (startTime, endTime) => {
     if (startTime == "00:00" && endTime == "08:00") {
         return "Shift 1";
@@ -58,6 +60,26 @@ export const getShiftName = (startTime, endTime) => {
         return "Shift 3";
     }
     return "24-hour Shift";
+}
+
+export const getShiftNameWithTime = (startTime, endTime, shift) => {
+    if (shift) {
+        let str = shift.leaveTypeEnum + " leave";
+        if (shift.approvalStatusEnum === "PENDING") {
+            str += " (PENDING)";
+        }
+        return str;
+    }
+    let start = moment(startTime, 'YYYY-MM-DD, HH:mm:ss').format('HH:mm');
+    let end = moment(endTime, 'YYYY-MM-DD, HH:mm:ss').format('HH:mm');
+    if (start == "00:00" && end == "08:00") {
+        return "Shift 1 (12am - 8am)";
+    } else if (start == "08:00" && end == "16:00") {
+        return "Shift 2 (8am - 4pm)";
+    } else if (start == "16:00" && end == "23:59") {
+        return "Shift 3 (4pm - 11.59pm)";
+    }
+    return "24-hour Shift (12am - 11.59pm)";
 }
 
 export const getShiftId = (startTime, endTime) => {
@@ -87,7 +109,10 @@ export const getTime = (dateTime) => {
     return moment(dateTime).format('HH:mm');
 }
 
-export const getColor = (startTime, endTime) => {
+export const getColor = (startTime, endTime, data) => {
+    if (data && data.leaveTypeEnum) {
+        return getColorLeave(data.approvalStatusEnum)
+    }
     if (getTime(startTime) == "00:00" && getTime(endTime) == "08:00") {
         return "#ffdc7a";
     } else if (getTime(startTime) == "08:00" && getTime(endTime) == "16:00") {
@@ -96,5 +121,13 @@ export const getColor = (startTime, endTime) => {
         return "#b3ccff";
     } else {
         return "#ffb5b3";
+    }
+}
+
+export const getColorLeave = (status) => {
+    if (status === "APPROVED") {
+        return "#5e5e5e";
+    } else if (status === "PENDING") {
+        return "#c2c2c2";
     }
 }
