@@ -31,10 +31,13 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 import { facilityApi, departmentApi } from "api/Api";
 import { useSelector } from "react-redux";
-
+import DateTimePicker from 'react-datetime-picker'
 import { displayMessage } from "../../../store/slices/snackbarSlice";
+import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop'
+import 'react-big-calendar/lib/addons/dragAndDrop/styles.css'
 
 function FacilityBooking() {
+	const DnDCalendar = withDragAndDrop(Calendar)
 	const reduxDispatch = useDispatch();
 	const [activeTab, setActiveTab] = useState(0);
 	const staff = useSelector(selectStaff);
@@ -44,6 +47,8 @@ function FacilityBooking() {
 	const [selectedSlot, setSelectedSlot] = useState(null);
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const [comments, setComments] = useState("");
+	const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+	const [bookingToDeleteId, setBookingToDeleteId] = useState(null);
 
 	const handleTabChange = (event, newValue) => {
 		setActiveTab(newValue);
@@ -52,15 +57,10 @@ function FacilityBooking() {
 	const handleSlotSelect = (slotInfo) => {
 		setSelectedSlot(slotInfo);
 		setIsBookingModalOpen(true);
-		//console.log("Selected Slot:", selectedSlot);
 	}
 
 	const handleBookingConfirmation = () => {
-		// if (!selectedSlot || !selectedFacility || !comments) {
-		// 	// Handle missing data or invalid state
-		// 	console.error("Missing data for booking.");
-		// 	return;
-		//       }
+		
 
 		console.log(selectedSlot.start)
 		const date1 = new Date(selectedSlot.start);
@@ -90,6 +90,13 @@ function FacilityBooking() {
 				const booking = response.data;
 				console.log(booking);
 				setIsBookingModalOpen(false);
+				reduxDispatch(
+					displayMessage({
+						color: "success",
+						icon: "notification",
+						title: "Successfully Created Booking!",
+					})
+				);
 			}).catch((error) => {
 				reduxDispatch(
 					displayMessage({
@@ -110,22 +117,21 @@ function FacilityBooking() {
 	};
 
 	const handleEventClick = (event) => {
-		setSelectedBooking(event); // Store the selected booking
-		setIsBookingDetailsOpen(true); // Open the dialog/modal
+		setSelectedBooking(event); 
+		setIsBookingDetailsOpen(true);
 	};
 
 	const handleCloseBookingDetails = () => {
-		setSelectedBooking(null); // Clear the selected booking
-		setIsBookingDetailsOpen(false); // Close the dialog/modal
+		setSelectedBooking(null);
+		setIsBookingDetailsOpen(false);
 	};
 
 	const formats = {
 		eventTimeRangeFormat: ({ start, end }) => {
-			const startTime = moment(start).format('LT'); // Customize the time format as needed
-			const endTime = moment(end).format('LT');     // Customize the time format as needed
+			const startTime = moment(start).format('LT'); 
+			const endTime = moment(end).format('LT');     
 			return `${startTime} - ${endTime}`;
 		},
-		// Add other custom formats here
 	};
 
 
@@ -133,11 +139,9 @@ function FacilityBooking() {
 		facilityApi
 			.getAllBookingsOfAStaff(staff.username)
 			.then((response) => {
-				const facilities = response.data; // Assuming 'facilities' is an array of facility objects
-
+				const facilities = response.data; 
 				console.log(facilities);
 
-				// Map the fetched data to match your table structure
 				const mappedRows = facilities.map((facility) => ({
 					facilityBookingId: facility.facilityBookingId,
 					startDateTime: moment(new Date(facility.startDateTime)).format('MMMM Do YYYY, h:mm:ss a'),
@@ -151,7 +155,6 @@ function FacilityBooking() {
 					rows: [mappedRows],
 				};
 
-				// Update the 'data' state with the mapped data
 				setBookingData((prevData) => ({
 					...prevData,
 					rows: mappedRows,
@@ -217,13 +220,28 @@ function FacilityBooking() {
 		rows: [],
 	});
 
-	const[bookingData, setBookingData] = useState({
+	const [bookingData, setBookingData] = useState({
 		columns: [
 			{ Header: "Facility Booking ID", accessor: "facilityBookingId", width: "10%" },
 			{ Header: "Start Date Time", accessor: "startDateTime", width: "20%" },
 			{ Header: "End Date Time", accessor: "endDateTime", width: "20%" },
 			{ Header: "Comments", accessor: "comments", width: "20%" },
 			{ Header: "Facility Name", accessor: "facilityName", width: "10%" },
+			{
+				Header: "Actions",
+				Cell: ({ row }) => (
+					<MDBox>
+						<IconButton
+							color="secondary"
+							onClick={() => handleDeleteFacility(row.original.facilityBookingId)}
+						>
+							<Icon>delete</Icon>
+						</IconButton>
+						
+					</MDBox>
+				),
+				width: "10%",
+			},
 		],
 		rows: [],
 	})
@@ -235,6 +253,21 @@ function FacilityBooking() {
 			{ Header: "End Date Time", accessor: "endDateTime", width: "20%" },
 			{ Header: "Comments", accessor: "comments", width: "20%" },
 			{ Header: "Facility Name", accessor: "facilityName", width: "10%" },
+			{
+				Header: "Actions",
+				Cell: ({ row }) => (
+					<MDBox>
+						<IconButton
+							color="secondary"
+							onClick={() => handleDeleteFacility(row.original.facilityBookingId)}
+						>
+							<Icon>delete</Icon>
+						</IconButton>
+						
+					</MDBox>
+				),
+				width: "10%",
+			},
 		],
 		rows: [],
 	});
@@ -269,6 +302,7 @@ function FacilityBooking() {
 					start: new Date(booking.startDateTime),
 					end: new Date(booking.endDateTime),
 					facilityBookingId: booking.facilityBookingId,
+					owner: booking.staffUsername,
 					resizable: true,
 					draggable: true,
 
@@ -282,6 +316,22 @@ function FacilityBooking() {
 
 
 
+	};
+	const eventStyleGetter = (event) => {
+
+		if (event.owner === staff.username) {
+			var style = {
+				backgroundColor: 'green',
+				opacity: 0.8,
+				color: 'white',
+
+			};
+			return {
+				style: style
+			};
+
+		}
+		return {};
 	};
 
 	const handleCloseCalendarModal = () => {
@@ -303,23 +353,66 @@ function FacilityBooking() {
 			.then((response) => {
 				const updatedEvents = calendarEvents.filter((event) => event.facilityBookingId !== id);
 				setCalendarEvents(updatedEvents);
-
-				// Close the dialog and update UI as needed
 				setIsBookingDetailsOpen(false);
+				reduxDispatch(
+					displayMessage({
+						color: "success",
+						icon: "notification",
+						title: "Successfully Deleted Booking!",
+					})
+				);
 			}).catch((error) => {
 				console.error("Error fetching data:", error);
 			});
 	};
 
+	const handleDeleteFacility = (facilityBookingId) => {
+		setBookingToDeleteId(facilityBookingId);
+		setDeleteConfirmationOpen(true);
+	};
+
+	const handleConfirmDeleteBooking = (facilityBookingId) => {
+		try {
+			facilityApi
+				.deleteFacilityBooking(facilityBookingId)
+				.then(() => {
+					fetchData();
+					fetchBookingData();
+					setDeleteConfirmationOpen(false);
+
+					reduxDispatch(
+						displayMessage({
+							color: "success",
+							icon: "notification",
+							title: "Successfully Deleted Facility!",
+							content: "Facility with facility Id: " + facilityBookingId + " deleted",
+						})
+					);
+				})
+				.catch((err) => {
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Error Encountered",
+							content: err.response.data,
+						})
+					);
+					console.log(err);
+				});
+		} catch (ex) {
+			console.error(ex);
+		}
+	}
+
 	const fetchData = async () => {
 		facilityApi
 			.findAllFacility()
 			.then((response) => {
-				const facilities = response.data; // Assuming 'facilities' is an array of facility objects
+				const facilities = response.data; 
 
 				console.log(facilities);
 
-				// Map the fetched data to match your table structure
 				const mappedRows = facilities.map((facility) => ({
 					facilityId: facility.facilityId,
 					name: facility.name,
@@ -336,7 +429,6 @@ function FacilityBooking() {
 					rows: [mappedRows],
 				};
 
-				// Update the 'data' state with the mapped data
 				setData((prevData) => ({
 					...prevData,
 					rows: mappedRows,
@@ -347,33 +439,107 @@ function FacilityBooking() {
 			});
 	};
 
-	const handleEventResize = (event, newStart, newEnd) => {
-		// Find the index of the event in your state
+	const handleEventResize = async (event) => {
 		const eventIndex = calendarEvents.findIndex((ev) => ev.id === event.id);
 
 		if (eventIndex !== -1) {
-			// Create a copy of the event with updated start and end times
-			const updatedEvent = {
-				...calendarEvents[eventIndex],
-				start: newStart,
-				end: newEnd,
-			};
+			const date1 = new Date(event.start);
+			const date2 = new Date(event.end);
 
-			// Update the event in your state
-			const updatedEvents = [...calendarEvents];
-			updatedEvents[eventIndex] = updatedEvent;
-			setCalendarEvents(updatedEvents);
+			const startDateObj = date1.toLocaleString();
+			const endDateObj = date2.toLocaleString();
 
-			// Make API calls to update the event on the server if needed
-			// Example: updateEventOnServer(event.id, newStart, newEnd);
+			if (event.event.staffUsername === staff.username) {
+				const updatedEvent = {
+					...calendarEvents[eventIndex],
+					start: startDateObj,
+					end: endDateObj,
+					facilityId: selectedFacility.facilityId,
+					facilityBookingId: event.event.facilityBookingId,
+					comments: event.event.comments,
+					staffUsername: event.event.staffUsername,
+				};
+
+				facilityApi
+					.updateFacilityBooking(updatedEvent)
+					.then((response) => {
+						const booking = response.data;
+						console.log(booking);
+						handleViewAvailability(selectedFacility);
+						reduxDispatch(
+							displayMessage({
+								color: "success",
+								icon: "notification",
+								title: "Successfully Updated Booking!",
+							})
+						);
+					})
+					.catch((error) => {
+						console.error("Error fetching data:", error);
+					});
+			} else {
+				console.log("Permission denied: You cannot resize this event.");
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Permission denied: You cannot resize an event you didn't create.",
+					})
+				);
+			}
 		}
 	};
 
-	const handleEventDrop = (event) => {
-		// Handle event drop (drag) here if needed
-		// You can use similar logic as in handleEventResize
-	};
+	const handleEventDrop = async (event) => {
+		const eventIndex = calendarEvents.findIndex((ev) => ev.id === event.id);
 
+		if (eventIndex !== -1) {
+			const date1 = new Date(event.start);
+			const date2 = new Date(event.end);
+
+			const startDateObj = date1.toLocaleString();
+			const endDateObj = date2.toLocaleString();
+
+			if (event.event.staffUsername === staff.username) {
+				const updatedEvent = {
+					...calendarEvents[eventIndex],
+					start: startDateObj,
+					end: endDateObj,
+					facilityId: selectedFacility.facilityId,
+					facilityBookingId: event.event.facilityBookingId,
+					comments: event.event.comments,
+					staffUsername: event.event.staffUsername,
+				};
+
+				facilityApi
+					.updateFacilityBooking(updatedEvent)
+					.then((response) => {
+						const booking = response.data;
+						console.log(booking);
+						handleViewAvailability(selectedFacility);
+						reduxDispatch(
+							displayMessage({
+								color: "success",
+								icon: "notification",
+								title: "Successfully Updated Booking!",
+							})
+						);
+					})
+					.catch((error) => {
+						console.error("Error fetching data:", error);
+					});
+			} else {
+				console.log("Permission denied: You cannot resize this event.");
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Permission denied: You cannot resize an event you didn't create.",
+					})
+				);
+			}
+		}
+	};
 
 	const calendarConfig = {
 		selectable: true,
@@ -446,14 +612,16 @@ function FacilityBooking() {
 										</IconButton>
 									</DialogTitle>
 									<DialogContent>
-										{/* Render the react-big-calendar here */}
-										<Calendar
+										<DnDCalendar
 											localizer={localizer}
 											formats={formats}
 											{...calendarConfig}
-											onSelectEvent={handleEventClick}
+											onSelectEvent={(event) => handleEventClick(event, event.facilityBookingId)}
 											selectable
 											onSelectSlot={handleSlotSelect}
+											eventPropGetter={eventStyleGetter}
+											onEventResize={(event) => handleEventResize(event, event.facilityBookingId)}
+
 										/>
 									</DialogContent>
 								</Dialog>
@@ -467,7 +635,6 @@ function FacilityBooking() {
 												<p>End Time: {moment(selectedBooking.end).format('MMMM Do YYYY, h:mm:ss a')}</p>
 												<p>Booked by: {selectedBooking.staffUsername}</p>
 												<p>Comments: {selectedBooking.comments}</p>
-												{/* Add more details here as needed */}
 												{selectedBooking.staffUsername === staff.username && (
 													<Button
 														variant="contained"
@@ -505,7 +672,6 @@ function FacilityBooking() {
 													value={comments}
 													onChange={(e) => setComments(e.target.value)} // Update comments state
 												/>
-												{/* Add additional booking details and input fields as needed */}
 											</div>
 										)}
 									</DialogContent>
@@ -518,6 +684,21 @@ function FacilityBooking() {
 										</Button>
 									</DialogActions>
 								</Dialog>
+								<Dialog open={isDeleteConfirmationOpen} onClose={() => setDeleteConfirmationOpen(false)}>
+									<DialogTitle>Confirm Deletion</DialogTitle>
+									<DialogContent>
+										Are you sure you want to delete this booking?
+									</DialogContent>
+									<DialogActions>
+										<Button onClick={() => setDeleteConfirmationOpen(false)} color="primary">
+											Cancel
+										</Button>
+										<Button onClick={() => handleConfirmDeleteBooking(bookingToDeleteId)} color="secondary">
+											Confirm
+										</Button>
+									</DialogActions>
+								</Dialog>
+								
 							</MDBox>
 						</Card>
 					</Grid>

@@ -152,6 +152,11 @@ export const facilityApi = {
     return axiosFetch.get(
       `${REST_ENDPOINT}/facilityBooking/getAllBookingsOfAStaff/${username}`
     )
+  },
+  updateFacilityBooking(requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/facilityBooking/updateFacilityBooking`, requestBody
+    )
   }
 };
 
