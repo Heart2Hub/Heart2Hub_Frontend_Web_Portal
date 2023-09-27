@@ -28,6 +28,7 @@ import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
 import { StaffRoleEnum } from "constants/StaffRoleEnum";
+import ConsumableEquipmentManagement from "layouts/administration/inventory-management/consumable-equipment";
 
 const routes = [
   {
@@ -263,6 +264,20 @@ const routes = [
         forHeadsOnly={false}
       >
         <ErrorPage />
+      </ProtectedRoute>
+    ),
+  },
+
+  {
+    name: "Consumable Equipment Management",
+    key: "ConsumableEquipmentManagement",
+    route: "/administration/consumable-equipment-management",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <ConsumableEquipmentManagement />
       </ProtectedRoute>
     ),
   },

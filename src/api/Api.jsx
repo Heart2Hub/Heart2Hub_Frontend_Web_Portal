@@ -269,3 +269,16 @@ export const shiftPreferenceApi = {
     );
   },
 };
+
+export const inventoryApi = {
+  getAllConsumableEquipment(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/consumableEquipment/getAllConsumableEquipment?name=${name}`
+    );
+  },
+  updateConsumableEquipment(id) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/consumableEquipment/updateConsumableEquipment?consumableEquipmentId=${id}`
+    );
+  },
+}
