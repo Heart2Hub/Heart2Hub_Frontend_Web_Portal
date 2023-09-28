@@ -157,8 +157,28 @@ export const facilityApi = {
     return axiosFetch.put(
       `${REST_ENDPOINT}/facilityBooking/updateFacilityBooking`, requestBody
     )
+  },
+  getAllConsumableInventory() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/consumableEquipment/getAllConsumableEquipment`
+    )
   }
 };
+
+export const allocatedInventoryApi ={
+  deleteAllocatedInventory(id) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/allocatedInventory/deleteAllocatedInventory/${id}`
+    )
+  },
+  updateAllocatedInventory(requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/allocatedInventory/updateAllocatedInventory`,
+      requestBody
+    )
+  }
+
+}
 
 export const patientApi = {
   getAllPatientsWithElectronicHealthRecordSummaryByName(name) {
