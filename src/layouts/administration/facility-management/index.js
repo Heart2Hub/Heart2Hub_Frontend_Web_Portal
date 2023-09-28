@@ -160,7 +160,7 @@ function FacilityManagement() {
             content: "Sub department cannot be null",
           })
         );
-      return
+        return
       }
       console.log(requestBody.facilityStatusEnum)
       if (requestBody.facilityStatusEnum == "") {
@@ -181,7 +181,7 @@ function FacilityManagement() {
             content: "Facility status cannot be null",
           })
         );
-      return
+        return
       }
       if (requestBody.facilityTypeEnum == "") {
         setFormData({
@@ -201,7 +201,7 @@ function FacilityManagement() {
             content: "Facility type cannot be null",
           })
         );
-      return
+        return
       }
       facilityApi
         .createFacility(subDepartmentId, requestBody)
@@ -265,10 +265,13 @@ function FacilityManagement() {
 
   const handleOpenUpdateModal = (facilityId) => {
     // Populate update form data with the facility's current data
+    console.log("Inventory " + dataRef.current.rows[0]);
 
     const facilityToUpdate = dataRef.current.rows[0].find(
       (facility) => facility.facilityId === facilityId
     );
+
+    console.log("Facility: " + facilityToUpdate.name);
 
     if (facilityToUpdate) {
       setUpdateFormData({
@@ -310,7 +313,7 @@ function FacilityManagement() {
             content: "Name cannot be null",
           })
         );
-      return
+        return
       }
       console.log(requestBody.location)
       if (requestBody.location == "") {
@@ -322,7 +325,7 @@ function FacilityManagement() {
             content: "Location cannot be null",
           })
         );
-      return
+        return
       }
       if (requestBody.capacity < 0) {
         reduxDispatch(
@@ -333,7 +336,7 @@ function FacilityManagement() {
             content: "Capacity cannot be less than 0",
           })
         );
-      return
+        return
       }
       facilityApi
         .updateFacility(facilityId, requestBody)
@@ -528,9 +531,9 @@ function FacilityManagement() {
               onChange={handleChange}
               sx={{ lineHeight: "3em" }}
             >
-              {departments?.map(department => 
-              <MenuItem value={department.unitId}>{department.name}</MenuItem>
-                )}
+              {departments?.map(department =>
+                <MenuItem value={department.unitId}>{department.name}</MenuItem>
+              )}
               {/* <MenuItem value={1}>Interventional Cardiology</MenuItem>
               <MenuItem value={2}>Electrophysiology (EP) Lab</MenuItem>
               <MenuItem value={3}>Cardiac Catheterization Lab</MenuItem>

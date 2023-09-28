@@ -31,11 +31,11 @@ function ConsumableEquipmentManagement() {
     const reduxDispatch = useDispatch();
     const [data, setData] = useState({
         columns: [
-            // { Header: "No.", accessor: "number", width: "10%" },
-            { Header: "Equipment Name", accessor: "name", width: "20%" },
-            { Header: "Description", accessor: "description", width: "20%" },
-            { Header: "Quantity", accessor: "quantity", width: "10%" },
-            { Header: "Price", accessor: "price", width: "10%" },
+            { Header: "No.", accessor: "inventoryItemId", width: "10%" },
+            { Header: "Equipment Name", accessor: "inventoryItemName", width: "20%" },
+            { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
+            { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
+            { Header: "Price", accessor: "restockPricePerQuantity", width: "10%" },
             // { Header: "Type", accessor: "type", width: "10%" },
             {
                 Header: "Actions",
@@ -63,11 +63,11 @@ function ConsumableEquipmentManagement() {
 
     const dataRef = useRef({
         columns: [
-            // { Header: "No.", accessor: "number", width: "10%" },
-            { Header: "Equipment Name", accessor: "name", width: "20%" },
-            { Header: "Description", accessor: "description", width: "20%" },
-            { Header: "Quantity", accessor: "quantity", width: "10%" },
-            { Header: "Price", accessor: "price", width: "10%" },
+            { Header: "No.", accessor: "inventoryItemId", width: "10%" },
+            { Header: "Equipment Name", accessor: "inventoryItemName", width: "20%" },
+            { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
+            { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
+            { Header: "Price", accessor: "restockPricePerQuantity", width: "10%" },
             // { Header: "Type", accessor: "type", width: "10%" },
             {
                 Header: "Actions",
@@ -95,19 +95,21 @@ function ConsumableEquipmentManagement() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
-        name: "",
-        description: "",
-        quantity: "",
-        price: "",
+        inventoryItemName: "",
+        inventoryItemDescription: "",
+        itemTypeEnum: "CONSUMABLE",
+        quantityInStock: "",
+        restockPricePerQuantity: "",
     });
 
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [updateFormData, setUpdateFormData] = useState({
         inventoryItemId: null,
-        name: "",
-        description: "",
-        quantity: "",
-        price: "",
+        inventoryItemName: "",
+        inventoryItemDescription: "",
+        itemTypeEnum: "CONSUMABLE",
+        quantityInStock: "",
+        restockPricePerQuantity: "",
     });
 
     const handleOpenModal = () => {
@@ -126,21 +128,118 @@ function ConsumableEquipmentManagement() {
         }));
     };
 
+    const handleCreateConsumableEquipment = () => {
+        try {
+            const { ...requestBody } = formData;
+            console.log("Type:" + requestBody.itemTypeEnum)
+            if (requestBody.inventoryItemName == "") {
+                setFormData({
+                    inventoryItemName: "",
+                    inventoryItemDescription: "",
+                    itemTypeEnum: "CONSUMABLE",
+                    quantityInStock: "",
+                    restockPricePerQuantity: "",
+                });
+                reduxDispatch(
+                    displayMessage({
+                        color: "error",
+                        icon: "notification",
+                        title: "Error Encountered",
+                        content: "Facility name cannot be null",
+                    })
+                );
+                return
+            }
+            if (requestBody.quantityInStock == "") {
+                setFormData({
+                    inventoryItemName: "",
+                    inventoryItemDescription: "",
+                    itemTypeEnum: "CONSUMABLE",
+                    quantityInStock: "",
+                    restockPricePerQuantity: "",
+                });
+                reduxDispatch(
+                    displayMessage({
+                        color: "error",
+                        icon: "notification",
+                        title: "Error Encountered",
+                        content: "Facility quantity cannot be null",
+                    })
+                );
+                return
+            }
+            inventoryApi
+                .createConsumableEquipment(requestBody)
+                .then(() => {
+                    fetchData();
+                    setFormData({
+                        inventoryItemName: "",
+                        inventoryItemDescription: "",
+                        itemTypeEnum: "CONSUMABLE",
+                        quantityInStock: "",
+                        restockPricePerQuantity: "",
+                    });
+                    reduxDispatch(
+                        displayMessage({
+                            color: "success",
+                            icon: "notification",
+                            title: "Successfully Created Facility!",
+                            content: requestBody.inventoryItemName + " created",
+                        })
+                    );
+                    handleCloseModal();
+                })
+                .catch((err) => {
+                    setFormData({
+                        inventoryItemName: "",
+                        inventoryItemDescription: "",
+                        itemTypeEnum: "CONSUMABLE",
+                        quantityInStock: "",
+                        restockPricePerQuantity: "",
+                    });
+                    // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
+                    if (err.response.data.detail) {
+                        reduxDispatch(
+                            displayMessage({
+                                color: "error",
+                                icon: "notification",
+                                title: "Error Encountered",
+                                content: err.response.data.detail,
+                            })
+                        );
+                    } else {
+                        reduxDispatch(
+                            displayMessage({
+                                color: "error",
+                                icon: "notification",
+                                title: "Error Encountered",
+                                content: err.response.data,
+                            })
+                        );
+                    }
+                    console.log(err.response.data.detail)
+                });
+        } catch (ex) {
+            console.log(ex);
+        }
+    };
+
     const handleOpenUpdateModal = (inventoryItemId) => {
         console.log("Inventory " + inventoryItemId);
         // Populate update form data with the facility's current data
-
+        // const { inventoryItemId, name, description, quantity, price } = rowData;
         const consumableEquipmentToUpdate = dataRef.current.rows[0].find(
-            (consumableEpuipment) => consumableEpuipment.inventoryItemId === inventoryItemId
+            (consumableEquipment) => consumableEquipment.inventoryItemId === inventoryItemId
         );
-
+        console.log("update " + consumableEquipmentToUpdate.inventoryItemName);
         if (consumableEquipmentToUpdate) {
             setUpdateFormData({
-                inventoryItenId: inventoryItemId,
-                name: consumableEquipmentToUpdate.inventoryItemName,
-                description: consumableEquipmentToUpdate.inventoryItemDescription,
-                quantity: consumableEquipmentToUpdate.quantityInStock,
-                price: consumableEquipmentToUpdate.restockPricePerQuantity,
+                inventoryItemId: inventoryItemId,
+                inventoryItemName: consumableEquipmentToUpdate.inventoryItemName,
+                inventoryItemDescription: consumableEquipmentToUpdate.inventoryItemDescription,
+                itemTypeEnum: consumableEquipmentToUpdate.itemTypeEnum,
+                quantityInStock: consumableEquipmentToUpdate.quantityInStock,
+                restockPricePerQuantity: consumableEquipmentToUpdate.restockPricePerQuantity,
             });
         }
 
@@ -160,11 +259,14 @@ function ConsumableEquipmentManagement() {
     };
 
     const handleUpdateConsumableEquipment = () => {
+        console.log("handleUpdateConsumableEquipment called"); // Add this line
+
         try {
             const { inventoryItemId, ...requestBody } = updateFormData;
+            console.log("updateFormData:", updateFormData);
             console.log("Request Body:", requestBody);
-            console.log(requestBody.name)
-            if (requestBody.name == "") {
+            console.log(requestBody.inventoryItemId)
+            if (requestBody.inventoryItemName == "") {
                 reduxDispatch(
                     displayMessage({
                         color: "error",
@@ -209,23 +311,25 @@ function ConsumableEquipmentManagement() {
                 );
                 return
             }
+            console.log("Request: " + requestBody.inventoryItemName);
             inventoryApi
                 .updateConsumableEquipment(inventoryItemId, requestBody)
                 .then(() => {
                     fetchData();
                     setUpdateFormData({
                         inventoryItemId: null,
-                        name: "",
-                        description: "",
-                        quantity: "",
-                        price: "",
+                        inventoryItemName: "",
+                        inventoryItemDescription: "",
+                        itemTypeEnum: "CONSUMABLE",
+                        quantityInStock: "",
+                        restockPricePerQuantity: "",
                     });
                     reduxDispatch(
                         displayMessage({
                             color: "success",
                             icon: "notification",
                             title: "Successfully Updated Facility!",
-                            content: requestBody.name + " updated",
+                            content: requestBody.inventoryItemName + " updated",
                         })
                     );
                     handleCloseUpdateModal();
@@ -256,11 +360,11 @@ function ConsumableEquipmentManagement() {
                 const mappedRows = consumableEpuipments.map((consumableEpuipment) => ({
                     inventoryItemId: consumableEpuipment.inventoryItemId,
                     // number: index + 1,
-                    name: consumableEpuipment.inventoryItemName,
-                    description: consumableEpuipment.inventoryItemDescription,
-                    quantity: consumableEpuipment.quantityInStock,
-                    price: consumableEpuipment.restockPricePerQuantity,
-                    // type: consumableEpuipment.itemTypeEnum,
+                    inventoryItemName: consumableEpuipment.inventoryItemName,
+                    inventoryItemDescription: consumableEpuipment.inventoryItemDescription,
+                    itemTypeEnum: consumableEpuipment.itemTypeEnum,
+                    quantityInStock: consumableEpuipment.quantityInStock,
+                    restockPricePerQuantity: consumableEpuipment.restockPricePerQuantity,
                     // Map other columns as needed
                 }));
 
@@ -310,9 +414,9 @@ function ConsumableEquipmentManagement() {
                                     Button
                                     variant="contained"
                                     color="primary"
-                                // onClick={() => setIsModalOpen(true)}
+                                    onClick={() => setIsModalOpen(true)}
                                 >
-                                    Create New Facility
+                                    Create New Equipment
                                     <Icon>add</Icon>
                                 </MDButton>
                             </MDBox>
@@ -323,40 +427,94 @@ function ConsumableEquipmentManagement() {
                     </Grid>
                 </Grid>
             </MDBox>
+            <Dialog open={isModalOpen} onClose={handleCloseModal}>
+                <DialogTitle>Create New Item</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        fullWidth
+                        label="Name"
+                        name="inventoryItemName"
+                        value={formData.inventoryItemName}
+                        onChange={handleChange}
+                        margin="dense"
+                    />
+                    <TextField
+                        fullWidth
+                        label="Description"
+                        name="inventoryItemDescription"
+                        value={formData.inventoryItemDescription}
+                        onChange={handleChange}
+                        margin="dense"
+                    />
+                    <TextField
+                        fullWidth
+                        label="Quantity"
+                        name="quantityInStock"
+                        type="number"
+                        value={formData.quantityInStock}
+                        onChange={handleChange}
+                        margin="dense"
+                    />
+                    <TextField
+                        fullWidth
+                        label="Price"
+                        name="restockPricePerQuantity"
+                        type="number"
+                        value={formData.restockPricePerQuantity}
+                        onChange={handleChange}
+                        margin="dense"
+                    />
+                    <TextField
+                        fullWidth
+                        label="Type"
+                        name="itemTypeEnum"
+                        value={formData.itemTypeEnum}
+                        margin="dense"
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <MDButton onClick={handleCloseModal} color="primary">
+                        Cancel
+                    </MDButton>
+                    <MDButton onClick={handleCreateConsumableEquipment} color="primary">
+                        Create
+                    </MDButton>
+                </DialogActions>
+            </Dialog>
             <Dialog open={isUpdateModalOpen} onClose={handleCloseUpdateModal}>
                 <DialogTitle>Update Item</DialogTitle>
                 <DialogContent>
                     <TextField
                         fullWidth
                         label="Name"
-                        name="name"
-                        value={updateFormData.name}
+                        name="inventoryItemName"
+                        value={updateFormData.inventoryItemName}
                         onChange={handleUpdateChange}
                         margin="dense"
                     />
                     <TextField
                         fullWidth
                         label="Description"
-                        name="description"
-                        value={updateFormData.description}
+                        name="inventoryItemDescription"
+                        value={updateFormData.inventoryItemDescription}
                         onChange={handleUpdateChange}
                         margin="dense"
                     />
                     <TextField
                         fullWidth
                         label="Quantity in Stock"
-                        name="quantity"
+                        name="quantityInStock"
                         type="number"
-                        value={updateFormData.quantity}
+                        value={updateFormData.quantityInStock}
                         onChange={handleUpdateChange}
                         margin="dense"
                     />
                     <TextField
                         fullWidth
                         label="Price per Quantity"
-                        name="price"
+                        name="restockPricePerQuantity"
                         type="number"
-                        value={updateFormData.price}
+                        value={updateFormData.restockPricePerQuantity}
                         onChange={handleUpdateChange}
                         margin="dense"
                     />

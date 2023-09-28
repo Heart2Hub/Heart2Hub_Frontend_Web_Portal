@@ -276,9 +276,17 @@ export const inventoryApi = {
       `${REST_ENDPOINT}/consumableEquipment/getAllConsumableEquipment?name=${name}`
     );
   },
-  updateConsumableEquipment(id) {
+  updateConsumableEquipment(inventoryItemId, requestBody) {
+    console.log("Request Sent: " + requestBody.name)
     return axiosFetch.put(
-      `${REST_ENDPOINT}/consumableEquipment/updateConsumableEquipment?consumableEquipmentId=${id}`
+      `${REST_ENDPOINT}/consumableEquipment/updateConsumableEquipment?inventoryItemId=${inventoryItemId}`,
+      requestBody
     );
   },
+  createConsumableEquipment(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/consumableEquipment/createConsumableEquipment`,
+      requestBody, // No request body
+    );
+  }
 }
