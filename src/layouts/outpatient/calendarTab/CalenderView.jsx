@@ -3,20 +3,12 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useState, useEffect } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import { useDispatch, useSelector } from "react-redux";
-import { selectStaff } from "../../store/slices/staffSlice";
-import { useNavigate } from "react-router-dom";
-import { appointmentApi } from "../../api/Api";
-import { displayMessage } from "../../store/slices/snackbarSlice";
+import { selectStaff } from "../../../store/slices/staffSlice";
+import { appointmentApi } from "../../../api/Api";
+import { displayMessage } from "../../../store/slices/snackbarSlice";
 
 import moment from "moment";
-import {
-  Box,
-  List,
-  ListItem,
-  ListItemText,
-  Modal,
-  TextField,
-} from "@mui/material";
+import { TextField } from "@mui/material";
 import MDTypography from "components/MDTypography";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
@@ -24,18 +16,6 @@ import { formatDateToYYYYMMDD } from "utility/Utility";
 import { parseDateFromYYYYMMDD } from "utility/Utility";
 import { addDurationToDate } from "utility/Utility";
 import ViewAppointmentModal from "./ViewAppointmentModal";
-
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  border: "2px solid #000",
-  boxShadow: 24,
-  p: 4,
-};
 
 function CalenderView() {
   const reduxDispatch = useDispatch();

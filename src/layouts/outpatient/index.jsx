@@ -1,7 +1,7 @@
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import React from "react";
-import CalenderView from "./CalenderView";
+import CalenderView from "./calendarTab/CalenderView";
 import { Box, Tab } from "@mui/material";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
@@ -10,6 +10,7 @@ import ViewWeekIcon from "@mui/icons-material/ViewWeek";
 import { useDispatch, useSelector } from "react-redux";
 import { selectStaff } from "../../store/slices/staffSlice";
 import MDTypography from "components/MDTypography";
+import KanbanBoard from "./kanbanTab/KanbanBoard";
 
 function Outpatient() {
   const staff = useSelector(selectStaff);
@@ -62,10 +63,11 @@ function Outpatient() {
               />
             </TabList>
           </Box>
+
           <TabPanel value="Calender View">
             <CalenderView />
           </TabPanel>
-          <TabPanel value="Kanban View">{"HELLO"}</TabPanel>
+          <TabPanel value="Kanban View">{/* <KanbanBoard /> */}</TabPanel>
         </TabContext>
       </Box>
     </DashboardLayout>
