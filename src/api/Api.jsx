@@ -271,9 +271,17 @@ export const shiftPreferenceApi = {
 };
 
 export const appointmentApi = {
-  viewAllAppointmentsByMonth(month, year) {
+  viewAllAppointmentsByRange(
+    startDay,
+    startMonth,
+    startYear,
+    endDay,
+    endMonth,
+    endYear,
+    departmentName
+  ) {
     return axiosFetch.get(
-      `${REST_ENDPOINT}/appointment/viewAllAppointmentsByMonth?month=${month}&year=${year}`
+      `${REST_ENDPOINT}/appointment/viewAllAppointmentsByRange?startDay=${startDay}&startMonth=${startMonth}&startYear=${startYear}&endDay=${endDay}&endMonth=${endMonth}&endYear=${endYear}&departmentName=${departmentName}`
     );
   },
 };
