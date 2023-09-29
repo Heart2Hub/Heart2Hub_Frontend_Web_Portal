@@ -15,7 +15,7 @@ import { inventoryApi } from 'api/Api';
 
 function UpdateDialogComponent({ rowData }) {
   const [open, setOpen] = React.useState(false);
-  const { inventoryItemId, name, description, quantity, price } = rowData;
+  const { inventoryItemId, name, description, type, quantity, price } = rowData;
   const [leaveBalance, setleaveBalance] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [action, setAction] = useState(null);
@@ -40,10 +40,11 @@ function UpdateDialogComponent({ rowData }) {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [updateFormData, setUpdateFormData] = useState({
     inventoryItemId: null,
-    name: "",
-    description: "",
-    quantity: "",
-    price: "",
+    inventoryItemName: "",
+    inventoryItemDescription: "",
+    itemTypeEnum: "CONSUMABLE",
+    quantityInStock: "",
+    restockPricePerQuantity: "",
   });
 
   const handleOpenUpdateModal = () => {
@@ -56,10 +57,11 @@ function UpdateDialogComponent({ rowData }) {
     // console.log("Update " + consumableEquipmentToUpdate.inventoryItemId);
     setUpdateFormData({
       inventoryItemId: inventoryItemId,
-      name: name,
-      description: description,
-      quantity: quantity,
-      price: price,
+      inventoryItemName: name,
+      inventoryItemDescription: description,
+      itemTypeEnum: type,
+      quantityInStock: quantity,
+      restockPricePerQuantity: price,
     });
 
     setIsUpdateModalOpen(true);
@@ -135,10 +137,11 @@ function UpdateDialogComponent({ rowData }) {
         .then(() => {
           setUpdateFormData({
             inventoryItemId: null,
-            name: "",
-            description: "",
-            quantity: "",
-            price: "",
+            inventoryItemName: "",
+            inventoryItemDescription: "",
+            itemTypeEnum: "CONSUMABLE",
+            quantityInStock: "",
+            restockPricePerQuantity: "",
           });
           reduxDispatch(
             displayMessage({
@@ -181,7 +184,7 @@ function UpdateDialogComponent({ rowData }) {
             fullWidth
             label="Name"
             name="name"
-            value={updateFormData.name}
+            value={updateFormData.inventoryItemName}
             onChange={handleUpdateChange}
             margin="dense"
           />
@@ -189,7 +192,7 @@ function UpdateDialogComponent({ rowData }) {
             fullWidth
             label="Description"
             name="description"
-            value={updateFormData.description}
+            value={updateFormData.inventoryItemDescription}
             onChange={handleUpdateChange}
             margin="dense"
           />
@@ -198,7 +201,7 @@ function UpdateDialogComponent({ rowData }) {
             label="Quantity in Stock"
             name="quantity"
             type="number"
-            value={updateFormData.quantity}
+            value={updateFormData.quantityInStock}
             onChange={handleUpdateChange}
             margin="dense"
           />
@@ -207,7 +210,7 @@ function UpdateDialogComponent({ rowData }) {
             label="Price per Quantity"
             name="price"
             type="number"
-            value={updateFormData.price}
+            value={updateFormData.restockPricePerQuantity}
             onChange={handleUpdateChange}
             margin="dense"
           />

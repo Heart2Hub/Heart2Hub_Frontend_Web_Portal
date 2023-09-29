@@ -43,6 +43,20 @@ function Administration() {
               />{" "}
             </MDBox>
           </Grid>
+          <Grid item xs={12} md={6} lg={3}>
+            <MDBox mb={1.5}>
+              <SimpleBlogCard
+                image="https://bit.ly/3Hlw1MQ"
+                title="Inventory Management"
+                action={{
+                  type: "internal",
+                  route: "/administration/inventory-management",
+                  color: "info",
+                  label: "Continue",
+                }}
+              />{" "}
+            </MDBox>
+          </Grid>
         </Grid>
       </MDBox>
     </DashboardLayout>

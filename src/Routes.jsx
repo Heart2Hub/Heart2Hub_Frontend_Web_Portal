@@ -29,6 +29,8 @@ import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
 import { StaffRoleEnum } from "constants/StaffRoleEnum";
 import ConsumableEquipmentManagement from "layouts/administration/inventory-management/consumable-equipment";
+import InventoryManagement from "layouts/administration/inventory-management";
+import MedicationManagement from "layouts/administration/inventory-management/medication-management";
 
 const routes = [
   {
@@ -267,11 +269,49 @@ const routes = [
       </ProtectedRoute>
     ),
   },
-
+  {
+    name: "Inventory Management",
+    key: "inventorymanagement",
+    route: "/administration/inventory-management",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <InventoryManagement />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Consumable Equipment Management",
+    key: "consumableequipmentmanagement",
+    route: "/administration/inventory-management/consumable-equipment-management",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <ConsumableEquipmentManagement />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "MedicationManagement",
+    key: "medicationmanagement",
+    route: "/administration/inventory-management/medication-management",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <MedicationManagement />
+      </ProtectedRoute>
+    ),
+  },
   {
     name: "Consumable Equipment Management",
     key: "ConsumableEquipmentManagement",
-    route: "/administration/consumable-equipment-management",
+    route: "/administration/inventory-management/consumable-equipment-management",
     component: (
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}

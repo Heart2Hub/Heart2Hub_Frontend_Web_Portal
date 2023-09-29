@@ -286,7 +286,12 @@ export const inventoryApi = {
   createConsumableEquipment(requestBody) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/consumableEquipment/createConsumableEquipment`,
-      requestBody, // No request body
+      requestBody,
+    );
+  },
+  deleteConsumableEquipment(inventoryItemId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/consumableEquipment/deleteConsumableEquipment?inventoryItemId=${inventoryItemId}`
     );
   }
 }

@@ -27,7 +27,7 @@ import { facilityApi, departmentApi } from "api/Api";
 import { inventoryApi } from "api/Api";
 import { displayMessage } from "store/slices/snackbarSlice";
 
-function ConsumableEquipmentManagement() {
+function MedicationManagement() {
 
     function priceFormat(num) {
         return `${num.toFixed(2)}`;
@@ -605,4 +605,4 @@ function ConsumableEquipmentManagement() {
 
 }
 
-export default ConsumableEquipmentManagement;
+export default MedicationManagement;
