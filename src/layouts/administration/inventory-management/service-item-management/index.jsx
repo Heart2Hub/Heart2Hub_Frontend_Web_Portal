@@ -27,7 +27,7 @@ import { facilityApi, departmentApi } from "api/Api";
 import { inventoryApi } from "api/Api";
 import { displayMessage } from "store/slices/snackbarSlice";
 
-function MedicationManagement() {
+function ServiceItemManagement() {
 
     function priceFormat(num) {
         return `${num.toFixed(2)}`;
@@ -39,9 +39,8 @@ function MedicationManagement() {
             { Header: "No.", accessor: "inventoryItemId", width: "10%" },
             { Header: "Medication Name", accessor: "inventoryItemName", width: "20%" },
             { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
-            { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
-            { Header: "Restock Price ($)", accessor: "restockPricePerQuantity", width: "10%" },
             { Header: "Retail Price ($)", accessor: "retailPricePerQuantity", width: "10%" },
+            { Header: "Item Type", accessor: "itemTypeEnum", width: "10%" },
             {
                 Header: "Actions",
                 Cell: ({ row }) => (
@@ -71,9 +70,8 @@ function MedicationManagement() {
             { Header: "No.", accessor: "inventoryItemId", width: "10%" },
             { Header: "Equipment Name", accessor: "inventoryItemName", width: "20%" },
             { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
-            { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
-            { Header: "Restock Price ($)", accessor: "restockPricePerQuantity", width: "10%" },
             { Header: "Retail Price ($)", accessor: "retailPricePerQuantity", width: "10%" },
+            { Header: "Item Type", accessor: "itemTypeEnum", width: "10%" },
             {
                 Header: "Actions",
                 Cell: ({ row }) => (
@@ -102,9 +100,7 @@ function MedicationManagement() {
     const [formData, setFormData] = useState({
         inventoryItemName: "",
         inventoryItemDescription: "",
-        itemTypeEnum: "MEDICINE",
-        quantityInStock: "",
-        restockPricePerQuantity: "",
+        itemTypeEnum: "",
         retailPricePerQuantity: "",
     });
 
@@ -113,9 +109,7 @@ function MedicationManagement() {
         inventoryItemId: null,
         inventoryItemName: "",
         inventoryItemDescription: "",
-        itemTypeEnum: "MEDICINE",
-        quantityInStock: "",
-        restockPricePerQuantity: "",
+        itemTypeEnum: "",
         retailPricePerQuantity: "",
     });
 
@@ -135,7 +129,7 @@ function MedicationManagement() {
         }));
     };
 
-    const handleCreateMedication = () => {
+    const handleCreateServiceItem = () => {
         try {
             const { ...requestBody } = formData;
             console.log("Type:" + requestBody.itemTypeEnum)
@@ -143,9 +137,7 @@ function MedicationManagement() {
                 setFormData({
                     inventoryItemName: "",
                     inventoryItemDescription: "",
-                    itemTypeEnum: "MEDICINE",
-                    quantityInStock: "",
-                    restockPricePerQuantity: "",
+                    itemTypeEnum: "",
                     retailPricePerQuantity: "",
                 });
                 reduxDispatch(
@@ -162,9 +154,7 @@ function MedicationManagement() {
                 setFormData({
                     inventoryItemName: "",
                     inventoryItemDescription: "",
-                    itemTypeEnum: "MEDICINE",
-                    quantityInStock: "",
-                    restockPricePerQuantity: "",
+                    itemTypeEnum: "",
                     retailPricePerQuantity: "",
                 });
                 reduxDispatch(
@@ -177,51 +167,11 @@ function MedicationManagement() {
                 );
                 return
             }
-            if (requestBody.quantityInStock == "") {
-                setFormData({
-                    inventoryItemName: "",
-                    inventoryItemDescription: "",
-                    itemTypeEnum: "MEDICINE",
-                    quantityInStock: "",
-                    restockPricePerQuantity: "",
-                    retailPricePerQuantity: "",
-                });
-                reduxDispatch(
-                    displayMessage({
-                        color: "error",
-                        icon: "notification",
-                        title: "Error Encountered",
-                        content: "Item quantity cannot be null",
-                    })
-                );
-                return
-            }
-            if (requestBody.restockPricePerQuantity == "") {
-                setFormData({
-                    inventoryItemName: "",
-                    inventoryItemDescription: "",
-                    itemTypeEnum: "MEDICINE",
-                    quantityInStock: "",
-                    restockPricePerQuantity: "",
-                    retailPricePerQuantity: "",
-                });
-                reduxDispatch(
-                    displayMessage({
-                        color: "error",
-                        icon: "notification",
-                        title: "Error Encountered",
-                        content: "Item price cannot be null",
-                    })
-                );
-                return
-            }
             if (requestBody.retailPricePerQuantity == "") {
                 setFormData({
                     inventoryItemName: "",
                     inventoryItemDescription: "",
-                    itemTypeEnum: "MEDICINE",
-                    quantityInStock: "",
-                    restockPricePerQuantity: "",
+                    itemTypeEnum: "",
                     retailPricePerQuantity: "",
                 });
                 reduxDispatch(
@@ -235,22 +185,20 @@ function MedicationManagement() {
                 return
             }
             inventoryApi
-                .createMedication(requestBody)
+                .createServiceItem(requestBody)
                 .then(() => {
                     fetchData();
                     setFormData({
                         inventoryItemName: "",
                         inventoryItemDescription: "",
-                        itemTypeEnum: "MEDICINE",
-                        quantityInStock: "",
-                        restockPricePerQuantity: "",
+                        itemTypeEnum: "",
                         retailPricePerQuantity: "",
                     });
                     reduxDispatch(
                         displayMessage({
                             color: "success",
                             icon: "notification",
-                            title: "Successfully Created MEDICINE!",
+                            title: "Successfully Created Service Item!",
                             content: requestBody.inventoryItemName + " created",
                         })
                     );
@@ -260,9 +208,7 @@ function MedicationManagement() {
                     setFormData({
                         inventoryItemName: "",
                         inventoryItemDescription: "",
-                        itemTypeEnum: "MEDICINE",
-                        quantityInStock: "",
-                        restockPricePerQuantity: "",
+                        itemTypeEnum: "",
                         retailPricePerQuantity: "",
                     });
                     // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
@@ -296,19 +242,17 @@ function MedicationManagement() {
         console.log("Inventory " + inventoryItemId);
         // Populate update form data with the facility's current data
         // const { inventoryItemId, name, description, quantity, price } = rowData;
-        const medicationToUpdate = dataRef.current.rows[0].find(
-            (medication) => medication.inventoryItemId === inventoryItemId
+        const serviceItemToUpdate = dataRef.current.rows[0].find(
+            (serviceItem) => serviceItem.inventoryItemId === inventoryItemId
         );
-        console.log("update " + medicationToUpdate.inventoryItemName);
-        if (medicationToUpdate) {
+        console.log("update " + serviceItemToUpdate.inventoryItemName);
+        if (serviceItemToUpdate) {
             setUpdateFormData({
                 inventoryItemId: inventoryItemId,
-                inventoryItemName: medicationToUpdate.inventoryItemName,
-                inventoryItemDescription: medicationToUpdate.inventoryItemDescription,
-                itemTypeEnum: medicationToUpdate.itemTypeEnum,
-                quantityInStock: medicationToUpdate.quantityInStock,
-                restockPricePerQuantity: medicationToUpdate.restockPricePerQuantity,
-                retailPricePerQuantity: medicationToUpdate.retailPricePerQuantity,
+                inventoryItemName: serviceItemToUpdate.inventoryItemName,
+                inventoryItemDescription: serviceItemToUpdate.inventoryItemDescription,
+                itemTypeEnum: serviceItemToUpdate.itemTypeEnum,
+                retailPricePerQuantity: serviceItemToUpdate.retailPricePerQuantity,
             });
         }
 
@@ -327,7 +271,7 @@ function MedicationManagement() {
         }));
     };
 
-    const handleUpdateMedication = () => {
+    const handleUpdateServiceItem = () => {
 
         try {
             const { inventoryItemId, ...requestBody } = updateFormData;
@@ -357,31 +301,6 @@ function MedicationManagement() {
                 );
                 return
             }
-            console.log(requestBody.quantityInStock)
-
-            if (requestBody.quantityInStock == "") {
-                reduxDispatch(
-                    displayMessage({
-                        color: "error",
-                        icon: "notification",
-                        title: "Error Encountered",
-                        content: "Item quantity cannot be null",
-                    })
-                );
-                return
-            }
-            console.log(requestBody.restockPricePerQuantity)
-            if (requestBody.restockPricePerQuantity == "") {
-                reduxDispatch(
-                    displayMessage({
-                        color: "error",
-                        icon: "notification",
-                        title: "Error Encountered",
-                        content: "Item price cannot be null",
-                    })
-                );
-                return
-            }
             if (requestBody.retailPricePerQuantity == "") {
                 reduxDispatch(
                     displayMessage({
@@ -395,16 +314,14 @@ function MedicationManagement() {
             }
             console.log("Request: " + requestBody.inventoryItemName);
             inventoryApi
-                .updateMedication(inventoryItemId, requestBody)
+                .updateServiceItem(inventoryItemId, requestBody)
                 .then(() => {
                     fetchData();
                     setUpdateFormData({
                         inventoryItemId: null,
                         inventoryItemName: "",
                         inventoryItemDescription: "",
-                        itemTypeEnum: "CONSUMABLE",
-                        quantityInStock: "",
-                        restockPricePerQuantity: "",
+                        itemTypeEnum: "",
                         retailPricePerQuantity: "",
                     });
                     reduxDispatch(
@@ -436,15 +353,15 @@ function MedicationManagement() {
     const handleDeleteInventory = (inventoryItemId) => {
         try {
             inventoryApi
-                .deleteMedication(inventoryItemId)
+                .deleteServiceItem(inventoryItemId)
                 .then(() => {
                     fetchData();
                     reduxDispatch(
                         displayMessage({
                             color: "success",
                             icon: "notification",
-                            title: "Successfully Deleted Medication!",
-                            content: "Medication with inventoryItemId: " + inventoryItemId + " deleted",
+                            title: "Successfully Deleted Service Item!",
+                            content: "Service Item with inventoryItemId: " + inventoryItemId + " deleted",
                         })
                     );
                 })
@@ -467,19 +384,17 @@ function MedicationManagement() {
 
     const fetchData = async () => {
         inventoryApi
-            .getAllMedication("")
+            .getAllServiceItem("")
             .then((response) => {
-                const medications = response.data; // Assuming 'facilities' is an array of facility objects
+                const serviceItems = response.data; // Assuming 'facilities' is an array of facility objects
                 console.log(response);
                 // Map the fetched data to match your table structure
-                const mappedRows = medications.map((medication) => ({
-                    inventoryItemId: medication.inventoryItemId,
-                    inventoryItemName: medication.inventoryItemName,
-                    inventoryItemDescription: medication.inventoryItemDescription,
-                    itemTypeEnum: medication.itemTypeEnum,
-                    quantityInStock: medication.quantityInStock,
-                    restockPricePerQuantity: priceFormat(medication.restockPricePerQuantity),
-                    retailPricePerQuantity: priceFormat(medication.retailPricePerQuantity),
+                const mappedRows = serviceItems.map((serviceItem) => ({
+                    inventoryItemId: serviceItem.inventoryItemId,
+                    inventoryItemName: serviceItem.inventoryItemName,
+                    inventoryItemDescription: serviceItem.inventoryItemDescription,
+                    itemTypeEnum: serviceItem.itemTypeEnum,
+                    retailPricePerQuantity: priceFormat(serviceItem.retailPricePerQuantity),
                 }));
 
                 dataRef.current = {
@@ -520,7 +435,7 @@ function MedicationManagement() {
                                 coloredShadow="info"
                             >
                                 <MDTypography variant="h6" color="white">
-                                    Medication Table
+                                    Service Item Table
                                 </MDTypography>
                             </MDBox>
                             <MDBox mx={2} mt={3} px={2}>
@@ -530,7 +445,7 @@ function MedicationManagement() {
                                     color="primary"
                                     onClick={() => setIsModalOpen(true)}
                                 >
-                                    Create New Medication
+                                    Create New Service Item
                                     <Icon>add</Icon>
                                 </MDButton>
                             </MDBox>
@@ -562,24 +477,6 @@ function MedicationManagement() {
                     />
                     <TextField
                         fullWidth
-                        label="Quantity"
-                        name="quantityInStock"
-                        type="number"
-                        value={formData.quantityInStock}
-                        onChange={handleChange}
-                        margin="dense"
-                    />
-                    <TextField
-                        fullWidth
-                        label="Restock Price per Quantity"
-                        name="restockPricePerQuantity"
-                        type="float"
-                        value={formData.restockPricePerQuantity}
-                        onChange={handleChange}
-                        margin="dense"
-                    />
-                    <TextField
-                        fullWidth
                         label="Retail Price per Quantity"
                         name="retailPricePerQuantity"
                         type="float"
@@ -587,19 +484,24 @@ function MedicationManagement() {
                         onChange={handleChange}
                         margin="dense"
                     />
-                    <TextField
-                        fullWidth
-                        label="Type"
-                        name="itemTypeEnum"
-                        value={formData.itemTypeEnum}
-                        margin="dense"
-                    />
+                    <FormControl fullWidth margin="dense">
+                        <InputLabel>Item Type</InputLabel>
+                        <Select
+                            name="itemTypeEnum"
+                            value={formData.itemTypeEnum}
+                            onChange={handleChange}
+                            sx={{ lineHeight: "3em" }}
+                        >
+                            <MenuItem value="INPATIENT">Inpatient</MenuItem>
+                            <MenuItem value="OUTPATIENT">Outpatient</MenuItem>
+                        </Select>
+                    </FormControl>
                 </DialogContent>
                 <DialogActions>
                     <MDButton onClick={handleCloseModal} color="primary">
                         Cancel
                     </MDButton>
-                    <MDButton onClick={handleCreateMedication} color="primary">
+                    <MDButton onClick={handleCreateServiceItem} color="primary">
                         Create
                     </MDButton>
                 </DialogActions>
@@ -625,24 +527,6 @@ function MedicationManagement() {
                     />
                     <TextField
                         fullWidth
-                        label="Quantity in Stock"
-                        name="quantityInStock"
-                        type="number"
-                        value={updateFormData.quantityInStock}
-                        onChange={handleUpdateChange}
-                        margin="dense"
-                    />
-                    <TextField
-                        fullWidth
-                        label="Restock Price per Quantity"
-                        name="restockPricePerQuantity"
-                        type="float"
-                        value={updateFormData.restockPricePerQuantity}
-                        onChange={handleUpdateChange}
-                        margin="dense"
-                    />
-                    <TextField
-                        fullWidth
                         label="Retail Price per Quantity"
                         name="retailPricePerQuantity"
                         type="float"
@@ -650,12 +534,24 @@ function MedicationManagement() {
                         onChange={handleUpdateChange}
                         margin="dense"
                     />
+                    <FormControl fullWidth margin="dense">
+                        <InputLabel>Item Type</InputLabel>
+                        <Select
+                            name="itemTypeEnum"
+                            value={updateFormData.itemTypeEnum}
+                            onChange={handleUpdateChange}
+                            sx={{ lineHeight: "3em" }}
+                        >
+                            <MenuItem value="INPATIENT">Inpatient</MenuItem>
+                            <MenuItem value="OUTPATIENT">Outpatient</MenuItem>
+                        </Select>
+                    </FormControl>
                 </DialogContent>
                 <DialogActions>
                     <MDButton onClick={handleCloseUpdateModal} color="primary">
                         Cancel
                     </MDButton>
-                    <MDButton onClick={handleUpdateMedication} color="primary">
+                    <MDButton onClick={handleUpdateServiceItem} color="primary">
                         Update
                     </MDButton>
                 </DialogActions>
@@ -666,4 +562,4 @@ function MedicationManagement() {
 
 }
 
-export default MedicationManagement;
+export default ServiceItemManagement;

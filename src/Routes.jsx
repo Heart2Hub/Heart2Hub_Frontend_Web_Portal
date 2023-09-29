@@ -31,6 +31,7 @@ import { StaffRoleEnum } from "constants/StaffRoleEnum";
 import ConsumableEquipmentManagement from "layouts/administration/inventory-management/consumable-equipment";
 import InventoryManagement from "layouts/administration/inventory-management";
 import MedicationManagement from "layouts/administration/inventory-management/medication-management";
+import ServiceItemManagement from "layouts/administration/inventory-management/service-item-management";
 
 const routes = [
   {
@@ -310,7 +311,7 @@ const routes = [
   },
   {
     name: "Consumable Equipment Management",
-    key: "ConsumableEquipmentManagement",
+    key: "consumableequipmentmanagement",
     route: "/administration/inventory-management/consumable-equipment-management",
     component: (
       <ProtectedRoute
@@ -318,6 +319,19 @@ const routes = [
         forHeadsOnly={false}
       >
         <ConsumableEquipmentManagement />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Service Item Management",
+    key: "serviceItemManagement",
+    route: "/administration/inventory-management/service-item-management",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <ServiceItemManagement />
       </ProtectedRoute>
     ),
   },

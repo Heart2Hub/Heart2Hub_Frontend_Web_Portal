@@ -293,5 +293,51 @@ export const inventoryApi = {
     return axiosFetch.delete(
       `${REST_ENDPOINT}/consumableEquipment/deleteConsumableEquipment?inventoryItemId=${inventoryItemId}`
     );
-  }
+  },
+  getAllMedication(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medication/getAllMedication?name=${name}`
+    );
+  },
+  updateMedication(inventoryItemId, requestBody) {
+    console.log("Request Sent: " + requestBody.name)
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/medication/updateMedication?inventoryItemId=${inventoryItemId}`,
+      requestBody
+    );
+  },
+  createMedication(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/medication/createMedication`,
+      requestBody,
+    );
+  },
+  deleteMedication(inventoryItemId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/medication/deleteMedication?inventoryItemId=${inventoryItemId}`
+    );
+  },
+  getAllServiceItem(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/serviceItem/getAllServiceItem?name=${name}`
+    );
+  },
+  updateServiceItem(inventoryItemId, requestBody) {
+    console.log("Request Sent: " + requestBody.name)
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/serviceItem/updateServiceItem?inventoryItemId=${inventoryItemId}`,
+      requestBody
+    );
+  },
+  createServiceItem(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/serviceItem/createServiceItem`,
+      requestBody,
+    );
+  },
+  deleteServiceItem(inventoryItemId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/serviceItem/deleteServiceItem?inventoryItemId=${inventoryItemId}`
+    );
+  },
 }
