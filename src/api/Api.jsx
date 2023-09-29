@@ -176,6 +176,12 @@ export const allocatedInventoryApi ={
       `${REST_ENDPOINT}/allocatedInventory/updateAllocatedInventory`,
       requestBody
     )
+  },
+  createAllocatedInventory(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/allocatedInventory/createAllocatedInventory`,
+      requestBody
+    )
   }
 
 }

@@ -24,7 +24,6 @@ import { useDispatch } from "react-redux";
 
 import { facilityApi, departmentApi, allocatedInventoryApi } from "api/Api";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
-import { response } from "express";
 
 function FacilityManagement() {
   const reduxDispatch = useDispatch();
@@ -32,9 +31,14 @@ function FacilityManagement() {
   const [selectedFacilityInventory, setSelectedFacilityInventory] = useState([]);
   const [facilityInventory, setFacilityInventory] = useState([]); // State to store facility inventory  
 
+  const [selectedFacilityId, setSelectedFacilityId] = useState(null); // State to store facility inventory  
+
   const [isUpdateInventoryDialogOpen, setIsUpdateInventoryDialogOpen] = useState(false);
   const [selectedInventoryItemForUpdate, setSelectedInventoryItemForUpdate] = useState(null);
+  // const [selectedAllocatedInventoryId, setSelectedAllocatedInventoryId] = useState(null);
   const [newQuantity, setNewQuantity] = useState(0);
+  const [minQuantity, setMinQuantity] = useState(0); // Add minQuantity state
+
   const [allocatedInventoryIdForUpdate, setAllocatedInventoryIdForUpdate] = useState(null);
 
 
@@ -56,11 +60,21 @@ function FacilityManagement() {
 
       allocatedInventoryApi
         .updateAllocatedInventory(requestBody)
-        .then((request => {
+        .then((response => {
 
           const update = response.data;
           console.log(data);
-          
+
+          const updatedInventory = selectedFacilityInventory.map((item) => {
+            if (item.allocatedInventoryId === allocatedInventoryIdForUpdate) {
+              // Update the quantity with the new value
+              return { ...item, allocatedInventoryCurrentQuantity: newQuantity };
+            }
+            return item;
+          });
+
+          setSelectedFacilityInventory(updatedInventory);
+
           setIsUpdateInventoryDialogOpen(false);
           setSelectedInventoryItemForUpdate(null);
           setAllocatedInventoryIdForUpdate(null);
@@ -73,11 +87,13 @@ function FacilityManagement() {
     }
   };
 
-  // Function to open the Facility Inventory Dialog
-  const handleOpenInventoryDialog = (inventoryData) => {
+  const handleOpenInventoryDialog = (inventoryData, facilityId) => {
+    console.log(facilityId);
+    setSelectedFacilityId(facilityId); // Set the facilityId in your state
     setSelectedFacilityInventory(inventoryData);
     setIsInventoryDialogOpen(true);
   };
+
 
   // Function to close the Facility Inventory Dialog
   const handleCloseInventoryDialog = () => {
@@ -101,47 +117,64 @@ function FacilityManagement() {
       });
   };
 
-  // Function to add inventory to the facility
-  const addInventoryToFacility = (inventoryItemId, quantity) => {
-    // Perform the logic to add the selected inventory item and quantity to the facility
-    // Update your facility's inventory state accordingly
-    // You can also calculate the cost of restock here
-    // Example: Update the state with the new inventory item and quantity
-    const updatedFacilityInventory = [...facilityInventory]; // Make a copy
-    const existingItemIndex = updatedFacilityInventory.findIndex(
-      (item) => item.inventoryItemId === inventoryItemId
-    );
+  const addInventoryToFacility = async (inventoryItemId, quantity, minQuantity) => {
 
-    if (existingItemIndex !== -1) {
-      // Item already exists, update the quantity
-      updatedFacilityInventory[existingItemIndex].quantity += quantity;
-    } else {
-      // Item doesn't exist, add a new entry
-      updatedFacilityInventory.push({
-        inventoryItemId,
-        quantity,
-      });
+    const requestBody = {
+      inventoryItemId,
+      quantity,
+      minQuantity,
+      selectedFacilityId
     }
 
-    setFacilityInventory(updatedFacilityInventory);
+    console.log(requestBody);
+
+    allocatedInventoryApi
+      .createAllocatedInventory(requestBody)
+      .then((response => {
+
+        const ai = response.data;
+        console.log(ai)
+
+        const updatedFacilityInventory = [...facilityInventory]; // Make a copy
+        const existingItemIndex = updatedFacilityInventory.findIndex(
+          (item) => item.inventoryItemId === inventoryItemId
+        );
+
+        if (existingItemIndex !== -1) {
+          // Item already exists, update the quantity and minQuantity
+          updatedFacilityInventory[existingItemIndex].quantity += quantity;
+          updatedFacilityInventory[existingItemIndex].minQuantity += minQuantity;
+        } else {
+          // Item doesn't exist, add a new entry
+          updatedFacilityInventory.push({
+            inventoryItemId,
+            quantity,
+            minQuantity,
+          });
+        }
+
+        setFacilityInventory(updatedFacilityInventory)
+      })).catch((error) => {
+        console.error("Error fetching data:", error);
+      });
+
   };
 
-  const handleAddInventory = () => {
-    // Validate selectedInventoryItem and quantity here if needed
-    if (!selectedInventoryItem || quantity <= 0) {
+
+  const handleAddInventory = (selectedFacilityId) => {
+    if (!selectedInventoryItem || quantity <= 0 || minQuantity < 0) {
       // Handle validation error, display a message, or prevent adding invalid data
       return;
     }
 
-    // Call addInventoryToFacility with the selected item and quantity
-    addInventoryToFacility(selectedInventoryItem, quantity);
+    addInventoryToFacility(selectedInventoryItem.inventoryItemId, quantity, minQuantity, selectedFacilityId);
 
-    // Close the Add Inventory dialog
     setIsAddInventoryDialogOpen(false);
 
-    // Optionally, reset selectedInventoryItem and quantity to their initial values
     setSelectedInventoryItem("");
     setQuantity(0);
+    setMinQuantity(0);
+
   };
 
   const [data, setData] = useState({
@@ -178,7 +211,7 @@ function FacilityManagement() {
         width: '10%',
         accessor: "inventory",
         Cell: ({ row }) => (
-          <Button onClick={() => handleOpenInventoryDialog(row.original.inventory)}>
+          <Button onClick={() => handleOpenInventoryDialog(row.original.inventory, row.original.facilityId)}>
             View Inventory
           </Button>
         ),
@@ -221,7 +254,7 @@ function FacilityManagement() {
         width: '10%',
         accessor: "inventory",
         Cell: ({ row }) => (
-          <Button onClick={() => handleOpenInventoryDialog(row.original.inventory)}>
+          <Button onClick={() => handleOpenInventoryDialog(row.original.inventory, row.original.facilityId)}>
             View Inventory
           </Button>
         ),
@@ -285,6 +318,8 @@ function FacilityManagement() {
             variant="contained"
             color="primary"
             onClick={() => handleUpdateInventory(row.original)}
+            style={{ backgroundColor: 'green', color: 'white' }}
+
           >
             Update
           </Button>
@@ -896,6 +931,7 @@ function FacilityManagement() {
             variant="contained"
             color="primary"
             onClick={() => setIsAddInventoryDialogOpen(true)}
+            style={{ color: 'white' }}
           >
             Add Inventory to Facility
           </Button>
@@ -918,29 +954,33 @@ function FacilityManagement() {
             <Select
               value={selectedInventoryItem}
               onChange={(e) => {
-                console.log("Selected Item:", e.target.value);
-
-                setSelectedInventoryItem(e.target.value)
+                setSelectedInventoryItem(e.target.value);
               }}
               required
               sx={{ lineHeight: "2.5em" }}
             >
-
               {inventoryItems.map((item) => (
-                <MenuItem key={item.inventoryItemId} value={item.inventoryItemId}>
+                <MenuItem key={item.id} value={item}>
                   {item.inventoryItemName}
                 </MenuItem>
               ))}
             </Select>
-            <br></br>
           </FormControl>
-          <br></br>
+          <br />
           <TextField
             fullWidth
             label="Quantity"
             type="number"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
+          />
+          <br />
+          <TextField
+            fullWidth
+            label="Minimum Quantity"
+            type="number"
+            value={minQuantity}
+            onChange={(e) => setMinQuantity(e.target.value)}
           />
           {/* Display the cost of restock based on selectedInventoryItem and quantity */}
           {/* You can calculate and display the cost here */}
@@ -952,6 +992,7 @@ function FacilityManagement() {
           </Button>
         </DialogActions>
       </Dialog>
+
       <Dialog
         open={isUpdateInventoryDialogOpen}
         onClose={() => setIsUpdateInventoryDialogOpen(false)}
