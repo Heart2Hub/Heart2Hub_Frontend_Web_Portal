@@ -17,6 +17,7 @@ import Manpower from "layouts/manpower";
 import Finance from "layouts/finance";
 import StaffManagement from "layouts/administration/staff-management";
 import FacilityManagement from "layouts/administration/facility-management";
+import FacilityBooking from "layouts/administration/facility-booking";
 import Home from "layouts/home";
 import Account from "layouts/account";
 import ErrorPage from "layouts/error";
@@ -163,6 +164,19 @@ const routes = [
         forHeadsOnly={false}
       >
         <FacilityManagement />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Facility Booking",
+    key: "facilitybooking",
+    route: "/administration/facility-booking",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <FacilityBooking />
       </ProtectedRoute>
     ),
   },

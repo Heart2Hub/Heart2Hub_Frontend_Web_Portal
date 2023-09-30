@@ -10,7 +10,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import { IconButton, Icon } from "@mui/material";
+import { IconButton, Icon, Button, Typography } from "@mui/material";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -22,11 +22,161 @@ import DataTable from "examples/Tables/DataTable";
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 
-import { facilityApi, departmentApi } from "api/Api";
+import { facilityApi, departmentApi, allocatedInventoryApi } from "api/Api";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
 
 function FacilityManagement() {
   const reduxDispatch = useDispatch();
+  const [isInventoryDialogOpen, setIsInventoryDialogOpen] = useState(false);
+  const [selectedFacilityInventory, setSelectedFacilityInventory] = useState([]);
+  const [facilityInventory, setFacilityInventory] = useState([]); // State to store facility inventory  
+
+  const [selectedFacilityId, setSelectedFacilityId] = useState(null); // State to store facility inventory  
+
+  const [isUpdateInventoryDialogOpen, setIsUpdateInventoryDialogOpen] = useState(false);
+  const [selectedInventoryItemForUpdate, setSelectedInventoryItemForUpdate] = useState(null);
+  // const [selectedAllocatedInventoryId, setSelectedAllocatedInventoryId] = useState(null);
+  const [newQuantity, setNewQuantity] = useState(0);
+  const [minQuantity, setMinQuantity] = useState(0); // Add minQuantity state
+
+  const [allocatedInventoryIdForUpdate, setAllocatedInventoryIdForUpdate] = useState(null);
+
+
+  const handleUpdateInventory = (inventoryItem) => {
+    setSelectedInventoryItemForUpdate(inventoryItem);
+    setAllocatedInventoryIdForUpdate(inventoryItem.allocatedInventoryId);
+    setNewQuantity(inventoryItem.allocatedInventoryCurrentQuantity); // Initialize with the current quantity
+    setIsUpdateInventoryDialogOpen(true);
+  };
+
+  const handleUpdateQuantity = () => {
+    // Check if selectedInventoryItemForUpdate and newQuantity are valid
+    if (selectedInventoryItemForUpdate && newQuantity >= 0) {
+
+      const requestBody = {
+        allocatedInventoryIdForUpdate,
+        newQuantity
+      }
+
+      allocatedInventoryApi
+        .updateAllocatedInventory(requestBody)
+        .then((response => {
+
+          const update = response.data;
+          console.log(data);
+
+          const updatedInventory = selectedFacilityInventory.map((item) => {
+            if (item.allocatedInventoryId === allocatedInventoryIdForUpdate) {
+              // Update the quantity with the new value
+              return { ...item, allocatedInventoryCurrentQuantity: newQuantity };
+            }
+            return item;
+          });
+
+          setSelectedFacilityInventory(updatedInventory);
+
+          setIsUpdateInventoryDialogOpen(false);
+          setSelectedInventoryItemForUpdate(null);
+          setAllocatedInventoryIdForUpdate(null);
+          setNewQuantity(0);
+
+          fetchData();
+        })).catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+    }
+  };
+
+  const handleOpenInventoryDialog = (inventoryData, facilityId) => {
+    console.log(facilityId);
+    setSelectedFacilityId(facilityId); // Set the facilityId in your state
+    setSelectedFacilityInventory(inventoryData);
+    setIsInventoryDialogOpen(true);
+  };
+
+
+  // Function to close the Facility Inventory Dialog
+  const handleCloseInventoryDialog = () => {
+    setIsInventoryDialogOpen(false);
+  };
+
+  const [isAddInventoryDialogOpen, setIsAddInventoryDialogOpen] = useState(false);
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState("");
+  const [quantity, setQuantity] = useState(0);
+  const [inventoryItems, setInventoryItems] = useState([]); // State to store inventory items
+
+  // Function to fetch inventory items from the API
+  const fetchInventoryItems = async () => {
+    facilityApi
+      .getAllConsumableInventory()
+      .then((response => {
+        const items = response.data;
+        setInventoryItems(items);
+      })).catch((error) => {
+        console.error("Error fetching data:", error);
+      });
+  };
+
+  const addInventoryToFacility = async (inventoryItemId, quantity, minQuantity) => {
+
+    const requestBody = {
+      inventoryItemId,
+      quantity,
+      minQuantity,
+      selectedFacilityId
+    }
+
+    console.log(requestBody);
+
+    allocatedInventoryApi
+      .createAllocatedInventory(requestBody)
+      .then((response => {
+
+        const ai = response.data;
+        console.log(ai)
+
+        const updatedFacilityInventory = [...facilityInventory]; // Make a copy
+        const existingItemIndex = updatedFacilityInventory.findIndex(
+          (item) => item.inventoryItemId === inventoryItemId
+        );
+
+        if (existingItemIndex !== -1) {
+          // Item already exists, update the quantity and minQuantity
+          updatedFacilityInventory[existingItemIndex].quantity += quantity;
+          updatedFacilityInventory[existingItemIndex].minQuantity += minQuantity;
+        } else {
+          // Item doesn't exist, add a new entry
+          updatedFacilityInventory.push({
+            inventoryItemId,
+            quantity,
+            minQuantity,
+          });
+        }
+
+        setFacilityInventory(updatedFacilityInventory)
+      })).catch((error) => {
+        console.error("Error fetching data:", error);
+      });
+
+  };
+
+
+  const handleAddInventory = (selectedFacilityId) => {
+    if (!selectedInventoryItem || quantity <= 0 || minQuantity < 0) {
+      // Handle validation error, display a message, or prevent adding invalid data
+      return;
+    }
+
+    addInventoryToFacility(selectedInventoryItem.inventoryItemId, quantity, minQuantity, selectedFacilityId);
+
+    setIsAddInventoryDialogOpen(false);
+
+    setSelectedInventoryItem("");
+    setQuantity(0);
+    setMinQuantity(0);
+
+  };
+
   const [data, setData] = useState({
     columns: [
       { Header: "Facility ID", accessor: "facilityId", width: "10%" },
@@ -55,6 +205,16 @@ function FacilityManagement() {
           </MDBox>
         ),
         width: "10%",
+      },
+      {
+        Header: 'Inventory',
+        width: '10%',
+        accessor: "inventory",
+        Cell: ({ row }) => (
+          <Button onClick={() => handleOpenInventoryDialog(row.original.inventory, row.original.facilityId)}>
+            View Inventory
+          </Button>
+        ),
       },
     ],
     rows: [],
@@ -89,9 +249,93 @@ function FacilityManagement() {
         ),
         width: "10%",
       },
+      {
+        Header: 'Inventory',
+        width: '10%',
+        accessor: "inventory",
+        Cell: ({ row }) => (
+          <Button onClick={() => handleOpenInventoryDialog(row.original.inventory, row.original.facilityId)}>
+            View Inventory
+          </Button>
+        ),
+      },
     ],
     rows: [],
   });
+
+
+  const handleDeleteInventory = (inventoryItemId) => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this inventory item?");
+
+    console.log(inventoryItemId);
+
+    if (isConfirmed) {
+
+      allocatedInventoryApi
+        .deleteAllocatedInventory(inventoryItemId)
+        .then((response => {
+          const updatedInventory = selectedFacilityInventory.filter(
+            (item) => item.allocatedInventoryId !== inventoryItemId
+          );
+
+          setSelectedFacilityInventory(updatedInventory);
+          fetchData();
+
+          reduxDispatch(
+            displayMessage({
+              color: "success",
+              icon: "notification",
+              title: "Successfully Deleted Allocated Inventory!",
+              content: "Allocated Inventory with Id: " + inventoryItemId + " deleted",
+            })
+          );
+        })).catch((err) => {
+          reduxDispatch(
+            displayMessage({
+              color: "error",
+              icon: "notification",
+              title: "Error Encountered",
+              content: err.response.data,
+            })
+          );
+          console.log(err);
+        });
+
+    }
+  };
+  const inventoryColumns = [
+    { Header: "Item ID", accessor: "allocatedInventoryId" },
+    { Header: "Name", accessor: "consumableEquipment.inventoryItemName" },
+    { Header: "Description", accessor: "consumableEquipment.inventoryItemDescription" },
+    { Header: "Quantity Before Restock", accessor: "minimumQuantityBeforeRestock" },
+    { Header: "Current Quantity", accessor: "allocatedInventoryCurrentQuantity" },
+    {
+      Header: "Actions",
+      accessor: "inventoryItemId",
+      Cell: ({ row }) => (
+        <div>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => handleUpdateInventory(row.original)}
+            style={{ backgroundColor: 'green', color: 'white' }}
+
+          >
+            Update
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => handleDeleteInventory(row.original.allocatedInventoryId)}
+            style={{ backgroundColor: 'red', color: 'white' }}
+          >
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     subDepartmentId: null,
@@ -423,6 +667,7 @@ function FacilityManagement() {
           capacity: facility.capacity,
           status: facility.facilityStatusEnum,
           type: facility.facilityTypeEnum,
+          inventory: facility.listOfAllocatedInventories
           // Map other columns as needed
         }));
 
@@ -445,6 +690,7 @@ function FacilityManagement() {
   useEffect(() => {
     fetchData();
     getDepartments();
+    fetchInventoryItems();
   }, []);
 
   return (
@@ -669,6 +915,117 @@ function FacilityManagement() {
           </MDButton>
         </DialogActions>
       </Dialog>
+      <Dialog
+        open={isInventoryDialogOpen}
+        onClose={handleCloseInventoryDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Facility Inventory</DialogTitle>
+        <DialogContent>
+          {selectedFacilityInventory && selectedFacilityInventory.length > 0 ? (
+            <DataTable table={{ columns: inventoryColumns, rows: selectedFacilityInventory }} />
+          ) : (
+            <MDTypography variant="body2" color="textSecondary">
+              No inventory items found for this facility.
+            </MDTypography>
+          )}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setIsAddInventoryDialogOpen(true)}
+            style={{ color: 'white' }}
+          >
+            Add Inventory to Facility
+          </Button>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={handleCloseInventoryDialog} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={isAddInventoryDialogOpen}
+        onClose={() => setIsAddInventoryDialogOpen(false)}
+      >
+        <DialogTitle>Add Inventory to Facility</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth>
+            <InputLabel>Select Inventory Item</InputLabel>
+            <Select
+              value={selectedInventoryItem}
+              onChange={(e) => {
+                setSelectedInventoryItem(e.target.value);
+              }}
+              required
+              sx={{ lineHeight: "2.5em" }}
+            >
+              {inventoryItems.map((item) => (
+                <MenuItem key={item.id} value={item}>
+                  {item.inventoryItemName}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <br />
+          <TextField
+            fullWidth
+            label="Quantity"
+            type="number"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+          />
+          <br />
+          <TextField
+            fullWidth
+            label="Minimum Quantity"
+            type="number"
+            value={minQuantity}
+            onChange={(e) => setMinQuantity(e.target.value)}
+          />
+          {/* Display the cost of restock based on selectedInventoryItem and quantity */}
+          {/* You can calculate and display the cost here */}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsAddInventoryDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleAddInventory} color="primary">
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={isUpdateInventoryDialogOpen}
+        onClose={() => setIsUpdateInventoryDialogOpen(false)}
+      >
+        <DialogTitle>Update Inventory Quantity</DialogTitle>
+        <DialogContent>
+          {selectedInventoryItemForUpdate && (
+            <div>
+              <Typography variant="body2">
+                Inventory Item: {selectedInventoryItemForUpdate.consumableEquipment.inventoryItemName}
+              </Typography>
+              <TextField
+                fullWidth
+                label="New Quantity"
+                type="number"
+                value={newQuantity}
+                onChange={(e) => setNewQuantity(e.target.value)}
+              />
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsUpdateInventoryDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleUpdateQuantity} color="primary">
+            Update
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+
     </DashboardLayout>
   );
 }
