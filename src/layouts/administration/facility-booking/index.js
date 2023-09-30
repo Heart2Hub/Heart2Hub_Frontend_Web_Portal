@@ -60,18 +60,28 @@ function FacilityBooking() {
 	}
 
 	const handleBookingConfirmation = () => {
-		
+
 
 		console.log(selectedSlot.start)
 		const date1 = new Date(selectedSlot.start);
 		const date2 = new Date(selectedSlot.end);
 
-		const startDateObj = date1.toLocaleString();
-		const endDateObj = date2.toLocaleString();
+		const options = {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+			hour12: false, // Use 24-hour format
+		};
 
+		const startDateObj = date1.toLocaleString('en-GB', options);
+		const endDateObj = date2.toLocaleString('en-GB', options);
 
 		console.log("hello there");
-
+		console.log(startDateObj);
+		console.log(endDateObj);
 
 		const bookingData = {
 			startDateTime: startDateObj,
@@ -117,7 +127,7 @@ function FacilityBooking() {
 	};
 
 	const handleEventClick = (event) => {
-		setSelectedBooking(event); 
+		setSelectedBooking(event);
 		setIsBookingDetailsOpen(true);
 	};
 
@@ -128,8 +138,8 @@ function FacilityBooking() {
 
 	const formats = {
 		eventTimeRangeFormat: ({ start, end }) => {
-			const startTime = moment(start).format('LT'); 
-			const endTime = moment(end).format('LT');     
+			const startTime = moment(start).format('LT');
+			const endTime = moment(end).format('LT');
 			return `${startTime} - ${endTime}`;
 		},
 	};
@@ -139,7 +149,7 @@ function FacilityBooking() {
 		facilityApi
 			.getAllBookingsOfAStaff(staff.username)
 			.then((response) => {
-				const facilities = response.data; 
+				const facilities = response.data;
 				console.log(facilities);
 
 				const mappedRows = facilities.map((facility) => ({
@@ -237,7 +247,7 @@ function FacilityBooking() {
 						>
 							<Icon>delete</Icon>
 						</IconButton>
-						
+
 					</MDBox>
 				),
 				width: "10%",
@@ -263,7 +273,7 @@ function FacilityBooking() {
 						>
 							<Icon>delete</Icon>
 						</IconButton>
-						
+
 					</MDBox>
 				),
 				width: "10%",
@@ -409,7 +419,7 @@ function FacilityBooking() {
 		facilityApi
 			.findAllFacility()
 			.then((response) => {
-				const facilities = response.data; 
+				const facilities = response.data;
 
 				console.log(facilities);
 
@@ -698,7 +708,7 @@ function FacilityBooking() {
 										</Button>
 									</DialogActions>
 								</Dialog>
-								
+
 							</MDBox>
 						</Card>
 					</Grid>
