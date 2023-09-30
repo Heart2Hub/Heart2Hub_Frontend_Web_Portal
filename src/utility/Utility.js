@@ -20,6 +20,20 @@ export const parseDateFromYYYYMMDD = (dateString) => {
   return new Date(yyyy, mm - 1, dd);
 };
 
+export const parseDateFromLocalDateTime = (localDateTime) => {
+  if (localDateTime.length < 6) {
+    return new Date(localDateTime[0], localDateTime[1] - 1, localDateTime[2]);
+  }
+  return new Date(
+    localDateTime[0],
+    localDateTime[1] - 1,
+    localDateTime[2],
+    localDateTime[3],
+    localDateTime[4],
+    localDateTime[5]
+  );
+};
+
 export const addDurationToDate = (dateObj, durationStr) => {
   const [hours, minutes, seconds] = durationStr.split(":").map(Number);
 
@@ -34,9 +48,32 @@ export const maskNric = (nric) => {
   if (nric.length < 9) {
     throw new Error("The string should be at least 9 characters long.");
   }
-  const firstPart = nric
-    .substring(0, nric.length - 4)
-    .replace(/.(?=.{4,}$)/g, "X");
+  const firstPart = nric.substring(0, 1);
   const lastPart = nric.slice(-4);
-  return firstPart + lastPart;
+  return firstPart + "XXXX" + lastPart;
 };
+
+export function calculateAge(dateOfBirth) {
+  let birthday = parseDateFromLocalDateTime(dateOfBirth);
+  let year = birthday.getFullYear();
+  let month = birthday.getMonth();
+  let day = birthday.getDay();
+
+  // const [year, month, day, hour, minutes, seconds] = birthday;
+
+  const birthDate = new Date(year, month - 1, day);
+  const currentDate = new Date();
+
+  let age = currentDate.getFullYear() - birthDate.getFullYear();
+  const monthDifference = currentDate.getMonth() - birthDate.getMonth();
+
+  // If the birthday hasn't occurred yet this year, subtract 1 from the age.
+  if (
+    monthDifference < 0 ||
+    (monthDifference === 0 && currentDate.getDate() < birthDate.getDate())
+  ) {
+    age--;
+  }
+
+  return age;
+}

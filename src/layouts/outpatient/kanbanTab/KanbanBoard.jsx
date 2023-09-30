@@ -1,12 +1,18 @@
 import React from "react";
 import { useState } from "react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext } from "@hello-pangea/dnd";
 import KanbanColumn from "./KanbanColumn";
 import { useSelector } from "react-redux";
 import { selectStaff } from "../../../store/slices/staffSlice";
+import { appointmentApi } from "../../../api/Api";
+import { useEffect } from "react";
+import "./kanbanStyles.css";
 
 function KanbanBoard() {
   const staff = useSelector(selectStaff);
+
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   //create 1 array for each column
   const [registration, setRegistration] = useState([]);
@@ -16,17 +22,25 @@ function KanbanBoard() {
   const handleDragEnd = (result) => {
     const { destination, source, draggableId } = result;
 
+    // console.log(source.droppableId);
+    // console.log(destination.droppableId);
+
     //if same source and destination do nothing
-    if (source.droppableId == destination.droppableId) return;
+    if (source.droppableId === destination.droppableId) return;
 
     //IF SOURCE AND END NOT THE SAME
     //REMOVE FROM SOURCE ARRAY
-    if (source.droppableId == 1) {
+    if (source.droppableId === 1 || source.droppableId === "1") {
       setRegistration(removeItemById(draggableId, registration));
-    } else if (source.droppableId == 3) {
+      // console.log("remove from registration");
+    } else if (source.droppableId === 2 || source.droppableId === "2") {
       setTriage(removeItemById(draggableId, triage));
-    } else if (source.droppableId == 3) {
+      // console.log("remove from triage");
+    } else if (source.droppableId === 3 || source.droppableId === "3") {
       setConsultation(removeItemById(draggableId, consultation));
+      // console.log("remove from consultation");
+    } else {
+      // console.log("NO SOURCE MATCH FOR " + source.droppableId);
     }
 
     // GET ITEM
@@ -36,55 +50,116 @@ function KanbanBoard() {
       ...consultation,
     ]);
 
+    // console.log("RETRIEVED THIS APPT: ");
+    // console.log(appointment);
+
     //ADD ITEM
     //should add checks to prevent backward flow?
-    if (destination.droppableId == 1) {
-      setRegistration([
-        { ...appointment, registration: !appointment.appointment },
-        ...appointment,
-      ]);
-    } else if (destination.droppableId == 2) {
-      setTriage([{ ...appointment, triage: !appointment.triage }, ...triage]);
+    if (destination.droppableId === 1 || destination.droppableId === "1") {
+      setRegistration([{ ...appointment }, ...registration]);
+      // console.log("add to registration");
+    } else if (
+      destination.droppableId === 2 ||
+      destination.droppableId === "2"
+    ) {
+      setTriage([{ ...appointment }, ...triage]);
+      // console.log("add to triage");
+    } else if (
+      destination.droppableId === 3 ||
+      destination.droppableId === "3"
+    ) {
+      setConsultation([{ ...appointment }, ...consultation]);
+      // console.log("add to consultation");
     } else {
-      setConsultation([
-        { ...appointment, consultation: !appointment.consultation },
-        ...consultation,
-      ]);
+      console.log("NO DESTINATION MATCH FOR " + destination.droppableId);
     }
   };
 
   //Utility functions to find and remove items in array
   function findItemById(id, array) {
-    return array.find((item) => item.id == id);
+    // console.log("item finding called");
+    // console.log(typeof Number(id));
+    // console.log(typeof array[0].appointmentId);
+    // console.log(array.find((item) => item.appointmentId === Number(id)));
+    return array.find((item) => item.appointmentId === Number(id));
   }
 
   function removeItemById(id, array) {
-    return array.filter((item) => item.id != id);
+    // console.log("item removal called to remove " + id);
+    // console.log(array.filter((item) => item.appointmentId !== Number(id)));
+    return array.filter((item) => item.appointmentId !== Number(id));
   }
+
+  const getAppointmentsForToday = async () => {
+    let today = new Date();
+    // need plus 1 since month starts with 0
+    const response = await appointmentApi.viewAllAppointmentsByRange(
+      today.getDate(),
+      today.getMonth() + 1,
+      today.getFullYear(),
+      today.getDate(),
+      today.getMonth() + 1,
+      today.getFullYear(),
+      staff.unit.name
+    );
+    // console.log(response);
+    setAppointments(response.data);
+    setRegistration(response.data);
+  };
+
+  useEffect(() => {
+    getAppointmentsForToday();
+  }, [loading]);
 
   return (
     <>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <h2 style={{ textAlign: "center" }}>KANBAN BOARD</h2>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexDirection: "row",
-          }}
-        >
-          {/* <Column title={"TO DO"} tasks={incomplete} id={"1"} />
-          <Column title={"DONE"} tasks={completed} id={"2"} />
-          <Column title={"BACKLOG"} tasks={[]} id={"3"} /> */}
-
-          <KanbanColumn title="Registration" tasks={registration} id={"1"} />
-          <KanbanColumn title="Triage" tasks={triage} id={"2"} />
-          <KanbanColumn title="Consultation" tasks={consultation} id={"3"} />
+        <div className="kanban-board">
+          <KanbanColumn
+            title="Registration"
+            appointments={registration}
+            id={"1"}
+          />
+          <KanbanColumn title="Triage" appointments={triage} id={"2"} />
+          <KanbanColumn
+            title="Consultation"
+            appointments={consultation}
+            id={"3"}
+          />
         </div>
       </DragDropContext>
     </>
   );
+  // return (
+  //   <>
+  //     <DragDropContext onDragEnd={handleDragEnd}>
+  //       {/* <h2 className="kanban-title">KANBAN BOARD</h2> */}
+  //       <div className="kanban-board">
+  //         <KanbanColumn
+  //           title="Registration"
+  //           appointments={registration}
+  //           id={"1"}
+  //         />
+  //         <KanbanColumn title="Triage" appointments={triage} id={"2"} />
+  //         <KanbanColumn
+  //           title="Consultation"
+  //           appointments={consultation}
+  //           id={"3"}
+  //         />
+  //         <KanbanColumn
+  //           title="Consultation"
+  //           appointments={consultation}
+  //           id={"3"}
+  //         />
+  //         <KanbanColumn
+  //           title="Consultation"
+  //           appointments={consultation}
+  //           id={"3"}
+  //         />
+  //       </div>
+  //     </DragDropContext>
+  //   </>
+  // );
 }
 
 export default KanbanBoard;

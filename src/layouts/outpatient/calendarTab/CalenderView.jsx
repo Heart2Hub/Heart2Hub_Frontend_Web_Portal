@@ -16,6 +16,7 @@ import { formatDateToYYYYMMDD } from "utility/Utility";
 import { parseDateFromYYYYMMDD } from "utility/Utility";
 import { addDurationToDate } from "utility/Utility";
 import ViewAppointmentModal from "./ViewAppointmentModal";
+import { parseDateFromLocalDateTime } from "utility/Utility";
 
 function CalenderView() {
   const reduxDispatch = useDispatch();
@@ -62,13 +63,12 @@ function CalenderView() {
         actualDateTime,
         estimatedDuration,
       } = appointment;
-      actualDateTime[1] -= 1;
       data.push({
         id: appointmentId,
         title: firstName + " " + lastName,
-        start: new Date(...actualDateTime.slice(0, 3), 0, 0, 0),
+        start: parseDateFromLocalDateTime(actualDateTime),
         end: addDurationToDate(
-          new Date(...actualDateTime.slice(0, 3), 0, 0, 0),
+          parseDateFromLocalDateTime(actualDateTime),
           estimatedDuration
         ),
         data: appointment,
@@ -79,7 +79,6 @@ function CalenderView() {
 
   const handleSelect = (data) => {
     setSelectedAppointment(data.data);
-    console.log(selectedAppointment);
     setOpenModal(true);
   };
 
@@ -154,6 +153,9 @@ function CalenderView() {
             alignItems: "center",
           }}
         >
+          <MDTypography variant="h5" fontWeight="medium" color="text">
+            Selected Date Range: &nbsp;
+          </MDTypography>
           <TextField
             type="date"
             label="Start Date"
@@ -170,17 +172,16 @@ function CalenderView() {
             required
             sx={{ marginRight: "16px" }}
           />
-
           <MDBox sx={{ alignItems: "center", justifyContent: "center" }}>
             <MDButton
               variant="gradient"
-              color="secondary"
+              color="info"
               onClick={handleChangeDateRange}
               size="medium"
               sx={{ marginRight: "16px" }}
             >
               <MDTypography variant="h5" fontWeight="medium" color="white">
-                Change View
+                Refresh Dates
               </MDTypography>
             </MDButton>
           </MDBox>

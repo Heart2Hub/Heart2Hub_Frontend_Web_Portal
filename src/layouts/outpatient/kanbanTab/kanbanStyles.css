@@ -1,0 +1,131 @@
+/* .kanban-board-wrapper {
+  overflow-x: auto;
+  width: 100%;
+  white-space: nowrap;
+} */
+
+/* For Chrome, Safari, and Opera */
+/* div[style*="overflowX: auto"]::-webkit-scrollbar {
+  display: none;
+} */
+
+/* For Firefox */
+/* div[style*="overflowX: auto"] {
+  scrollbar-width: none;
+  -ms-overflow-style: none; 
+} */
+
+/* .column {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  width: 400px;
+  background-color: #f4f5f7;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow-y: scroll;
+  scrollbar-width: none; 
+  -ms-overflow-style: none; 
+  flex-shrink: 0;
+} */
+
+.kanban-board {
+  display: flex;
+  flex-wrap: wrap; /* Allows columns to wrap to the next row */
+  justify-content: flex-start;
+  align-items: start;
+  gap: 4px;
+  padding: 0 20px;
+  min-height: 100vh;
+}
+
+.kanban-title {
+  text-align: center;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  width: calc(33% - 20px); /* For 3 columns per row. Adjust as needed */
+  background-color: #f4f5f7;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.column::-webkit-scrollbar {
+  display: none; /* For Webkit browsers like Chrome and Safari */
+}
+
+.column-title {
+  padding: 8px;
+  background-color: #007bff;
+  color: white;
+  text-align: center;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.column-tasklist {
+  flex: 1;
+  padding: 3px;
+  background-color: #f4f5f7;
+  transition: background-color 0.2s ease;
+  min-height: 100px;
+}
+
+.column::-webkit-scrollbar {
+  display: none;
+}
+
+.draggable-container {
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
+  padding: 16px;
+  background-color: #eaf4fc;
+  margin: 16px;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.draggable-container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slightly bigger shadow on hover */
+  transform: translateY(-2px);
+}
+
+/* ... Your other styles ... */
+
+.draggable-description {
+  font-size: 14px; /* Adjust as needed */
+  color: #333;
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between; /* Adjusted */
+}
+
+.draggable-icons {
+  display: flex;
+  justify-content: space-between; /* Adjusted */
+  align-items: center; /* Adjusted */
+  padding-top: 10px; /* Adjusted */
+}
+
+.draggable-id {
+  font-weight: 600; /* Bold font */
+  color: #555;
+}
+
+.avatar-left {
+  order: 1; /* Places it to the left */
+}
+
+.avatar-right {
+  order: 2; /* Places it to the right */
+}

@@ -67,7 +67,10 @@ function Outpatient() {
           <TabPanel value="Calender View">
             <CalenderView />
           </TabPanel>
-          <TabPanel value="Kanban View">{/* <KanbanBoard /> */}</TabPanel>
+          <TabPanel value="Kanban View">
+            <KanbanBoard />
+            {/* <Kanban /> */}
+          </TabPanel>
         </TabContext>
       </Box>
     </DashboardLayout>

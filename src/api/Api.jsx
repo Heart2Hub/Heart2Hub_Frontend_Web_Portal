@@ -36,6 +36,11 @@ export const staffApi = {
   getAllStaff() {
     return axiosFetch.get(`${REST_ENDPOINT}/staff/getAllStaff`);
   },
+  getStaffByStaffId(staffId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/staff/getStaffByUsername?staffId=${staffId}`
+    );
+  },
   getStaffByUsername(username) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/staff/getStaffByUsername?username=${username}`
