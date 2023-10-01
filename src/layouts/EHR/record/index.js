@@ -1,13 +1,20 @@
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+
 // @mui material components
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
 
 import MDBox from "components/MDBox";
+import MDTypography from "components/MDTypography";
+import MDAvatar from "components/MDAvatar";
+import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
 
-import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
+import { IMAGE_SERVER } from "constants/RestEndPoint";
+import Header from "./components/Header";
+import Divider from "@mui/material/Divider";
 
 import { useSelector } from "react-redux";
 import { selectEHRRecord } from "../../../store/slices/ehrSlice";
@@ -20,82 +27,86 @@ function EHRRecord() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox pt={6} pb={3}>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Card>
-              <Typography variant="h5" gutterBottom>
-                Patient Information
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                First Name: {ehrRecord.firstName}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                Last Name: {ehrRecord.lastName}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                Username: {ehrRecord.username}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                Date of Birth:{" "}
-                {
-                  ehrRecord.dateOfBirth &&
-                    ehrRecord.dateOfBirth.join(
-                      "/"
-                    ) /* Assuming it's an array of [year, month, day] */
-                }
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                Address: {ehrRecord.address}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                Contact Number: {ehrRecord.contactNumber}
-              </Typography>
-              <Grid item xs={12}>
-                <Card>
-                  <Typography variant="h5" gutterBottom>
-                    Medical History
-                  </Typography>
-                  {ehrRecord.listOfMedicalHistoryRecords.map((record) => (
-                    <div key={record.medicalRecordId}>
-                      <Typography variant="body1" gutterBottom>
-                        Created By: {record.createdBy}
-                      </Typography>
-                      <Typography variant="body1" gutterBottom>
-                        Created Date:{" "}
-                        {
-                          record.createdDate &&
-                            record.createdDate.join(
-                              "/"
-                            ) /* Assuming it's an array of [year, month, day] */
-                        }
-                      </Typography>
-                      <Typography variant="body1" gutterBottom>
-                        Description: {record.description}
-                      </Typography>
-                      <Typography variant="body1" gutterBottom>
-                        Priority: {record.priorityEnum}
-                      </Typography>
-                      <Typography variant="body1" gutterBottom>
-                        Problem Type: {record.problemTypeEnum}
-                      </Typography>
-                      <Typography variant="body1" gutterBottom>
-                        Resolved Date:{" "}
-                        {
-                          record.resolvedDate &&
-                            record.resolvedDate.join(
-                              "/"
-                            ) /* Assuming it's an array of [year, month, day] */
-                        }
-                      </Typography>
-                      {/* Add more fields from the record as needed */}
-                    </div>
-                  ))}
-                </Card>
-              </Grid>
-            </Card>
-          </Grid>
-        </Grid>
+      <Header>
+        <Divider orientation="horizontal" sx={{ ml: -2, mr: 1 }} />
+
+        <MDBox mt={3} mb={3}>
+          <ProfileInfoCard
+            title="patient EHR information:"
+            info={{
+              firstName: ehrRecord.firstName,
+              lastName: ehrRecord.lastName,
+              username: ehrRecord.username,
+              birthDate: ehrRecord.dateOfBirth.split(" ")[0],
+              address: ehrRecord.address,
+              contactNumber: ehrRecord.contactNumber,
+            }}
+            shadow={false}
+          />
+        </MDBox>
+      </Header>
+
+      <MDBox position="relative" mb={5}>
+        <MDBox position="relative" minHeight="5rem" />
+        <Card
+          sx={{
+            position: "relative",
+            mt: -8,
+            mx: 3,
+            py: 2,
+            px: 2,
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            List of Problem Records:
+            {ehrRecord.listOfProblemRecords.map((problemRecord, index) => (
+              <ProfileInfoCard
+                key={index}
+                title={`Problem ${index + 1}`}
+                info={{
+                  createdBy: problemRecord.createdBy,
+                  createdDate: problemRecord.createdDate.join("/"),
+                  description: problemRecord.description,
+                  priority: problemRecord.priorityEnum,
+                  problemType: problemRecord.problemTypeEnum,
+                }}
+                shadow={false}
+              />
+            ))}
+          </Typography>
+        </Card>
+      </MDBox>
+
+      <MDBox position="relative" mb={5}>
+        <MDBox position="relative" minHeight="5rem" />
+        <Card
+          sx={{
+            position: "relative",
+            mt: -8,
+            mx: 3,
+            py: 2,
+            px: 2,
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            List of Medical History Records:
+          </Typography>
+          {ehrRecord.listOfMedicalHistoryRecords.map((medicalRecord, index) => (
+            <ProfileInfoCard
+              key={index}
+              title={`Medical History ${index + 1}`}
+              info={{
+                createdBy: medicalRecord.createdBy,
+                createdDate: medicalRecord.createdDate.join("/"),
+                description: medicalRecord.description,
+                priority: medicalRecord.priorityEnum,
+                problemType: medicalRecord.problemTypeEnum,
+                resolvedDate: medicalRecord.resolvedDate.join("/"),
+              }}
+              shadow={false}
+            />
+          ))}
+        </Card>
       </MDBox>
     </DashboardLayout>
   );
