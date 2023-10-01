@@ -36,6 +36,11 @@ export const staffApi = {
   getAllStaff() {
     return axiosFetch.get(`${REST_ENDPOINT}/staff/getAllStaff`);
   },
+  getStaffByStaffId(staffId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/staff/getStaffByUsername?staffId=${staffId}`
+    );
+  },
   getStaffByUsername(username) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/staff/getStaffByUsername?username=${username}`
@@ -66,7 +71,9 @@ export const staffApi = {
     return axiosFetch.put(`${REST_ENDPOINT}/staff/disableStaff/${username}`);
   },
   getStaffListByRole(role, unit) {
-    return axiosFetch.get(`${REST_ENDPOINT}/staff/getStaffByRole?role=${role}&unit=${unit}`);
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/staff/getStaffByRole?role=${role}&unit=${unit}`
+    );
   },
 };
 
@@ -80,9 +87,7 @@ export const departmentApi = {
 
 export const wardApi = {
   getAllWards(name) {
-    return axiosFetch.get(
-      `${REST_ENDPOINT}/ward/getAllWards?name=${name}`
-    );
+    return axiosFetch.get(`${REST_ENDPOINT}/ward/getAllWards?name=${name}`);
   },
 };
 
@@ -266,6 +271,22 @@ export const shiftPreferenceApi = {
   deleteShiftPreference(id) {
     return axiosFetch.delete(
       `${REST_ENDPOINT}/shiftPreference/deleteShiftPreference/${id}`
+    );
+  },
+};
+
+export const appointmentApi = {
+  viewAllAppointmentsByRange(
+    startDay,
+    startMonth,
+    startYear,
+    endDay,
+    endMonth,
+    endYear,
+    departmentName
+  ) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/appointment/viewAllAppointmentsByRange?startDay=${startDay}&startMonth=${startMonth}&startYear=${startYear}&endDay=${endDay}&endMonth=${endMonth}&endYear=${endYear}&departmentName=${departmentName}`
     );
   },
 };
