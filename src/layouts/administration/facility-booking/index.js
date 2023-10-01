@@ -97,6 +97,7 @@ function FacilityBooking() {
 			.createFacilityBooking(bookingData)
 			.then((response) => {
 				handleViewAvailability(selectedFacility)
+				fetchBookingData();
 				const booking = response.data;
 				console.log(booking);
 				setIsBookingModalOpen(false);
@@ -395,7 +396,7 @@ function FacilityBooking() {
 							color: "success",
 							icon: "notification",
 							title: "Successfully Deleted Facility!",
-							content: "Facility with facility Id: " + facilityBookingId + " deleted",
+							content: "Facility Booking with facilitybooking Id: " + facilityBookingId + " deleted",
 						})
 					);
 				})
@@ -703,7 +704,7 @@ function FacilityBooking() {
 										<Button onClick={() => setDeleteConfirmationOpen(false)} color="primary">
 											Cancel
 										</Button>
-										<Button onClick={() => handleConfirmDeleteBooking(bookingToDeleteId)} color="secondary">
+										<Button onClick={() => handleConfirmDeleteBooking(bookingToDeleteId)} color="primary">
 											Confirm
 										</Button>
 									</DialogActions>
