@@ -46,7 +46,6 @@ function FacilityManagement() {
     setSelectedInventoryItemForUpdate(inventoryItem);
     setAllocatedInventoryIdForUpdate(inventoryItem.allocatedInventoryId);
     setNewQuantity(inventoryItem.allocatedInventoryCurrentQuantity); // Initialize with the current quantity
-    setMinQuantity(inventoryItem.minimumQuantityBeforeRestock);
     setIsUpdateInventoryDialogOpen(true);
   };
 
@@ -56,78 +55,34 @@ function FacilityManagement() {
 
       const requestBody = {
         allocatedInventoryIdForUpdate,
-        newQuantity,
-        minQuantity
-      }
-      if (requestBody.newQuantity == "") {
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error Encountered",
-            content: "Quantity cannot be null",
-          })
-        );
-        return
-      }
-      if (requestBody.minQuantity == "") {
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error Encountered",
-            content: "Quantity cannot be null",
-          })
-        );
-        return
+        newQuantity
       }
 
       allocatedInventoryApi
         .updateAllocatedInventory(requestBody)
-        .then(() => {
-          fetchInventoryItems();
-          // const update = response.data;
-          // console.log(data);
+        .then((response => {
+
+          const update = response.data;
+          console.log(data);
 
           const updatedInventory = selectedFacilityInventory.map((item) => {
             if (item.allocatedInventoryId === allocatedInventoryIdForUpdate) {
               // Update the quantity with the new value
-              return { ...item, allocatedInventoryCurrentQuantity: newQuantity, minimumQuantityBeforeRestock: minQuantity };
+              return { ...item, allocatedInventoryCurrentQuantity: newQuantity };
             }
             return item;
           });
 
           setSelectedFacilityInventory(updatedInventory);
-          console.log("Updated: " + updatedInventory);
-
-          reduxDispatch(
-            displayMessage({
-              color: "success",
-              icon: "notification",
-              title: "Successfully Updated Inventory Item! ",
-              content: "Inventory Item with Id " + requestBody.allocatedInventoryIdForUpdate + " updated",
-            })
-          );
 
           setIsUpdateInventoryDialogOpen(false);
           setSelectedInventoryItemForUpdate(null);
           setAllocatedInventoryIdForUpdate(null);
           setNewQuantity(0);
-          setMinQuantity(0);
 
-          // fetchData();
-
-
-        }).catch((err) => {
-          reduxDispatch(
-            displayMessage({
-              color: "error",
-              icon: "notification",
-              title: "Error Encountered",
-              content: err.response.data,
-            })
-          );
-          console.log(err)
+          fetchData();
+        })).catch((error) => {
+          console.error("Error fetching data:", error);
         });
     }
   };
@@ -157,105 +112,52 @@ function FacilityManagement() {
       .then((response => {
         const items = response.data;
         setInventoryItems(items);
-
       })).catch((error) => {
         console.error("Error fetching data:", error);
       });
   };
 
   const addInventoryToFacility = async (inventoryItemId, quantity, minQuantity) => {
-    try {
-      const requestBody = {
-        inventoryItemId,
-        quantity,
-        minQuantity,
-        selectedFacilityId
-      }
 
-      console.log(requestBody);
-      // if (requestBody.quantity == "") {
-      //   reduxDispatch(
-      //     displayMessage({
-      //       color: "error",
-      //       icon: "notification",
-      //       title: "Error Encountered",
-      //       content: "Quantity cannot be null",
-      //     })
-      //   );
-      //   return
-      // }
-      // if (requestBody.minQuantity == "") {
-      //   reduxDispatch(
-      //     displayMessage({
-      //       color: "error",
-      //       icon: "notification",
-      //       title: "Error Encountered",
-      //       content: "Quantity cannot be null",
-      //     })
-      //   );
-      //   return
-      // }
-
-      allocatedInventoryApi
-        .createAllocatedInventory(requestBody)
-        .then(() => {
-          // const ai = response.data;
-          // console.log(ai)
-
-          const updatedFacilityInventory = [...facilityInventory]; // Make a copy
-          const existingItemIndex = updatedFacilityInventory.findIndex(
-            (item) => item.inventoryItemId === inventoryItemId
-          );
-
-          if (existingItemIndex !== -1) {
-            // Item already exists, update the quantity and minQuantity
-            updatedFacilityInventory[existingItemIndex].quantity += quantity;
-            updatedFacilityInventory[existingItemIndex].minQuantity += minQuantity;
-          } else {
-            // Item doesn't exist, add a new entry
-            updatedFacilityInventory.push({
-              inventoryItemId,
-              quantity,
-              minQuantity,
-            });
-          }
-
-          setFacilityInventory(...facilityInventory, updatedFacilityInventory)
-          fetchInventoryItems();
-          reduxDispatch(
-            displayMessage({
-              color: "success",
-              icon: "notification",
-              title: "Successfully Created Inventory Item!",
-              content: "Inventory Item created",
-            })
-          );
-
-        }).catch((err) => {
-          if (err.response.data.detail) {
-            reduxDispatch(
-              displayMessage({
-                color: "error",
-                icon: "notification",
-                title: "Error Encountered",
-                content: err.response.data.detail,
-              })
-            );
-          } else {
-            reduxDispatch(
-              displayMessage({
-                color: "error",
-                icon: "notification",
-                title: "Error Encountered",
-                content: err.response.data,
-              })
-            );
-          }
-          console.log(err.response.data.detail)
-        });
-    } catch (ex) {
-      console.log(ex);
+    const requestBody = {
+      inventoryItemId,
+      quantity,
+      minQuantity,
+      selectedFacilityId
     }
+
+    console.log(requestBody);
+
+    allocatedInventoryApi
+      .createAllocatedInventory(requestBody)
+      .then((response => {
+
+        const ai = response.data;
+        console.log(ai)
+
+        const updatedFacilityInventory = [...facilityInventory]; // Make a copy
+        const existingItemIndex = updatedFacilityInventory.findIndex(
+          (item) => item.inventoryItemId === inventoryItemId
+        );
+
+        if (existingItemIndex !== -1) {
+          // Item already exists, update the quantity and minQuantity
+          updatedFacilityInventory[existingItemIndex].quantity += quantity;
+          updatedFacilityInventory[existingItemIndex].minQuantity += minQuantity;
+        } else {
+          // Item doesn't exist, add a new entry
+          updatedFacilityInventory.push({
+            inventoryItemId,
+            quantity,
+            minQuantity,
+          });
+        }
+
+        setFacilityInventory(updatedFacilityInventory)
+      })).catch((error) => {
+        console.error("Error fetching data:", error);
+      });
+
   };
 
 
@@ -267,7 +169,6 @@ function FacilityManagement() {
 
     addInventoryToFacility(selectedInventoryItem.inventoryItemId, quantity, minQuantity, selectedFacilityId);
 
-    fetchInventoryItems();
     setIsAddInventoryDialogOpen(false);
 
     setSelectedInventoryItem("");
@@ -378,7 +279,7 @@ function FacilityManagement() {
           );
 
           setSelectedFacilityInventory(updatedInventory);
-          fetchInventoryItems();
+          fetchData();
 
           reduxDispatch(
             displayMessage({
@@ -1017,7 +918,7 @@ function FacilityManagement() {
       <Dialog
         open={isInventoryDialogOpen}
         onClose={handleCloseInventoryDialog}
-        maxWidth="lg"
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle>Facility Inventory</DialogTitle>
@@ -1051,9 +952,7 @@ function FacilityManagement() {
       >
         <DialogTitle>Add Inventory to Facility</DialogTitle>
         <DialogContent>
-          <FormControl fullWidth
-            margin="dense"
-          >
+          <FormControl fullWidth>
             <InputLabel>Select Inventory Item</InputLabel>
             <Select
               value={selectedInventoryItem}
@@ -1077,7 +976,6 @@ function FacilityManagement() {
             type="number"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            margin="dense"
           />
           <br />
           <TextField
@@ -1086,7 +984,6 @@ function FacilityManagement() {
             type="number"
             value={minQuantity}
             onChange={(e) => setMinQuantity(e.target.value)}
-            margin="dense"
           />
           {/* Display the cost of restock based on selectedInventoryItem and quantity */}
           {/* You can calculate and display the cost here */}
@@ -1116,16 +1013,6 @@ function FacilityManagement() {
                 type="number"
                 value={newQuantity}
                 onChange={(e) => setNewQuantity(e.target.value)}
-                margin="dense"
-              />
-
-              <TextField
-                fullWidth
-                label="Minimum Quantity"
-                type="number"
-                value={minQuantity}
-                onChange={(e) => setMinQuantity(e.target.value)}
-                margin="dense"
               />
             </div>
           )}
