@@ -4,7 +4,7 @@ import KanbanDraggable from "./KanbanDraggable";
 import "./kanbanStyles.css";
 import MDTypography from "components/MDTypography";
 
-function KanbanColumn({ title, appointments, id }) {
+function KanbanColumn({ title, appointments, id, replaceItemByIdWithUpdated }) {
   // console.log("in KanbanColumn");
   // console.log(title + " " + appointments + " " + id);
   // console.log(appointments);
@@ -24,6 +24,8 @@ function KanbanColumn({ title, appointments, id }) {
                 key={index}
                 index={index}
                 appointment={appointment}
+                replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+                columnName={title}
               />
             ))}
             {provided.placeholder}

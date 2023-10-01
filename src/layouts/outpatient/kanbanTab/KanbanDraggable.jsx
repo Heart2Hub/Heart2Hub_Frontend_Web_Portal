@@ -13,7 +13,12 @@ import MDTypography from "components/MDTypography";
 import AppointmentTicketModal from "./AppointmentTicketModal";
 import { useState } from "react";
 
-function KanbanDraggable({ appointment, index }) {
+function KanbanDraggable({
+  appointment,
+  index,
+  replaceItemByIdWithUpdated,
+  columnName,
+}) {
   const [openModal, setOpenModal] = useState(false);
 
   const handleCloseModal = () => {
@@ -75,6 +80,8 @@ function KanbanDraggable({ appointment, index }) {
         openModal={openModal}
         handleCloseModal={handleCloseModal}
         selectedAppointment={appointment}
+        replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+        columnName={columnName}
       />
     </>
   );

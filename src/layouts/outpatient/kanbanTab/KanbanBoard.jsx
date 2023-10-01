@@ -77,17 +77,46 @@ function KanbanBoard() {
 
   //Utility functions to find and remove items in array
   function findItemById(id, array) {
-    // console.log("item finding called");
-    // console.log(typeof Number(id));
-    // console.log(typeof array[0].appointmentId);
-    // console.log(array.find((item) => item.appointmentId === Number(id)));
     return array.find((item) => item.appointmentId === Number(id));
   }
 
   function removeItemById(id, array) {
-    // console.log("item removal called to remove " + id);
-    // console.log(array.filter((item) => item.appointmentId !== Number(id)));
     return array.filter((item) => item.appointmentId !== Number(id));
+  }
+
+  function replaceItemByIdWithUpdated(id, arrayName, newItem) {
+    let newColumnList = [];
+    let selectedColumnList;
+
+    if (arrayName === "Registration") {
+      selectedColumnList = JSON.parse(JSON.stringify(registration));
+    } else if (arrayName === "Triage") {
+      selectedColumnList = JSON.parse(JSON.stringify(triage));
+    } else if (arrayName === "Consultation") {
+      selectedColumnList = JSON.parse(JSON.stringify(consultation));
+    } else {
+      console.log("ERROR");
+      selectedColumnList = [];
+    }
+
+    selectedColumnList.map((item) => {
+      if (item.appointmentId === Number(id)) {
+        console.log("FOUND: " + Number(id));
+        newColumnList.push(newItem);
+      } else {
+        newColumnList.push(item);
+      }
+    });
+
+    if (arrayName === "Registration") {
+      setRegistration(newColumnList);
+    } else if (arrayName === "Triage") {
+      setTriage(newColumnList);
+    } else if (arrayName === "Consultation") {
+      setConsultation(newColumnList);
+    } else {
+      console.log("ERROR 2");
+    }
   }
 
   const getAppointmentsForToday = async () => {
@@ -119,47 +148,24 @@ function KanbanBoard() {
             title="Registration"
             appointments={registration}
             id={"1"}
+            replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
           />
-          <KanbanColumn title="Triage" appointments={triage} id={"2"} />
+          <KanbanColumn
+            title="Triage"
+            appointments={triage}
+            id={"2"}
+            replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+          />
           <KanbanColumn
             title="Consultation"
             appointments={consultation}
             id={"3"}
+            replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
           />
         </div>
       </DragDropContext>
     </>
   );
-  // return (
-  //   <>
-  //     <DragDropContext onDragEnd={handleDragEnd}>
-  //       {/* <h2 className="kanban-title">KANBAN BOARD</h2> */}
-  //       <div className="kanban-board">
-  //         <KanbanColumn
-  //           title="Registration"
-  //           appointments={registration}
-  //           id={"1"}
-  //         />
-  //         <KanbanColumn title="Triage" appointments={triage} id={"2"} />
-  //         <KanbanColumn
-  //           title="Consultation"
-  //           appointments={consultation}
-  //           id={"3"}
-  //         />
-  //         <KanbanColumn
-  //           title="Consultation"
-  //           appointments={consultation}
-  //           id={"3"}
-  //         />
-  //         <KanbanColumn
-  //           title="Consultation"
-  //           appointments={consultation}
-  //           id={"3"}
-  //         />
-  //       </div>
-  //     </DragDropContext>
-  //   </>
-  // );
 }
 
 export default KanbanBoard;

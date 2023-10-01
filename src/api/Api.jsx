@@ -289,4 +289,14 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/viewAllAppointmentsByRange?startDay=${startDay}&startMonth=${startMonth}&startYear=${startYear}&endDay=${endDay}&endMonth=${endMonth}&endYear=${endYear}&departmentName=${departmentName}`
     );
   },
+  updateAppointmentArrival(appointmentId, arrivalStatus) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/updateAppointmentArrival?appointmentId=${appointmentId}&arrivalStatus=${arrivalStatus}`
+    );
+  },
+  updateAppointmentComments(appointmentId, comments) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/updateAppointmentComments?appointmentId=${appointmentId}&comments=${comments}`
+    );
+  },
 };
