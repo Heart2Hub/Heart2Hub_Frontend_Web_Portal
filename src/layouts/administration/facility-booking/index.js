@@ -49,6 +49,8 @@ function FacilityBooking() {
 	const [comments, setComments] = useState("");
 	const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
 	const [bookingToDeleteId, setBookingToDeleteId] = useState(null);
+	const [bookingToDeleteStartDate, setBookingToDeleteStartDate] = useState(null);
+
 
 	const handleTabChange = (event, newValue) => {
 		setActiveTab(newValue);
@@ -61,64 +63,84 @@ function FacilityBooking() {
 
 	const handleBookingConfirmation = () => {
 
+		try {
+			console.log(selectedSlot.start)
+			const date1 = new Date(selectedSlot.start);
+			const date2 = new Date(selectedSlot.end);
 
-		console.log(selectedSlot.start)
-		const date1 = new Date(selectedSlot.start);
-		const date2 = new Date(selectedSlot.end);
+			const options = {
+				day: '2-digit',
+				month: '2-digit',
+				year: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+				second: '2-digit',
+				hour12: false, // Use 24-hour format
+			};
 
-		const options = {
-			day: '2-digit',
-			month: '2-digit',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit',
-			second: '2-digit',
-			hour12: false, // Use 24-hour format
-		};
+			const startDateObj = date1.toLocaleString('en-GB', options);
+			const endDateObj = date2.toLocaleString('en-GB', options);
 
-		const startDateObj = date1.toLocaleString('en-GB', options);
-		const endDateObj = date2.toLocaleString('en-GB', options);
+			console.log("hello there");
+			// console.log(startDateObj);
+			// console.log(endDateObj);
+			const currentDate = new Date();
+			console.log(date1);
+			console.log(currentDate);
+			console.log(date1 < currentDate);
 
-		console.log("hello there");
-		console.log(startDateObj);
-		console.log(endDateObj);
-
-		const bookingData = {
-			startDateTime: startDateObj,
-			endDateTime: endDateObj,
-			comments: comments,
-			staffUsername: staff.username,
-			facilityId: selectedFacility.facilityId,
-		};
-
-		console.log(bookingData);
-
-		facilityApi
-			.createFacilityBooking(bookingData)
-			.then((response) => {
-				handleViewAvailability(selectedFacility)
-				const booking = response.data;
-				console.log(booking);
+			if (date1 < currentDate) {
 				setIsBookingModalOpen(false);
-				reduxDispatch(
-					displayMessage({
-						color: "success",
-						icon: "notification",
-						title: "Successfully Created Booking!",
-					})
-				);
-			}).catch((error) => {
 				reduxDispatch(
 					displayMessage({
 						color: "error",
 						icon: "notification",
 						title: "Error Encountered",
-						content: error.response.data,
+						content: "Booking cannot be done for past date",
 					})
 				);
-				console.error("Error fetching data:", error);
-			});
+				return
+			}
 
+			const bookingData = {
+				startDateTime: startDateObj,
+				endDateTime: endDateObj,
+				comments: comments,
+				staffUsername: staff.username,
+				facilityId: selectedFacility.facilityId,
+			};
+
+			console.log(bookingData);
+
+			facilityApi
+				.createFacilityBooking(bookingData)
+				.then((response) => {
+					handleViewAvailability(selectedFacility)
+					fetchBookingData();
+					const booking = response.data;
+					console.log(booking);
+					setIsBookingModalOpen(false);
+					reduxDispatch(
+						displayMessage({
+							color: "success",
+							icon: "notification",
+							title: "Successfully Created Booking!",
+						})
+					);
+				}).catch((error) => {
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Error Encountered",
+							content: error.response.data,
+						})
+					);
+					console.error("Error fetching data:", error);
+				});
+		} catch (ex) {
+			console.log(ex);
+		}
 	};
 
 	const handleCloseBookingModal = () => {
@@ -243,7 +265,7 @@ function FacilityBooking() {
 					<MDBox>
 						<IconButton
 							color="secondary"
-							onClick={() => handleDeleteFacility(row.original.facilityBookingId)}
+							onClick={() => handleDeleteFacility(row.original.facilityBookingId, row.original.startDateTime)}
 						>
 							<Icon>delete</Icon>
 						</IconButton>
@@ -269,7 +291,7 @@ function FacilityBooking() {
 					<MDBox>
 						<IconButton
 							color="secondary"
-							onClick={() => handleDeleteFacility(row.original.facilityBookingId)}
+							onClick={() => handleDeleteFacility(row.original.facilityBookingId, row.original.startDateTime)}
 						>
 							<Icon>delete</Icon>
 						</IconButton>
@@ -357,32 +379,91 @@ function FacilityBooking() {
 		}));
 	};
 
-	const handleDeleteBooking = async (id) => {
-		facilityApi
-			.deleteFacilityBooking(id)
-			.then((response) => {
-				const updatedEvents = calendarEvents.filter((event) => event.facilityBookingId !== id);
-				setCalendarEvents(updatedEvents);
-				setIsBookingDetailsOpen(false);
+	const handleDeleteBooking = async (id, startDateTime) => {
+		try {
+			console.log(startDateTime);
+			const currentDate = new Date();
+			// const bookingDate = new Date(startDateTime);
+			console.log(currentDate);
+			// console.log(bookingDate)
+			console.log(startDateTime < currentDate);
+			if (startDateTime < currentDate) {
 				reduxDispatch(
 					displayMessage({
-						color: "success",
+						color: "error",
 						icon: "notification",
-						title: "Successfully Deleted Booking!",
+						title: "Error Encountered",
+						content: "Deletion cannot be done for past date",
 					})
 				);
-			}).catch((error) => {
-				console.error("Error fetching data:", error);
-			});
+				return
+			}
+			facilityApi
+				.deleteFacilityBooking(id)
+				.then((response) => {
+					const updatedEvents = calendarEvents.filter((event) => event.facilityBookingId !== id);
+					setCalendarEvents(updatedEvents);
+					setIsBookingDetailsOpen(false);
+					reduxDispatch(
+						displayMessage({
+							color: "success",
+							icon: "notification",
+							title: "Successfully Deleted Booking!",
+						})
+					);
+				}).catch((error) => {
+					console.error("Error fetching data:", error);
+				});
+		} catch (ex) {
+			console.error(ex);
+		}
 	};
 
-	const handleDeleteFacility = (facilityBookingId) => {
+	const handleDeleteFacility = (facilityBookingId, startDateTime) => {
 		setBookingToDeleteId(facilityBookingId);
+		setBookingToDeleteStartDate(startDateTime);
 		setDeleteConfirmationOpen(true);
 	};
 
-	const handleConfirmDeleteBooking = (facilityBookingId) => {
+	const handleConfirmDeleteBooking = (facilityBookingId, startDateTime) => {
 		try {
+			console.log(startDateTime);
+			const currentDate = new Date();
+			// const bookingDate = new Date(startDateTime);
+			console.log(currentDate);
+			// console.log(bookingDate);
+			const dateComponents = startDateTime.match(/(\w+) (\d+)(?:st|nd|rd|th)? (\d+), (\d+):(\d+):(\d+) ([APap][Mm])/);
+
+			const [, month, day, year, hours, minutes, seconds, ampm] = dateComponents;
+
+			// Convert month name to its numerical representation (January is 0, February is 1, etc.)
+			const monthIndex = new Date(Date.parse(`${month} 1, 2000`)).getMonth();
+
+			// Adjust hours for 12-hour format
+			let parsedHours = parseInt(hours, 10);
+			if (ampm.toLowerCase() === 'pm' && parsedHours !== 12) {
+				parsedHours += 12;
+			} else if (ampm.toLowerCase() === 'am' && parsedHours === 12) {
+				parsedHours = 0;
+			}
+
+			// Create the Date object
+			const parsedDate = new Date(year, monthIndex, day, parsedHours, minutes, seconds);
+
+			console.log(parsedDate);
+
+			console.log(parsedDate < currentDate);
+			if (parsedDate < currentDate) {
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Error Encountered",
+						content: "Deletion cannot be done for past date",
+					})
+				);
+				return
+			}
 			facilityApi
 				.deleteFacilityBooking(facilityBookingId)
 				.then(() => {
@@ -395,7 +476,7 @@ function FacilityBooking() {
 							color: "success",
 							icon: "notification",
 							title: "Successfully Deleted Facility!",
-							content: "Facility with facility Id: " + facilityBookingId + " deleted",
+							content: "Facility Booking with facilitybooking Id: " + facilityBookingId + " deleted",
 						})
 					);
 				})
@@ -555,6 +636,16 @@ function FacilityBooking() {
 		selectable: true,
 		events: calendarEvents,
 		defaultView: 'week',
+		views: {
+			week: true,
+			day: true,
+			agenda: true,
+		},
+		header: {
+			left: 'prev,next today',
+			center: 'title',
+			right: 'month,week,day,agenda', // Use default view names
+		},
 		onSelectEvent: handleEventClick,
 		onEventResize: handleEventResize, // Add this callback for resizing
 		onEventDrop: handleEventDrop,     // Add this callback for dragging
@@ -649,7 +740,7 @@ function FacilityBooking() {
 													<Button
 														variant="contained"
 														style={{ backgroundColor: 'red', color: 'white' }}
-														onClick={() => handleDeleteBooking(selectedBooking.facilityBookingId)}													>
+														onClick={() => handleDeleteBooking(selectedBooking.facilityBookingId, selectedBooking.start)}													>
 														Delete Booking
 													</Button>
 												)}
@@ -703,7 +794,7 @@ function FacilityBooking() {
 										<Button onClick={() => setDeleteConfirmationOpen(false)} color="primary">
 											Cancel
 										</Button>
-										<Button onClick={() => handleConfirmDeleteBooking(bookingToDeleteId)} color="secondary">
+										<Button onClick={() => handleConfirmDeleteBooking(bookingToDeleteId, bookingToDeleteStartDate)} color="primary">
 											Confirm
 										</Button>
 									</DialogActions>

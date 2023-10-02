@@ -24,13 +24,16 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { patientApi, ehrApi } from "api/Api";
 import { useDispatch } from "react-redux";
 import { displayMessage } from "../../store/slices/snackbarSlice";
 import { Label } from "@mui/icons-material";
+import { setEHRRecord } from '../../store/slices/ehrSlice';
 
 function EHR() {
+  const navigate = useNavigate(); 
   const MaskedNRIC = ({ value }) => {
     // Mask the NRIC to display only the first and last characters
     const maskedValue = value ? value.charAt(0) + 'XXXX' + value.slice(-4) : '';
@@ -197,8 +200,16 @@ function EHR() {
             );
             setIsModalOpen(false);
             // ROUTE HERE
+            response.data = {
+              ...response.data,
+              username: formData.username,
+              profilePicture: formData.profilePicture
+            }
+            reduxDispatch(setEHRRecord(response));
+            navigate('/ehr/ehrRecord');
           })
           .catch((err) => {
+            console.log(err);
             // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with redux.
             if (err.response.data.detail) {
               reduxDispatch(

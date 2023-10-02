@@ -11,6 +11,7 @@ import Icon from "@mui/material/Icon";
 import Outpatient from "layouts/outpatient";
 import Inpatient from "layouts/inpatient";
 import EHR from "layouts/EHR";
+import EHRRecord from "layouts/EHR/record";
 //import EHRRecord from "layouts/ehr/record";
 import Administration from "layouts/administration";
 import Manpower from "layouts/manpower";
@@ -118,13 +119,13 @@ const routes = [
       </ProtectedRoute>
     ),
   },
-  // {
-  //   name: "EHR",
-  //   key: "ehr",
-  //   icon: <Icon fontSize="small">receipt_long</Icon>,
-  //   route: "/ehr/record",
-  //   component: <EHRRecord />,
-  // },
+  {
+    name: "EHR",
+    key: "ehr",
+    icon: <Icon fontSize="small">receipt_long</Icon>,
+    route: "/ehr/ehrRecord",
+    component: <EHRRecord />,
+  },
   {
     type: "collapse",
     name: "Administration",
@@ -173,7 +174,7 @@ const routes = [
     route: "/administration/facility-booking",
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
       >
         <FacilityBooking />

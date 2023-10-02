@@ -3,13 +3,22 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import SimpleBlogCard from "examples/Cards/BlogCards/SimpleBlogCard";
 import React from "react";
+import { selectStaff } from "store/slices/staffSlice";
+
 
 // @mui material components
 import Grid from "@mui/material/Grid";
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
+import { useSelector } from "react-redux";
 
 function Administration() {
+  const staff = useSelector(selectStaff);
+  const staffRole = staff.staffRoleEnum;
+  const ADMIN_ROLE = 'ADMIN';
+
+  const isAdmin = staffRole === ADMIN_ROLE;
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -43,7 +52,7 @@ function Administration() {
               />{" "}
             </MDBox>
           </Grid>
-          <Grid item xs={12} md={6} lg={3}>
+          {isAdmin && (<Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <SimpleBlogCard
                 image="https://bit.ly/3Hlw1MQ"
@@ -56,7 +65,7 @@ function Administration() {
                 }}
               />{" "}
             </MDBox>
-          </Grid>
+          </Grid>)}
           <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <SimpleBlogCard
