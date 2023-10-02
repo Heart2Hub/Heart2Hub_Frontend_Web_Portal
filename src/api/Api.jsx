@@ -137,7 +137,64 @@ export const facilityApi = {
       requestBody
     );
   },
+  findAllFacility() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facility/findAllFacility`
+    );
+  },
+  findAllBookingsOfAFacility(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facilityBooking/getAllBookingsOfAFacility/${id}`
+    );
+  },
+  deleteFacilityBooking(id) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/facilityBooking/deleteFacilityBooking/${id}`
+    )
+  },
+  createFacilityBooking(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/facilityBooking/createFacilityBooking`,
+      requestBody
+    )
+  },
+  getAllBookingsOfAStaff(username) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facilityBooking/getAllBookingsOfAStaff/${username}`
+    )
+  },
+  updateFacilityBooking(requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/facilityBooking/updateFacilityBooking`, requestBody
+    )
+  },
+  getAllConsumableInventory() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/consumableEquipment/getAllConsumableEquipment`
+    )
+  }
 };
+
+export const allocatedInventoryApi ={
+  deleteAllocatedInventory(id) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/allocatedInventory/deleteAllocatedInventory/${id}`
+    )
+  },
+  updateAllocatedInventory(requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/allocatedInventory/updateAllocatedInventory`,
+      requestBody
+    )
+  },
+  createAllocatedInventory(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/allocatedInventory/createAllocatedInventory`,
+      requestBody
+    )
+  }
+
+}
 
 export const patientApi = {
   getAllPatientsWithElectronicHealthRecordSummaryByName(name) {
@@ -145,7 +202,17 @@ export const patientApi = {
       `${REST_ENDPOINT}/patient/getAllPatientsWithElectronicHealthRecordSummaryByName?name=${name}`
     );
   },
-};
+  getAllPatientUsername() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/patient/findAllPatientsUsername`
+    );
+  },
+  getAllPatients() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/electronicHealthRecord/getAllElectronicHealthRecords`
+    );
+  }
+}; 
 
 export const ehrApi = {
   getElectronicHealthRecordByIdAndDateOfBirth(
@@ -315,4 +382,16 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/assignAppointmentToStaff?appointmentId=${appointmentId}&staffId=${staffId}`
     );
   },
+  createNewAppointment(
+    description,
+    actualDateTime,
+    bookedDateTime,
+    priority,
+    patientUsername,
+    departmentName
+  ) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
+    );
+  }
 };

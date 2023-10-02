@@ -6,7 +6,12 @@ import { useSelector } from "react-redux";
 import { selectStaff } from "../../../store/slices/staffSlice";
 import { appointmentApi, staffApi } from "../../../api/Api";
 import { useEffect } from "react";
+import MDButton from "components/MDButton";
+
+import { Icon, Box } from "@mui/material";
 import "./kanbanStyles.css";
+import CreateAppointmentModal from "./CreateAppointmentModal";
+
 import StaffListSidePanel from "./StaffListSidePanel";
 import MDBox from "components/MDBox";
 import { useDispatch } from "react-redux";
@@ -34,6 +39,17 @@ function KanbanBoard() {
   const [registration, setRegistration] = useState([]);
   const [triage, setTriage] = useState([]);
   const [consultation, setConsultation] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Function to open the modal
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  // Function to close the modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
   const handleSelectStaffToFilter = (staffId) => {
     setSelectStaffToFilter(staffId);
@@ -129,10 +145,9 @@ function KanbanBoard() {
           color: "warning",
           icon: "notification",
           title: "Error",
-          content: error.response.data,
+          content: error.data,
         })
       );
-      console.log(error);
       return;
     }
 
@@ -221,12 +236,13 @@ function KanbanBoard() {
           dialogResolver.current = null; // Clear it out after using
         }
       } catch (error) {
+        //perform error handling
         reduxDispatch(
           displayMessage({
             color: "warning",
             icon: "notification",
             title: "Error",
-            content: error.response.data,
+            content: error.data,
           })
         );
       }
@@ -244,7 +260,7 @@ function KanbanBoard() {
       displayMessage({
         color: "info",
         icon: "notification",
-        title: "Info",
+        title: "Error",
         content: "No action was taken",
       })
     );
@@ -353,6 +369,10 @@ function KanbanBoard() {
     setListOfWorkingStaff(response.data);
   };
 
+  const handleAppointmentCreated = () => {
+    getAppointmentsForToday();
+  };
+
   useEffect(() => {
     getAppointmentsForToday();
     getStaffCurrentlyWorking();
@@ -360,6 +380,22 @@ function KanbanBoard() {
 
   return (
     <>
+      <Box display="flex" justifyContent="left" alignItems="left" mb={2}>
+        <MDButton
+          Button
+          variant="contained"
+          color="primary"
+          onClick={openModal}
+        >
+          Create New Appointment
+          <Icon>add</Icon>
+        </MDButton>
+      </Box>
+      <CreateAppointmentModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onAppointmentCreated={handleAppointmentCreated}
+      />
       <MDBox sx={{ display: "flex", flexDirection: "row", width: "100%" }}>
         <StaffListSidePanel
           handleSelectStaffToFilter={handleSelectStaffToFilter}
