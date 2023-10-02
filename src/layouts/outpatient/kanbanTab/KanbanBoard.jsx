@@ -54,19 +54,17 @@ function KanbanBoard() {
     //if same source and destination do nothing
     if (source.droppableId === destination.droppableId) return;
 
-    //if from registration, check that patient has arrived, else return do nth
-    if (source.droppableId === "1") {
-      if (!appointment.arrived) {
-        reduxDispatch(
-          displayMessage({
-            color: "warning",
-            icon: "notification",
-            title: "Error",
-            content: "Please check that patient has arrived first!",
-          })
-        );
-        return;
-      }
+    //from any swimlane check that patient has arrived, else return do nth
+    if (!appointment.arrived) {
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error",
+          content: "Please check that patient has arrived first!",
+        })
+      );
+      return;
     }
 
     //ticket should not flow back to the registration swimlane
@@ -79,16 +77,23 @@ function KanbanBoard() {
           content: "Cannot return to Registration",
         })
       );
+      return;
     }
 
     //=======================   ADD ASSIGNED LOGIC HERE =================
     const assignAppointment = await showAssignAppointmentDialog(appointment);
     if (!assignAppointment) {
       setSelectedAppointmentToAssign(null);
-      return; // Exit the function if the user didn't confirm
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error",
+          content: "No Assignment was performed",
+        })
+      );
+      return;
     }
-
-    //=========================================================================
 
     //========================== Updating Backend ========================
     let destinationSwimlane = "";
@@ -100,6 +105,14 @@ function KanbanBoard() {
       destinationSwimlane = "Consultation";
     } else {
       console.log("NO DESTINATION MATCH FOR " + destination.droppableId);
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error",
+          content: "Invalid Swimlane!",
+        })
+      );
     }
 
     let updatedAppointment;
@@ -119,7 +132,6 @@ function KanbanBoard() {
           content: error.data,
         })
       );
-      console.log("SOMETHING WENT WRONG");
       console.log(error);
       return;
     }
@@ -137,6 +149,14 @@ function KanbanBoard() {
       // console.log("remove from consultation");
     } else {
       console.log("NO SOURCE MATCH FOR " + source.droppableId);
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error",
+          content: "Invalid Swimlane",
+        })
+      );
     }
 
     //ADD ITEM
@@ -149,6 +169,14 @@ function KanbanBoard() {
       setConsultation([{ ...updatedAppointment }, ...consultation]);
     } else {
       console.log("NO DESTINATION MATCH FOR " + destination.droppableId);
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error",
+          content: "Invalid Swimlane",
+        })
+      );
     }
 
     reduxDispatch(
@@ -166,7 +194,6 @@ function KanbanBoard() {
   const dialogResolver = useRef(null); // This will hold the resolve function
 
   const showAssignAppointmentDialog = (appointment) => {
-    console.log("SHOW CONFIRMATION IS BEING CALLED");
     return new Promise((resolve) => {
       // Store the resolve function in our ref
       dialogResolver.current = resolve;
@@ -176,15 +203,30 @@ function KanbanBoard() {
   };
 
   const handleConfirm = async (selectedStaffId) => {
+    console.log("CALLING CONFIRM ASSIGN");
+    console.log(selectedStaffId);
     if (dialogResolver.current) {
       try {
         //send to BE to assign staff
+        console.log(selectedAppointmentToAssign);
         if (selectedAppointmentToAssign !== null) {
           const response = await appointmentApi.assignAppointmentToStaff(
             selectedAppointmentToAssign.appointmentId,
             selectedStaffId
           );
-          console.log(response);
+
+          const updatedAssignment = response.data;
+          console.log(updatedAssignment);
+          // console.log(columnName);
+
+          console.log("Need to change appointment with new one");
+          // replaceItemByIdWithUpdated(
+          //   updatedAssignment.appointmentId,
+          //   columnName,
+          //   updatedAssignment
+          // );
+
+          console.log("successfully updated swimlane");
 
           //reset
           setSelectedAppointmentToAssign(null);
@@ -194,8 +236,14 @@ function KanbanBoard() {
         }
       } catch (error) {
         //perform error handling
-
-        console.log(error);
+        reduxDispatch(
+          displayMessage({
+            color: "warning",
+            icon: "notification",
+            title: "Error",
+            content: error.data,
+          })
+        );
       }
     }
     setDialogOpen(false);
@@ -207,8 +255,25 @@ function KanbanBoard() {
       dialogResolver.current = null; // Clear it out after using
     }
 
+    reduxDispatch(
+      displayMessage({
+        color: "info",
+        icon: "notification",
+        title: "Error",
+        content: "No action was taken",
+      })
+    );
+
     setSelectedAppointmentToAssign(null);
     setDialogOpen(false);
+  };
+
+  //force a refresh for modal assigning
+  const forceRefresh = () => {
+    setLoading(true);
+    getAppointmentsForToday();
+    getStaffCurrentlyWorking();
+    setLoading(false);
   };
 
   //Utility functions to find and remove items in array
@@ -326,6 +391,7 @@ function KanbanBoard() {
               id={"1"}
               replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
               listOfWorkingStaff={listOfWorkingStaff}
+              forceRefresh={forceRefresh}
             />
             <KanbanColumn
               title="Triage"
@@ -333,6 +399,7 @@ function KanbanBoard() {
               id={"2"}
               replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
               listOfWorkingStaff={listOfWorkingStaff}
+              forceRefresh={forceRefresh}
             />
             <KanbanColumn
               title="Consultation"
@@ -340,6 +407,7 @@ function KanbanBoard() {
               id={"3"}
               replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
               listOfWorkingStaff={listOfWorkingStaff}
+              forceRefresh={forceRefresh}
             />
           </div>
         </DragDropContext>

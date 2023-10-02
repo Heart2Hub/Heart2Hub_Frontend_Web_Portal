@@ -10,6 +10,7 @@ import {
   Select,
 } from "@mui/material";
 import React, { useState } from "react";
+// import { useEffect } from "react";
 
 function AssignAppointmentDialog({
   open,
@@ -48,7 +49,6 @@ function AssignAppointmentDialog({
     }
   };
 
-  console.log(selectedAppointmentToAssign);
   return (
     <>
       <Dialog open={open} onClose={onClose}>
@@ -62,7 +62,7 @@ function AssignAppointmentDialog({
               labelId="demo-simple-select-label"
               id="demo-simple-select"
               value={selectedStaff}
-              label="Staff"
+              label="Select Staff"
               onChange={handleChange}
               sx={{ height: "40px" }}
             >

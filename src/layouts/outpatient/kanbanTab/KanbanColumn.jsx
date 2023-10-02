@@ -2,7 +2,6 @@ import React from "react";
 import { Droppable } from "@hello-pangea/dnd";
 import KanbanDraggable from "./KanbanDraggable";
 import "./kanbanStyles.css";
-import MDTypography from "components/MDTypography";
 
 function KanbanColumn({
   title,
@@ -10,6 +9,7 @@ function KanbanColumn({
   id,
   replaceItemByIdWithUpdated,
   listOfWorkingStaff,
+  forceRefresh,
 }) {
   return (
     <div className="column">
@@ -29,6 +29,7 @@ function KanbanColumn({
                 replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
                 columnName={title}
                 listOfWorkingStaff={listOfWorkingStaff}
+                forceRefresh={forceRefresh}
               />
             ))}
             {provided.placeholder}

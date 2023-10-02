@@ -17,6 +17,7 @@ import { displayMessage } from "store/slices/snackbarSlice";
 import { useDispatch } from "react-redux";
 import { appointmentApi } from "../../../api/Api";
 import MDButton from "components/MDButton";
+import AssignAppointmentDialog from "./AssignAppointmentDialog";
 
 const style = {
   position: "absolute",
@@ -38,6 +39,7 @@ function AppointmentTicketModal({
   replaceItemByIdWithUpdated,
   columnName,
   listOfWorkingStaff,
+  forceRefresh,
 }) {
   const [assignedStaff, setAssignedStaff] = useState(null);
   const [facilityLocation, setFacilityLocation] = useState(null);
@@ -46,6 +48,9 @@ function AppointmentTicketModal({
   );
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  //for assigning appointment to staff in the AppointmentTicketModal
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const reduxDispatch = useDispatch();
 
   // console.log(selectedAppointment);
@@ -79,6 +84,7 @@ function AppointmentTicketModal({
     setAssignedStaff(response.data);
   };
 
+  //TODO this is bugged for other swimlanes except registration
   const handleUpdateAppointmentArrival = async () => {
     //set loading true
     setLoading(true);
@@ -89,12 +95,11 @@ function AppointmentTicketModal({
         !selectedAppointment.arrived
       );
       let updatedAppointment = response.data;
-      console.log(updatedAppointment);
 
       //update the old appt
       replaceItemByIdWithUpdated(
         updatedAppointment.appointmentId,
-        "Registration",
+        columnName,
         updatedAppointment
       );
 
@@ -106,15 +111,13 @@ function AppointmentTicketModal({
           content: "Patient's Arrival Status is updated",
         })
       );
-    } catch (ex) {
-      //handle error message and success message display
-      console.log(ex);
+    } catch (error) {
       reduxDispatch(
         displayMessage({
           color: "error",
           icon: "notification",
           title: "Update Failed!",
-          content: ex,
+          content: error.data,
         })
       );
     }
@@ -162,6 +165,75 @@ function AppointmentTicketModal({
     setLoading(false);
   };
 
+  const handleOpenAssignDialog = () => {
+    setIsDialogOpen(true);
+  };
+
+  //has its own set of logic for assignAppointmentDialog to not clash with the drag and drop version
+  const handleConfirmAssignDialog = async (selectedStaffId) => {
+    console.log("CALLING CONFIRM ASSIGN");
+    console.log(selectedStaffId);
+    try {
+      //send to BE to assign staff
+      console.log(selectedAppointment);
+      const response = await appointmentApi.assignAppointmentToStaff(
+        selectedAppointment.appointmentId,
+        selectedStaffId
+      );
+
+      const updatedAssignment = response.data;
+      console.log(updatedAssignment);
+      // console.log(columnName);
+
+      // console.log("Need to change appointment with new one");
+      // replaceItemByIdWithUpdated(
+      //   updatedAssignment.appointmentId,
+      //   columnName,
+      //   updatedAssignment
+      // );
+
+      //force a rerender instead
+      forceRefresh();
+
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Success",
+          content: "Appointment has been updated successfully!!",
+        })
+      );
+
+      handleCloseModal();
+
+      console.log("successfully updated swimlane");
+    } catch (error) {
+      //perform error handling
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error",
+          content: error.data,
+        })
+      );
+    }
+
+    setIsDialogOpen(false);
+  };
+
+  const handleCloseAssignDialog = () => {
+    reduxDispatch(
+      displayMessage({
+        color: "info",
+        icon: "notification",
+        title: "Error",
+        content: "No action was taken",
+      })
+    );
+    setIsDialogOpen(false);
+  };
+
   useEffect(() => {
     if (selectedAppointment.currentAssignedStaffId !== null) {
       getAssignedStaffName(selectedAppointment.currentAssignedStaffId);
@@ -172,7 +244,7 @@ function AppointmentTicketModal({
       );
     }
     setEditableComments(selectedAppointment.comments);
-  }, [selectedAppointment.comments, listOfWorkingStaff]);
+  }, [selectedAppointment, listOfWorkingStaff]);
 
   return (
     <>
@@ -200,7 +272,7 @@ function AppointmentTicketModal({
                 >
                   HH-{selectedAppointment.appointmentId}:{" "}
                   {selectedAppointment.firstName} {selectedAppointment.lastName}{" "}
-                  ({calculateAge(selectedAppointment.dateOfBirth)}
+                  ({calculateAge(selectedAppointment?.dateOfBirth)}
                   {selectedAppointment.sex === "Male" ? "M" : "F"})
                 </MDTypography>
                 <MDAvatar
@@ -240,7 +312,9 @@ function AppointmentTicketModal({
                 <ListItem>
                   <ListItemText primary="Assigned To:" secondary={""} />
                 </ListItem>
-                <ListItem>
+                <ListItem
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <MDTypography variant="h6" gutterBottom>
                     {assignedStaff === null
                       ? "No Staff Assigned"
@@ -251,6 +325,16 @@ function AppointmentTicketModal({
                         assignedStaff.staffRoleEnum +
                         ")"}
                   </MDTypography>
+                  <MDButton
+                    disabled={loading}
+                    onClick={handleOpenAssignDialog}
+                    variant="gradient"
+                    color="primary"
+                  >
+                    {selectedAppointment.currentAssignedStaffId === null
+                      ? "Assign"
+                      : "Reassign"}
+                  </MDButton>
                 </ListItem>
                 <ListItem>
                   <ListItemText primary="Priority:" secondary={""} />
@@ -282,15 +366,13 @@ function AppointmentTicketModal({
                       label={selectedAppointment.arrived ? "Yes" : "No"}
                     />
                   </MDTypography>
-                  {columnName === "Registration" && (
-                    <ArrivalButton
-                      selectedAppointment={selectedAppointment}
-                      handleUpdateAppointmentArrival={
-                        handleUpdateAppointmentArrival
-                      }
-                      disableButton={loading}
-                    />
-                  )}
+                  <ArrivalButton
+                    selectedAppointment={selectedAppointment}
+                    handleUpdateAppointmentArrival={
+                      handleUpdateAppointmentArrival
+                    }
+                    disableButton={loading}
+                  />
                 </ListItem>
                 <ListItem sx={{ marginTop: "10px" }}>
                   <MDTypography variant="h5" gutterBottom>
@@ -344,6 +426,8 @@ function AppointmentTicketModal({
                   <MDButton
                     disabled={!commentsTouched || loading}
                     onClick={handleUpdateComments}
+                    variant="gradient"
+                    color="primary"
                   >
                     Save Comments
                   </MDButton>
@@ -353,6 +437,13 @@ function AppointmentTicketModal({
           )}
         </Box>
       </Modal>
+      <AssignAppointmentDialog
+        open={isDialogOpen}
+        onConfirm={handleConfirmAssignDialog}
+        onClose={handleCloseAssignDialog}
+        listOfWorkingStaff={listOfWorkingStaff}
+        selectedAppointmentToAssign={selectedAppointment}
+      />
     </>
   );
 }

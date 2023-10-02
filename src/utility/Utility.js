@@ -21,7 +21,7 @@ export const parseDateFromYYYYMMDD = (dateString) => {
 };
 
 export const parseDateFromLocalDateTime = (localDateTime) => {
-  if (localDateTime.length < 6) {
+  if (localDateTime !== null && localDateTime.length < 6) {
     return new Date(localDateTime[0], localDateTime[1] - 1, localDateTime[2]);
   }
   return new Date(
@@ -54,6 +54,10 @@ export const maskNric = (nric) => {
 };
 
 export function calculateAge(dateOfBirth) {
+  console.log(dateOfBirth);
+  if (dateOfBirth === undefined) {
+    return;
+  }
   let birthday = parseDateFromLocalDateTime(dateOfBirth);
   let year = birthday.getFullYear();
   let month = birthday.getMonth();
