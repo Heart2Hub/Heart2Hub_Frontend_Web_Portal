@@ -63,8 +63,6 @@ function AppointmentTicketModal({
 
   //get the facility location
   const getFacilityLocationByStaffIdThroughShift = (staffId) => {
-    console.log("CHECKING HERE");
-    console.log(listOfWorkingStaff);
     let facility = listOfWorkingStaff.filter(
       (staff) => staff.staffId === staffId
     )[0];
@@ -284,13 +282,15 @@ function AppointmentTicketModal({
                       label={selectedAppointment.arrived ? "Yes" : "No"}
                     />
                   </MDTypography>
-                  <ArrivalButton
-                    selectedAppointment={selectedAppointment}
-                    handleUpdateAppointmentArrival={
-                      handleUpdateAppointmentArrival
-                    }
-                    disableButton={loading}
-                  />
+                  {columnName === "Registration" && (
+                    <ArrivalButton
+                      selectedAppointment={selectedAppointment}
+                      handleUpdateAppointmentArrival={
+                        handleUpdateAppointmentArrival
+                      }
+                      disableButton={loading}
+                    />
+                  )}
                 </ListItem>
                 <ListItem sx={{ marginTop: "10px" }}>
                   <MDTypography variant="h5" gutterBottom>

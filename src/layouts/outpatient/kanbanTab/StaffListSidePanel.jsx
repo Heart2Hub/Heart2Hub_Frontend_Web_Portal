@@ -4,21 +4,13 @@ import MDTypography from "components/MDTypography";
 import MDBox from "components/MDBox";
 import MDAvatar from "components/MDAvatar";
 import "./kanbanStyles.css";
-import { staffApi } from "../../../api/Api";
-import { useSelector } from "react-redux";
-import { selectStaff } from "store/slices/staffSlice";
-import { useState } from "react";
 import { IMAGE_SERVER } from "constants/RestEndPoint";
 
 function StaffListSidePanel({
   handleSelectStaffToFilter,
   selectStaffToFilter,
-  // handleLiftListOfCurrentWorkingStaff,
   listOfWorkingStaff,
 }) {
-  // const staff = useSelector(selectStaff);
-  // const [listOfWorkingStaff, setListOfWorkingStaff] = useState([]);
-
   const handleClick = (staffId) => {
     if (selectStaffToFilter === staffId) {
       handleSelectStaffToFilter(0);
@@ -29,17 +21,9 @@ function StaffListSidePanel({
     }
   };
 
-  // const getStaffCurrentlyWorking = async () => {
-  //   const response = await staffApi.getStaffsWorkingInCurrentShiftAndDepartment(
-  //     staff.unit.name
-  //   );
-  //   setListOfWorkingStaff(response.data);
-  //   handleLiftListOfCurrentWorkingStaff(response.data);
-  // };
-
-  // useEffect(() => {
-  //   getStaffCurrentlyWorking();
-  // }, []);
+  useEffect(() => {
+    console.log(listOfWorkingStaff);
+  }, []);
 
   return (
     <MDBox className="panel-container" sx={{ backgroundColor: "#D3E5F9" }}>

@@ -9,10 +9,18 @@ import { useEffect } from "react";
 import "./kanbanStyles.css";
 import StaffListSidePanel from "./StaffListSidePanel";
 import MDBox from "components/MDBox";
+import { useDispatch } from "react-redux";
+import { displayMessage } from "store/slices/snackbarSlice";
+import AssignAppointmentDialog from "./AssignAppointmentDialog";
+import { useRef } from "react";
 
 function KanbanBoard() {
   const staff = useSelector(selectStaff);
   const [loading, setLoading] = useState(false);
+  const reduxDispatch = useDispatch();
+
+  //for assigning staff to appoint
+  const [isDialogOpen, setDialogOpen] = useState(false);
 
   //for handling filtering
   const [selectStaffToFilter, setSelectStaffToFilter] = useState(null);
@@ -30,12 +38,90 @@ function KanbanBoard() {
   };
 
   //main method to handle drag and drop logic
-  const handleDragEnd = (result) => {
+  const handleDragEnd = async (result) => {
     const { destination, source, draggableId } = result;
 
+    // GET ITEM
+    const appointment = findItemById(draggableId, [
+      ...registration,
+      ...triage,
+      ...consultation,
+    ]);
+
+    //========================== DRAG DROP LOGIC CHECKS ========================
     //if same source and destination do nothing
     if (source.droppableId === destination.droppableId) return;
 
+    //if from registration, check that patient has arrived, else return do nth
+    if (source.droppableId === "1") {
+      if (!appointment.arrived) {
+        reduxDispatch(
+          displayMessage({
+            color: "warning",
+            icon: "notification",
+            title: "Error",
+            content: "Please check that patient has arrived first!",
+          })
+        );
+        return;
+      }
+    }
+
+    //ticket should not flow back to the registration swimlane
+    if (destination.droppableId === "1" && source.droppableId !== "1") {
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error",
+          content: "Cannot return to Registration",
+        })
+      );
+    }
+
+    //=======================   ADD ASSIGNED LOGIC CHECK HERE =================
+    const userConfirmed = await showConfirmationDialog();
+    if (!userConfirmed) {
+      return; // Exit the function if the user didn't confirm
+    }
+
+    //=========================================================================
+
+    //========================== Updating Backend ========================
+    let destinationSwimlane = "";
+    if (destination.droppableId === "1") {
+      destinationSwimlane = "Registration";
+    } else if (destination.droppableId === "2") {
+      destinationSwimlane = "Triage";
+    } else if (destination.droppableId === "3") {
+      destinationSwimlane = "Consultation";
+    } else {
+      console.log("NO DESTINATION MATCH FOR " + destination.droppableId);
+    }
+
+    let updatedAppointment;
+    try {
+      const response = await appointmentApi.updateAppointmentSwimlaneStatus(
+        appointment.appointmentId,
+        destinationSwimlane
+      );
+
+      updatedAppointment = response.data;
+    } catch (error) {
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error",
+          content: error.data,
+        })
+      );
+      console.log("SOMETHING WENT WRONG");
+      console.log(error);
+      return;
+    }
+
+    //========================== ACTUAL DRAGGIN DROPPING ========================
     //IF SOURCE AND END NOT THE SAME REMOVE FROM SOURCE ARRAY
     if (source.droppableId === "1") {
       setRegistration(removeItemById(draggableId, registration));
@@ -50,24 +136,55 @@ function KanbanBoard() {
       console.log("NO SOURCE MATCH FOR " + source.droppableId);
     }
 
-    // GET ITEM
-    const appointment = findItemById(draggableId, [
-      ...registration,
-      ...triage,
-      ...consultation,
-    ]);
-
     //ADD ITEM
     //should add checks to prevent backward flow?
     if (destination.droppableId === "1") {
-      setRegistration([{ ...appointment }, ...registration]);
+      setRegistration([{ ...updatedAppointment }, ...registration]);
     } else if (destination.droppableId === "2") {
-      setTriage([{ ...appointment }, ...triage]);
+      setTriage([{ ...updatedAppointment }, ...triage]);
     } else if (destination.droppableId === "3") {
-      setConsultation([{ ...appointment }, ...consultation]);
+      setConsultation([{ ...updatedAppointment }, ...consultation]);
     } else {
       console.log("NO DESTINATION MATCH FOR " + destination.droppableId);
     }
+
+    reduxDispatch(
+      displayMessage({
+        color: "success",
+        icon: "notification",
+        title: "Success",
+        content: "Appointment Ticket is updated!",
+      })
+    );
+    getStaffCurrentlyWorking();
+  };
+
+  //for assigning appt to staff
+  const dialogResolver = useRef(null); // This will hold the resolve function
+
+  const showConfirmationDialog = () => {
+    console.log("SHOW CONFIRMATION IS BEING CALLED");
+    return new Promise((resolve) => {
+      // Store the resolve function in our ref
+      dialogResolver.current = resolve;
+      setDialogOpen(true);
+    });
+  };
+
+  const handleConfirm = () => {
+    if (dialogResolver.current) {
+      dialogResolver.current(true); // Resolve promise if user confirms
+      dialogResolver.current = null; // Clear it out after using
+    }
+    setDialogOpen(false);
+  };
+
+  const handleClose = () => {
+    if (dialogResolver.current) {
+      dialogResolver.current(false); // Resolve promise if user cancels
+      dialogResolver.current = null; // Clear it out after using
+    }
+    setDialogOpen(false);
   };
 
   //Utility functions to find and remove items in array
@@ -160,6 +277,7 @@ function KanbanBoard() {
       staff.unit.name
     );
     setListOfWorkingStaff(response.data);
+    console.log(response.data);
     // handleLiftListOfCurrentWorkingStaff(response.data);
   };
 
@@ -202,6 +320,12 @@ function KanbanBoard() {
           </div>
         </DragDropContext>
       </MDBox>
+      <AssignAppointmentDialog
+        open={isDialogOpen}
+        onConfirm={handleConfirm}
+        onClose={handleClose}
+      />
+      ;
     </>
   );
 }

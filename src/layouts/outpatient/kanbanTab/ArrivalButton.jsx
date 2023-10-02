@@ -32,7 +32,7 @@ function ArrivalButton({
         onMouseLeave={handlePopoverClose}
         disabled={disableButton}
       >
-        Arrived
+        {selectedAppointment.arrived ? "Reset" : "Arrived"}
       </MDButton>
       <Popover
         id="mouse-over-popover"
