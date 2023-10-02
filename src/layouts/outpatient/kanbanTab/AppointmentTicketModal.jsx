@@ -53,8 +53,6 @@ function AppointmentTicketModal({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const reduxDispatch = useDispatch();
 
-  // console.log(selectedAppointment);
-
   const handleCommentsTouched = () => {
     setCommentsTouched(true);
   };
@@ -117,7 +115,7 @@ function AppointmentTicketModal({
           color: "error",
           icon: "notification",
           title: "Update Failed!",
-          content: error.data,
+          content: error.response.data,
         })
       );
     }
@@ -150,15 +148,14 @@ function AppointmentTicketModal({
           content: "Comments are updated",
         })
       );
-    } catch (ex) {
+    } catch (error) {
       //handle error message and success message display
-      console.log(ex);
       reduxDispatch(
         displayMessage({
           color: "error",
           icon: "notification",
           title: "Update Failed!",
-          content: ex,
+          content: error.response.data,
         })
       );
     }
@@ -171,8 +168,18 @@ function AppointmentTicketModal({
 
   //has its own set of logic for assignAppointmentDialog to not clash with the drag and drop version
   const handleConfirmAssignDialog = async (selectedStaffId) => {
-    console.log("CALLING CONFIRM ASSIGN");
-    console.log(selectedStaffId);
+    if (selectedStaffId === 0) {
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error",
+          content: "Please select a staff to assign!",
+        })
+      );
+      return;
+    }
+
     try {
       //send to BE to assign staff
       console.log(selectedAppointment);
@@ -182,15 +189,6 @@ function AppointmentTicketModal({
       );
 
       const updatedAssignment = response.data;
-      console.log(updatedAssignment);
-      // console.log(columnName);
-
-      // console.log("Need to change appointment with new one");
-      // replaceItemByIdWithUpdated(
-      //   updatedAssignment.appointmentId,
-      //   columnName,
-      //   updatedAssignment
-      // );
 
       //force a rerender instead
       forceRefresh();
@@ -214,7 +212,7 @@ function AppointmentTicketModal({
           color: "warning",
           icon: "notification",
           title: "Error",
-          content: error.data,
+          content: error.response.data,
         })
       );
     }
@@ -227,7 +225,7 @@ function AppointmentTicketModal({
       displayMessage({
         color: "info",
         icon: "notification",
-        title: "Error",
+        title: "Info",
         content: "No action was taken",
       })
     );
@@ -421,6 +419,7 @@ function AppointmentTicketModal({
                     display: "flex",
                     justifyContent: "flex-end",
                     width: "100%",
+                    marginTop: "10px",
                   }}
                 >
                   <MDButton

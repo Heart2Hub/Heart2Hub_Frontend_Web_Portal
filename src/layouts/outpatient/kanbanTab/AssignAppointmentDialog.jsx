@@ -10,7 +10,6 @@ import {
   Select,
 } from "@mui/material";
 import React, { useState } from "react";
-// import { useEffect } from "react";
 
 function AssignAppointmentDialog({
   open,
@@ -23,7 +22,7 @@ function AssignAppointmentDialog({
     selectedAppointmentToAssign !== null &&
       selectedAppointmentToAssign.currentAssignedStaffId !== null
       ? selectedAppointmentToAssign.currentAssignedStaffId
-      : null
+      : 0
   );
 
   const handleChange = (event) => {
@@ -66,6 +65,7 @@ function AssignAppointmentDialog({
               onChange={handleChange}
               sx={{ height: "40px" }}
             >
+              <MenuItem value={0}>Not assigned</MenuItem>
               {listOfWorkingStaff.length !== 0 &&
                 listOfWorkingStaff.map((staff) => (
                   <MenuItem key={staff.staffId} value={staff.staffId}>

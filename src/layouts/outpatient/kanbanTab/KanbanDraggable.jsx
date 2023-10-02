@@ -26,13 +26,7 @@ function KanbanDraggable({
 
   const handleCloseModal = () => {
     setOpenModal(false);
-    // setSelectedAppointment(null);
   };
-
-  // const handleOpenAppointmentTicketModal = (appointment) => {
-  //   setOpenModal(true);
-  //   setSelectedAppointment(appointment);
-  // };
 
   return (
     <>
@@ -57,12 +51,7 @@ function KanbanDraggable({
                 <MDTypography variant="h5" className="draggable-id">
                   HH-{appointment.appointmentId}
                 </MDTypography>
-                <Button
-                  // onClick={() => handleOpenAppointmentTicketModal(appointment)}
-                  onClick={() => setOpenModal(true)}
-                >
-                  View
-                </Button>
+                <Button onClick={() => setOpenModal(true)}>View</Button>
               </div>
 
               <Typography variant="body2" className="draggable-description">
@@ -90,18 +79,15 @@ function KanbanDraggable({
           </Card>
         )}
       </Draggable>
-      {/* {selectedAppointment !== null && ( */}
       <AppointmentTicketModal
         openModal={openModal}
         handleCloseModal={handleCloseModal}
-        // selectedAppointment={selectedAppointment}
         selectedAppointment={appointment}
         replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
         columnName={columnName}
         listOfWorkingStaff={listOfWorkingStaff}
         forceRefresh={forceRefresh}
       />
-      {/* )} */}
     </>
   );
 }

@@ -14,16 +14,10 @@ function StaffListSidePanel({
   const handleClick = (staffId) => {
     if (selectStaffToFilter === staffId) {
       handleSelectStaffToFilter(0);
-      console.log("Selected Staff: " + 0);
     } else {
       handleSelectStaffToFilter(staffId);
-      console.log("Selected Staff: " + staffId);
     }
   };
-
-  useEffect(() => {
-    console.log(listOfWorkingStaff);
-  }, []);
 
   return (
     <MDBox className="panel-container" sx={{ backgroundColor: "#D3E5F9" }}>
@@ -94,10 +88,11 @@ function StaffListSidePanel({
                         component="div"
                         sx={{ flex: 1, textAlign: "left" }}
                       >
-                        {staff.currentAssignedAppointmentSwimlaneStatusEnum !==
+                        {staff.name}
+                        {/* {staff.currentAssignedAppointmentSwimlaneStatusEnum !==
                         null
                           ? staff.currentAssignedAppointmentSwimlaneStatusEnum
-                          : "Not Assigned"}
+                          : "Not Assigned"} */}
                       </Typography>
                     </MDBox>
                   </MDBox>

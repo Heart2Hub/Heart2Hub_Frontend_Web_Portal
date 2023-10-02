@@ -129,7 +129,7 @@ function KanbanBoard() {
           color: "warning",
           icon: "notification",
           title: "Error",
-          content: error.data,
+          content: error.response.data,
         })
       );
       console.log(error);
@@ -203,12 +203,9 @@ function KanbanBoard() {
   };
 
   const handleConfirm = async (selectedStaffId) => {
-    console.log("CALLING CONFIRM ASSIGN");
-    console.log(selectedStaffId);
     if (dialogResolver.current) {
       try {
         //send to BE to assign staff
-        console.log(selectedAppointmentToAssign);
         if (selectedAppointmentToAssign !== null) {
           const response = await appointmentApi.assignAppointmentToStaff(
             selectedAppointmentToAssign.appointmentId,
@@ -216,17 +213,6 @@ function KanbanBoard() {
           );
 
           const updatedAssignment = response.data;
-          console.log(updatedAssignment);
-          // console.log(columnName);
-
-          console.log("Need to change appointment with new one");
-          // replaceItemByIdWithUpdated(
-          //   updatedAssignment.appointmentId,
-          //   columnName,
-          //   updatedAssignment
-          // );
-
-          console.log("successfully updated swimlane");
 
           //reset
           setSelectedAppointmentToAssign(null);
@@ -235,13 +221,12 @@ function KanbanBoard() {
           dialogResolver.current = null; // Clear it out after using
         }
       } catch (error) {
-        //perform error handling
         reduxDispatch(
           displayMessage({
             color: "warning",
             icon: "notification",
             title: "Error",
-            content: error.data,
+            content: error.response.data,
           })
         );
       }
@@ -259,7 +244,7 @@ function KanbanBoard() {
       displayMessage({
         color: "info",
         icon: "notification",
-        title: "Error",
+        title: "Info",
         content: "No action was taken",
       })
     );
@@ -366,8 +351,6 @@ function KanbanBoard() {
       staff.unit.name
     );
     setListOfWorkingStaff(response.data);
-    console.log(response.data);
-    // handleLiftListOfCurrentWorkingStaff(response.data);
   };
 
   useEffect(() => {

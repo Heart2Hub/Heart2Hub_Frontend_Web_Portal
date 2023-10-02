@@ -54,7 +54,7 @@ export const maskNric = (nric) => {
 };
 
 export function calculateAge(dateOfBirth) {
-  console.log(dateOfBirth);
+  // console.log(dateOfBirth);
   if (dateOfBirth === undefined) {
     return;
   }
