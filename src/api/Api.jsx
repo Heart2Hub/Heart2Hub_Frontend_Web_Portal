@@ -153,6 +153,18 @@ export const ehrApi = {
   },
 };
 
+export const problemRecordApi = {
+  createProblemRecord(
+    electronicHealthRecordId,
+    requestBody
+  ) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/problemRecord/createProblemRecord?electronicHealthRecordId=${electronicHealthRecordId}`,
+      requestBody
+    );
+  },
+};
+
 export const leaveApi = {
   getAllManagedLeaves(staffId) {
     console.log(staffId);
