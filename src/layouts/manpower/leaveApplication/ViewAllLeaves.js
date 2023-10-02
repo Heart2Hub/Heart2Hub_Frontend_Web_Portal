@@ -8,7 +8,6 @@ import Card from "@mui/material/Card";
 import Paper from '@mui/material/Paper';
 import SimpleBlogCard from "examples/Cards/BlogCards/SimpleBlogCard";
 import CardContent from '@mui/material/CardContent';
-import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';

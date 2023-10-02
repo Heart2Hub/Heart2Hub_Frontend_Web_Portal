@@ -12,6 +12,7 @@ import {
 } from "redux-persist";
 
 import staffReducer from "./slices/staffSlice";
+import ehrReducer from "./slices/ehrSlice";
 import snackbarReducer from "./slices/snackbarSlice";
 import loadingOverlayReducer from "./slices/loadingOverlaySlice";
 
@@ -19,10 +20,12 @@ const persistConfig = {
   key: "root",
   version: 1,
   storage,
+  blacklist: ["loadingOverlay", "snackbar"],
 };
 
 const rootReducer = combineReducers({
   staff: staffReducer,
+  ehr: ehrReducer,
   snackbar: snackbarReducer,
   loadingOverlay: loadingOverlayReducer,
 });
