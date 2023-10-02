@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Modal,
   Box,
@@ -11,10 +11,15 @@ import {
 import MDTypography from "components/MDTypography";
 import { calculateAge } from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
+import MDButton from "components/MDButton";
 import { staffApi } from "api/Api";
+
+import { ehrApi } from "api/Api";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setEHRRecord } from "../../../store/slices/ehrSlice";
 import ArrivalButton from "./ArrivalButton";
 import { displayMessage } from "store/slices/snackbarSlice";
-import { useDispatch } from "react-redux";
 import { appointmentApi } from "../../../api/Api";
 import MDButton from "components/MDButton";
 import AssignAppointmentDialog from "./AssignAppointmentDialog";
@@ -41,6 +46,8 @@ function AppointmentTicketModal({
   listOfWorkingStaff,
   forceRefresh,
 }) {
+  const navigate = useNavigate();
+  const reduxDispatch = useDispatch();
   const [assignedStaff, setAssignedStaff] = useState(null);
   const [facilityLocation, setFacilityLocation] = useState(null);
   const [editableComments, setEditableComments] = useState(
@@ -51,7 +58,6 @@ function AppointmentTicketModal({
 
   //for assigning appointment to staff in the AppointmentTicketModal
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const reduxDispatch = useDispatch();
 
   const handleCommentsTouched = () => {
     setCommentsTouched(true);
@@ -82,9 +88,7 @@ function AppointmentTicketModal({
     setAssignedStaff(response.data);
   };
 
-  //TODO this is bugged for other swimlanes except registration
   const handleUpdateAppointmentArrival = async () => {
-    //set loading true
     setLoading(true);
 
     try {
@@ -232,6 +236,60 @@ function AppointmentTicketModal({
     setIsDialogOpen(false);
   };
 
+  const handleClickToEhr = () => {
+    // Can refactor to util
+    const dateComponents = selectedAppointment.dateOfBirth;
+    const [year, month, day, hours, minutes] = dateComponents;
+    const formattedMonth = String(month).padStart(2, "0");
+    const formattedDay = String(day).padStart(2, "0");
+    const dateOfBirthFormatted = `${year}-${formattedMonth}-${formattedDay}T${String(
+      hours
+    ).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`;
+    ehrApi
+      .getElectronicHealthRecordByIdAndDateOfBirth(
+        selectedAppointment.electronicHealthRecordId,
+        dateOfBirthFormatted
+      )
+      .then((response) => {
+        console.log(response);
+        // ROUTE HERE
+        response.data = {
+          ...response.data,
+          username: selectedAppointment.username,
+          profilePicture: selectedAppointment.profilePicture,
+        };
+        reduxDispatch(setEHRRecord(response));
+        navigate("/ehr/ehrRecord");
+      });
+  };
+
+  const handleClickToEhr = () => {
+    // Can refactor to util
+    const dateComponents = selectedAppointment.dateOfBirth;
+    const [year, month, day, hours, minutes] = dateComponents;
+    const formattedMonth = String(month).padStart(2, "0");
+    const formattedDay = String(day).padStart(2, "0");
+    const dateOfBirthFormatted = `${year}-${formattedMonth}-${formattedDay}T${String(
+      hours
+    ).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`;
+    ehrApi
+      .getElectronicHealthRecordByIdAndDateOfBirth(
+        selectedAppointment.electronicHealthRecordId,
+        dateOfBirthFormatted
+      )
+      .then((response) => {
+        console.log(response);
+        // ROUTE HERE
+        response.data = {
+          ...response.data,
+          username: selectedAppointment.username,
+          profilePicture: selectedAppointment.profilePicture,
+        };
+        reduxDispatch(setEHRRecord(response));
+        navigate("/ehr/ehrRecord");
+      });
+  };
+
   useEffect(() => {
     if (selectedAppointment.currentAssignedStaffId !== null) {
       getAssignedStaffName(selectedAppointment.currentAssignedStaffId);
@@ -245,67 +303,68 @@ function AppointmentTicketModal({
   }, [selectedAppointment, listOfWorkingStaff]);
 
   return (
-    <>
-      <Modal
-        open={openModal}
-        onClose={handleCloseModal}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={style}>
-          {selectedAppointment && (
-            <>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center", // To align items vertically center
-                }}
+    <Modal
+      open={openModal}
+      onClose={handleCloseModal}
+      aria-labelledby="modal-modal-title"
+      aria-describedby="modal-modal-description"
+    >
+      <Box sx={style}>
+        {selectedAppointment && (
+          <>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center", // To align items vertically center
+              }}
+            >
+              <MDTypography
+                id="modal-modal-title"
+                variant="h3"
+                component="h2"
+                gutterBottom
               >
-                <MDTypography
-                  id="modal-modal-title"
-                  variant="h3"
-                  component="h2"
-                  gutterBottom
-                >
-                  HH-{selectedAppointment.appointmentId}:{" "}
-                  {selectedAppointment.firstName} {selectedAppointment.lastName}{" "}
-                  ({calculateAge(selectedAppointment?.dateOfBirth)}
-                  {selectedAppointment.sex === "Male" ? "M" : "F"})
-                </MDTypography>
-                <MDAvatar
-                  src={
-                    ""
-                    // IMAGE_SERVER + "/images/id/" + staff.profilePicture?.imageLink
-                  }
-                  alt="profile-image"
-                  size="xxl"
-                  shadow="xxl"
-                  style={{ height: "150px", width: "150px" }}
-                />
-              </Box>
-              <List>
-                <ListItem>
-                  <ListItemText primary="Location:" secondary={""} />
-                </ListItem>
-                <ListItem>
-                  <MDTypography variant="h6" gutterBottom>
-                    {facilityLocation !== null
+                HH-{selectedAppointment.appointmentId}:{" "}
+                {selectedAppointment.firstName} {selectedAppointment.lastName} (
+                {calculateAge(selectedAppointment?.dateOfBirth)}
+                {selectedAppointment.sex === "Male" ? "M" : "F"})
+              </MDTypography>
+              <MDAvatar
+                src={
+                  ""
+                  // IMAGE_SERVER + "/images/id/" + staff.profilePicture?.imageLink
+                }
+                alt="profile-image"
+                size="xxl"
+                shadow="xxl"
+                style={{ height: "150px", width: "150px" }}
+              />
+            </Box>
+            <List>
+              <ListItem>
+                <ListItemText primary="Location:" secondary={""} />
+              </ListItem>
+              <ListItem>
+                <MDTypography variant="h6" gutterBottom>
+                {facilityLocation !== null
                       ? facilityLocation
                       : "No Location Yet"}
-                  </MDTypography>
-                </ListItem>
-                <ListItem>
-                  <ListItemText
-                    primary="Link to Electronic Health Record:"
-                    secondary={""}
-                  />
-                </ListItem>
-                <ListItem>
-                  <MDTypography variant="h6" gutterBottom>
-                    xxx
-                  </MDTypography>
-                </ListItem>
+                </MDTypography>
+              </ListItem>
+              <ListItem>
+                <ListItemText
+                  primary="Link to Electronic Health Record:"
+                  secondary={""}
+                />
+              </ListItem>
+              <ListItem>
+                <MDTypography variant="h6" gutterBottom>
+                <MDButton onClick={handleClickToEhr} color="primary">
+                  EHR
+                </MDButton>
+                </MDTypography>
+              </ListItem>
 
                 <ListItem>
                   <ListItemText primary="Assigned To:" secondary={""} />
