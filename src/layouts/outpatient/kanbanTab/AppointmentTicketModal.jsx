@@ -37,8 +37,10 @@ function AppointmentTicketModal({
   selectedAppointment,
   replaceItemByIdWithUpdated,
   columnName,
+  listOfWorkingStaff,
 }) {
   const [assignedStaff, setAssignedStaff] = useState(null);
+  const [facilityLocation, setFacilityLocation] = useState(null);
   const [editableComments, setEditableComments] = useState(
     selectedAppointment.comments
   );
@@ -56,6 +58,21 @@ function AppointmentTicketModal({
     setEditableComments(event.target.value);
     if (!commentsTouched) {
       handleCommentsTouched();
+    }
+  };
+
+  //get the facility location
+  const getFacilityLocationByStaffIdThroughShift = (staffId) => {
+    console.log("CHECKING HERE");
+    console.log(listOfWorkingStaff);
+    let facility = listOfWorkingStaff.filter(
+      (staff) => staff.staffId === staffId
+    )[0];
+
+    if (facility) {
+      return facility.name + " (" + facility.location + ")";
+    } else {
+      return null;
     }
   };
 
@@ -116,9 +133,6 @@ function AppointmentTicketModal({
         editableComments
       );
       let updatedAppointment = response.data;
-      console.log(updatedAppointment);
-
-      console.log("CURRENTLY IN: " + columnName);
 
       //update the old appt
       replaceItemByIdWithUpdated(
@@ -152,10 +166,15 @@ function AppointmentTicketModal({
 
   useEffect(() => {
     if (selectedAppointment.currentAssignedStaffId !== null) {
-      getAssignedStaffName();
+      getAssignedStaffName(selectedAppointment.currentAssignedStaffId);
+      setFacilityLocation(
+        getFacilityLocationByStaffIdThroughShift(
+          selectedAppointment.currentAssignedStaffId
+        )
+      );
     }
     setEditableComments(selectedAppointment.comments);
-  }, [selectedAppointment.comments]);
+  }, [selectedAppointment.comments, listOfWorkingStaff]);
 
   return (
     <>
@@ -203,7 +222,9 @@ function AppointmentTicketModal({
                 </ListItem>
                 <ListItem>
                   <MDTypography variant="h6" gutterBottom>
-                    xxx
+                    {facilityLocation !== null
+                      ? facilityLocation
+                      : "No Location Yet"}
                   </MDTypography>
                 </ListItem>
                 <ListItem>
@@ -225,9 +246,9 @@ function AppointmentTicketModal({
                   <MDTypography variant="h6" gutterBottom>
                     {assignedStaff === null
                       ? "No Staff Assigned"
-                      : assignedStaff.firstName +
+                      : assignedStaff.firstname +
                         " " +
-                        assignedStaff.lastName +
+                        assignedStaff.lastname +
                         " (" +
                         assignedStaff.staffRoleEnum +
                         ")"}

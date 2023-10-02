@@ -38,7 +38,7 @@ export const staffApi = {
   },
   getStaffByStaffId(staffId) {
     return axiosFetch.get(
-      `${REST_ENDPOINT}/staff/getStaffByUsername?staffId=${staffId}`
+      `${REST_ENDPOINT}/staff/getStaffByStaffId?staffId=${staffId}`
     );
   },
   getStaffByUsername(username) {
@@ -73,6 +73,11 @@ export const staffApi = {
   getStaffListByRole(role, unit) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/staff/getStaffByRole?role=${role}&unit=${unit}`
+    );
+  },
+  getStaffsWorkingInCurrentShiftAndDepartment(departmentName) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/staff/getStaffsWorkingInCurrentShiftAndDepartment?departmentName=${departmentName}`
     );
   },
 };
@@ -283,10 +288,11 @@ export const appointmentApi = {
     endDay,
     endMonth,
     endYear,
-    departmentName
+    departmentName,
+    selectStaffId
   ) {
     return axiosFetch.get(
-      `${REST_ENDPOINT}/appointment/viewAllAppointmentsByRange?startDay=${startDay}&startMonth=${startMonth}&startYear=${startYear}&endDay=${endDay}&endMonth=${endMonth}&endYear=${endYear}&departmentName=${departmentName}`
+      `${REST_ENDPOINT}/appointment/viewAllAppointmentsByRange?startDay=${startDay}&startMonth=${startMonth}&startYear=${startYear}&endDay=${endDay}&endMonth=${endMonth}&endYear=${endYear}&departmentName=${departmentName}&selectStaffId=${selectStaffId}`
     );
   },
   updateAppointmentArrival(appointmentId, arrivalStatus) {

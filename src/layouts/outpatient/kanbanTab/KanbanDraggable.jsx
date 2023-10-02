@@ -18,6 +18,7 @@ function KanbanDraggable({
   index,
   replaceItemByIdWithUpdated,
   columnName,
+  listOfWorkingStaff,
 }) {
   const [openModal, setOpenModal] = useState(false);
 
@@ -82,6 +83,7 @@ function KanbanDraggable({
         selectedAppointment={appointment}
         replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
         columnName={columnName}
+        listOfWorkingStaff={listOfWorkingStaff}
       />
     </>
   );
