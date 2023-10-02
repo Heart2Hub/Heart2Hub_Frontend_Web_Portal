@@ -21,6 +21,8 @@ function KanbanBoard() {
 
   //for assigning staff to appoint
   const [isDialogOpen, setDialogOpen] = useState(false);
+  const [selectedAppointmentToAssign, setSelectedAppointmentToAssign] =
+    useState(null);
 
   //for handling filtering
   const [selectStaffToFilter, setSelectStaffToFilter] = useState(null);
@@ -79,9 +81,10 @@ function KanbanBoard() {
       );
     }
 
-    //=======================   ADD ASSIGNED LOGIC CHECK HERE =================
-    const userConfirmed = await showConfirmationDialog();
-    if (!userConfirmed) {
+    //=======================   ADD ASSIGNED LOGIC HERE =================
+    const assignAppointment = await showAssignAppointmentDialog(appointment);
+    if (!assignAppointment) {
+      setSelectedAppointmentToAssign(null);
       return; // Exit the function if the user didn't confirm
     }
 
@@ -162,19 +165,38 @@ function KanbanBoard() {
   //for assigning appt to staff
   const dialogResolver = useRef(null); // This will hold the resolve function
 
-  const showConfirmationDialog = () => {
+  const showAssignAppointmentDialog = (appointment) => {
     console.log("SHOW CONFIRMATION IS BEING CALLED");
     return new Promise((resolve) => {
       // Store the resolve function in our ref
       dialogResolver.current = resolve;
+      setSelectedAppointmentToAssign(appointment);
       setDialogOpen(true);
     });
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async (selectedStaffId) => {
     if (dialogResolver.current) {
-      dialogResolver.current(true); // Resolve promise if user confirms
-      dialogResolver.current = null; // Clear it out after using
+      try {
+        //send to BE to assign staff
+        if (selectedAppointmentToAssign !== null) {
+          const response = await appointmentApi.assignAppointmentToStaff(
+            selectedAppointmentToAssign.appointmentId,
+            selectedStaffId
+          );
+          console.log(response);
+
+          //reset
+          setSelectedAppointmentToAssign(null);
+
+          dialogResolver.current(true); // Resolve promise if user confirms
+          dialogResolver.current = null; // Clear it out after using
+        }
+      } catch (error) {
+        //perform error handling
+
+        console.log(error);
+      }
     }
     setDialogOpen(false);
   };
@@ -184,6 +206,8 @@ function KanbanBoard() {
       dialogResolver.current(false); // Resolve promise if user cancels
       dialogResolver.current = null; // Clear it out after using
     }
+
+    setSelectedAppointmentToAssign(null);
     setDialogOpen(false);
   };
 
@@ -324,6 +348,8 @@ function KanbanBoard() {
         open={isDialogOpen}
         onConfirm={handleConfirm}
         onClose={handleClose}
+        listOfWorkingStaff={listOfWorkingStaff}
+        selectedAppointmentToAssign={selectedAppointmentToAssign}
       />
       ;
     </>

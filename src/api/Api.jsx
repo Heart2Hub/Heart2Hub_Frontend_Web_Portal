@@ -310,4 +310,9 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/updateAppointmentSwimlaneStatus?appointmentId=${appointmentId}&swimlaneStatus=${swimlaneStatus}`
     );
   },
+  assignAppointmentToStaff(appointmentId, staffId) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/assignAppointmentToStaff?appointmentId=${appointmentId}&staffId=${staffId}`
+    );
+  },
 };
