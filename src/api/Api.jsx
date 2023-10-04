@@ -132,7 +132,64 @@ export const facilityApi = {
       requestBody
     );
   },
+  findAllFacility() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facility/findAllFacility`
+    );
+  },
+  findAllBookingsOfAFacility(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facilityBooking/getAllBookingsOfAFacility/${id}`
+    );
+  },
+  deleteFacilityBooking(id) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/facilityBooking/deleteFacilityBooking/${id}`
+    )
+  },
+  createFacilityBooking(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/facilityBooking/createFacilityBooking`,
+      requestBody
+    )
+  },
+  getAllBookingsOfAStaff(username) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/facilityBooking/getAllBookingsOfAStaff/${username}`
+    )
+  },
+  updateFacilityBooking(requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/facilityBooking/updateFacilityBooking`, requestBody
+    )
+  },
+  getAllConsumableInventory() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/consumableEquipment/getAllConsumableEquipment`
+    )
+  }
 };
+
+export const allocatedInventoryApi = {
+  deleteAllocatedInventory(id) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/allocatedInventory/deleteAllocatedInventory/${id}`
+    )
+  },
+  updateAllocatedInventory(requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/allocatedInventory/updateAllocatedInventory`,
+      requestBody
+    )
+  },
+  createAllocatedInventory(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/allocatedInventory/createAllocatedInventory`,
+      requestBody
+    )
+  }
+
+}
 
 export const patientApi = {
   getAllPatientsWithElectronicHealthRecordSummaryByName(name) {
@@ -290,3 +347,75 @@ export const appointmentApi = {
     );
   },
 };
+
+export const inventoryApi = {
+  getAllConsumableEquipment(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/consumableEquipment/getAllConsumableEquipment?name=${name}`
+    );
+  },
+  updateConsumableEquipment(inventoryItemId, requestBody) {
+    console.log("Request Sent: " + requestBody.name)
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/consumableEquipment/updateConsumableEquipment?inventoryItemId=${inventoryItemId}`,
+      requestBody
+    );
+  },
+  createConsumableEquipment(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/consumableEquipment/createConsumableEquipment`,
+      requestBody,
+    );
+  },
+  deleteConsumableEquipment(inventoryItemId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/consumableEquipment/deleteConsumableEquipment?inventoryItemId=${inventoryItemId}`
+    );
+  },
+  getAllMedication(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medication/getAllMedication?name=${name}`
+    );
+  },
+  updateMedication(inventoryItemId, requestBody) {
+    console.log("Request Sent: " + requestBody.name)
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/medication/updateMedication?inventoryItemId=${inventoryItemId}`,
+      requestBody
+    );
+  },
+  createMedication(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/medication/createMedication`,
+      requestBody,
+    );
+  },
+  deleteMedication(inventoryItemId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/medication/deleteMedication?inventoryItemId=${inventoryItemId}`
+    );
+  },
+  getAllServiceItem(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/serviceItem/getAllServiceItem?name=${name}`
+    );
+  },
+  updateServiceItem(inventoryItemId, requestBody) {
+    console.log("Request Sent: " + requestBody.name)
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/serviceItem/updateServiceItem?inventoryItemId=${inventoryItemId}`,
+      requestBody
+    );
+  },
+  createServiceItem(requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/serviceItem/createServiceItem`,
+      requestBody,
+    );
+  },
+  deleteServiceItem(inventoryItemId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/serviceItem/deleteServiceItem?inventoryItemId=${inventoryItemId}`
+    );
+  },
+}
