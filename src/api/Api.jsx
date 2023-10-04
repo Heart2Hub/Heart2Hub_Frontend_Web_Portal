@@ -163,6 +163,11 @@ export const problemRecordApi = {
       requestBody
     );
   },
+  resolveProblemRecord(electronicHealthRecordId,problemRecordId) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/problemRecord/resolveProblemRecord?electronicHealthRecordId=${electronicHealthRecordId}&problemRecordId=${problemRecordId}`
+    );
+  },
 };
 
 export const leaveApi = {

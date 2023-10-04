@@ -44,7 +44,7 @@ function Header({ children }) {
           <Grid item justifyContent="center">
             <MDAvatar
               src={
-                IMAGE_SERVER + "/images/id/" + ehrRecord.profilePicture?.imageLink
+                IMAGE_SERVER + "/images/id/" + ehrRecord?.profilePicture?.imageLink
               }
               alt="profile-image"
               size="xxl"
@@ -54,7 +54,7 @@ function Header({ children }) {
           <Grid item xs>
             <MDBox height="100%" mt={0.5} lineHeight={1}>
               <MDTypography variant="h5" fontWeight="medium">
-                {ehrRecord.firstname} {ehrRecord.lastname}
+                {ehrRecord?.firstname} {ehrRecord?.lastname}
               </MDTypography>
             </MDBox>
           </Grid>

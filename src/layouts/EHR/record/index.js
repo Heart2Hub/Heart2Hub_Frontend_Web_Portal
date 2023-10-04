@@ -30,9 +30,15 @@ import Divider from "@mui/material/Divider";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { problemRecordApi } from "api/Api";
-import { selectEHRRecord, setEHRRecord, updateEHRRecord } from "../../../store/slices/ehrSlice";
+import {
+  selectEHRRecord,
+  setEHRRecord,
+  updateEHRRecord,
+} from "../../../store/slices/ehrSlice";
 import { selectStaff } from "../../../store/slices/staffSlice";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
+import { ehrApi } from "api/Api";
+import { parseDateFromLocalDateTime } from "utility/Utility";
 
 function EHRRecord() {
   const reduxDispatch = useDispatch();
@@ -87,31 +93,42 @@ function EHRRecord() {
         );
         return;
       }
-      formData.createdBy = loggedInStaff.staffRoleEnum + " " + loggedInStaff.firstName + " " + loggedInStaff.lastName
+      formData.createdBy =
+        loggedInStaff.staffRoleEnum +
+        " " +
+        loggedInStaff.firstname +
+        " " +
+        loggedInStaff.lastname;
       const currentDate = new Date();
-      const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1)
+      const formattedDate = `${currentDate.getFullYear()}-${(
+        currentDate.getMonth() + 1
+      )
         .toString()
-        .padStart(2, "0")}-${currentDate.getDate().toString().padStart(2, "0")}T${currentDate
+        .padStart(2, "0")}-${currentDate
+        .getDate()
+        .toString()
+        .padStart(2, "0")}T${currentDate
         .getHours()
         .toString()
-        .padStart(2, "0")}:${currentDate.getMinutes().toString().padStart(2, "0")}:${currentDate
+        .padStart(2, "0")}:${currentDate
+        .getMinutes()
+        .toString()
+        .padStart(2, "0")}:${currentDate
         .getSeconds()
         .toString()
         .padStart(2, "0")}`;
-      formData.createdDate = formattedDate
-      console.log(ehrRecord)
+      formData.createdDate = formattedDate;
       problemRecordApi
-        .createProblemRecord(ehrRecord.electronicHealthRecordId
-          , formData)
+        .createProblemRecord(ehrRecord.electronicHealthRecordId, formData)
         .then((response) => {
-          reduxDispatch(
-            updateEHRRecord({
-              ...ehrRecord,
-              listOfProblemRecords: [...ehrRecord.listOfProblemRecords, response.data],
-            })
-          );        
-          console.log(ehrRecord)
-          console.log(response)
+          const updatedEhrRecord = {
+            ...ehrRecord,
+            listOfProblemRecords: [
+              ...ehrRecord.listOfProblemRecords,
+              response.data,
+            ],
+          };
+          reduxDispatch(updateEHRRecord(updatedEhrRecord));
           setFormData({
             description: "",
             createdBy: "",
@@ -130,7 +147,7 @@ function EHRRecord() {
           handleCloseModal();
         })
         .catch((err) => {
-          console.log(err)
+          console.log(err);
           setFormData({
             description: "",
             createdBy: "",
@@ -165,9 +182,64 @@ function EHRRecord() {
     }
   };
 
-  useEffect(() => {
-    console.log(ehrRecord); // This will log the updated ehrRecord
-  }, [ehrRecord]);
+  const handleResolveProblemRecord = (problemRecord) => {
+    try {
+      problemRecordApi
+        .resolveProblemRecord(ehrRecord.electronicHealthRecordId, problemRecord.problemRecordId)
+        .then((response) => {
+          const updatedEhrRecord = {
+            ...ehrRecord,
+            listOfProblemRecords: ehrRecord.listOfProblemRecords.filter(
+              (record) => record.problemRecordId !== problemRecord.problemRecordId
+            ),
+            listOfMedicalHistoryRecords: [
+              ...ehrRecord.listOfMedicalHistoryRecords,
+              response.data,
+            ],
+          };
+          reduxDispatch(updateEHRRecord(updatedEhrRecord));
+          reduxDispatch(
+            displayMessage({
+              color: "success",
+              icon: "notification",
+              title: "Successfully Created Facility!",
+              content: formData.problemTypeEnum + " created",
+            })
+          );
+        })
+        .catch((err) => {
+          console.log(err);
+          // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
+          if (err.response.data.detail) {
+            reduxDispatch(
+              displayMessage({
+                color: "error",
+                icon: "notification",
+                title: "Error Encountered",
+                content: err.response.data.detail,
+              })
+            );
+          } else {
+            reduxDispatch(
+              displayMessage({
+                color: "error",
+                icon: "notification",
+                title: "Error Encountered",
+                content: err.response.data,
+              })
+            );
+          }
+          console.log(err.response.data.detail);
+        });
+    } catch (ex) {
+      console.log(ex);
+    }
+  };
+
+  // useEffect(() => {
+  //   console.log(ehrRecordSate); // This will log the updated ehrRecord
+  //   console.log(loggedInStaff.firstname)
+  // }, [ehrRecord]);
 
   return (
     <DashboardLayout>
@@ -205,18 +277,39 @@ function EHRRecord() {
           <Typography variant="h6" gutterBottom>
             List of Problem Records:
             {ehrRecord.listOfProblemRecords.map((problemRecord, index) => (
-              <ProfileInfoCard
-                key={index}
-                title={`Problem ${index + 1}`}
-                info={{
-                  createdBy: problemRecord.createdBy,
-                  createdDate: problemRecord.createdDate.join("/"),
-                  description: problemRecord.description,
-                  priority: problemRecord.priorityEnum,
-                  problemType: problemRecord.problemTypeEnum,
-                }}
-                shadow={false}
-              />
+              <Grid container spacing={3} justify="center" alignItems="center" >
+                <Grid item xs={12} md={6} lg={3}>
+                  <MDBox mb={1.5}>
+                    <ProfileInfoCard
+                      key={index}
+                      title={`Problem ${index + 1}`}
+                      info={{
+                        createdBy: problemRecord.createdBy,
+                        createdDate: problemRecord.createdDate.split(" ")[0],
+                        description: problemRecord.description,
+                        priority: problemRecord.priorityEnum,
+                        problemType: problemRecord.problemTypeEnum,
+                      }}
+                      shadow={false}
+                    />
+                  </MDBox>
+                </Grid>
+                <Grid item xs={12} md={6} lg={3}>
+                  <MDBox mb={1.5}>
+                    {loggedInStaff.staffRoleEnum === "DOCTOR" && (
+                      <MDButton
+                        variant="contained"
+                        color="primary"
+                        onClick={() =>
+                          handleResolveProblemRecord(problemRecord)
+                        }
+                      >
+                        Resolve Problem Record
+                      </MDButton>
+                    )}
+                  </MDBox>
+                </Grid>
+              </Grid>
             ))}
             {loggedInStaff.staffRoleEnum === "DOCTOR" && (
               <MDBox mx={2} mt={3} px={2}>
@@ -257,11 +350,11 @@ function EHRRecord() {
                   title={`Medical History ${index + 1}`}
                   info={{
                     createdBy: medicalRecord.createdBy,
-                    createdDate: medicalRecord.createdDate.join("/"),
+                    createdDate: medicalRecord.createdDate.split(" ")[0],
+                    resolvedDate: medicalRecord.resolvedDate.split(" ")[0],
                     description: medicalRecord.description,
                     priority: medicalRecord.priorityEnum,
                     problemType: medicalRecord.problemTypeEnum,
-                    resolvedDate: medicalRecord.resolvedDate.join("/"),
                   }}
                   shadow={false}
                 />
