@@ -67,14 +67,11 @@ function AssignAppointmentDialog({
         listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "DOCTOR")
       );
     } else {
-      console.log(
-        "ERROR ENCOUNTERED IN handleFilterListOfApplicableWorkingStaff"
-      );
+      // console.log("No Filter result of applicable working staff");
     }
   };
 
   useEffect(() => {
-    console.log("current swimlane chosen: " + assigningToSwimlane);
     handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
   }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
 

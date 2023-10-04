@@ -7,6 +7,7 @@ import {
   ListItemText,
   Chip,
   Skeleton,
+  Stack,
 } from "@mui/material";
 import MDTypography from "components/MDTypography";
 import { calculateAge } from "utility/Utility";
@@ -25,6 +26,9 @@ import AssignAppointmentDialog from "./AssignAppointmentDialog";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import { IMAGE_SERVER } from "constants/RestEndPoint";
+import MDBox from "components/MDBox";
+import AddAttachmentButton from "./AddAttachmentButton";
+import ViewAttachmentsButton from "./ViewAttachmentsButton";
 
 const style = {
   position: "absolute",
@@ -339,11 +343,23 @@ function AppointmentTicketModal({
                       : "No Location Yet"}
                   </MDTypography>
                 </ListItem>
-                <ListItem>
+                <ListItem
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <ListItemText
                     primary="Link to Electronic Health Record:"
                     secondary={""}
                   />
+                  <MDBox>
+                    <Stack direction="row" spacing={2}>
+                      <AddAttachmentButton
+                        selectedAppointment={selectedAppointment}
+                      />
+                      <ViewAttachmentsButton
+                        selectedAppointment={selectedAppointment}
+                      />
+                    </Stack>
+                  </MDBox>
                 </ListItem>
                 <ListItem>
                   <MDTypography variant="h6" gutterBottom>
@@ -436,7 +452,7 @@ function AppointmentTicketModal({
                       fontSize: "15px",
                       overflowY: "auto",
                       resize: "none",
-                      "::-webkit-scrollbar": {
+                      "::WebkitScrollbar": {
                         display: "none",
                       },
                       scrollbarWidth: "none",
@@ -464,7 +480,7 @@ function AppointmentTicketModal({
                       fontSize: "15px",
                       overflowY: "auto",
                       resize: "none",
-                      "::-webkit-scrollbar": {
+                      "::WebkitScrollbar": {
                         width: "0px",
                         background: "transparent",
                       },
@@ -488,7 +504,7 @@ function AppointmentTicketModal({
                       fontSize: "15px",
                       overflowY: "auto",
                       resize: "none",
-                      "::-webkit-scrollbar": {
+                      "::WebkitScrollbar": {
                         width: "0px",
                         background: "transparent",
                       },
