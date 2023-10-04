@@ -1,10 +1,11 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Card, Typography, List, ButtonBase } from "@mui/material";
 import MDTypography from "components/MDTypography";
 import MDBox from "components/MDBox";
 import MDAvatar from "components/MDAvatar";
 import "./kanbanStyles.css";
 import { IMAGE_SERVER } from "constants/RestEndPoint";
+import { truncateText } from "utility/Utility";
 
 function StaffListSidePanel({
   handleSelectStaffToFilter,
@@ -73,27 +74,27 @@ function StaffListSidePanel({
 
                   <MDBox sx={{ marginLeft: "10px" }}>
                     <MDBox>
-                      <Typography
+                      <MDTypography
                         variant="h5"
                         component="div"
                         sx={{ flex: 1, textAlign: "left" }}
                       >
-                        {staff.firstname + " " + staff.lastname + " | "}
+                        {truncateText(
+                          staff.firstname + " " + staff.lastname,
+                          10
+                        )}
+                        <br />
                         {staff.staffRoleEnum}
-                      </Typography>
+                      </MDTypography>
                     </MDBox>
                     <MDBox>
-                      <Typography
+                      <MDTypography
                         variant="h6"
-                        component="div"
+                        component=""
                         sx={{ flex: 1, textAlign: "left" }}
                       >
                         {staff.name}
-                        {/* {staff.currentAssignedAppointmentSwimlaneStatusEnum !==
-                        null
-                          ? staff.currentAssignedAppointmentSwimlaneStatusEnum
-                          : "Not Assigned"} */}
-                      </Typography>
+                      </MDTypography>
                     </MDBox>
                   </MDBox>
                 </MDBox>
