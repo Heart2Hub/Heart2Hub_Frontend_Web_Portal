@@ -103,6 +103,22 @@ function FacilityBooking() {
 				);
 				return
 			}
+			console.log("facility:" + selectedFacility.status);
+
+			if (selectedFacility.status === 'NON_BOOKABLE') {
+				setIsBookingModalOpen(false);
+				fetchData();
+				fetchBookingData();
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Error Encountered",
+						content: "This facility is not available for booking",
+					})
+				);
+				return
+			}
 
 			const bookingData = {
 				startDateTime: startDateObj,
@@ -122,6 +138,7 @@ function FacilityBooking() {
 					const booking = response.data;
 					console.log(booking);
 					setIsBookingModalOpen(false);
+					setComments("");
 					reduxDispatch(
 						displayMessage({
 							color: "success",
@@ -306,20 +323,21 @@ function FacilityBooking() {
 		rows: [],
 	});
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [formData, setFormData] = useState({
-		subDepartmentId: null,
-		name: "",
-		location: "",
-		description: "",
-		capacity: "",
-		facilityStatusEnum: "",
-		facilityTypeEnum: "",
-	});
+	// const [formData, setFormData] = useState({
+	// 	departmentId: null,
+	// 	name: "",
+	// 	location: "",
+	// 	description: "",
+	// 	capacity: "",
+	// 	facilityStatusEnum: "",
+	// 	facilityTypeEnum: "",
+	// });
 
 	const [selectedFacility, setSelectedFacility] = useState(null);
 	const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
 
 	const handleViewAvailability = (facility) => {
+		console.log("selected facility: " + facility.facilityStatusEnum);
 		setSelectedFacility(facility);
 		setIsCalendarModalOpen(true);
 
@@ -372,14 +390,6 @@ function FacilityBooking() {
 		setIsCalendarModalOpen(false);
 	};
 
-
-	const handleChange = (event) => {
-		const { name, value } = event.target;
-		setFormData((prevData) => ({
-			...prevData,
-			[name]: value,
-		}));
-	};
 
 	const handleDeleteBooking = async (id, startDateTime) => {
 		try {
@@ -533,106 +543,227 @@ function FacilityBooking() {
 	};
 
 	const handleEventResize = async (event) => {
-		const eventIndex = calendarEvents.findIndex((ev) => ev.id === event.id);
+		try {
+			const eventIndex = calendarEvents.findIndex((ev) => ev.id === event.id);
 
-		if (eventIndex !== -1) {
-			const date1 = new Date(event.start);
-			const date2 = new Date(event.end);
+			if (eventIndex !== -1) {
+				const date1 = new Date(event.start);
+				const date2 = new Date(event.end);
 
-			const startDateObj = date1.toLocaleString();
-			const endDateObj = date2.toLocaleString();
-
-			if (event.event.staffUsername === staff.username) {
-				const updatedEvent = {
-					...calendarEvents[eventIndex],
-					start: startDateObj,
-					end: endDateObj,
-					facilityId: selectedFacility.facilityId,
-					facilityBookingId: event.event.facilityBookingId,
-					comments: event.event.comments,
-					staffUsername: event.event.staffUsername,
+				const options = {
+					day: '2-digit',
+					month: '2-digit',
+					year: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+					second: '2-digit',
+					hour12: false, // Use 24-hour format
 				};
 
-				facilityApi
-					.updateFacilityBooking(updatedEvent)
-					.then((response) => {
-						const booking = response.data;
-						console.log(booking);
-						handleViewAvailability(selectedFacility);
-						reduxDispatch(
-							displayMessage({
-								color: "success",
-								icon: "notification",
-								title: "Successfully Updated Booking!",
-							})
-						);
-					})
-					.catch((error) => {
-						console.error("Error fetching data:", error);
-					});
-			} else {
-				console.log("Permission denied: You cannot resize this event.");
-				reduxDispatch(
-					displayMessage({
-						color: "error",
-						icon: "notification",
-						title: "Permission denied: You cannot resize an event you didn't create.",
-					})
-				);
+				const startDateObj = date1.toLocaleString('en-GB', options);
+				const endDateObj = date2.toLocaleString('en-GB', options);
+
+				console.log("hello there");
+				// console.log(startDateObj);
+				// console.log(endDateObj);
+				const currentDate = new Date();
+				console.log(date1);
+				console.log(currentDate);
+				console.log(date1 < currentDate);
+
+				if (date1 < currentDate) {
+					setIsBookingModalOpen(false);
+					fetchData();
+					fetchBookingData();
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Error Encountered",
+							content: "Booking cannot be done for past date",
+						})
+					);
+					return
+				}
+
+
+				if (event.event.staffUsername === staff.username) {
+					const updatedEvent = {
+						...calendarEvents[eventIndex],
+						start: startDateObj,
+						end: endDateObj,
+						facilityId: selectedFacility.facilityId,
+						facilityBookingId: event.event.facilityBookingId,
+						comments: event.event.comments,
+						staffUsername: event.event.staffUsername,
+					};
+
+					facilityApi
+						.updateFacilityBooking(updatedEvent)
+						.then((response) => {
+							const booking = response.data;
+							console.log(booking);
+							handleViewAvailability(selectedFacility);
+							reduxDispatch(
+								displayMessage({
+									color: "success",
+									icon: "notification",
+									title: "Successfully Updated Booking!",
+								})
+							);
+						})
+						.catch((err) => {
+							if (err.response.data.detail) {
+								reduxDispatch(
+									displayMessage({
+										color: "error",
+										icon: "notification",
+										title: "Error Encountered",
+										content: err.response.data.detail,
+									})
+								);
+							} else {
+								reduxDispatch(
+									displayMessage({
+										color: "error",
+										icon: "notification",
+										title: "Error Encountered",
+										content: err.response.data,
+									})
+								);
+							}
+							console.log(err.response.data.detail)
+						})
+				} else {
+					console.log("Permission denied: You cannot resize this event.");
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Permission denied: You cannot resize an event you didn't create.",
+						})
+					);
+				}
 			}
+		} catch (ex) {
+			console.log(ex.response.data);
+			reduxDispatch(
+				displayMessage({
+					color: "error",
+					icon: "notification",
+					title: "Error Encountered",
+					content: ex.response.data,
+				})
+			);
 		}
 	};
 
 	const handleEventDrop = async (event) => {
-		const eventIndex = calendarEvents.findIndex((ev) => ev.id === event.id);
+		try {
+			const eventIndex = calendarEvents.findIndex((ev) => ev.id === event.id);
 
-		if (eventIndex !== -1) {
-			const date1 = new Date(event.start);
-			const date2 = new Date(event.end);
+			if (eventIndex !== -1) {
+				const date1 = new Date(event.start);
+				const date2 = new Date(event.end);
 
-			const startDateObj = date1.toLocaleString();
-			const endDateObj = date2.toLocaleString();
-
-			if (event.event.staffUsername === staff.username) {
-				const updatedEvent = {
-					...calendarEvents[eventIndex],
-					start: startDateObj,
-					end: endDateObj,
-					facilityId: selectedFacility.facilityId,
-					facilityBookingId: event.event.facilityBookingId,
-					comments: event.event.comments,
-					staffUsername: event.event.staffUsername,
+				const options = {
+					day: '2-digit',
+					month: '2-digit',
+					year: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+					second: '2-digit',
+					hour12: false, // Use 24-hour format
 				};
 
-				facilityApi
-					.updateFacilityBooking(updatedEvent)
-					.then((response) => {
-						const booking = response.data;
-						console.log(booking);
-						handleViewAvailability(selectedFacility);
-						reduxDispatch(
-							displayMessage({
-								color: "success",
-								icon: "notification",
-								title: "Successfully Updated Booking!",
-							})
-						);
-					})
-					.catch((error) => {
-						console.error("Error fetching data:", error);
-					});
-			} else {
-				console.log("Permission denied: You cannot resize this event.");
-				reduxDispatch(
-					displayMessage({
-						color: "error",
-						icon: "notification",
-						title: "Permission denied: You cannot resize an event you didn't create.",
-					})
-				);
+				const startDateObj = date1.toLocaleString('en-GB', options);
+				const endDateObj = date2.toLocaleString('en-GB', options);
+
+				console.log("hello there");
+				// console.log(startDateObj);
+				// console.log(endDateObj);
+				const currentDate = new Date();
+				console.log(date1);
+				console.log(currentDate);
+				console.log(date1 < currentDate);
+
+				if (date1 < currentDate) {
+					setIsBookingModalOpen(false);
+					fetchData();
+					fetchBookingData();
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Error Encountered",
+							content: "Booking cannot be done for past date",
+						})
+					);
+					return
+				}
+				if (event.event.staffUsername === staff.username) {
+					const updatedEvent = {
+						...calendarEvents[eventIndex],
+						start: startDateObj,
+						end: endDateObj,
+						facilityId: selectedFacility.facilityId,
+						facilityBookingId: event.event.facilityBookingId,
+						comments: event.event.comments,
+						staffUsername: event.event.staffUsername,
+					};
+
+					facilityApi
+						.updateFacilityBooking(updatedEvent)
+						.then((response) => {
+							const booking = response.data;
+							console.log(booking);
+							handleViewAvailability(selectedFacility);
+							reduxDispatch(
+								displayMessage({
+									color: "success",
+									icon: "notification",
+									title: "Successfully Updated Booking!",
+								})
+							);
+						})
+						.catch((err) => {
+							if (err.response.data.detail) {
+								reduxDispatch(
+									displayMessage({
+										color: "error",
+										icon: "notification",
+										title: "Error Encountered",
+										content: err.response.data.detail,
+									})
+								);
+							} else {
+								reduxDispatch(
+									displayMessage({
+										color: "error",
+										icon: "notification",
+										title: "Error Encountered",
+										content: err.response.data,
+									})
+								);
+							}
+							console.log(err.response.data.detail)
+						})
+				} else {
+					console.log("Permission denied: You cannot move this booking.");
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Permission denied: You cannot move a booking you didn't create.",
+						})
+					);
+				}
 			}
+		} catch (ex) {
+			console.error(ex);
 		}
-	};
+	}
+
 
 	const calendarConfig = {
 		selectable: true,

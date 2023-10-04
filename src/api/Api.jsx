@@ -120,9 +120,9 @@ export const facilityApi = {
       `${REST_ENDPOINT}/facility/getAllFacilitiesByDepartmentName?name=${name}`
     );
   },
-  createFacility(subDepartmentId, requestBody) {
+  createFacility(departmentId, requestBody) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/facility/createFacility?subDepartmentId=${subDepartmentId}`,
+      `${REST_ENDPOINT}/facility/createFacility?departmentId=${departmentId}`,
       requestBody
     );
   },
@@ -190,9 +190,15 @@ export const allocatedInventoryApi = {
     return axiosFetch.post(
       `${REST_ENDPOINT}/allocatedInventory/createAllocatedInventory`,
       requestBody
-    );
+    )
   },
-};
+  findAllAllocatedInventoryOfFacility(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/allocatedInventory/findAllAllocatedInventoryOfFacility/${id}`
+    )
+  }
+
+}
 
 export const patientApi = {
   getAllPatientsWithElectronicHealthRecordSummaryByName(name) {
@@ -207,7 +213,7 @@ export const patientApi = {
     return axiosFetch.get(
       `${REST_ENDPOINT}/electronicHealthRecord/getAllElectronicHealthRecords`
     );
-  },
+  }
 };
 
 export const ehrApi = {
