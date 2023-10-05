@@ -108,6 +108,7 @@ function CreateAppointmentModal({ isOpen, onClose, onAppointmentCreated }) {
 				setTime("");
 				setDescription("");
 				onAppointmentCreated();
+				reset();
 				onClose();
 				reduxDispatch(
 					displayMessage({
