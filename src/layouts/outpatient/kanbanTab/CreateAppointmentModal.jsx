@@ -16,7 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { patientApi, appointmentApi } from "api/Api";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
 
-function CreateAppointmentModal({ isOpen, onClose }) {
+function CreateAppointmentModal({ isOpen, onClose, onAppointmentCreated }) {
 	const reduxDispatch = useDispatch();
 
 	const staff = useSelector(selectStaff);
@@ -107,6 +107,7 @@ function CreateAppointmentModal({ isOpen, onClose }) {
 
 				setTime("");
 				setDescription("");
+				onAppointmentCreated();
 				onClose();
 				reduxDispatch(
 					displayMessage({

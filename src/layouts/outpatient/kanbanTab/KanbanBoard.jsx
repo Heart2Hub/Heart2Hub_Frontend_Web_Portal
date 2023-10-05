@@ -130,6 +130,10 @@ function KanbanBoard() {
     setRegistration(response.data);
   };
 
+  const handleAppointmentCreated = () => {
+    getAppointmentsForToday();
+  };
+
   useEffect(() => {
     getAppointmentsForToday();
   }, [loading]);
@@ -153,7 +157,8 @@ function KanbanBoard() {
 
 
       {/* Use the CreateAppointmentModal component */}
-      <CreateAppointmentModal isOpen={isModalOpen} onClose={closeModal} />      <DragDropContext onDragEnd={handleDragEnd}>
+      <CreateAppointmentModal isOpen={isModalOpen} onClose={closeModal} onAppointmentCreated={handleAppointmentCreated}/>      
+      <DragDropContext onDragEnd={handleDragEnd}>
         <div className="kanban-board">
           <KanbanColumn
             title="Registration"
