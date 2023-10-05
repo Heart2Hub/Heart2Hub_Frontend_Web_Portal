@@ -18,7 +18,7 @@ function Administration() {
           <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <SimpleBlogCard
-                image="https://bit.ly/3Hlw1MQ"
+                image="https://i.ibb.co/thf32fT/pexels-cottonbro-studio-5722160.jpg"
                 title="Staff Management"
                 action={{
                   type: "internal",
@@ -46,7 +46,7 @@ function Administration() {
           <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <SimpleBlogCard
-                image="https://bit.ly/3Hlw1MQ"
+                image="https://i.ibb.co/wyvGpY2/martha-dominguez-de-gouveia-KF-h9-HMx-RKg-unsplash.jpg"
                 title="Facility Booking"
                 action={{
                   type: "internal",

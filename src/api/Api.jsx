@@ -197,7 +197,17 @@ export const patientApi = {
       `${REST_ENDPOINT}/patient/getAllPatientsWithElectronicHealthRecordSummaryByName?name=${name}`
     );
   },
-};
+  getAllPatientUsername() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/patient/findAllPatientsUsername`
+    );
+  },
+  getAllPatients() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/electronicHealthRecord/getAllElectronicHealthRecords`
+    );
+  }
+}; 
 
 export const ehrApi = {
   getElectronicHealthRecordByIdAndDateOfBirth(
@@ -346,4 +356,16 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/viewAllAppointmentsByRange?startDay=${startDay}&startMonth=${startMonth}&startYear=${startYear}&endDay=${endDay}&endMonth=${endMonth}&endYear=${endYear}&departmentName=${departmentName}`
     );
   },
+  createNewAppointment(
+    description,
+    actualDateTime,
+    bookedDateTime,
+    priority,
+    patientUsername,
+    departmentName
+  ) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
+    );
+  }
 };

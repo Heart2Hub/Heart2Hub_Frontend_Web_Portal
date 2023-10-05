@@ -6,7 +6,19 @@ import { useSelector } from "react-redux";
 import { selectStaff } from "../../../store/slices/staffSlice";
 import { appointmentApi } from "../../../api/Api";
 import { useEffect } from "react";
+import MDButton from "components/MDButton";
+
+
+import {
+
+  Button,
+  Icon,
+  Box
+
+} from '@mui/material';
 import "./kanbanStyles.css";
+import CreateAppointmentModal from "./CreateAppointmentModal";
+
 
 function KanbanBoard() {
   const staff = useSelector(selectStaff);
@@ -18,10 +30,21 @@ function KanbanBoard() {
   const [registration, setRegistration] = useState([]);
   const [triage, setTriage] = useState([]);
   const [consultation, setConsultation] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Function to open the modal
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  // Function to close the modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
 
   const handleDragEnd = (result) => {
     const { destination, source, draggableId } = result;
-
     // console.log(source.droppableId);
     // console.log(destination.droppableId);
 
@@ -113,7 +136,24 @@ function KanbanBoard() {
 
   return (
     <>
-      <DragDropContext onDragEnd={handleDragEnd}>
+        <div>
+
+      <Box display="flex" justifyContent="left" alignItems="left" mb={2}>
+
+        <MDButton
+          Button
+          variant="contained"
+          color="primary"
+          onClick={openModal}
+        >
+          Create New Appointment
+          <Icon>add</Icon>
+        </MDButton>
+      </Box>
+
+
+      {/* Use the CreateAppointmentModal component */}
+      <CreateAppointmentModal isOpen={isModalOpen} onClose={closeModal} />      <DragDropContext onDragEnd={handleDragEnd}>
         <div className="kanban-board">
           <KanbanColumn
             title="Registration"
@@ -128,6 +168,8 @@ function KanbanBoard() {
           />
         </div>
       </DragDropContext>
+      </div>
+
     </>
   );
   // return (
