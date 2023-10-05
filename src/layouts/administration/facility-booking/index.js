@@ -60,7 +60,7 @@ function FacilityBooking() {
 	}
 
 	const handleBookingConfirmation = () => {
-		
+
 
 		console.log(selectedSlot.start)
 		const date1 = new Date(selectedSlot.start);
@@ -90,6 +90,8 @@ function FacilityBooking() {
 				const booking = response.data;
 				console.log(booking);
 				setIsBookingModalOpen(false);
+				fetchData();
+				fetchBookingData();
 				reduxDispatch(
 					displayMessage({
 						color: "success",
@@ -117,7 +119,7 @@ function FacilityBooking() {
 	};
 
 	const handleEventClick = (event) => {
-		setSelectedBooking(event); 
+		setSelectedBooking(event);
 		setIsBookingDetailsOpen(true);
 	};
 
@@ -128,8 +130,8 @@ function FacilityBooking() {
 
 	const formats = {
 		eventTimeRangeFormat: ({ start, end }) => {
-			const startTime = moment(start).format('LT'); 
-			const endTime = moment(end).format('LT');     
+			const startTime = moment(start).format('LT');
+			const endTime = moment(end).format('LT');
 			return `${startTime} - ${endTime}`;
 		},
 	};
@@ -139,7 +141,7 @@ function FacilityBooking() {
 		facilityApi
 			.getAllBookingsOfAStaff(staff.username)
 			.then((response) => {
-				const facilities = response.data; 
+				const facilities = response.data;
 				console.log(facilities);
 
 				const mappedRows = facilities.map((facility) => ({
@@ -237,7 +239,7 @@ function FacilityBooking() {
 						>
 							<Icon>delete</Icon>
 						</IconButton>
-						
+
 					</MDBox>
 				),
 				width: "10%",
@@ -263,7 +265,7 @@ function FacilityBooking() {
 						>
 							<Icon>delete</Icon>
 						</IconButton>
-						
+
 					</MDBox>
 				),
 				width: "10%",
@@ -409,7 +411,7 @@ function FacilityBooking() {
 		facilityApi
 			.findAllFacility()
 			.then((response) => {
-				const facilities = response.data; 
+				const facilities = response.data;
 
 				console.log(facilities);
 
@@ -698,7 +700,7 @@ function FacilityBooking() {
 										</Button>
 									</DialogActions>
 								</Dialog>
-								
+
 							</MDBox>
 						</Card>
 					</Grid>
