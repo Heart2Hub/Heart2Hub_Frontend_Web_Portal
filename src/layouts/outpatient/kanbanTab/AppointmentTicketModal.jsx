@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Modal,
   Box,
@@ -11,7 +11,13 @@ import {
 import MDTypography from "components/MDTypography";
 import { calculateAge } from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
+import MDButton from "components/MDButton";
 import { staffApi } from "api/Api";
+
+import { ehrApi } from "api/Api";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setEHRRecord } from "../../../store/slices/ehrSlice";
 
 const style = {
   position: "absolute",
@@ -31,6 +37,8 @@ function AppointmentTicketModal({
   handleCloseModal,
   selectedAppointment,
 }) {
+  const navigate = useNavigate();
+  const reduxDispatch = useDispatch();
   const [assignedStaff, setAssignedStaff] = useState(null);
   console.log(selectedAppointment);
 
@@ -42,6 +50,33 @@ function AppointmentTicketModal({
     // console.log(response);
     // setAppointments(response.data);
     // setRegistration(response.data);
+  };
+
+  const handleClickToEhr = () => {
+    // Can refactor to util
+    const dateComponents = selectedAppointment.dateOfBirth;
+    const [year, month, day, hours, minutes] = dateComponents;
+    const formattedMonth = String(month).padStart(2, "0");
+    const formattedDay = String(day).padStart(2, "0");
+    const dateOfBirthFormatted = `${year}-${formattedMonth}-${formattedDay}T${String(
+      hours
+    ).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`;
+    ehrApi
+      .getElectronicHealthRecordByIdAndDateOfBirth(
+        selectedAppointment.electronicHealthRecordId,
+        dateOfBirthFormatted
+      )
+      .then((response) => {
+        console.log(response);
+        // ROUTE HERE
+        response.data = {
+          ...response.data,
+          username: selectedAppointment.username,
+          profilePicture: selectedAppointment.profilePicture,
+        };
+        reduxDispatch(setEHRRecord(response));
+        navigate("/ehr/ehrRecord");
+      });
   };
 
   useEffect(() => {
@@ -105,9 +140,9 @@ function AppointmentTicketModal({
                 />
               </ListItem>
               <ListItem>
-                <MDTypography variant="h6" gutterBottom>
-                  xxx
-                </MDTypography>
+                <MDButton onClick={handleClickToEhr} color="primary">
+                  EHR
+                </MDButton>
               </ListItem>
 
               <ListItem>
