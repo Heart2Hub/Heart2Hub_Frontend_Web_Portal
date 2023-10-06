@@ -2,13 +2,15 @@ import React from "react";
 import { Droppable } from "@hello-pangea/dnd";
 import KanbanDraggable from "./KanbanDraggable";
 import "./kanbanStyles.css";
-import MDTypography from "components/MDTypography";
 
-function KanbanColumn({ title, appointments, id }) {
-  // console.log("in KanbanColumn");
-  // console.log(title + " " + appointments + " " + id);
-  // console.log(appointments);
-
+function KanbanColumn({
+  title,
+  appointments,
+  id,
+  replaceItemByIdWithUpdated,
+  listOfWorkingStaff,
+  forceRefresh,
+}) {
   return (
     <div className="column">
       <h3 className="column-title">{title}</h3>
@@ -24,6 +26,10 @@ function KanbanColumn({ title, appointments, id }) {
                 key={index}
                 index={index}
                 appointment={appointment}
+                replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+                columnName={title}
+                listOfWorkingStaff={listOfWorkingStaff}
+                forceRefresh={forceRefresh}
               />
             ))}
             {provided.placeholder}

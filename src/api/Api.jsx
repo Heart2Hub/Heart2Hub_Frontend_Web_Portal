@@ -38,7 +38,7 @@ export const staffApi = {
   },
   getStaffByStaffId(staffId) {
     return axiosFetch.get(
-      `${REST_ENDPOINT}/staff/getStaffByUsername?staffId=${staffId}`
+      `${REST_ENDPOINT}/staff/getStaffByStaffId?staffId=${staffId}`
     );
   },
   getStaffByUsername(username) {
@@ -73,6 +73,11 @@ export const staffApi = {
   getStaffListByRole(role, unit) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/staff/getStaffByRole?role=${role}&unit=${unit}`
+    );
+  },
+  getStaffsWorkingInCurrentShiftAndDepartment(departmentName) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/staff/getStaffsWorkingInCurrentShiftAndDepartment?departmentName=${departmentName}`
     );
   },
 };
@@ -197,7 +202,17 @@ export const patientApi = {
       `${REST_ENDPOINT}/patient/getAllPatientsWithElectronicHealthRecordSummaryByName?name=${name}`
     );
   },
-};
+  getAllPatientUsername() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/patient/findAllPatientsUsername`
+    );
+  },
+  getAllPatients() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/electronicHealthRecord/getAllElectronicHealthRecords`
+    );
+  }
+}; 
 
 export const ehrApi = {
   getElectronicHealthRecordByIdAndDateOfBirth(
@@ -357,12 +372,45 @@ export const appointmentApi = {
     endDay,
     endMonth,
     endYear,
-    departmentName
+    departmentName,
+    selectStaffId
   ) {
     return axiosFetch.get(
-      `${REST_ENDPOINT}/appointment/viewAllAppointmentsByRange?startDay=${startDay}&startMonth=${startMonth}&startYear=${startYear}&endDay=${endDay}&endMonth=${endMonth}&endYear=${endYear}&departmentName=${departmentName}`
+      `${REST_ENDPOINT}/appointment/viewAllAppointmentsByRange?startDay=${startDay}&startMonth=${startMonth}&startYear=${startYear}&endDay=${endDay}&endMonth=${endMonth}&endYear=${endYear}&departmentName=${departmentName}&selectStaffId=${selectStaffId}`
     );
   },
+  updateAppointmentArrival(appointmentId, arrivalStatus) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/updateAppointmentArrival?appointmentId=${appointmentId}&arrivalStatus=${arrivalStatus}`
+    );
+  },
+  updateAppointmentComments(appointmentId, comments) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/updateAppointmentComments?appointmentId=${appointmentId}&comments=${comments}`
+    );
+  },
+  updateAppointmentSwimlaneStatus(appointmentId, swimlaneStatus) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/updateAppointmentSwimlaneStatus?appointmentId=${appointmentId}&swimlaneStatus=${swimlaneStatus}`
+    );
+  },
+  assignAppointmentToStaff(appointmentId, staffId) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/assignAppointmentToStaff?appointmentId=${appointmentId}&staffId=${staffId}`
+    );
+  },
+  createNewAppointment(
+    description,
+    actualDateTime,
+    bookedDateTime,
+    priority,
+    patientUsername,
+    departmentName
+  ) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
+    );
+  }
 };
 
 export const inventoryApi = {

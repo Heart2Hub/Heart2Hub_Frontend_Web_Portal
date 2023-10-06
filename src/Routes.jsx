@@ -73,17 +73,49 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Outpatient",
-    key: "outpatient",
-    icon: <Icon fontSize="small">local_hospital</Icon>,
-    route: "/outpatient",
+    name: "Administration",
+    key: "administration",
+    icon: <Icon fontSize="small">build</Icon>,
+    route: "/administration",
     authorizedRoles: [StaffRoleEnum.ALL],
     component: (
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
       >
-        <Outpatient />
+        <Administration />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "EHR",
+    key: "ehr",
+    icon: <Icon fontSize="small">receipt_long</Icon>,
+    route: "/ehr",
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <EHR />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "Finance",
+    key: "finance",
+    icon: <Icon fontSize="small">attach_money</Icon>,
+    route: "/finance",
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Finance />
       </ProtectedRoute>
     ),
   },
@@ -105,42 +137,44 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "EHR",
-    key: "ehr",
-    icon: <Icon fontSize="small">receipt_long</Icon>,
-    route: "/ehr",
+    name: "Manpower",
+    key: "manpower",
+    icon: <Icon fontSize="small">group</Icon>,
+    route: "/manpower",
     authorizedRoles: [StaffRoleEnum.ALL],
     component: (
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
       >
-        <EHR />
+        <Manpower />
       </ProtectedRoute>
     ),
   },
+  {
+    type: "collapse",
+    name: "Outpatient",
+    key: "outpatient",
+    icon: <Icon fontSize="small">local_hospital</Icon>,
+    route: "/outpatient",
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Outpatient />
+      </ProtectedRoute>
+    ),
+  },
+  
+  
   {
     name: "EHR",
     key: "ehr",
     icon: <Icon fontSize="small">receipt_long</Icon>,
     route: "/ehr/ehrRecord",
     component: <EHRRecord />,
-  },
-  {
-    type: "collapse",
-    name: "Administration",
-    key: "administration",
-    icon: <Icon fontSize="small">build</Icon>,
-    route: "/administration",
-    authorizedRoles: [StaffRoleEnum.ALL],
-    component: (
-      <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
-        forHeadsOnly={false}
-      >
-        <Administration />
-      </ProtectedRoute>
-    ),
   },
   {
     name: "Staff Management",
@@ -181,22 +215,7 @@ const routes = [
       </ProtectedRoute>
     ),
   },
-  {
-    type: "collapse",
-    name: "Manpower",
-    key: "manpower",
-    icon: <Icon fontSize="small">group</Icon>,
-    route: "/manpower",
-    authorizedRoles: [StaffRoleEnum.ALL],
-    component: (
-      <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
-        forHeadsOnly={false}
-      >
-        <Manpower />
-      </ProtectedRoute>
-    ),
-  },
+  
   {
     name: "Rostering",
     key: "rostering",
@@ -256,22 +275,7 @@ const routes = [
       </ProtectedRoute>
     ),
   },
-  {
-    type: "collapse",
-    name: "Finance",
-    key: "finance",
-    icon: <Icon fontSize="small">attach_money</Icon>,
-    route: "/finance",
-    authorizedRoles: [StaffRoleEnum.ALL],
-    component: (
-      <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
-        forHeadsOnly={false}
-      >
-        <Finance />
-      </ProtectedRoute>
-    ),
-  },
+  
   {
     name: "Error",
     key: "error",

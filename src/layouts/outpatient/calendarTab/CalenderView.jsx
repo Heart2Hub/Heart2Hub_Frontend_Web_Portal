@@ -51,7 +51,8 @@ function CalenderView() {
       endDateDisplay.getDate(),
       endDateDisplay.getMonth() + 1,
       endDateDisplay.getFullYear(),
-      staff.unit.name
+      staff.unit.name,
+      0
     );
     let data = [];
     let listOfAppts = response.data;
