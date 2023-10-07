@@ -62,10 +62,6 @@ function FacilityBooking() {
 	}
 
 	const handleBookingConfirmation = () => {
-<<<<<<< HEAD
-
-=======
->>>>>>> 652c70e1b69e9f7ee1497ee9a5b03d9e8890a3a3
 
 		try {
 			console.log(selectedSlot.start)
