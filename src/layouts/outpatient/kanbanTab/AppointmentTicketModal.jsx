@@ -21,7 +21,6 @@ import { setEHRRecord } from "../../../store/slices/ehrSlice";
 import ArrivalButton from "./ArrivalButton";
 import { displayMessage } from "store/slices/snackbarSlice";
 import { appointmentApi } from "../../../api/Api";
-import MDButton from "components/MDButton";
 import AssignAppointmentDialog from "./AssignAppointmentDialog";
 
 const style = {
@@ -236,32 +235,6 @@ function AppointmentTicketModal({
     setIsDialogOpen(false);
   };
 
-  const handleClickToEhr = () => {
-    // Can refactor to util
-    const dateComponents = selectedAppointment.dateOfBirth;
-    const [year, month, day, hours, minutes] = dateComponents;
-    const formattedMonth = String(month).padStart(2, "0");
-    const formattedDay = String(day).padStart(2, "0");
-    const dateOfBirthFormatted = `${year}-${formattedMonth}-${formattedDay}T${String(
-      hours
-    ).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`;
-    ehrApi
-      .getElectronicHealthRecordByIdAndDateOfBirth(
-        selectedAppointment.electronicHealthRecordId,
-        dateOfBirthFormatted
-      )
-      .then((response) => {
-        console.log(response);
-        // ROUTE HERE
-        response.data = {
-          ...response.data,
-          username: selectedAppointment.username,
-          profilePicture: selectedAppointment.profilePicture,
-        };
-        reduxDispatch(setEHRRecord(response));
-        navigate("/ehr/ehrRecord");
-      });
-  };
 
   const handleClickToEhr = () => {
     // Can refactor to util
@@ -303,6 +276,7 @@ function AppointmentTicketModal({
   }, [selectedAppointment, listOfWorkingStaff]);
 
   return (
+    <>
     <Modal
       open={openModal}
       onClose={handleCloseModal}
