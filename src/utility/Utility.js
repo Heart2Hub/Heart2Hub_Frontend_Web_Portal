@@ -81,3 +81,12 @@ export function calculateAge(dateOfBirth) {
 
   return age;
 }
+
+export function truncateText(text, maxLength) {
+  if (text.length <= maxLength) {
+    return text; // No need to truncate
+  }
+
+  // Truncate the text and add an ellipsis
+  return text.slice(0, maxLength) + "...";
+}

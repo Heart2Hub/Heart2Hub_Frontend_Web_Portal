@@ -103,6 +103,22 @@ function FacilityBooking() {
 				);
 				return
 			}
+			console.log("facility:" + selectedFacility.status);
+
+			if (selectedFacility.status === 'NON_BOOKABLE') {
+				setIsBookingModalOpen(false);
+				fetchData();
+				fetchBookingData();
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Error Encountered",
+						content: "This facility is not available for booking",
+					})
+				);
+				return
+			}
 
 			const bookingData = {
 				startDateTime: startDateObj,
@@ -321,6 +337,7 @@ function FacilityBooking() {
 	const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
 
 	const handleViewAvailability = (facility) => {
+		console.log("selected facility: " + facility.facilityStatusEnum);
 		setSelectedFacility(facility);
 		setIsCalendarModalOpen(true);
 

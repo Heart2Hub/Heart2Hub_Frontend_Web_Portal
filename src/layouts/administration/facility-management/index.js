@@ -24,6 +24,8 @@ import { useDispatch } from "react-redux";
 
 import { facilityApi, departmentApi, allocatedInventoryApi } from "api/Api";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
+import { selectStaff } from "store/slices/staffSlice";
+import { useSelector } from "react-redux";
 
 function FacilityManagement() {
   const reduxDispatch = useDispatch();
@@ -41,6 +43,11 @@ function FacilityManagement() {
 
   const [allocatedInventoryIdForUpdate, setAllocatedInventoryIdForUpdate] = useState(null);
 
+  const staff = useSelector(selectStaff);
+  const staffRole = staff.staffRoleEnum;
+  const ADMIN_ROLE = 'ADMIN';
+
+  const isAdmin = staffRole === ADMIN_ROLE;
 
   const handleUpdateInventory = (inventoryItem) => {
     setSelectedInventoryItemForUpdate(inventoryItem);
@@ -52,8 +59,7 @@ function FacilityManagement() {
 
   const handleUpdateQuantity = () => {
     // Check if selectedInventoryItemForUpdate and newQuantity are valid
-    if (selectedInventoryItemForUpdate && newQuantity >= 0) {
-
+    try {
       const requestBody = {
         allocatedInventoryIdForUpdate,
         newQuantity,
@@ -70,13 +76,36 @@ function FacilityManagement() {
         );
         return
       }
+      console.log("newQuantity " + requestBody.new)
+      if (requestBody.newQuantity < 0) {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Quantity cannot be less than 0",
+          })
+        );
+        return
+      }
       if (requestBody.minQuantity == "") {
         reduxDispatch(
           displayMessage({
             color: "error",
             icon: "notification",
             title: "Error Encountered",
-            content: "Quantity cannot be null",
+            content: "Minimum quantity cannot be null",
+          })
+        );
+        return
+      }
+      if (requestBody.minQuantity < 0) {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Minimum quantity cannot be less than 0",
           })
         );
         return
@@ -84,6 +113,7 @@ function FacilityManagement() {
       allocatedInventoryApi
         .updateAllocatedInventory(requestBody)
         .then(() => {
+          fetchData();
           fetchInventoryItems();
 
           const updatedInventory = selectedFacilityInventory.map((item) => {
@@ -124,6 +154,9 @@ function FacilityManagement() {
           );
           console.log(err)
         });
+
+    } catch (ex) {
+      console.log(ex);
     }
   };
 
@@ -161,6 +194,7 @@ function FacilityManagement() {
       allocatedInventoryApi
         .createAllocatedInventory(requestBody)
         .then(() => {
+          fetchData();
           fetchInventoryItemsOfFacility(selectedFacilityId);
 
           const updatedFacilityInventory = [...selectedFacilityInventory]; // Make a copy
@@ -370,7 +404,7 @@ function FacilityManagement() {
           const updatedInventory = selectedFacilityInventory.filter(
             (item) => item.allocatedInventoryId !== inventoryItemId
           );
-
+          fetchData();
           setSelectedFacilityInventory(updatedInventory);
           fetchInventoryItems();
 
@@ -748,44 +782,82 @@ function FacilityManagement() {
   };
 
   const fetchData = async () => {
-    facilityApi
-      .getAllFacilitiesByName("")
-      .then((response) => {
-        const facilities = response.data; // Assuming 'facilities' is an array of facility objects
+    if (isAdmin) {
+      facilityApi
+        .getAllFacilitiesByName("")
+        .then((response) => {
+          const facilities = response.data; // Assuming 'facilities' is an array of facility objects
 
-        // Map the fetched data to match your table structure
-        const mappedRows = facilities.map((facility) => ({
-          facilityId: facility.facilityId,
-          name: facility.name,
-          location: facility.location,
-          description: facility.description,
-          capacity: facility.capacity,
-          status: facility.facilityStatusEnum,
-          type: facility.facilityTypeEnum,
-          inventory: facility.listOfAllocatedInventories
-          // Map other columns as needed
-        }));
+          // Map the fetched data to match your table structure
+          const mappedRows = facilities.map((facility) => ({
+            facilityId: facility.facilityId,
+            name: facility.name,
+            location: facility.location,
+            description: facility.description,
+            capacity: facility.capacity,
+            status: facility.facilityStatusEnum,
+            type: facility.facilityTypeEnum,
+            inventory: facility.listOfAllocatedInventories
+            // Map other columns as needed
+          }));
 
-        dataRef.current = {
-          ...dataRef.current,
-          rows: [mappedRows],
-        };
+          dataRef.current = {
+            ...dataRef.current,
+            rows: [mappedRows],
+          };
 
-        // Update the 'data' state with the mapped data
-        setData((prevData) => ({
-          ...prevData,
-          rows: mappedRows,
-        }));
-      })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
-      });
+          // Update the 'data' state with the mapped data
+          setData((prevData) => ({
+            ...prevData,
+            rows: mappedRows,
+          }));
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+    } else {
+      facilityApi
+        .getAllFacilitiesByDepartmentName(staff.unit.name)
+        .then((response) => {
+          console.log("staff: " + staff.unit.name);
+          const facilities = response.data; // Assuming 'facilities' is an array of facility objects
+
+          // Map the fetched data to match your table structure
+          const mappedRows = facilities.map((facility) => ({
+            facilityId: facility.facilityId,
+            name: facility.name,
+            location: facility.location,
+            description: facility.description,
+            capacity: facility.capacity,
+            status: facility.facilityStatusEnum,
+            type: facility.facilityTypeEnum,
+            inventory: facility.listOfAllocatedInventories
+            // Map other columns as needed
+          }));
+
+          dataRef.current = {
+            ...dataRef.current,
+            rows: [mappedRows],
+          };
+
+          // Update the 'data' state with the mapped data
+          setData((prevData) => ({
+            ...prevData,
+            rows: mappedRows,
+          }));
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+    }
   };
+
 
   useEffect(() => {
     fetchData();
     getDepartments();
-    fetchInventoryItems();
+    // fetchInventoryItems();
+    fetchInventoryItemsOfFacility();
   }, []);
 
   return (
@@ -899,10 +971,8 @@ function FacilityManagement() {
               onChange={handleChange}
               sx={{ lineHeight: "3em" }}
             >
-              <MenuItem value="AVAILABLE">Available</MenuItem>
-              <MenuItem value="UNAVAILABLE">Unavailable</MenuItem>
-              <MenuItem value="MAINTENANCE">Maintenance</MenuItem>
-              <MenuItem value="CLOSED">Closed</MenuItem>
+              <MenuItem value="BOOKABLE">Bookable</MenuItem>
+              <MenuItem value="NON_BOOKABLE">Non Bookable</MenuItem>
               {/* Add more status options as needed */}
             </Select>
           </FormControl>
@@ -977,10 +1047,8 @@ function FacilityManagement() {
               onChange={handleUpdateChange}
               sx={{ lineHeight: "3em" }}
             >
-              <MenuItem value="AVAILABLE">Available</MenuItem>
-              <MenuItem value="UNAVAILABLE">Unavailable</MenuItem>
-              <MenuItem value="MAINTENANCE">Maintenance</MenuItem>
-              <MenuItem value="CLOSED">Closed</MenuItem>
+              <MenuItem value="BOOKABLE">Bookable</MenuItem>
+              <MenuItem value="NON_BOOKABLE">Non Bookable</MenuItem>
               {/* Refactor to pull from database */}
             </Select>
           </FormControl>

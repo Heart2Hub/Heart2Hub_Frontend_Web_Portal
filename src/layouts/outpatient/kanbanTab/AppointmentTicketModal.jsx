@@ -5,8 +5,8 @@ import {
   List,
   ListItem,
   ListItemText,
-  TextareaAutosize,
   Chip,
+  Skeleton,
 } from "@mui/material";
 import MDTypography from "components/MDTypography";
 import { calculateAge } from "utility/Utility";
@@ -22,6 +22,9 @@ import ArrivalButton from "./ArrivalButton";
 import { displayMessage } from "store/slices/snackbarSlice";
 import { appointmentApi } from "../../../api/Api";
 import AssignAppointmentDialog from "./AssignAppointmentDialog";
+import { useSelector } from "react-redux";
+import { selectStaff } from "store/slices/staffSlice";
+import { IMAGE_SERVER } from "constants/RestEndPoint";
 
 const style = {
   position: "absolute",
@@ -49,14 +52,16 @@ function AppointmentTicketModal({
   const reduxDispatch = useDispatch();
   const [assignedStaff, setAssignedStaff] = useState(null);
   const [facilityLocation, setFacilityLocation] = useState(null);
-  const [editableComments, setEditableComments] = useState(
-    selectedAppointment.comments
-  );
+  const [editableComments, setEditableComments] = useState("");
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
 
   //for assigning appointment to staff in the AppointmentTicketModal
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // const [assigningToSwimlane, setAssigningToSwimlane] = useState("");
+
+  //logged in staff
+  const loggedInStaff = useSelector(selectStaff);
 
   const handleCommentsTouched = () => {
     setCommentsTouched(true);
@@ -93,7 +98,8 @@ function AppointmentTicketModal({
     try {
       const response = await appointmentApi.updateAppointmentArrival(
         selectedAppointment.appointmentId,
-        !selectedAppointment.arrived
+        !selectedAppointment.arrived,
+        loggedInStaff.staffId
       );
       let updatedAppointment = response.data;
 
@@ -126,13 +132,13 @@ function AppointmentTicketModal({
   };
 
   const handleUpdateComments = async () => {
-    //set loading true
     setLoading(true);
 
     try {
       const response = await appointmentApi.updateAppointmentComments(
         selectedAppointment.appointmentId,
-        editableComments
+        editableComments,
+        loggedInStaff.staffId
       );
       let updatedAppointment = response.data;
 
@@ -152,7 +158,6 @@ function AppointmentTicketModal({
         })
       );
     } catch (error) {
-      //handle error message and success message display
       reduxDispatch(
         displayMessage({
           color: "error",
@@ -162,6 +167,8 @@ function AppointmentTicketModal({
         })
       );
     }
+    setEditableComments("");
+    setCommentsTouched(false);
     setLoading(false);
   };
 
@@ -206,10 +213,7 @@ function AppointmentTicketModal({
       );
 
       handleCloseModal();
-
-      console.log("successfully updated swimlane");
     } catch (error) {
-      //perform error handling
       reduxDispatch(
         displayMessage({
           color: "warning",
@@ -271,7 +275,7 @@ function AppointmentTicketModal({
         )
       );
     }
-    setEditableComments(selectedAppointment.comments);
+    // setAssigningToSwimlane(columnName);
   }, [selectedAppointment, listOfWorkingStaff]);
 
   return (
@@ -289,7 +293,7 @@ function AppointmentTicketModal({
                 sx={{
                   display: "flex",
                   justifyContent: "space-between",
-                  alignItems: "center", // To align items vertically center
+                  alignItems: "center",
                 }}
               >
                 <MDTypography
@@ -299,20 +303,30 @@ function AppointmentTicketModal({
                   gutterBottom
                 >
                   HH-{selectedAppointment.appointmentId}:{" "}
-                  {selectedAppointment.firstName} {selectedAppointment.lastName} (
-                  {calculateAge(selectedAppointment?.dateOfBirth)}
+                  {selectedAppointment.firstName} {selectedAppointment.lastName}{" "}
+                  ({calculateAge(selectedAppointment?.dateOfBirth)}
                   {selectedAppointment.sex === "Male" ? "M" : "F"})
                 </MDTypography>
-                <MDAvatar
-                  src={
-                    ""
-                    // IMAGE_SERVER + "/images/id/" + staff.profilePicture?.imageLink
-                  }
-                  alt="profile-image"
-                  size="xxl"
-                  shadow="xxl"
-                  style={{ height: "150px", width: "150px" }}
-                />
+                {selectedAppointment.patientProfilePicture !== null && (
+                  <MDAvatar
+                    src={
+                      IMAGE_SERVER +
+                      "/images/id/" +
+                      selectedAppointment.patientProfilePicture
+                    }
+                    alt="profile-image"
+                    size="xxl"
+                    shadow="xxl"
+                    style={{ height: "150px", width: "150px" }}
+                  />
+                )}
+                {selectedAppointment.patientProfilePicture === null && (
+                  <Skeleton
+                    className="avatar-right"
+                    variant="circular"
+                    style={{ height: "150px", width: "150px" }}
+                  />
+                )}
               </Box>
               <List>
                 <ListItem>
@@ -338,7 +352,6 @@ function AppointmentTicketModal({
                     </MDButton>
                   </MDTypography>
                 </ListItem>
-
                 <ListItem>
                   <ListItemText primary="Assigned To:" secondary={""} />
                 </ListItem>
@@ -381,7 +394,6 @@ function AppointmentTicketModal({
                     label={selectedAppointment.priorityEnum}
                   />
                 </ListItem>
-                {/* <ListItem style={{ width: "40%" }}> */}
                 <ListItem>
                   <ListItemText primary="Arrival Status:" secondary="" />
                 </ListItem>
@@ -410,18 +422,25 @@ function AppointmentTicketModal({
                   </MDTypography>
                 </ListItem>
                 <ListItem>
-                  <TextareaAutosize
+                  <textarea
                     readOnly
-                    rowsmin={3}
                     value={selectedAppointment.description}
+                    placeholder="This appointment has no description yet"
                     style={{
                       width: "100%",
-                      minHeight: "120px",
+                      height: "40px",
                       borderColor: "gainsboro",
                       borderRadius: "6px",
                       fontFamily: "Arial",
                       padding: "10px",
                       fontSize: "15px",
+                      overflowY: "auto",
+                      resize: "none",
+                      "::-webkit-scrollbar": {
+                        display: "none",
+                      },
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
                     }}
                   />
                 </ListItem>
@@ -431,18 +450,50 @@ function AppointmentTicketModal({
                   </MDTypography>
                 </ListItem>
                 <ListItem>
-                  <TextareaAutosize
-                    rowsmin={3}
-                    value={editableComments}
-                    onChange={handleCommentsChange}
+                  <textarea
+                    readOnly
+                    value={selectedAppointment.comments}
+                    placeholder="This appointment has no comments yet"
                     style={{
                       width: "100%",
-                      minHeight: "120px",
+                      height: "60px",
                       borderColor: "gainsboro",
                       borderRadius: "6px",
                       fontFamily: "Arial",
                       padding: "10px",
                       fontSize: "15px",
+                      overflowY: "auto",
+                      resize: "none",
+                      "::-webkit-scrollbar": {
+                        width: "0px",
+                        background: "transparent",
+                      },
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
+                    }}
+                  />
+                </ListItem>
+                <ListItem sx={{ marginTop: "10px" }}>
+                  <textarea
+                    value={editableComments}
+                    onChange={handleCommentsChange}
+                    placeholder="Add new comment here"
+                    style={{
+                      width: "100%",
+                      height: "40px",
+                      borderColor: "gainsboro",
+                      borderRadius: "6px",
+                      fontFamily: "Arial",
+                      padding: "10px",
+                      fontSize: "15px",
+                      overflowY: "auto",
+                      resize: "none",
+                      "::-webkit-scrollbar": {
+                        width: "0px",
+                        background: "transparent",
+                      },
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
                     }}
                   />
                 </ListItem>
@@ -474,6 +525,7 @@ function AppointmentTicketModal({
         onClose={handleCloseAssignDialog}
         listOfWorkingStaff={listOfWorkingStaff}
         selectedAppointmentToAssign={selectedAppointment}
+        assigningToSwimlane={columnName}
       />
     </>
   );
