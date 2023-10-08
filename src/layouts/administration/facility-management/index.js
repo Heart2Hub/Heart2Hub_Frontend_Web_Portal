@@ -145,17 +145,6 @@ function FacilityManagement() {
   const [quantity, setQuantity] = useState(0);
   const [inventoryItems, setInventoryItems] = useState([]); // State to store inventory items
 
-  // Function to fetch inventory items from the API
-  const fetchInventoryItems = async () => {
-    facilityApi
-      .getAllConsumableInventory()
-      .then((response => {
-        const items = response.data;
-        setInventoryItems(items);
-      })).catch((error) => {
-        console.error("Error fetching data:", error);
-      });
-  };
 
   const addInventoryToFacility = async (inventoryItemId, quantity, minQuantity) => {
 
@@ -172,8 +161,9 @@ function FacilityManagement() {
       allocatedInventoryApi
         .createAllocatedInventory(requestBody)
         .then(() => {
+          fetchInventoryItemsOfFacility(selectedFacilityId);
 
-          const updatedFacilityInventory = [...facilityInventory]; // Make a copy
+          const updatedFacilityInventory = [...selectedFacilityInventory]; // Make a copy
           const existingItemIndex = updatedFacilityInventory.findIndex(
             (item) => item.inventoryItemId === inventoryItemId
           );
@@ -190,9 +180,10 @@ function FacilityManagement() {
               minQuantity,
             });
           }
+          console.log(updatedFacilityInventory);
 
-          setFacilityInventory(...facilityInventory, updatedFacilityInventory)
-          fetchInventoryItems();
+          // setSelectedFacilityInventory(updatedFacilityInventory);
+
           reduxDispatch(
             displayMessage({
               color: "success",
@@ -229,22 +220,55 @@ function FacilityManagement() {
     }
   };
 
-  const handleAddInventory = (selectedFacilityId) => {
+  const handleAddInventory = async (selectedFacilityId) => {
     if (!selectedInventoryItem || quantity <= 0 || minQuantity < 0) {
       // Handle validation error, display a message, or prevent adding invalid data
       return;
     }
 
-    addInventoryToFacility(selectedInventoryItem.inventoryItemId, quantity, minQuantity, selectedFacilityId);
+    try {
+      await addInventoryToFacility(selectedInventoryItem.inventoryItemId, quantity, minQuantity, selectedFacilityId)
+        .then(() => {
 
-    fetchInventoryItems();
-    setIsAddInventoryDialogOpen(false);
+          setIsAddInventoryDialogOpen(false);
+          setSelectedInventoryItem("");
+          setQuantity(0);
+          setMinQuantity(0);
+        })
 
-    setSelectedInventoryItem("");
-    setQuantity(0);
-    setMinQuantity(0);
-
+    } catch (error) {
+      // Handle any error that occurs during the addition process
+      console.error("Error adding inventory item:", error);
+    };
   };
+
+
+  // Function to fetch inventory items from the API
+  const fetchInventoryItems = async () => {
+    try {
+      const response = await facilityApi.getAllConsumableInventory()
+      const items = response.data;
+      console.log("fetched items:" + items);
+      setInventoryItems(items);
+
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    };
+  };
+
+  const fetchInventoryItemsOfFacility = async (selectedFacilityId) => {
+    try {
+      console.log("fetching now");
+      const response = await allocatedInventoryApi.findAllAllocatedInventoryOfFacility(selectedFacilityId);
+      const items = response.data;
+      console.log("fetched items:" + items);
+      setSelectedFacilityInventory(items);
+
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    };
+  };
+
 
   const [data, setData] = useState({
     columns: [
@@ -407,7 +431,7 @@ function FacilityManagement() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    subDepartmentId: null,
+    departmentId: null,
     name: "",
     location: "",
     description: "",
@@ -454,10 +478,12 @@ function FacilityManagement() {
 
   const handleCreateFacility = () => {
     try {
-      const { subDepartmentId, ...requestBody } = formData;
-      if (subDepartmentId == null) {
+      const { departmentId, ...requestBody } = formData;
+      console.log(departmentId);
+      console.log(requestBody);
+      if (departmentId == null) {
         setFormData({
-          subDepartmentId: null,
+          departmentId: null,
           name: "",
           location: "",
           description: "",
@@ -470,7 +496,7 @@ function FacilityManagement() {
             color: "error",
             icon: "notification",
             title: "Error Encountered",
-            content: "Sub department cannot be null",
+            content: "Department cannot be null",
           })
         );
         return
@@ -478,7 +504,7 @@ function FacilityManagement() {
       console.log(requestBody.facilityStatusEnum)
       if (requestBody.facilityStatusEnum == "") {
         setFormData({
-          subDepartmentId: null,
+          departmentId: null,
           name: "",
           location: "",
           description: "",
@@ -498,7 +524,7 @@ function FacilityManagement() {
       }
       if (requestBody.facilityTypeEnum == "") {
         setFormData({
-          subDepartmentId: null,
+          departmentId: null,
           name: "",
           location: "",
           description: "",
@@ -517,11 +543,11 @@ function FacilityManagement() {
         return
       }
       facilityApi
-        .createFacility(subDepartmentId, requestBody)
+        .createFacility(departmentId, requestBody)
         .then(() => {
           fetchData();
           setFormData({
-            subDepartmentId: null,
+            departmentId: null,
             name: "",
             location: "",
             description: "",
@@ -541,7 +567,7 @@ function FacilityManagement() {
         })
         .catch((err) => {
           setFormData({
-            subDepartmentId: null,
+            departmentId: null,
             name: "",
             location: "",
             description: "",
@@ -841,8 +867,8 @@ function FacilityManagement() {
           <FormControl fullWidth margin="dense">
             <InputLabel>Unit</InputLabel>
             <Select
-              name="subDepartmentId"
-              value={formData.subDepartmentId}
+              name="departmentId"
+              value={formData.departmentId}
               onChange={handleChange}
               sx={{ lineHeight: "3em" }}
             >
