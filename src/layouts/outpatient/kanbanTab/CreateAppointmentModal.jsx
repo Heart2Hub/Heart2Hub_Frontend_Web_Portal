@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
 	Modal,
 	Button,
@@ -10,7 +10,7 @@ import {
 	FormControl,
 	InputLabel,
 } from "@mui/material";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, reset } from "react-hook-form";
 import { selectStaff } from "../../../store/slices/staffSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { patientApi, appointmentApi } from "api/Api";
@@ -20,22 +20,33 @@ function CreateAppointmentModal({ isOpen, onClose, onAppointmentCreated }) {
 	const reduxDispatch = useDispatch();
 
 	const staff = useSelector(selectStaff);
-	const [patients, setPatients] = useState([]);
+	const [nric, setNric] = useState('');
 	const [time, setTime] = useState('');
 	const [description, setDescription] = useState('');
 	//const singaporeTimeOptions = { timeZone: 'Asia/Singapore' };
 
 	const currentD = new Date();
 
+	currentD.setHours((currentD.getHours() + 1) % 24);
+	// currentD.setMinutes(0);
+	// currentD.setSeconds(0);
+
+
 	const year = currentD.getFullYear();
-	const day = String(currentD.getDate()).padStart(2, '0');
+	let day = String(currentD.getDate()).padStart(2, '0');
 	const month = String(currentD.getMonth() + 1).padStart(2, '0'); // Adding 1 to month as it's zero-based
 	const hours = String(currentD.getHours()).padStart(2, '0');
 	const minutes = String(currentD.getMinutes()).padStart(2, '0');
 	const seconds = String(currentD.getSeconds()).padStart(2, '0');
 	const milliseconds = String(currentD.getMilliseconds()).padStart(3, '0');
 
-	const currentDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}`;
+	let currentDate = `${year}-${month}-${day}T${String(currentD.getHours() - 1).padStart(2, '0')}:${minutes}:${seconds}.${milliseconds}`;
+
+	if (currentD.getHours() === 0) {
+		day = String(currentD.getDate() + 1).padStart(2, '0');
+		currentDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}`;
+
+	}
 
 
 	const style = {
@@ -85,14 +96,14 @@ function CreateAppointmentModal({ isOpen, onClose, onAppointmentCreated }) {
 		console.log(new Date())
 		console.log(defaultDate)
 		const enteredTime = time; // Entered time from the form
-		const actualDateTime = `${defaultDate}T${enteredTime}:10.000`; // Combine date and time
+		const actualDateTime = `${year}-${month}-${day}T${time}:10.000`;
 
 		const appointmentData = {
 			description: description,
 			actualDateTime: actualDateTime, // Set to current date time
 			bookedDateTime: currentDate, // Use the state valuee
 			priority: data.priority,
-			patientUsername: data.patient,
+			patientUsername: nric,
 			departmentName: staff.unit.name,
 		};
 
@@ -105,9 +116,10 @@ function CreateAppointmentModal({ isOpen, onClose, onAppointmentCreated }) {
 			.then((response) => {
 				console.log("Appointment created:", response.data);
 
-				setTime("");
+				//setTime("");
 				setDescription("");
 				onAppointmentCreated();
+				setNric("");
 				reset();
 				onClose();
 				reduxDispatch(
@@ -134,28 +146,15 @@ function CreateAppointmentModal({ isOpen, onClose, onAppointmentCreated }) {
 
 
 	const handleCancel = () => {
-		// Reset the form fields to their initial values
 		reset();
-		// Close the modal
+		setNric("");
 		onClose();
 	};
 
-	const fetchPatientUsername = async () => {
-		patientApi
-			.getAllPatientUsername()
-			.then((response) => {
-				const patients = response.data;
-				console.log(patients);
-
-				setPatients(patients)
-			})
-			.catch((error) => {
-				console.error("Error fetching data:", error);
-			});
-	};
-
 	useEffect(() => {
-		fetchPatientUsername();
+
+		setTime(`${(currentD.getHours()).toString().padStart(2, '0')}:00`);
+
 	}, []);
 
 	return (
@@ -163,31 +162,9 @@ function CreateAppointmentModal({ isOpen, onClose, onAppointmentCreated }) {
 			<Box sx={style}>
 				<h2>Create Appointment</h2>
 				<h3>Date: {year}-{month}-{day}</h3>
+				<h3>Time: {time}</h3>
 				<form onSubmit={handleSubmit(onSubmit)}>
-					{/* <TextField
-						label="Date"
-						type="date"
-						InputLabelProps={{
-							shrink: true,
-						}}
-						defaultValue={defaultDate}
-						disabled
-						fullWidth
-						margin="normal"
-					/> */}
-					<TextField
-						label="Time"
-						type="time"
-						InputLabelProps={{
-							shrink: true,
-						}}
-						value={time}
-						onChange={(e) => setTime(e.target.value)}
-						fullWidth
-						margin="normal"
-						name="time" // Make sure the name matches the Controller field name
-						control={control}
-					/>
+
 					<TextareaAutosize
 						minRows={3}
 						label="Description"
@@ -223,29 +200,14 @@ function CreateAppointmentModal({ isOpen, onClose, onAppointmentCreated }) {
 						/>
 					</FormControl>
 
-					<FormControl fullWidth margin="normal">
-						<InputLabel htmlFor="patient">Patient Username</InputLabel>
-						<Controller
-							name="patient"
-							control={control}
-							render={({ field }) => (
-								<Select
-									{...field}
-									label="Patients"
-									labelId="patient"
-									id="patient"
-									sx={{ lineHeight: "3em" }}
-								>
-									{/* Populate the Select component with patients */}
-									{patients.map((patients) => (
-										<MenuItem key={patients} value={patients}>
-											{patients}
-										</MenuItem>
-									))}
-								</Select>
-							)}
-						/>
-					</FormControl>
+					<TextField
+						label="NRIC"
+						fullWidth
+						margin="normal"
+						name="nric"
+						value={nric}
+						onChange={(e) => setNric(e.target.value)}
+					/>
 
 					<TextField
 						label="Department"

@@ -28,6 +28,7 @@ function KanbanBoard() {
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedAppointmentToAssign, setSelectedAppointmentToAssign] =
     useState(null);
+  const [assigningToSwimlane, setAssigningToSwimlane] = useState("");
 
   //for handling filtering
   const [selectStaffToFilter, setSelectStaffToFilter] = useState(null);
@@ -96,22 +97,7 @@ function KanbanBoard() {
       return;
     }
 
-    //=======================   ADD ASSIGNED LOGIC HERE =================
-    const assignAppointment = await showAssignAppointmentDialog(appointment);
-    if (!assignAppointment) {
-      setSelectedAppointmentToAssign(null);
-      reduxDispatch(
-        displayMessage({
-          color: "warning",
-          icon: "notification",
-          title: "Error",
-          content: "No Assignment was performed",
-        })
-      );
-      return;
-    }
-
-    //========================== Updating Backend ========================
+    //========================== Get destination swimlane name ========================
     let destinationSwimlane = "";
     if (destination.droppableId === "1") {
       destinationSwimlane = "Registration";
@@ -131,6 +117,25 @@ function KanbanBoard() {
       );
     }
 
+    //=======================   ADD ASSIGNED LOGIC HERE =================
+    const assignAppointment = await showAssignAppointmentDialog(
+      appointment,
+      destinationSwimlane
+    );
+    if (!assignAppointment) {
+      setSelectedAppointmentToAssign(null);
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error",
+          content: "No Assignment was performed",
+        })
+      );
+      return;
+    }
+
+    //========================== Updating Backend ========================
     let updatedAppointment;
     try {
       const response = await appointmentApi.updateAppointmentSwimlaneStatus(
@@ -145,7 +150,7 @@ function KanbanBoard() {
           color: "warning",
           icon: "notification",
           title: "Error",
-          content: error.data,
+          content: error.response.data,
         })
       );
       return;
@@ -208,11 +213,12 @@ function KanbanBoard() {
   //for assigning appt to staff
   const dialogResolver = useRef(null); // This will hold the resolve function
 
-  const showAssignAppointmentDialog = (appointment) => {
+  const showAssignAppointmentDialog = (appointment, swimlaneName) => {
     return new Promise((resolve) => {
       // Store the resolve function in our ref
       dialogResolver.current = resolve;
       setSelectedAppointmentToAssign(appointment);
+      setAssigningToSwimlane(swimlaneName);
       setDialogOpen(true);
     });
   };
@@ -242,7 +248,7 @@ function KanbanBoard() {
             color: "warning",
             icon: "notification",
             title: "Error",
-            content: error.data,
+            content: error.response.data,
           })
         );
       }
@@ -381,12 +387,7 @@ function KanbanBoard() {
   return (
     <>
       <Box display="flex" justifyContent="left" alignItems="left" mb={2}>
-        <MDButton
-          Button
-          variant="contained"
-          color="primary"
-          onClick={openModal}
-        >
+        <MDButton variant="contained" color="primary" onClick={openModal}>
           Create New Appointment
           <Icon>add</Icon>
         </MDButton>
@@ -437,8 +438,8 @@ function KanbanBoard() {
         onClose={handleClose}
         listOfWorkingStaff={listOfWorkingStaff}
         selectedAppointmentToAssign={selectedAppointmentToAssign}
+        assigningToSwimlane={assigningToSwimlane}
       />
-      ;
     </>
   );
 }

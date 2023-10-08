@@ -3,6 +3,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   FormControl,
   InputLabel,
@@ -10,6 +11,7 @@ import {
   Select,
 } from "@mui/material";
 import React, { useState } from "react";
+import { useEffect } from "react";
 
 function AssignAppointmentDialog({
   open,
@@ -17,6 +19,7 @@ function AssignAppointmentDialog({
   onConfirm,
   listOfWorkingStaff,
   selectedAppointmentToAssign,
+  assigningToSwimlane,
 }) {
   const [selectedStaff, setSelectedStaff] = useState(
     selectedAppointmentToAssign !== null &&
@@ -24,6 +27,8 @@ function AssignAppointmentDialog({
       ? selectedAppointmentToAssign.currentAssignedStaffId
       : 0
   );
+  const [listOfApplicableWorkingStaff, setListOfApplicableWorkingStaff] =
+    useState([]);
 
   const handleChange = (event) => {
     setSelectedStaff(event.target.value);
@@ -48,14 +53,41 @@ function AssignAppointmentDialog({
     }
   };
 
+  const handleFilterListOfApplicableWorkingStaff = (swimlaneName) => {
+    if (swimlaneName === "Registration") {
+      setListOfApplicableWorkingStaff(
+        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
+      );
+    } else if (swimlaneName === "Triage") {
+      setListOfApplicableWorkingStaff(
+        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "NURSE")
+      );
+    } else if (swimlaneName === "Consultation") {
+      setListOfApplicableWorkingStaff(
+        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "DOCTOR")
+      );
+    } else {
+      console.log(
+        "ERROR ENCOUNTERED IN handleFilterListOfApplicableWorkingStaff"
+      );
+    }
+  };
+
+  useEffect(() => {
+    console.log("current swimlane chosen: " + assigningToSwimlane);
+    handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
+  }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
+
   return (
     <>
       <Dialog open={open} onClose={onClose}>
-        <DialogTitle>
-          Select a Staff to assign this appointment ticket:
-        </DialogTitle>
+        <DialogTitle>Staff Assignment to Ticket:</DialogTitle>
         <DialogContent>
-          <FormControl fullWidth>
+          <DialogContentText>
+            Please choose from the list of available staff members to assign
+            this appointment ticket.
+          </DialogContentText>
+          <FormControl fullWidth variant="outlined" sx={{ mt: 2 }}>
             <InputLabel id="demo-simple-select-label">Staff</InputLabel>
             <Select
               labelId="demo-simple-select-label"
@@ -63,11 +95,11 @@ function AssignAppointmentDialog({
               value={selectedStaff}
               label="Select Staff"
               onChange={handleChange}
-              sx={{ height: "40px" }}
+              sx={{ height: "50px" }}
             >
               <MenuItem value={0}>Not assigned</MenuItem>
-              {listOfWorkingStaff.length !== 0 &&
-                listOfWorkingStaff.map((staff) => (
+              {listOfApplicableWorkingStaff.length !== 0 &&
+                listOfApplicableWorkingStaff.map((staff) => (
                   <MenuItem key={staff.staffId} value={staff.staffId}>
                     {findStaffInListByStaffId(staff.staffId)}
                   </MenuItem>

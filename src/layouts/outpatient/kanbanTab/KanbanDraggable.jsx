@@ -1,10 +1,9 @@
 import {
-  Avatar,
   Typography,
   Card,
   CardContent,
-  Button,
   ButtonBase,
+  Skeleton,
 } from "@mui/material";
 import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
@@ -13,6 +12,8 @@ import MDTypography from "components/MDTypography";
 import AppointmentTicketModal from "./AppointmentTicketModal";
 import { useState } from "react";
 import MDAvatar from "components/MDAvatar";
+import { IMAGE_SERVER } from "constants/RestEndPoint";
+import { truncateText } from "utility/Utility";
 
 function KanbanDraggable({
   appointment,
@@ -23,10 +24,15 @@ function KanbanDraggable({
   forceRefresh,
 }) {
   const [openModal, setOpenModal] = useState(false);
-  // const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   const handleCloseModal = () => {
     setOpenModal(false);
+  };
+
+  const handleOpenModal = (appointment) => {
+    setSelectedAppointment(appointment);
+    setOpenModal(true);
   };
 
   return (
@@ -40,7 +46,7 @@ function KanbanDraggable({
           <ButtonBase
             key={appointment.appointmentId}
             style={{ width: "100%", marginBottom: "10px" }}
-            onClick={() => setOpenModal(true)}
+            onClick={() => handleOpenModal(appointment)}
           >
             <Card
               className={`draggable-container ${
@@ -57,29 +63,43 @@ function KanbanDraggable({
                   <MDTypography variant="h5" className="draggable-id">
                     HH-{appointment.appointmentId}
                   </MDTypography>
-                  {/* <Button onClick={() => setOpenModal(true)}>View</Button> */}
                 </div>
 
                 <Typography variant="body2" className="draggable-description">
                   {appointment.birthday}
                 </Typography>
                 <div className="draggable-icons">
-                  <Typography variant="subtitle2" className="avatar-left">
-                    {appointment.firstName +
-                      " " +
-                      appointment.lastName +
-                      " (" +
-                      appointment.sex +
-                      ")"}
+                  <Typography
+                    variant="subtitle2"
+                    className="avatar-left"
+                    sx={{ textAlign: "left" }}
+                  >
+                    {truncateText(
+                      appointment.firstName + " " + appointment.lastName,
+                      14
+                    )}
+                    <br />
+                    {"(" + appointment.sex + ")"}
                   </Typography>
-                  <MDAvatar
-                    size="xl"
-                    className="avatar-right"
-                    src={
-                      "https://joesch.moe/api/v1/random?key=" +
-                      appointment.appointmentId
-                    }
-                  />
+                  {appointment.patientProfilePicture === null && (
+                    <Skeleton
+                      className="avatar-right"
+                      variant="circular"
+                      style={{ height: "50px", width: "50px" }}
+                    />
+                  )}
+                  {appointment.patientProfilePicture !== null && (
+                    <MDAvatar
+                      size="xl"
+                      className="avatar-right"
+                      src={
+                        IMAGE_SERVER +
+                        "/images/id/" +
+                        appointment.patientProfilePicture
+                      }
+                      alt={"Loading"}
+                    />
+                  )}
                 </div>
               </CardContent>
               {provided.placeholder}
@@ -87,15 +107,17 @@ function KanbanDraggable({
           </ButtonBase>
         )}
       </Draggable>
-      <AppointmentTicketModal
-        openModal={openModal}
-        handleCloseModal={handleCloseModal}
-        selectedAppointment={appointment}
-        replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-        columnName={columnName}
-        listOfWorkingStaff={listOfWorkingStaff}
-        forceRefresh={forceRefresh}
-      />
+      {selectedAppointment && (
+        <AppointmentTicketModal
+          openModal={openModal}
+          handleCloseModal={handleCloseModal}
+          selectedAppointment={appointment}
+          replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+          columnName={columnName}
+          listOfWorkingStaff={listOfWorkingStaff}
+          forceRefresh={forceRefresh}
+        />
+      )}
     </>
   );
 }
