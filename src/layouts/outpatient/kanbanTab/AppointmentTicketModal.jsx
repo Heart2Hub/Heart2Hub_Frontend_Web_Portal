@@ -29,6 +29,7 @@ import { IMAGE_SERVER } from "constants/RestEndPoint";
 import MDBox from "components/MDBox";
 import AddAttachmentButton from "./AddAttachmentButton";
 import ViewAttachmentsButton from "./ViewAttachmentsButton";
+import ViewFacilityInventoryButton from "layouts/administration/facility-management/viewFacilityInventoryButton";
 
 const style = {
   position: "absolute",
@@ -342,6 +343,9 @@ function AppointmentTicketModal({
                       ? facilityLocation
                       : "No Location Yet"}
                   </MDTypography>
+                  {facilityLocation !== null && (<ViewFacilityInventoryButton
+                    selectedFacility={facilityLocation}
+                  />)}
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}

@@ -353,22 +353,6 @@ function FacilityManagement() {
     };
   };
 
-  // const fetchItemQuantity = async (itemId) => {
-  //   try {
-  //     // Make an API request to fetch the quantity based on the itemId
-  //     const response = await yourApi.getQuantity(itemId);
-
-  //     // Extract the quantity data from the response
-  //     const itemQuantity = response.data.quantity;
-
-  //     // Update the state with the fetched quantity
-  //     setItemQuantity(itemQuantity);
-  //   } catch (error) {
-  //     // Handle any errors that occur during the API request
-  //     console.error("Error fetching item quantity:", error);
-  //   }
-  // };
-
   const [data, setData] = useState({
     columns: [
       { Header: "Facility ID", accessor: "facilityId", width: "10%" },
@@ -495,15 +479,6 @@ function FacilityManagement() {
     setIsConfirmationDialogOpen(false);
   };
 
-  function RestockTypeColor(isNeedRestock) {
-    switch (isNeedRestock) {
-      case "false":
-        return "green";
-      case "true":
-        return "red";
-
-    }
-  }
   const inventoryColumns = [
     { Header: "Item ID", accessor: "allocatedInventoryId" },
     { Header: "Name", accessor: "consumableEquipment.inventoryItemName" },
@@ -991,7 +966,7 @@ function FacilityManagement() {
                 coloredShadow="info"
               >
                 <MDTypography variant="h6" color="white">
-                  Facilties Table
+                  Facilities Table
                 </MDTypography>
               </MDBox>
               <MDBox mx={2} mt={3} px={2}>

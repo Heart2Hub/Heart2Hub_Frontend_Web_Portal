@@ -12,6 +12,7 @@ function StaffListSidePanel({
   selectStaffToFilter,
   listOfWorkingStaff,
 }) {
+  console.log(listOfWorkingStaff);
   const handleClick = (staffId) => {
     if (selectStaffToFilter === staffId) {
       handleSelectStaffToFilter(0);
@@ -34,26 +35,25 @@ function StaffListSidePanel({
               onClick={() => handleClick(staff.staffId)}
             >
               <Card
-                className={`card-shadow ${
-                  selectStaffToFilter === staff.staffId ? "selected-card" : ""
-                }`}
+                className={`card-shadow ${selectStaffToFilter === staff.staffId ? "selected-card" : ""
+                  }`}
                 style={
                   selectStaffToFilter === staff.staffId
                     ? {
-                        backgroundColor: "#e0e0e0",
-                        boxShadow: "0 0 15px rgba(0, 0, 0, 0.3)",
-                        border: "1px solid #b0b0b0",
-                        display: "flex",
-                        cursor: "pointer",
-                        padding: "8px",
-                        width: "100%",
-                      }
+                      backgroundColor: "#e0e0e0",
+                      boxShadow: "0 0 15px rgba(0, 0, 0, 0.3)",
+                      border: "1px solid #b0b0b0",
+                      display: "flex",
+                      cursor: "pointer",
+                      padding: "8px",
+                      width: "100%",
+                    }
                     : {
-                        display: "flex",
-                        cursor: "pointer",
-                        padding: "8px",
-                        width: "100%",
-                      }
+                      display: "flex",
+                      cursor: "pointer",
+                      padding: "8px",
+                      width: "100%",
+                    }
                 }
               >
                 <MDBox
