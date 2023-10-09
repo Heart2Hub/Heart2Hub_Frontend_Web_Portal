@@ -26,6 +26,7 @@ import { facilityApi, departmentApi, allocatedInventoryApi } from "api/Api";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
 import { selectStaff } from "store/slices/staffSlice";
 import { useSelector } from "react-redux";
+import ConfirmationDialogComponent from "./confirmationDialogComponent";
 
 function FacilityManagement() {
   const reduxDispatch = useDispatch();
@@ -42,12 +43,17 @@ function FacilityManagement() {
   const [minQuantity, setMinQuantity] = useState(0); // Add minQuantity state
 
   const [allocatedInventoryIdForUpdate, setAllocatedInventoryIdForUpdate] = useState(null);
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
+  const [inventoryItemToDelete, setInventoryItemToDelete] = useState(null);
+  const [isNeedRestock, setisNeedRestock] = useState(false);
 
   const staff = useSelector(selectStaff);
   const staffRole = staff.staffRoleEnum;
   const ADMIN_ROLE = 'ADMIN';
+  const NURSE_ROLE = 'NURSE';
 
   const isAdmin = staffRole === ADMIN_ROLE;
+  const isNurse = staffRole === NURSE_ROLE;
 
   const handleUpdateInventory = (inventoryItem) => {
     setSelectedInventoryItemForUpdate(inventoryItem);
@@ -195,6 +201,7 @@ function FacilityManagement() {
         .createAllocatedInventory(requestBody)
         .then(() => {
           fetchData();
+          fetchInventoryItems();
           fetchInventoryItemsOfFacility(selectedFacilityId);
 
           const updatedFacilityInventory = [...selectedFacilityInventory]; // Make a copy
@@ -255,11 +262,53 @@ function FacilityManagement() {
   };
 
   const handleAddInventory = async (selectedFacilityId) => {
-    if (!selectedInventoryItem || quantity <= 0 || minQuantity < 0) {
-      // Handle validation error, display a message, or prevent adding invalid data
-      return;
+    // if (!selectedInventoryItem || quantity <= 0 || minQuantity < 0) {
+
+    if (quantity == "") {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error Encountered",
+          content: "Quantity cannot be null",
+        })
+      );
+      return
     }
 
+    if (quantity < 0) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error Encountered",
+          content: "Quantity cannot be less than 0",
+        })
+      );
+      return
+    }
+    if (minQuantity == "") {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error Encountered",
+          content: "Minimum quantity cannot be null",
+        })
+      );
+      return
+    }
+    if (minQuantity < 0) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error Encountered",
+          content: "Minimum quantity cannot be less than 0",
+        })
+      );
+      return
+    }
     try {
       await addInventoryToFacility(selectedInventoryItem.inventoryItemId, quantity, minQuantity, selectedFacilityId)
         .then(() => {
@@ -293,6 +342,7 @@ function FacilityManagement() {
   const fetchInventoryItemsOfFacility = async (selectedFacilityId) => {
     try {
       console.log("fetching now");
+      console.log(selectedFacilityId);
       const response = await allocatedInventoryApi.findAllAllocatedInventoryOfFacility(selectedFacilityId);
       const items = response.data;
       console.log("fetched items:" + items);
@@ -303,6 +353,21 @@ function FacilityManagement() {
     };
   };
 
+  // const fetchItemQuantity = async (itemId) => {
+  //   try {
+  //     // Make an API request to fetch the quantity based on the itemId
+  //     const response = await yourApi.getQuantity(itemId);
+
+  //     // Extract the quantity data from the response
+  //     const itemQuantity = response.data.quantity;
+
+  //     // Update the state with the fetched quantity
+  //     setItemQuantity(itemQuantity);
+  //   } catch (error) {
+  //     // Handle any errors that occur during the API request
+  //     console.error("Error fetching item quantity:", error);
+  //   }
+  // };
 
   const [data, setData] = useState({
     columns: [
@@ -392,44 +457,53 @@ function FacilityManagement() {
 
 
   const handleDeleteInventory = (inventoryItemId) => {
-    const isConfirmed = window.confirm("Are you sure you want to delete this inventory item?");
+    setIsConfirmationDialogOpen(true);
+    setInventoryItemToDelete(inventoryItemId);
+  };
 
-    console.log(inventoryItemId);
+  const confirmDeletion = () => {
+    const inventoryItemIdToDelete = inventoryItemToDelete;
+    allocatedInventoryApi
+      .deleteAllocatedInventory(inventoryItemIdToDelete)
+      .then((response => {
+        const updatedInventory = selectedFacilityInventory.filter(
+          (item) => item.allocatedInventoryId !== inventoryItemIdToDelete
+        );
+        fetchData();
+        setSelectedFacilityInventory(updatedInventory);
+        fetchInventoryItems();
 
-    if (isConfirmed) {
+        reduxDispatch(
+          displayMessage({
+            color: "success",
+            icon: "notification",
+            title: "Successfully Deleted Allocated Inventory!",
+            content: "Allocated Inventory with Id: " + inventoryItemIdToDelete + " deleted",
+          })
+        );
+      })).catch((err) => {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: err.response.data,
+          })
+        );
+        console.log(err);
+      });
+    setIsConfirmationDialogOpen(false);
+  };
 
-      allocatedInventoryApi
-        .deleteAllocatedInventory(inventoryItemId)
-        .then((response => {
-          const updatedInventory = selectedFacilityInventory.filter(
-            (item) => item.allocatedInventoryId !== inventoryItemId
-          );
-          fetchData();
-          setSelectedFacilityInventory(updatedInventory);
-          fetchInventoryItems();
-
-          reduxDispatch(
-            displayMessage({
-              color: "success",
-              icon: "notification",
-              title: "Successfully Deleted Allocated Inventory!",
-              content: "Allocated Inventory with Id: " + inventoryItemId + " deleted",
-            })
-          );
-        })).catch((err) => {
-          reduxDispatch(
-            displayMessage({
-              color: "error",
-              icon: "notification",
-              title: "Error Encountered",
-              content: err.response.data,
-            })
-          );
-          console.log(err);
-        });
+  function RestockTypeColor(isNeedRestock) {
+    switch (isNeedRestock) {
+      case "false":
+        return "green";
+      case "true":
+        return "red";
 
     }
-  };
+  }
   const inventoryColumns = [
     { Header: "Item ID", accessor: "allocatedInventoryId" },
     { Header: "Name", accessor: "consumableEquipment.inventoryItemName" },
@@ -437,31 +511,70 @@ function FacilityManagement() {
     { Header: "Quantity Before Restock", accessor: "minimumQuantityBeforeRestock" },
     { Header: "Current Quantity", accessor: "allocatedInventoryCurrentQuantity" },
     {
+      Header: 'Restock Status',
+      accessor: "restockStatus",
+      Cell: ({ row }) => {
+        const isNeedRestock = row.original.allocatedInventoryCurrentQuantity < row.original.minimumQuantityBeforeRestock;
+        const symbolColor = isNeedRestock ? 'red' : 'green';
+
+        return (
+          <div>
+            <div
+              style={{
+                backgroundColor: symbolColor,
+                width: '20px',
+                height: '20px',
+                display: 'inline-block',
+                marginRight: '5px',
+                borderRadius: '50%',
+              }}
+            ></div>
+            {isNeedRestock ? 'Restock Needed' : 'No Restock Needed'}
+          </div>
+        )
+      }
+    },
+
+  ];
+  if (isAdmin || isNurse) {
+    inventoryColumns.push({
       Header: "Actions",
       accessor: "inventoryItemId",
-      Cell: ({ row }) => (
-        <div>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleUpdateInventory(row.original)}
-            style={{ backgroundColor: 'green', color: 'white' }}
+      Cell: ({ row }) => {
+        const isAllowedToUpdate = isAdmin || isNurse;
+        const isAllowedToDelete = isAdmin || isNurse;
 
-          >
-            Update
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={() => handleDeleteInventory(row.original.allocatedInventoryId)}
-            style={{ backgroundColor: 'red', color: 'white' }}
-          >
-            Delete
-          </Button>
-        </div>
-      ),
-    },
-  ];
+        return (
+          <div>
+            {isAllowedToUpdate && (
+              <IconButton
+                variant="contained"
+                color="secondary"
+                onClick={() => handleUpdateInventory(row.original)}
+              >
+                <Icon>create</Icon>
+              </IconButton>
+            )}
+            {isAllowedToDelete && (
+              <IconButton
+                variant="contained"
+                color="secondary"
+                onClick={() => handleDeleteInventory(row.original.allocatedInventoryId)}
+              >
+                <Icon>delete</Icon>
+              </IconButton>
+            )}
+            <ConfirmationDialogComponent
+              open={isConfirmationDialogOpen}
+              onClose={() => setIsConfirmationDialogOpen(false)}
+              onConfirm={confirmDeletion}
+            />
+          </div>
+        );
+      },
+    });
+  }
+
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -856,8 +969,8 @@ function FacilityManagement() {
   useEffect(() => {
     fetchData();
     getDepartments();
-    // fetchInventoryItems();
-    fetchInventoryItemsOfFacility();
+    fetchInventoryItems();
+    // fetchInventoryItemsOfFacility();
   }, []);
 
   return (
@@ -1093,14 +1206,16 @@ function FacilityManagement() {
               No inventory items found for this facility.
             </MDTypography>
           )}
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setIsAddInventoryDialogOpen(true)}
-            style={{ color: 'white' }}
-          >
-            Add Inventory to Facility
-          </Button>
+          {isAdmin || isNurse ? (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setIsAddInventoryDialogOpen(true)}
+              style={{ color: 'white' }}
+            >
+              Add Inventory to Facility
+            </Button>
+          ) : null}
         </DialogContent>
 
         <DialogActions>
@@ -1123,9 +1238,12 @@ function FacilityManagement() {
               value={selectedInventoryItem}
               onChange={(e) => {
                 setSelectedInventoryItem(e.target.value);
+                console.log(selectedInventoryItem);
               }}
               required
-              sx={{ lineHeight: "2.5em" }}
+              sx={{ lineHeight: "2.5em", mt: 1 }}
+              margin="dense"
+              fullWidth
             >
               {inventoryItems.map((item) => (
                 <MenuItem key={item.id} value={item}>
@@ -1135,6 +1253,9 @@ function FacilityManagement() {
             </Select>
           </FormControl>
           <br />
+          <MDTypography variant="h6" gutterBottom>
+            Quantity in Stock: {selectedInventoryItem.quantityInStock}
+          </MDTypography>
           <TextField
             fullWidth
             label="Quantity"
