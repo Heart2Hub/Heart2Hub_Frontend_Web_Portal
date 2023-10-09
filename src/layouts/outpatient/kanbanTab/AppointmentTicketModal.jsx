@@ -60,7 +60,7 @@ function AppointmentTicketModal({
   const [editableComments, setEditableComments] = useState("");
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [facility, setFacility] = useState("");
   //for assigning appointment to staff in the AppointmentTicketModal
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   // const [assigningToSwimlane, setAssigningToSwimlane] = useState("");
@@ -86,6 +86,7 @@ function AppointmentTicketModal({
     )[0];
 
     if (facility) {
+      setFacility(facility);
       return facility.name + " (" + facility.location + ")";
     } else {
       return null;
@@ -344,7 +345,7 @@ function AppointmentTicketModal({
                       : "No Location Yet"}
                   </MDTypography>
                   {facilityLocation !== null && (<ViewFacilityInventoryButton
-                    selectedFacility={facilityLocation}
+                    selectedFacility={facility}
                   />)}
                 </ListItem>
                 <ListItem
