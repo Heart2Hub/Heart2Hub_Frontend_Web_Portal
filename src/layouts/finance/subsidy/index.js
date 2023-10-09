@@ -1,15 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
 	Grid,
 	Card,
-	Dialog,
-	DialogActions,
-	DialogContent,
-	DialogTitle,
-	TextField,
 	Button,
-	Tabs,
-	Tab,
 } from '@mui/material';
 
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -17,58 +10,140 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import MDButton from "components/MDButton";
 import { subsidyApi } from 'api/Api';
+import { useDispatch } from "react-redux";
+
+
 function Subsidy() {
-	const [subsidies, setSubsidies] = useState([]);
+	// const [subsidies, setSubsidies] = useState([]);
 	const [selectedSubsidy, setSelectedSubsidy] = useState(null);
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	// Define columns for the DataTable
-	const columns = [
-		{ Header: 'ID', accessor: 'id', width: '10%' },
-		{ Header: 'Subsidy Rate', accessor: 'subsidyRate', width: '20%' },
-		{ Header: 'Item Type', accessor: 'itemType', width: '20%' },
-		{ Header: 'Minimum DOB', accessor: 'minDOB', width: '20%' },
-		{ Header: 'Sex', accessor: 'sex', width: '10%' },
-		{ Header: 'Race', accessor: 'race', width: '10%' },
-		{ Header: 'Nationality', accessor: 'nationality', width: '10%' },
-		{
-			Header: 'Actions',
-			Cell: ({ row }) => (
-				<>
-					<Button variant="outlined" onClick={() => handleEdit(row.original)}>
-						Edit
-					</Button>
-					<Button variant="outlined" onClick={() => handleDelete(row.original.id)}>
-						Delete
-					</Button>
-				</>
-			),
-			width: '10%',
-		},
-	];
 
-	
+	const reduxDispatch = useDispatch();
+
+	const [data, setData] = useState({
+		columns: [
+			{ Header: 'ID', accessor: 'subsidyId', width: '10%' },
+			{
+				Header: 'Subsidy Rate',
+				accessor: 'subsidyRate',
+				width: '20%',
+				Cell: ({ value }) => `${value}%`,
+			},
+			{ Header: 'Item Type', accessor: 'itemTypeEnum', width: '20%' },
+			{
+				Header: 'Minimum DOB',
+				accessor: 'minDOB',
+				width: '20%',
+				Cell: ({ value }) => {
+					const date = new Date(value);
+					console.log(date);
+					const day = date.getDate().toString().padStart(2, '0');
+					const month = (date.getMonth() + 1).toString().padStart(2, '0');
+					const year = date.getFullYear();
+					return `${day}/${month}/${year}`;
+				},
+			},
+			{ Header: 'Sex', accessor: 'sex', width: '10%' },
+			{ Header: 'Race', accessor: 'race', width: '10%' },
+			{ Header: 'Nationality', accessor: 'nationality', width: '10%' },
+			{
+				Header: 'Actions',
+				Cell: ({ row }) => (
+					<>
+						<Button variant="outlined" onClick={() => handleEdit(row.original)}>
+							Edit
+						</Button>
+						<Button variant="outlined" onClick={() => handleDelete(row.original.id)}>
+							Delete
+						</Button>
+					</>
+				),
+				width: '10%',
+			},
+		],
+		rows: [],
+	});
+
+	const dataRef = useRef({
+		columns: [
+			{ Header: 'ID', accessor: 'subsidyId', width: '10%' },
+			{
+				Header: 'Subsidy Rate',
+				accessor: 'subsidyRate',
+				width: '20%',
+				Cell: ({ value }) => `${value}%`,
+			},
+			{ Header: 'Item Type', accessor: 'itemTypeEnum', width: '20%' },
+			{
+				Header: 'Minimum DOB',
+				accessor: 'minDOB',
+				width: '20%',
+				Cell: ({ value }) => {
+					const date = new Date(value);
+					const day = date.getDate().toString().padStart(2, '0');
+					const month = (date.getMonth() + 1).toString().padStart(2, '0');
+					const year = date.getFullYear();
+					return `${day}/${month}/${year}`;
+				},
+			},
+			{ Header: 'Sex', accessor: 'sex', width: '10%' },
+			{ Header: 'Race', accessor: 'race', width: '10%' },
+			{ Header: 'Nationality', accessor: 'nationality', width: '10%' },
+			{
+				Header: 'Actions',
+				Cell: ({ row }) => (
+					<>
+						<Button variant="outlined" onClick={() => handleEdit(row.original)}>
+							Edit
+						</Button>
+						<Button variant="outlined" onClick={() => handleDelete(row.original.id)}>
+							Delete
+						</Button>
+					</>
+				),
+				width: '10%',
+			},
+		],
+		rows: [],
+	});
 
 	useEffect(() => {
 		// Fetch subsidies data and populate the "subsidies" state
-		// You should implement the fetchData function here
 		fetchData();
 	}, []);
 
 	const fetchData = async () => {
-		subsidyApi.
-			getAllSubsidies()
-			.then((response) => {
-				const subsidiesData = response.data; 
-				console.log('Subsidies data:', subsidiesData); // Add this line for debugging
+		try {
+			subsidyApi
+				.getAllSubsidies()
+				.then((response) => {
+					const subsidies = response.data; // Assuming 'facilities' is an array of facility objects
+					console.log(response);
+					const mappedRows = subsidies.map((subsidy) => ({
+						subsidyId: subsidy.subsidyId,
+						subsidyRate: subsidy.subsidyRate,
+						itemTypeEnum: subsidy.itemTypeEnum,
+						minDOB: subsidy.minDOB,
+						sex: subsidy.sex,
+						race: subsidy.race,
+						nationality: subsidy.nationality
+					}));
+					dataRef.current = {
+						...dataRef.current,
+						rows: [mappedRows],
+					};
 
-				setSubsidies(subsidiesData);				
-			})
-			.catch((error) => {
-				console.error("Error fetching data:", error);
-			});
+					// Update the 'data' state with the mapped data
+					setData((prevData) => ({
+						...prevData,
+						rows: mappedRows,
+					}));
+				})
 
+		} catch (error) {
+			console.error("Error fetching data:", error);
+		}
 	};
 
 	const handleAdd = () => {
@@ -86,8 +161,32 @@ function Subsidy() {
 		// After deletion, update the subsidies state to remove the deleted subsidy
 	};
 
-	return (
+	// // Define columns for the DataTable
+	// const columns = [
+	// 	{ Header: 'ID', accessor: 'subsidyId', width: '10%' },
+	// 	{ Header: 'Subsidy Rate', accessor: 'subsidyRate', width: '20%' },
+	// 	{ Header: 'Item Type', accessor: 'itemTypeEnum', width: '20%' },
+	// 	{ Header: 'Minimum DOB', accessor: 'minDOB', width: '20%' },
+	// 	{ Header: 'Sex', accessor: 'sex', width: '10%' },
+	// 	{ Header: 'Race', accessor: 'race', width: '10%' },
+	// 	{ Header: 'Nationality', accessor: 'nationality', width: '10%' },
+	// 	{
+	// 		Header: 'Actions',
+	// 		Cell: ({ row }) => (
+	// 			<>
+	// 				<Button variant="outlined" onClick={() => handleEdit(row.original)}>
+	// 					Edit
+	// 				</Button>
+	// 				<Button variant="outlined" onClick={() => handleDelete(row.original.id)}>
+	// 					Delete
+	// 				</Button>
+	// 			</>
+	// 		),
+	// 		width: '10%',
+	// 	},
+	// ];
 
+	return (
 		<DashboardLayout>
 			<DashboardNavbar />
 			<MDBox pt={6} pb={3}>
@@ -108,19 +207,13 @@ function Subsidy() {
 									Subsidy
 								</MDTypography>
 							</MDBox>
-
 							<MDBox pt={3}>
-
-
-								<DataTable  columns={columns} table={subsidies} />
-
-
+								<DataTable canSearch={true} table={data} />
 							</MDBox>
 						</Card>
 					</Grid>
 				</Grid>
 			</MDBox>
-
 		</DashboardLayout>
 	);
 }
