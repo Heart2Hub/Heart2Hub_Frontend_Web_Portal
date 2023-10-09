@@ -111,7 +111,7 @@ function CreateAppointmentModal({ isOpen, onClose, onAppointmentCreated }) {
 
 
 		appointmentApi
-			.createNewAppointment(appointmentData.description, appointmentData.actualDateTime, appointmentData.bookedDateTime,
+			.createNewAppointmentOnWeb(appointmentData.description, appointmentData.actualDateTime, appointmentData.bookedDateTime,
 				appointmentData.priority, appointmentData.patientUsername, appointmentData.departmentName)
 			.then((response) => {
 				console.log("Appointment created:", response.data);
