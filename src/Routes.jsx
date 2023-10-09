@@ -208,7 +208,7 @@ const routes = [
     route: "/administration/facility-booking",
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ADMIN]}
+        authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
       >
         <FacilityBooking />

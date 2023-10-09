@@ -417,6 +417,16 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
     );
   },
+  addImageAttachmentToAppointment(appointmentId, imageLink, createdDate) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/addImageAttachmentToAppointment?appointmentId=${appointmentId}&imageLink=${imageLink}&createdDate=${createdDate}`
+    );
+  },
+  viewAppointmentAttachments(appointmentId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/appointment/viewAppointmentAttachments?appointmentId=${appointmentId}`
+    );
+  },
 };
 
 export const inventoryApi = {

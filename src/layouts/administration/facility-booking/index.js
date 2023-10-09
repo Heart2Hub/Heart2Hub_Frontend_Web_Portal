@@ -29,7 +29,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { facilityApi, departmentApi } from "api/Api";
+import { facilityApi, staffApi } from "api/Api";
 import { useSelector } from "react-redux";
 import DateTimePicker from 'react-datetime-picker'
 import { displayMessage } from "../../../store/slices/snackbarSlice";
@@ -340,14 +340,30 @@ function FacilityBooking() {
 		console.log("selected facility: " + facility.facilityStatusEnum);
 		setSelectedFacility(facility);
 		setIsCalendarModalOpen(true);
-
-		facilityApi.
-			findAllBookingsOfAFacility(facility.facilityId)
-			.then((response) => {
-				const facilityBookings = response.data;
-				console.log(facilityBookings);
-				const mappedEvents = facilityBookings.map((booking) => ({
-					title: `Booked by ${booking.staffUsername}`,
+	    
+		facilityApi
+		    .findAllBookingsOfAFacility(facility.facilityId)
+		    .then((response) => {
+			const facilityBookings = response.data;
+			console.log(facilityBookings);
+	    
+			// Create an array of promises for fetching staff details
+			const staffPromises = facilityBookings.map((booking) => {
+			    return staffApi.getStaffByUsername(booking.staffUsername); // Replace with your API call
+			});
+	    
+			// Use Promise.all to resolve all staff detail requests
+			Promise.all(staffPromises)
+			    .then((staffDetails) => {
+				const mappedEvents = facilityBookings.map((booking, index) => {
+				    const staff = staffDetails[index];
+				    console.log("Staff details:", staff);
+				    const title = `Booked by ${staff.data.firstname} ${staff.data.lastname}`;
+				    const ownerFullName = `${staff.data.firstname} ${staff.data.lastname}`;
+	    
+				    return {
+					title,
+					ownerFullName,
 					facilityBookingId: booking.facilityBookingId,
 					comments: booking.comments,
 					staffUsername: booking.staffUsername,
@@ -357,18 +373,20 @@ function FacilityBooking() {
 					owner: booking.staffUsername,
 					resizable: true,
 					draggable: true,
-
-				}));
-
+				    };
+				});
+	    
 				setCalendarEvents(mappedEvents);
-			}).catch((error) => {
-				console.error("Error fetching data:", error);
-			});
-
-
-
-
-	};
+			    })
+			    .catch((error) => {
+				console.error("Error fetching staff data:", error);
+			    });
+		    })
+		    .catch((error) => {
+			console.error("Error fetching data:", error);
+		    });
+	    };
+	    
 	const eventStyleGetter = (event) => {
 
 		if (event.owner === staff.username) {
@@ -867,7 +885,7 @@ function FacilityBooking() {
 												<p>Booking ID: {selectedBooking.facilityBookingId}</p>
 												<p>Start Time: {moment(selectedBooking.start).format('MMMM Do YYYY, h:mm:ss a')}</p>
 												<p>End Time: {moment(selectedBooking.end).format('MMMM Do YYYY, h:mm:ss a')}</p>
-												<p>Booked by: {selectedBooking.staffUsername}</p>
+												<p>Booked by: {selectedBooking.ownerFullName}</p>
 												<p>Comments: {selectedBooking.comments}</p>
 												{selectedBooking.staffUsername === staff.username && (
 													<Button
