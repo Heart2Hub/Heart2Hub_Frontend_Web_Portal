@@ -26,6 +26,7 @@ import Rostering from "layouts/manpower/rostering/ShiftOverallRoster";
 import CalendarRoster from "layouts/manpower/rostering/CalendarRoster";
 import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
 import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
+import Subsidy from "layouts/finance/subsidy";
 
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
@@ -351,6 +352,19 @@ const routes = [
         forHeadsOnly={false}
       >
         <ServiceItemManagement />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Subsidy Management",
+    key: "subsidy",
+    route: "/finance/subsidy",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Subsidy />
       </ProtectedRoute>
     ),
   },
