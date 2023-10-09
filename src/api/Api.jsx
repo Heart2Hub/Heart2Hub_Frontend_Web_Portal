@@ -225,6 +225,13 @@ export const ehrApi = {
       `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordByIdAndDateOfBirth?electronicHealthRecordId=${electronicHealthRecordId}&dateOfBirth=${dateOfBirth}`
     );
   },
+  getElectronicHealthRecordByNric(
+    nric
+  ) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordByNric?nric=${nric}`
+    );
+  },
 };
 
 export const problemRecordApi = {
