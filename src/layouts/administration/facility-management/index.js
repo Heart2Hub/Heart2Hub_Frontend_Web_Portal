@@ -353,21 +353,6 @@ function FacilityManagement() {
     };
   };
 
-  // const fetchItemQuantity = async (itemId) => {
-  //   try {
-  //     // Make an API request to fetch the quantity based on the itemId
-  //     const response = await yourApi.getQuantity(itemId);
-
-  //     // Extract the quantity data from the response
-  //     const itemQuantity = response.data.quantity;
-
-  //     // Update the state with the fetched quantity
-  //     setItemQuantity(itemQuantity);
-  //   } catch (error) {
-  //     // Handle any errors that occur during the API request
-  //     console.error("Error fetching item quantity:", error);
-  //   }
-  // };
 
   const [data, setData] = useState({
     columns: [
@@ -412,6 +397,8 @@ function FacilityManagement() {
     rows: [],
   });
   const [departments, setDepartments] = useState([]);
+  const [facilityTypes, setFacilityTypes] = useState([]);
+
   const dataRef = useRef({
     columns: [
       { Header: "Facility ID", accessor: "facilityId", width: "10%" },
@@ -991,7 +978,7 @@ function FacilityManagement() {
                 coloredShadow="info"
               >
                 <MDTypography variant="h6" color="white">
-                  Facilties Table
+                  Facilities Table
                 </MDTypography>
               </MDBox>
               <MDBox mx={2} mt={3} px={2}>
@@ -1097,7 +1084,9 @@ function FacilityManagement() {
               onChange={handleChange}
               sx={{ lineHeight: "3em" }}
             >
-              <MenuItem value="WARD_BED">Ward Bed</MenuItem>
+              {facilityTypes?.map(facilityTypes =>
+                <MenuItem value={facilityTypes}>{facilityTypes}</MenuItem>
+              )}
               <MenuItem value="CONSULTATION_ROOM">Consultation Room</MenuItem>
               <MenuItem value="TRIAGE_ROOM">Triage Room</MenuItem>
               <MenuItem value="OPERATING_ROOM">Operating Room</MenuItem>
@@ -1173,7 +1162,6 @@ function FacilityManagement() {
               onChange={handleUpdateChange}
               sx={{ lineHeight: "3em" }}
             >
-              <MenuItem value="WARD_BED">Ward Bed</MenuItem>
               <MenuItem value="CONSULTATION_ROOM">Consultation Room</MenuItem>
               <MenuItem value="TRIAGE_ROOM">Triage Room</MenuItem>
               <MenuItem value="OPERATING_ROOM">Operating Room</MenuItem>

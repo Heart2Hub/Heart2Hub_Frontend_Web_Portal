@@ -10,7 +10,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import { IconButton, Icon, Button, Tabs, Tab } from "@mui/material";
+import { IconButton, Icon, Button, Tabs, Tab, ListItemText, ListItem } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 
 
@@ -340,53 +340,53 @@ function FacilityBooking() {
 		console.log("selected facility: " + facility.facilityStatusEnum);
 		setSelectedFacility(facility);
 		setIsCalendarModalOpen(true);
-	    
+
 		facilityApi
-		    .findAllBookingsOfAFacility(facility.facilityId)
-		    .then((response) => {
-			const facilityBookings = response.data;
-			console.log(facilityBookings);
-	    
-			// Create an array of promises for fetching staff details
-			const staffPromises = facilityBookings.map((booking) => {
-			    return staffApi.getStaffByUsername(booking.staffUsername); // Replace with your API call
-			});
-	    
-			// Use Promise.all to resolve all staff detail requests
-			Promise.all(staffPromises)
-			    .then((staffDetails) => {
-				const mappedEvents = facilityBookings.map((booking, index) => {
-				    const staff = staffDetails[index];
-				    console.log("Staff details:", staff);
-				    const title = `Booked by ${staff.data.firstname} ${staff.data.lastname}`;
-				    const ownerFullName = `${staff.data.firstname} ${staff.data.lastname}`;
-	    
-				    return {
-					title,
-					ownerFullName,
-					facilityBookingId: booking.facilityBookingId,
-					comments: booking.comments,
-					staffUsername: booking.staffUsername,
-					start: new Date(booking.startDateTime),
-					end: new Date(booking.endDateTime),
-					facilityBookingId: booking.facilityBookingId,
-					owner: booking.staffUsername,
-					resizable: true,
-					draggable: true,
-				    };
+			.findAllBookingsOfAFacility(facility.facilityId)
+			.then((response) => {
+				const facilityBookings = response.data;
+				console.log(facilityBookings);
+
+				// Create an array of promises for fetching staff details
+				const staffPromises = facilityBookings.map((booking) => {
+					return staffApi.getStaffByUsername(booking.staffUsername); // Replace with your API call
 				});
-	    
-				setCalendarEvents(mappedEvents);
-			    })
-			    .catch((error) => {
-				console.error("Error fetching staff data:", error);
-			    });
-		    })
-		    .catch((error) => {
-			console.error("Error fetching data:", error);
-		    });
-	    };
-	    
+
+				// Use Promise.all to resolve all staff detail requests
+				Promise.all(staffPromises)
+					.then((staffDetails) => {
+						const mappedEvents = facilityBookings.map((booking, index) => {
+							const staff = staffDetails[index];
+							console.log("Staff details:", staff);
+							const title = `Booked by ${staff.data.firstname} ${staff.data.lastname}`;
+							const ownerFullName = `${staff.data.firstname} ${staff.data.lastname}`;
+
+							return {
+								title,
+								ownerFullName,
+								facilityBookingId: booking.facilityBookingId,
+								comments: booking.comments,
+								staffUsername: booking.staffUsername,
+								start: new Date(booking.startDateTime),
+								end: new Date(booking.endDateTime),
+								facilityBookingId: booking.facilityBookingId,
+								owner: booking.staffUsername,
+								resizable: true,
+								draggable: true,
+							};
+						});
+
+						setCalendarEvents(mappedEvents);
+					})
+					.catch((error) => {
+						console.error("Error fetching staff data:", error);
+					});
+			})
+			.catch((error) => {
+				console.error("Error fetching data:", error);
+			});
+	};
+
 	const eventStyleGetter = (event) => {
 
 		if (event.owner === staff.username) {
@@ -432,6 +432,8 @@ function FacilityBooking() {
 				.deleteFacilityBooking(id)
 				.then((response) => {
 					const updatedEvents = calendarEvents.filter((event) => event.facilityBookingId !== id);
+					fetchData();
+					fetchBookingData();
 					setCalendarEvents(updatedEvents);
 					setIsBookingDetailsOpen(false);
 					reduxDispatch(
@@ -881,12 +883,38 @@ function FacilityBooking() {
 									<DialogTitle>Facility Booking Details</DialogTitle>
 									<DialogContent>
 										{selectedBooking && (
-											<div>
-												<p>Booking ID: {selectedBooking.facilityBookingId}</p>
-												<p>Start Time: {moment(selectedBooking.start).format('MMMM Do YYYY, h:mm:ss a')}</p>
-												<p>End Time: {moment(selectedBooking.end).format('MMMM Do YYYY, h:mm:ss a')}</p>
-												<p>Booked by: {selectedBooking.ownerFullName}</p>
-												<p>Comments: {selectedBooking.comments}</p>
+											<>
+												<ListItem>
+													<ListItemText primary="Booking ID:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom>
+														{selectedBooking.facilityBookingId}
+													</MDTypography>
+												</ListItem>
+												<ListItem>
+													<ListItemText primary="Start Time:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom>
+														{moment(selectedBooking.start).format('MMMM Do YYYY, h:mm:ss a')}
+													</MDTypography>
+												</ListItem>
+												<ListItem>
+													<ListItemText primary="End Time:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom>
+														{moment(selectedBooking.end).format('MMMM Do YYYY, h:mm:ss a')}
+													</MDTypography>
+												</ListItem>
+												<ListItem>
+													<ListItemText primary="Booked by:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom>
+														{selectedBooking.ownerFullName}
+													</MDTypography>
+												</ListItem>
+												<ListItem>
+													<ListItemText primary="Comments:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom>
+														{selectedBooking.comments}
+													</MDTypography>
+												</ListItem>
+
 												{selectedBooking.staffUsername === staff.username && (
 													<Button
 														variant="contained"
@@ -895,7 +923,7 @@ function FacilityBooking() {
 														Delete Booking
 													</Button>
 												)}
-											</div>
+											</>
 										)}
 									</DialogContent>
 								</Dialog>
@@ -957,7 +985,7 @@ function FacilityBooking() {
 				</Grid>
 			</MDBox>
 
-		</DashboardLayout>
+		</DashboardLayout >
 	);
 }
 
