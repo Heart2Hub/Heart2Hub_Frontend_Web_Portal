@@ -26,6 +26,9 @@ function Header({ children }) {
   const ehrRecord = useSelector(selectEHRRecord);
 
   useEffect(() => {
+
+    console.log(ehrRecord)
+
   }, [ehrRecord]);
 
   return (
@@ -44,7 +47,7 @@ function Header({ children }) {
           <Grid item justifyContent="center">
             <MDAvatar
             
-              src={`${IMAGE_SERVER}/images/id/${ehrRecord?.patient?.profilePicture?.imageLink}`}
+              src={`${IMAGE_SERVER}/images/id/${ehrRecord?.profilePicture}`}
               alt="profile-image"
               size="xxl"
               shadow="xxl"
