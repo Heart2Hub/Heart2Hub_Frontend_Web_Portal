@@ -79,7 +79,8 @@ function AddAttachmentButton({ selectedAppointment }) {
         const response = await appointmentApi.addImageAttachmentToAppointment(
           selectedAppointment.appointmentId,
           imageLink,
-          createdDate
+          createdDate,
+          loggedInStaff.staffId
         );
 
         reduxDispatch(
