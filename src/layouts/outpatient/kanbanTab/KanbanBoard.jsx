@@ -230,18 +230,21 @@ function KanbanBoard() {
         if (selectedAppointmentToAssign !== null) {
           const response = await appointmentApi.assignAppointmentToStaff(
             selectedAppointmentToAssign.appointmentId,
-            selectedStaffId
+            selectedStaffId,
+            staff.staffId
           );
 
           const updatedAssignment = response.data;
-
-          //reset
-          setSelectedAppointmentToAssign(null);
-
-          dialogResolver.current(true); // Resolve promise if user confirms
-          dialogResolver.current = null; // Clear it out after using
         }
+
+        //reset
+        setSelectedAppointmentToAssign(null);
+
+        dialogResolver.current(true); // Resolve promise if user confirms
+        dialogResolver.current = null; // Clear it out after using
+        // }
       } catch (error) {
+        console.log(error);
         //perform error handling
         reduxDispatch(
           displayMessage({
@@ -382,6 +385,7 @@ function KanbanBoard() {
   useEffect(() => {
     getAppointmentsForToday();
     getStaffCurrentlyWorking();
+    console.log(staff);
   }, [loading, selectStaffToFilter]);
 
   return (

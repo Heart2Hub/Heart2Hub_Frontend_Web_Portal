@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Box,
@@ -199,7 +199,8 @@ function AppointmentTicketModal({
       console.log(selectedAppointment);
       const response = await appointmentApi.assignAppointmentToStaff(
         selectedAppointment.appointmentId,
-        selectedStaffId
+        selectedStaffId,
+        loggedInStaff.staffId
       );
 
       const updatedAssignment = response.data;
@@ -227,6 +228,7 @@ function AppointmentTicketModal({
         })
       );
     }
+    // }
 
     setIsDialogOpen(false);
   };
@@ -361,7 +363,15 @@ function AppointmentTicketModal({
                 </ListItem>
                 <ListItem>
                   <MDTypography variant="h6" gutterBottom>
-                    <MDButton onClick={handleClickToEhr} color="primary">
+                    <MDButton
+                      onClick={handleClickToEhr}
+                      color="primary"
+                      //quick fix for SR2
+                      disabled={
+                        selectedAppointment.currentAssignedStaffId !=
+                        loggedInStaff.staffId
+                      }
+                    >
                       EHR
                     </MDButton>
                   </MDTypography>
@@ -376,11 +386,11 @@ function AppointmentTicketModal({
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
-                      " " +
-                      assignedStaff.lastname +
-                      " (" +
-                      assignedStaff.staffRoleEnum +
-                      ")"}
+                        " " +
+                        assignedStaff.lastname +
+                        " (" +
+                        assignedStaff.staffRoleEnum +
+                        ")"}
                   </MDTypography>
                   <MDButton
                     disabled={loading}
@@ -402,8 +412,8 @@ function AppointmentTicketModal({
                       selectedAppointment.priorityEnum === "LOW"
                         ? "success"
                         : selectedAppointment.priorityEnum === "MEDIUM"
-                          ? "warning"
-                          : "error"
+                        ? "warning"
+                        : "error"
                     }
                     label={selectedAppointment.priorityEnum}
                   />

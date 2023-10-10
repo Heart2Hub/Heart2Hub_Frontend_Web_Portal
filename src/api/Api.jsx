@@ -397,9 +397,9 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/updateAppointmentSwimlaneStatus?appointmentId=${appointmentId}&swimlaneStatus=${swimlaneStatus}`
     );
   },
-  assignAppointmentToStaff(appointmentId, staffId) {
+  assignAppointmentToStaff(appointmentId, toStaffId, fromStaffId) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/appointment/assignAppointmentToStaff?appointmentId=${appointmentId}&staffId=${staffId}`
+      `${REST_ENDPOINT}/appointment/assignAppointmentToStaff?appointmentId=${appointmentId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
     );
   },
   createNewAppointment(
@@ -427,9 +427,14 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/createNewAppointmentOnWeb?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
     );
   },
-  addImageAttachmentToAppointment(appointmentId, imageLink, createdDate) {
+  addImageAttachmentToAppointment(
+    appointmentId,
+    imageLink,
+    createdDate,
+    staffId
+  ) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/appointment/addImageAttachmentToAppointment?appointmentId=${appointmentId}&imageLink=${imageLink}&createdDate=${createdDate}`
+      `${REST_ENDPOINT}/appointment/addImageAttachmentToAppointment?appointmentId=${appointmentId}&imageLink=${imageLink}&createdDate=${createdDate}&staffId=${staffId}`
     );
   },
   viewAppointmentAttachments(appointmentId) {
