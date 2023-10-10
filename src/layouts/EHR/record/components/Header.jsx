@@ -43,9 +43,8 @@ function Header({ children }) {
         <Grid container spacing={5} alignItems="center" width="100%">
           <Grid item justifyContent="center">
             <MDAvatar
-              src={
-                IMAGE_SERVER + "/images/id/" + ehrRecord?.profilePicture?.imageLink
-              }
+            
+              src={`${IMAGE_SERVER}/images/id/${ehrRecord?.patient?.profilePicture?.imageLink}`}
               alt="profile-image"
               size="xxl"
               shadow="xxl"
