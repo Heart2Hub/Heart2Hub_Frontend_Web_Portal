@@ -10,6 +10,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import DialogContentText from '@mui/material/DialogContentText';
 import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
@@ -38,7 +39,10 @@ import {
 } from "../../../store/slices/ehrSlice";
 import { selectStaff } from "../../../store/slices/staffSlice";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
-import { parseDateFromLocalDateTime, formatDateToYYYYMMDD } from "utility/Utility";
+import {
+  parseDateFromLocalDateTime,
+  formatDateToYYYYMMDD,
+} from "utility/Utility";
 import { appointmentApi } from "api/Api";
 
 function EHRRecord() {
@@ -48,6 +52,8 @@ function EHRRecord() {
   const [nextOfKinEhrs, setNextOfKinEhrs] = useState([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [openResolveProblemRecordModal, setOpenResolveProblemRecordModal] =
+    useState(false);
   const [formData, setFormData] = useState({
     description: "",
     createdBy: "",
@@ -62,6 +68,14 @@ function EHRRecord() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleOpenResolveProblemRecordModal = () => {
+    setOpenResolveProblemRecordModal(true);
+  };
+
+  const handleCloseResolveProblemRecordModal = () => {
+    setOpenResolveProblemRecordModal(false);
   };
 
   const handleChange = (event) => {
@@ -276,14 +290,25 @@ function EHRRecord() {
         const allAppointments = response.data;
         setUpcomingAppointments([]);
         for (const appointment of allAppointments) {
-          if (parseDateFromLocalDateTime(appointment.bookedDateTime) > new Date() ) {
-            if (!upcomingAppointments.some(existingAppointment => existingAppointment.appointmentId === appointment.appointmentId)) {
-              setUpcomingAppointments(prevAppointments => [...prevAppointments, appointment]);
+          if (
+            parseDateFromLocalDateTime(appointment.bookedDateTime) > new Date()
+          ) {
+            if (
+              !upcomingAppointments.some(
+                (existingAppointment) =>
+                  existingAppointment.appointmentId ===
+                  appointment.appointmentId
+              )
+            ) {
+              setUpcomingAppointments((prevAppointments) => [
+                ...prevAppointments,
+                appointment,
+              ]);
             }
           } else {
             // ADD PAST APPOINTMENT LOGIC HERE LATER ON
           }
-        } 
+        }
       } catch (error) {
         console.error("Error fetching appointment data:", error);
       }
@@ -347,15 +372,44 @@ function EHRRecord() {
                 <Grid item xs={12} md={6} lg={3}>
                   <MDBox mb={1.5}>
                     {loggedInStaff.staffRoleEnum === "DOCTOR" && (
-                      <MDButton
-                        variant="contained"
-                        color="primary"
-                        onClick={() =>
-                          handleResolveProblemRecord(problemRecord)
-                        }
-                      >
-                        Resolve Problem Record
-                      </MDButton>
+                      <>
+                        <MDButton
+                          variant="contained"
+                          color="primary"
+                          onClick={handleOpenResolveProblemRecordModal}
+                        >
+                          Resolve Problem Record
+                        </MDButton>
+                        <Dialog
+                          open={openResolveProblemRecordModal}
+                          onClose={handleCloseResolveProblemRecordModal}
+                        >
+                          <DialogTitle>Confirm Resolution</DialogTitle>
+                          <DialogContent>
+                            <DialogContentText>
+                              Are you sure you want to resolve this problem
+                              record?
+                            </DialogContentText>
+                          </DialogContent>
+                          <DialogActions>
+                            <MDButton
+                              onClick={handleCloseResolveProblemRecordModal}
+                              color="primary"
+                            >
+                              Cancel
+                            </MDButton>
+                            <MDButton
+                              onClick={() => {
+                                handleCloseResolveProblemRecordModal();
+                                handleResolveProblemRecord(problemRecord);
+                              }}
+                              color="primary"
+                            >
+                              Confirm
+                            </MDButton>
+                          </DialogActions>
+                        </Dialog>
+                      </>
                     )}
                   </MDBox>
                 </Grid>
@@ -399,10 +453,15 @@ function EHRRecord() {
                       key={index}
                       title={`Appointment ${index + 1}`}
                       info={{
-                        bookedDateTime: formatDateToYYYYMMDD(parseDateFromLocalDateTime(upcomingAppointment.bookedDateTime)),
+                        bookedDateTime: formatDateToYYYYMMDD(
+                          parseDateFromLocalDateTime(
+                            upcomingAppointment.bookedDateTime
+                          )
+                        ),
                         departmentName: upcomingAppointment.departmentName,
                         description: upcomingAppointment.description,
-                        estimatedDuration: upcomingAppointment.estimatedDuration,
+                        estimatedDuration:
+                          upcomingAppointment.estimatedDuration,
                       }}
                       shadow={false}
                     />
