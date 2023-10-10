@@ -50,6 +50,7 @@ function FacilityBooking() {
 	const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
 	const [bookingToDeleteId, setBookingToDeleteId] = useState(null);
 	const [bookingToDeleteStartDate, setBookingToDeleteStartDate] = useState(null);
+	const [isDeleteConfirmationCalendarOpen, setIsDeleteConfirmationCalendarOpen] = useState(false);
 
 
 	const handleTabChange = (event, newValue) => {
@@ -284,7 +285,7 @@ function FacilityBooking() {
 					<MDBox>
 						<IconButton
 							color="secondary"
-							onClick={() => handleDeleteFacility(row.original.facilityBookingId, row.original.startDateTime)}
+							onClick={() => handleDeleteFacilityBooking(row.original.facilityBookingId, row.original.startDateTime)}
 						>
 							<Icon>delete</Icon>
 						</IconButton>
@@ -310,7 +311,7 @@ function FacilityBooking() {
 					<MDBox>
 						<IconButton
 							color="secondary"
-							onClick={() => handleDeleteFacility(row.original.facilityBookingId, row.original.startDateTime)}
+							onClick={() => handleDeleteFacilityBooking(row.original.facilityBookingId, row.original.startDateTime)}
 						>
 							<Icon>delete</Icon>
 						</IconButton>
@@ -436,6 +437,8 @@ function FacilityBooking() {
 					fetchBookingData();
 					setCalendarEvents(updatedEvents);
 					setIsBookingDetailsOpen(false);
+					setIsDeleteConfirmationCalendarOpen(false);
+
 					reduxDispatch(
 						displayMessage({
 							color: "success",
@@ -444,6 +447,7 @@ function FacilityBooking() {
 						})
 					);
 				}).catch((error) => {
+					setIsDeleteConfirmationCalendarOpen(false);
 					reduxDispatch(
 						displayMessage({
 							color: "error",
@@ -459,7 +463,13 @@ function FacilityBooking() {
 		}
 	};
 
-	const handleDeleteFacility = (facilityBookingId, startDateTime) => {
+	const handleDeleteFacilityBookingCalendar = (facilityBookingId, startDateTime) => {
+		setBookingToDeleteId(facilityBookingId);
+		setBookingToDeleteStartDate(startDateTime);
+		setIsDeleteConfirmationCalendarOpen(true);
+	};
+
+	const handleDeleteFacilityBooking = (facilityBookingId, startDateTime) => {
 		setBookingToDeleteId(facilityBookingId);
 		setBookingToDeleteStartDate(startDateTime);
 		setDeleteConfirmationOpen(true);
@@ -927,7 +937,7 @@ function FacilityBooking() {
 													<Button
 														variant="contained"
 														style={{ backgroundColor: 'red', color: 'white' }}
-														onClick={() => handleDeleteBooking(selectedBooking.facilityBookingId, selectedBooking.start)}													>
+														onClick={() => handleDeleteFacilityBookingCalendar(selectedBooking.facilityBookingId, selectedBooking.start)}													>
 														Delete Booking
 													</Button>
 												)}
@@ -982,6 +992,20 @@ function FacilityBooking() {
 											Cancel
 										</Button>
 										<Button onClick={() => handleConfirmDeleteBooking(bookingToDeleteId, bookingToDeleteStartDate)} color="primary">
+											Confirm
+										</Button>
+									</DialogActions>
+								</Dialog>
+								<Dialog open={isDeleteConfirmationCalendarOpen} onClose={() => setIsDeleteConfirmationCalendarOpen(false)}>
+									<DialogTitle>Confirm Deletion</DialogTitle>
+									<DialogContent>
+										Are you sure you want to delete this booking?
+									</DialogContent>
+									<DialogActions>
+										<Button onClick={() => setIsDeleteConfirmationCalendarOpen(false)} color="primary">
+											Cancel
+										</Button>
+										<Button onClick={() => handleDeleteBooking(bookingToDeleteId, bookingToDeleteStartDate)} color="primary">
 											Confirm
 										</Button>
 									</DialogActions>
