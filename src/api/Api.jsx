@@ -437,6 +437,11 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/viewAppointmentAttachments?appointmentId=${appointmentId}`
     );
   },
+  viewPatientAppointments(patientUsername) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/appointment/viewPatientAppointments?patientUsername=${patientUsername}`
+    );
+  },
 };
 
 export const inventoryApi = {
