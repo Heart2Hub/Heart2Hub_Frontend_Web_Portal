@@ -190,15 +190,14 @@ export const allocatedInventoryApi = {
     return axiosFetch.post(
       `${REST_ENDPOINT}/allocatedInventory/createAllocatedInventory`,
       requestBody
-    )
+    );
   },
   findAllAllocatedInventoryOfFacility(id) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/allocatedInventory/findAllAllocatedInventoryOfFacility/${id}`
-    )
-  }
-
-}
+    );
+  },
+};
 
 export const patientApi = {
   getAllPatientsWithElectronicHealthRecordSummaryByName(name) {
@@ -213,7 +212,7 @@ export const patientApi = {
     return axiosFetch.get(
       `${REST_ENDPOINT}/electronicHealthRecord/getAllElectronicHealthRecords`
     );
-  }
+  },
 };
 
 export const ehrApi = {
@@ -225,9 +224,7 @@ export const ehrApi = {
       `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordByIdAndDateOfBirth?electronicHealthRecordId=${electronicHealthRecordId}&dateOfBirth=${dateOfBirth}`
     );
   },
-  getElectronicHealthRecordByNric(
-    nric
-  ) {
+  getElectronicHealthRecordByNric(nric) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordByNric?nric=${nric}`
     );
@@ -407,14 +404,15 @@ export const appointmentApi = {
   },
   createNewAppointment(
     description,
-    actualDateTime,
+    // actualDateTime,
     bookedDateTime,
     priority,
     patientUsername,
     departmentName
   ) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
+      // `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
+      `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
     );
   },
   addImageAttachmentToAppointment(appointmentId, imageLink, createdDate) {
