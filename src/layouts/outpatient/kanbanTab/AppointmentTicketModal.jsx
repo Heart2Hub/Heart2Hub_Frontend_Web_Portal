@@ -247,6 +247,7 @@ function AppointmentTicketModal({
 
   const handleClickToEhr = () => {
     // Can refactor to util
+    console.log(selectedAppointment)
     const dateComponents = selectedAppointment.dateOfBirth;
     const [year, month, day, hours, minutes] = dateComponents;
     const formattedMonth = String(month).padStart(2, "0");
@@ -315,11 +316,8 @@ function AppointmentTicketModal({
                 </MDTypography>
                 {selectedAppointment.patientProfilePicture !== null && (
                   <MDAvatar
-                    src={
-                      IMAGE_SERVER +
-                      "/images/id/" +
-                      selectedAppointment.patientProfilePicture
-                    }
+                    
+                    src={`${IMAGE_SERVER}/images/id/${selectedAppointment.patientProfilePicture}`}
                     alt="profile-image"
                     size="xxl"
                     shadow="xxl"

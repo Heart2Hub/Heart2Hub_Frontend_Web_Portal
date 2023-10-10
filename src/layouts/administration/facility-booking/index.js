@@ -444,6 +444,14 @@ function FacilityBooking() {
 						})
 					);
 				}).catch((error) => {
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Error Encountered",
+							content: error.response.data,
+						})
+					);
 					console.error("Error fetching data:", error);
 				});
 		} catch (ex) {
@@ -886,31 +894,31 @@ function FacilityBooking() {
 											<>
 												<ListItem>
 													<ListItemText primary="Booking ID:" secondary={""} />
-													<MDTypography variant="h6" gutterBottom>
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
 														{selectedBooking.facilityBookingId}
 													</MDTypography>
 												</ListItem>
 												<ListItem>
 													<ListItemText primary="Start Time:" secondary={""} />
-													<MDTypography variant="h6" gutterBottom>
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
 														{moment(selectedBooking.start).format('MMMM Do YYYY, h:mm:ss a')}
 													</MDTypography>
 												</ListItem>
 												<ListItem>
 													<ListItemText primary="End Time:" secondary={""} />
-													<MDTypography variant="h6" gutterBottom>
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
 														{moment(selectedBooking.end).format('MMMM Do YYYY, h:mm:ss a')}
 													</MDTypography>
 												</ListItem>
 												<ListItem>
 													<ListItemText primary="Booked by:" secondary={""} />
-													<MDTypography variant="h6" gutterBottom>
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
 														{selectedBooking.ownerFullName}
 													</MDTypography>
 												</ListItem>
 												<ListItem>
 													<ListItemText primary="Comments:" secondary={""} />
-													<MDTypography variant="h6" gutterBottom>
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
 														{selectedBooking.comments}
 													</MDTypography>
 												</ListItem>
