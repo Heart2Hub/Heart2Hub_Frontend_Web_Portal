@@ -52,7 +52,7 @@ function Administration() {
               />{" "}
             </MDBox>
           </Grid>
-          {isAdmin && (<Grid item xs={12} md={6} lg={3}>
+          <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <SimpleBlogCard
                 image="https://i.ibb.co/wyvGpY2/martha-dominguez-de-gouveia-KF-h9-HMx-RKg-unsplash.jpg"
@@ -65,11 +65,11 @@ function Administration() {
                 }}
               />{" "}
             </MDBox>
-          </Grid>)}
-          <Grid item xs={12} md={6} lg={3}>
+          </Grid>
+          {isAdmin && <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <SimpleBlogCard
-                image="https://bit.ly/3Hlw1MQ"
+                image="https://media.istockphoto.com/id/1175657274/photo/hospital-indoor-storage-room-health-center-repository.jpg?s=612x612&w=0&k=20&c=st6kLOWp84yP38IRStwApk7bOLuEpSaMIH13AlHCjqY="
                 title="Inventory Management"
                 action={{
                   type: "internal",
@@ -80,6 +80,7 @@ function Administration() {
               />{" "}
             </MDBox>
           </Grid>
+          }
         </Grid>
       </MDBox>
     </DashboardLayout>

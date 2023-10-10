@@ -105,16 +105,24 @@ function ViewAppointmentModal({
                 <ListItemText
                   sx={{ width: "50%" }}
                   primary="Appointment Date"
-                  secondary={parseDateFromLocalDateTime(
-                    selectedAppointment.actualDateTime
-                  ).toLocaleDateString()}
+                  secondary={
+                    selectedAppointment.actualDateTime !== null
+                      ? parseDateFromLocalDateTime(
+                          selectedAppointment.actualDateTime
+                        ).toLocaleDateString()
+                      : " - "
+                  }
                 />
                 <ListItemText
                   sx={{ width: "50%" }}
                   primary="Appointment Time"
-                  secondary={parseDateFromLocalDateTime(
-                    selectedAppointment.actualDateTime
-                  ).toLocaleTimeString()}
+                  secondary={
+                    selectedAppointment.actualDateTime !== null
+                      ? parseDateFromLocalDateTime(
+                          selectedAppointment.actualDateTime
+                        ).toLocaleTimeString()
+                      : " - "
+                  }
                 />
               </ListItem>
               <ListItem>
