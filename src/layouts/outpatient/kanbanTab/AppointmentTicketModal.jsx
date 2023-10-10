@@ -403,7 +403,7 @@ function AppointmentTicketModal({
                       : "Reassign"}
                   </MDButton>
                 </ListItem>
-                <ListItem>
+                {/* <ListItem>
                   <ListItemText primary="Priority:" secondary={""} />
                 </ListItem>
                 <ListItem>
@@ -417,7 +417,7 @@ function AppointmentTicketModal({
                     }
                     label={selectedAppointment.priorityEnum}
                   />
-                </ListItem>
+                </ListItem> */}
                 <ListItem>
                   <ListItemText primary="Arrival Status:" secondary="" />
                 </ListItem>
