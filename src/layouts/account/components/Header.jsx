@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { IMAGE_SERVER } from "constants/RestEndPoint";
 
 // prop-types is a library for typechecking of props.
@@ -12,12 +11,6 @@ import Grid from "@mui/material/Grid";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDAvatar from "components/MDAvatar";
-
-// Material Dashboard 2 React base styles
-import breakpoints from "assets/theme/base/breakpoints";
-
-// Images
-import burceMars from "assets/images/bruce-mars.jpg";
 
 import { useSelector } from "react-redux";
 import { selectStaff } from "../../../store/slices/staffSlice";

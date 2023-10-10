@@ -15,6 +15,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
@@ -29,7 +30,7 @@ import Divider from "@mui/material/Divider";
 
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
-import { problemRecordApi } from "api/Api";
+import { problemRecordApi, ehrApi } from "api/Api";
 import {
   selectEHRRecord,
   setEHRRecord,
@@ -37,13 +38,15 @@ import {
 } from "../../../store/slices/ehrSlice";
 import { selectStaff } from "../../../store/slices/staffSlice";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
-import { ehrApi } from "api/Api";
-import { parseDateFromLocalDateTime } from "utility/Utility";
+import { parseDateFromLocalDateTime, formatDateToYYYYMMDD } from "utility/Utility";
+import { appointmentApi } from "api/Api";
 
 function EHRRecord() {
   const reduxDispatch = useDispatch();
   const ehrRecord = useSelector(selectEHRRecord);
   const loggedInStaff = useSelector(selectStaff);
+  const [nextOfKinEhrs, setNextOfKinEhrs] = useState([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     description: "",
@@ -71,6 +74,17 @@ function EHRRecord() {
 
   const handleCreateProblemRecord = () => {
     try {
+      if (formData.description.trim() == "") {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Description cannot be null",
+          })
+        );
+        return;
+      }
       if (formData.priorityEnum == "") {
         reduxDispatch(
           displayMessage({
@@ -107,7 +121,7 @@ function EHRRecord() {
         .padStart(2, "0")}-${currentDate
         .getDate()
         .toString()
-        .padStart(2, "0")}T${currentDate
+        .padStart(2, "0")} ${currentDate
         .getHours()
         .toString()
         .padStart(2, "0")}:${currentDate
@@ -185,12 +199,16 @@ function EHRRecord() {
   const handleResolveProblemRecord = (problemRecord) => {
     try {
       problemRecordApi
-        .resolveProblemRecord(ehrRecord.electronicHealthRecordId, problemRecord.problemRecordId)
+        .resolveProblemRecord(
+          ehrRecord.electronicHealthRecordId,
+          problemRecord.problemRecordId
+        )
         .then((response) => {
           const updatedEhrRecord = {
             ...ehrRecord,
             listOfProblemRecords: ehrRecord.listOfProblemRecords.filter(
-              (record) => record.problemRecordId !== problemRecord.problemRecordId
+              (record) =>
+                record.problemRecordId !== problemRecord.problemRecordId
             ),
             listOfMedicalHistoryRecords: [
               ...ehrRecord.listOfMedicalHistoryRecords,
@@ -202,8 +220,8 @@ function EHRRecord() {
             displayMessage({
               color: "success",
               icon: "notification",
-              title: "Successfully Created Facility!",
-              content: formData.problemTypeEnum + " created",
+              title: "Successfully Resolved Problem Record!",
+              content: response.data.problemTypeEnum + " resolved",
             })
           );
         })
@@ -236,10 +254,42 @@ function EHRRecord() {
     }
   };
 
-  // useEffect(() => {
-  //   console.log(ehrRecordSate); // This will log the updated ehrRecord
-  //   console.log(loggedInStaff.firstname)
-  // }, [ehrRecord]);
+  useEffect(() => {
+    const fetchDataSequentially = async () => {
+      const nextOfKinDataArray = [];
+      for (const nextOfKin of ehrRecord.listOfNextOfKinRecords) {
+        try {
+          const response = await ehrApi.getElectronicHealthRecordByNric(
+            nextOfKin.nric
+          );
+          const data = response.data;
+          nextOfKinDataArray.push(data);
+        } catch (error) {
+          console.error("Error fetching EHR data:", error);
+        }
+      }
+      setNextOfKinEhrs(nextOfKinDataArray);
+      try {
+        const response = await appointmentApi.viewPatientAppointments(
+          ehrRecord.username
+        );
+        const allAppointments = response.data;
+        setUpcomingAppointments([]);
+        for (const appointment of allAppointments) {
+          if (parseDateFromLocalDateTime(appointment.bookedDateTime) > new Date() ) {
+            if (!upcomingAppointments.some(existingAppointment => existingAppointment.appointmentId === appointment.appointmentId)) {
+              setUpcomingAppointments(prevAppointments => [...prevAppointments, appointment]);
+            }
+          } else {
+            // ADD PAST APPOINTMENT LOGIC HERE LATER ON
+          }
+        } 
+      } catch (error) {
+        console.error("Error fetching appointment data:", error);
+      }
+    };
+    fetchDataSequentially();
+  }, [ehrRecord.listOfNextOfKinRecords]);
 
   return (
     <DashboardLayout>
@@ -251,9 +301,9 @@ function EHRRecord() {
           <ProfileInfoCard
             title="patient EHR information:"
             info={{
+              username: ehrRecord.username,
               firstName: ehrRecord.firstName,
               lastName: ehrRecord.lastName,
-              username: ehrRecord.username,
               birthDate: ehrRecord.dateOfBirth.split(" ")[0],
               address: ehrRecord.address,
               contactNumber: ehrRecord.contactNumber,
@@ -277,7 +327,7 @@ function EHRRecord() {
           <Typography variant="h6" gutterBottom>
             List of Problem Records:
             {ehrRecord.listOfProblemRecords.map((problemRecord, index) => (
-              <Grid container spacing={3} justify="center" alignItems="center" >
+              <Grid container spacing={3} justify="center" alignItems="center">
                 <Grid item xs={12} md={6} lg={3}>
                   <MDBox mb={1.5}>
                     <ProfileInfoCard
@@ -328,6 +378,42 @@ function EHRRecord() {
         </Card>
       </MDBox>
 
+      <MDBox position="relative" mb={5}>
+        <MDBox position="relative" minHeight="5rem" />
+        <Card
+          sx={{
+            position: "relative",
+            mt: -8,
+            mx: 3,
+            py: 2,
+            px: 2,
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            List of Upcoming Appointments:
+            {upcomingAppointments.map((upcomingAppointment, index) => (
+              <Grid container spacing={2} justify="center" alignItems="center">
+                <Grid item xs={12} md={6} lg={3}>
+                  <MDBox mb={1.5}>
+                    <ProfileInfoCard
+                      key={index}
+                      title={`Appointment ${index + 1}`}
+                      info={{
+                        bookedDateTime: formatDateToYYYYMMDD(parseDateFromLocalDateTime(upcomingAppointment.bookedDateTime)),
+                        departmentName: upcomingAppointment.departmentName,
+                        description: upcomingAppointment.description,
+                        estimatedDuration: upcomingAppointment.estimatedDuration,
+                      }}
+                      shadow={false}
+                    />
+                  </MDBox>
+                </Grid>
+              </Grid>
+            ))}
+          </Typography>
+        </Card>
+      </MDBox>
+
       {loggedInStaff.staffRoleEnum === "DOCTOR" && (
         <MDBox position="relative" mb={5}>
           <MDBox position="relative" minHeight="5rem" />
@@ -360,6 +446,111 @@ function EHRRecord() {
                 />
               )
             )}
+          </Card>
+        </MDBox>
+      )}
+
+      {loggedInStaff.staffRoleEnum === "DOCTOR" && (
+        <MDBox position="relative" mb={5}>
+          <MDBox position="relative" minHeight="5rem" />
+          <Card
+            sx={{
+              position: "relative",
+              mt: -8,
+              mx: 3,
+              py: 2,
+              px: 2,
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              List of Next of Kin Records:
+            </Typography>
+            {ehrRecord.listOfNextOfKinRecords.map((nextOfKinRecord, index) => {
+              // Check if nextOfKinRecord.nric exists in nextOfKinEhrs
+              const ehrMatch = nextOfKinEhrs.find(
+                (ehr) => ehr.nric === nextOfKinRecord.nric
+              );
+              return (
+                <Accordion key={index}>
+                  <AccordionSummary>
+                    <Typography variant="h6">
+                      {nextOfKinRecord.relationship}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {ehrMatch ? (
+                      // Render the EHR data here if a match is found
+                      <MDBox>
+                        <Typography>NRIC: {ehrMatch.nric}</Typography>
+                        <Divider
+                          orientation="horizontal"
+                          sx={{ ml: -2, mr: 1 }}
+                        />
+                        {ehrMatch.listOfMedicalHistoryRecords.map(
+                          (medicalHistory, medicalHistoryIndex) => (
+                            <MDBox key={medicalHistoryIndex}>
+                              <MDBox mb={1.5}>
+                                <ProfileInfoCard
+                                  key={index}
+                                  title={`Medical History ${index + 1}`}
+                                  info={{
+                                    createdBy: medicalHistory.createdBy,
+                                    createdDate:
+                                      medicalHistory.createdDate.split(" ")[0],
+                                    resolvedDate:
+                                      medicalHistory.resolvedDate.split(" ")[0],
+                                    description: medicalHistory.description,
+                                    priority: medicalHistory.priorityEnum,
+                                    problemType: medicalHistory.problemTypeEnum,
+                                  }}
+                                  shadow={false}
+                                />
+                              </MDBox>
+                            </MDBox>
+                          )
+                        )}
+                        <Divider
+                          orientation="horizontal"
+                          sx={{ ml: -2, mr: 1 }}
+                        />
+                        {ehrMatch.listOfProblemRecords.map(
+                          (problem, problemIndex) => (
+                            <MDBox key={problemIndex}>
+                              <ProfileInfoCard
+                                key={index}
+                                title={`Problem ${index + 1}`}
+                                info={{
+                                  createdBy: problem.createdBy,
+                                  createdDate:
+                                    problem.createdDate.split(" ")[0],
+                                  description: problem.description,
+                                  priority: problem.priorityEnum,
+                                  problemType: problem.problemTypeEnum,
+                                }}
+                                shadow={false}
+                              />
+                            </MDBox>
+                          )
+                        )}
+                      </MDBox>
+                    ) : (
+                      <MDBox>
+                        <Typography variant="h6">
+                          {nextOfKinRecord.nric}
+                        </Typography>
+                        <Divider
+                          orientation="horizontal"
+                          sx={{ ml: -2, mr: 1 }}
+                        />
+                        <Typography>
+                          No EHR data found for this next of kin.
+                        </Typography>
+                      </MDBox>
+                    )}
+                  </AccordionDetails>
+                </Accordion>
+              );
+            })}
           </Card>
         </MDBox>
       )}

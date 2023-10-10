@@ -10,7 +10,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import { IconButton, Icon, Button, Tabs, Tab } from "@mui/material";
+import { IconButton, Icon, Button, Tabs, Tab, ListItemText, ListItem } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 
 
@@ -29,7 +29,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { facilityApi, departmentApi } from "api/Api";
+import { facilityApi, staffApi } from "api/Api";
 import { useSelector } from "react-redux";
 import DateTimePicker from 'react-datetime-picker'
 import { displayMessage } from "../../../store/slices/snackbarSlice";
@@ -103,6 +103,22 @@ function FacilityBooking() {
 				);
 				return
 			}
+			console.log("facility:" + selectedFacility.status);
+
+			if (selectedFacility.status === 'NON_BOOKABLE') {
+				setIsBookingModalOpen(false);
+				fetchData();
+				fetchBookingData();
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Error Encountered",
+						content: "This facility is not available for booking",
+					})
+				);
+				return
+			}
 
 			const bookingData = {
 				startDateTime: startDateObj,
@@ -122,6 +138,7 @@ function FacilityBooking() {
 					const booking = response.data;
 					console.log(booking);
 					setIsBookingModalOpen(false);
+					setComments("");
 					reduxDispatch(
 						displayMessage({
 							color: "success",
@@ -306,51 +323,70 @@ function FacilityBooking() {
 		rows: [],
 	});
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [formData, setFormData] = useState({
-		subDepartmentId: null,
-		name: "",
-		location: "",
-		description: "",
-		capacity: "",
-		facilityStatusEnum: "",
-		facilityTypeEnum: "",
-	});
+	// const [formData, setFormData] = useState({
+	// 	departmentId: null,
+	// 	name: "",
+	// 	location: "",
+	// 	description: "",
+	// 	capacity: "",
+	// 	facilityStatusEnum: "",
+	// 	facilityTypeEnum: "",
+	// });
 
 	const [selectedFacility, setSelectedFacility] = useState(null);
 	const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
 
 	const handleViewAvailability = (facility) => {
+		console.log("selected facility: " + facility.facilityStatusEnum);
 		setSelectedFacility(facility);
 		setIsCalendarModalOpen(true);
 
-		facilityApi.
-			findAllBookingsOfAFacility(facility.facilityId)
+		facilityApi
+			.findAllBookingsOfAFacility(facility.facilityId)
 			.then((response) => {
 				const facilityBookings = response.data;
 				console.log(facilityBookings);
-				const mappedEvents = facilityBookings.map((booking) => ({
-					title: `Booked by ${booking.staffUsername}`,
-					facilityBookingId: booking.facilityBookingId,
-					comments: booking.comments,
-					staffUsername: booking.staffUsername,
-					start: new Date(booking.startDateTime),
-					end: new Date(booking.endDateTime),
-					facilityBookingId: booking.facilityBookingId,
-					owner: booking.staffUsername,
-					resizable: true,
-					draggable: true,
 
-				}));
+				// Create an array of promises for fetching staff details
+				const staffPromises = facilityBookings.map((booking) => {
+					return staffApi.getStaffByUsername(booking.staffUsername); // Replace with your API call
+				});
 
-				setCalendarEvents(mappedEvents);
-			}).catch((error) => {
+				// Use Promise.all to resolve all staff detail requests
+				Promise.all(staffPromises)
+					.then((staffDetails) => {
+						const mappedEvents = facilityBookings.map((booking, index) => {
+							const staff = staffDetails[index];
+							console.log("Staff details:", staff);
+							const title = `Booked by ${staff.data.firstname} ${staff.data.lastname}`;
+							const ownerFullName = `${staff.data.firstname} ${staff.data.lastname}`;
+
+							return {
+								title,
+								ownerFullName,
+								facilityBookingId: booking.facilityBookingId,
+								comments: booking.comments,
+								staffUsername: booking.staffUsername,
+								start: new Date(booking.startDateTime),
+								end: new Date(booking.endDateTime),
+								facilityBookingId: booking.facilityBookingId,
+								owner: booking.staffUsername,
+								resizable: true,
+								draggable: true,
+							};
+						});
+
+						setCalendarEvents(mappedEvents);
+					})
+					.catch((error) => {
+						console.error("Error fetching staff data:", error);
+					});
+			})
+			.catch((error) => {
 				console.error("Error fetching data:", error);
 			});
-
-
-
-
 	};
+
 	const eventStyleGetter = (event) => {
 
 		if (event.owner === staff.username) {
@@ -372,14 +408,6 @@ function FacilityBooking() {
 		setIsCalendarModalOpen(false);
 	};
 
-
-	const handleChange = (event) => {
-		const { name, value } = event.target;
-		setFormData((prevData) => ({
-			...prevData,
-			[name]: value,
-		}));
-	};
 
 	const handleDeleteBooking = async (id, startDateTime) => {
 		try {
@@ -404,6 +432,8 @@ function FacilityBooking() {
 				.deleteFacilityBooking(id)
 				.then((response) => {
 					const updatedEvents = calendarEvents.filter((event) => event.facilityBookingId !== id);
+					fetchData();
+					fetchBookingData();
 					setCalendarEvents(updatedEvents);
 					setIsBookingDetailsOpen(false);
 					reduxDispatch(
@@ -414,6 +444,14 @@ function FacilityBooking() {
 						})
 					);
 				}).catch((error) => {
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Error Encountered",
+							content: error.response.data,
+						})
+					);
 					console.error("Error fetching data:", error);
 				});
 		} catch (ex) {
@@ -533,106 +571,227 @@ function FacilityBooking() {
 	};
 
 	const handleEventResize = async (event) => {
-		const eventIndex = calendarEvents.findIndex((ev) => ev.id === event.id);
+		try {
+			const eventIndex = calendarEvents.findIndex((ev) => ev.id === event.id);
 
-		if (eventIndex !== -1) {
-			const date1 = new Date(event.start);
-			const date2 = new Date(event.end);
+			if (eventIndex !== -1) {
+				const date1 = new Date(event.start);
+				const date2 = new Date(event.end);
 
-			const startDateObj = date1.toLocaleString();
-			const endDateObj = date2.toLocaleString();
-
-			if (event.event.staffUsername === staff.username) {
-				const updatedEvent = {
-					...calendarEvents[eventIndex],
-					start: startDateObj,
-					end: endDateObj,
-					facilityId: selectedFacility.facilityId,
-					facilityBookingId: event.event.facilityBookingId,
-					comments: event.event.comments,
-					staffUsername: event.event.staffUsername,
+				const options = {
+					day: '2-digit',
+					month: '2-digit',
+					year: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+					second: '2-digit',
+					hour12: false, // Use 24-hour format
 				};
 
-				facilityApi
-					.updateFacilityBooking(updatedEvent)
-					.then((response) => {
-						const booking = response.data;
-						console.log(booking);
-						handleViewAvailability(selectedFacility);
-						reduxDispatch(
-							displayMessage({
-								color: "success",
-								icon: "notification",
-								title: "Successfully Updated Booking!",
-							})
-						);
-					})
-					.catch((error) => {
-						console.error("Error fetching data:", error);
-					});
-			} else {
-				console.log("Permission denied: You cannot resize this event.");
-				reduxDispatch(
-					displayMessage({
-						color: "error",
-						icon: "notification",
-						title: "Permission denied: You cannot resize an event you didn't create.",
-					})
-				);
+				const startDateObj = date1.toLocaleString('en-GB', options);
+				const endDateObj = date2.toLocaleString('en-GB', options);
+
+				console.log("hello there");
+				// console.log(startDateObj);
+				// console.log(endDateObj);
+				const currentDate = new Date();
+				console.log(date1);
+				console.log(currentDate);
+				console.log(date1 < currentDate);
+
+				if (date1 < currentDate) {
+					setIsBookingModalOpen(false);
+					fetchData();
+					fetchBookingData();
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Error Encountered",
+							content: "Booking cannot be done for past date",
+						})
+					);
+					return
+				}
+
+
+				if (event.event.staffUsername === staff.username) {
+					const updatedEvent = {
+						...calendarEvents[eventIndex],
+						start: startDateObj,
+						end: endDateObj,
+						facilityId: selectedFacility.facilityId,
+						facilityBookingId: event.event.facilityBookingId,
+						comments: event.event.comments,
+						staffUsername: event.event.staffUsername,
+					};
+
+					facilityApi
+						.updateFacilityBooking(updatedEvent)
+						.then((response) => {
+							const booking = response.data;
+							console.log(booking);
+							handleViewAvailability(selectedFacility);
+							reduxDispatch(
+								displayMessage({
+									color: "success",
+									icon: "notification",
+									title: "Successfully Updated Booking!",
+								})
+							);
+						})
+						.catch((err) => {
+							if (err.response.data.detail) {
+								reduxDispatch(
+									displayMessage({
+										color: "error",
+										icon: "notification",
+										title: "Error Encountered",
+										content: err.response.data.detail,
+									})
+								);
+							} else {
+								reduxDispatch(
+									displayMessage({
+										color: "error",
+										icon: "notification",
+										title: "Error Encountered",
+										content: err.response.data,
+									})
+								);
+							}
+							console.log(err.response.data.detail)
+						})
+				} else {
+					console.log("Permission denied: You cannot resize this event.");
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Permission denied: You cannot resize an event you didn't create.",
+						})
+					);
+				}
 			}
+		} catch (ex) {
+			console.log(ex.response.data);
+			reduxDispatch(
+				displayMessage({
+					color: "error",
+					icon: "notification",
+					title: "Error Encountered",
+					content: ex.response.data,
+				})
+			);
 		}
 	};
 
 	const handleEventDrop = async (event) => {
-		const eventIndex = calendarEvents.findIndex((ev) => ev.id === event.id);
+		try {
+			const eventIndex = calendarEvents.findIndex((ev) => ev.id === event.id);
 
-		if (eventIndex !== -1) {
-			const date1 = new Date(event.start);
-			const date2 = new Date(event.end);
+			if (eventIndex !== -1) {
+				const date1 = new Date(event.start);
+				const date2 = new Date(event.end);
 
-			const startDateObj = date1.toLocaleString();
-			const endDateObj = date2.toLocaleString();
-
-			if (event.event.staffUsername === staff.username) {
-				const updatedEvent = {
-					...calendarEvents[eventIndex],
-					start: startDateObj,
-					end: endDateObj,
-					facilityId: selectedFacility.facilityId,
-					facilityBookingId: event.event.facilityBookingId,
-					comments: event.event.comments,
-					staffUsername: event.event.staffUsername,
+				const options = {
+					day: '2-digit',
+					month: '2-digit',
+					year: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+					second: '2-digit',
+					hour12: false, // Use 24-hour format
 				};
 
-				facilityApi
-					.updateFacilityBooking(updatedEvent)
-					.then((response) => {
-						const booking = response.data;
-						console.log(booking);
-						handleViewAvailability(selectedFacility);
-						reduxDispatch(
-							displayMessage({
-								color: "success",
-								icon: "notification",
-								title: "Successfully Updated Booking!",
-							})
-						);
-					})
-					.catch((error) => {
-						console.error("Error fetching data:", error);
-					});
-			} else {
-				console.log("Permission denied: You cannot resize this event.");
-				reduxDispatch(
-					displayMessage({
-						color: "error",
-						icon: "notification",
-						title: "Permission denied: You cannot resize an event you didn't create.",
-					})
-				);
+				const startDateObj = date1.toLocaleString('en-GB', options);
+				const endDateObj = date2.toLocaleString('en-GB', options);
+
+				console.log("hello there");
+				// console.log(startDateObj);
+				// console.log(endDateObj);
+				const currentDate = new Date();
+				console.log(date1);
+				console.log(currentDate);
+				console.log(date1 < currentDate);
+
+				if (date1 < currentDate) {
+					setIsBookingModalOpen(false);
+					fetchData();
+					fetchBookingData();
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Error Encountered",
+							content: "Booking cannot be done for past date",
+						})
+					);
+					return
+				}
+				if (event.event.staffUsername === staff.username) {
+					const updatedEvent = {
+						...calendarEvents[eventIndex],
+						start: startDateObj,
+						end: endDateObj,
+						facilityId: selectedFacility.facilityId,
+						facilityBookingId: event.event.facilityBookingId,
+						comments: event.event.comments,
+						staffUsername: event.event.staffUsername,
+					};
+
+					facilityApi
+						.updateFacilityBooking(updatedEvent)
+						.then((response) => {
+							const booking = response.data;
+							console.log(booking);
+							handleViewAvailability(selectedFacility);
+							reduxDispatch(
+								displayMessage({
+									color: "success",
+									icon: "notification",
+									title: "Successfully Updated Booking!",
+								})
+							);
+						})
+						.catch((err) => {
+							if (err.response.data.detail) {
+								reduxDispatch(
+									displayMessage({
+										color: "error",
+										icon: "notification",
+										title: "Error Encountered",
+										content: err.response.data.detail,
+									})
+								);
+							} else {
+								reduxDispatch(
+									displayMessage({
+										color: "error",
+										icon: "notification",
+										title: "Error Encountered",
+										content: err.response.data,
+									})
+								);
+							}
+							console.log(err.response.data.detail)
+						})
+				} else {
+					console.log("Permission denied: You cannot move this booking.");
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Permission denied: You cannot move a booking you didn't create.",
+						})
+					);
+				}
 			}
+		} catch (ex) {
+			console.error(ex);
 		}
-	};
+	}
+
 
 	const calendarConfig = {
 		selectable: true,
@@ -732,12 +891,38 @@ function FacilityBooking() {
 									<DialogTitle>Facility Booking Details</DialogTitle>
 									<DialogContent>
 										{selectedBooking && (
-											<div>
-												<p>Booking ID: {selectedBooking.facilityBookingId}</p>
-												<p>Start Time: {moment(selectedBooking.start).format('MMMM Do YYYY, h:mm:ss a')}</p>
-												<p>End Time: {moment(selectedBooking.end).format('MMMM Do YYYY, h:mm:ss a')}</p>
-												<p>Booked by: {selectedBooking.staffUsername}</p>
-												<p>Comments: {selectedBooking.comments}</p>
+											<>
+												<ListItem>
+													<ListItemText primary="Booking ID:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
+														{selectedBooking.facilityBookingId}
+													</MDTypography>
+												</ListItem>
+												<ListItem>
+													<ListItemText primary="Start Time:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
+														{moment(selectedBooking.start).format('MMMM Do YYYY, h:mm:ss a')}
+													</MDTypography>
+												</ListItem>
+												<ListItem>
+													<ListItemText primary="End Time:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
+														{moment(selectedBooking.end).format('MMMM Do YYYY, h:mm:ss a')}
+													</MDTypography>
+												</ListItem>
+												<ListItem>
+													<ListItemText primary="Booked by:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
+														{selectedBooking.ownerFullName}
+													</MDTypography>
+												</ListItem>
+												<ListItem>
+													<ListItemText primary="Comments:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
+														{selectedBooking.comments}
+													</MDTypography>
+												</ListItem>
+
 												{selectedBooking.staffUsername === staff.username && (
 													<Button
 														variant="contained"
@@ -746,7 +931,7 @@ function FacilityBooking() {
 														Delete Booking
 													</Button>
 												)}
-											</div>
+											</>
 										)}
 									</DialogContent>
 								</Dialog>
@@ -808,7 +993,7 @@ function FacilityBooking() {
 				</Grid>
 			</MDBox>
 
-		</DashboardLayout>
+		</DashboardLayout >
 	);
 }
 
