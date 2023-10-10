@@ -314,11 +314,8 @@ function AppointmentTicketModal({
                 </MDTypography>
                 {selectedAppointment.patientProfilePicture !== null && (
                   <MDAvatar
-                    src={
-                      IMAGE_SERVER +
-                      "/images/id/" +
-                      selectedAppointment.patientProfilePicture
-                    }
+                    
+                    src={`${IMAGE_SERVER}/images/id/${selectedAppointment.patientProfilePicture}`}
                     alt="profile-image"
                     size="xxl"
                     shadow="xxl"

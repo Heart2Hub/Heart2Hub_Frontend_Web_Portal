@@ -18,7 +18,7 @@ function InventoryManagement() {
                     <Grid item xs={12} md={6} lg={3}>
                         <MDBox mb={1.5}>
                             <SimpleBlogCard
-                                image="https://bit.ly/3Hlw1MQ"
+                                image="https://media.istockphoto.com/id/1216812369/photo/a-medical-hand-in-a-glove-holds-an-ampoule-with-a-vaccine-and-a-syringe-with-illustration.jpg?s=612x612&w=0&k=20&c=1j6lajNvibgVIy1g8G8_umJkfgVgodvEFi3KHhkxxi4="
                                 title="Consumable Equipment Management"
                                 action={{
                                     type: "internal",
@@ -32,7 +32,7 @@ function InventoryManagement() {
                     <Grid item xs={12} md={6} lg={3}>
                         <MDBox mb={1.5}>
                             <SimpleBlogCard
-                                image="https://bit.ly/3Hlw1MQ"
+                                image="https://st.depositphotos.com/1151871/3045/i/450/depositphotos_30459135-stock-photo-medication.jpg"
                                 title="Medication Management"
                                 action={{
                                     type: "internal",
@@ -46,7 +46,7 @@ function InventoryManagement() {
                     <Grid item xs={12} md={6} lg={3}>
                         <MDBox mb={1.5}>
                             <SimpleBlogCard
-                                image="https://bit.ly/3Hlw1MQ"
+                                image="https://media.istockphoto.com/id/482858629/photo/doctors-hospital-corridor-nurse-pushing-gurney-stretcher-bed.jpg?b=1&s=612x612&w=0&k=20&c=QA5AU7uv9cnJUXBdMstov5CcpErsIQEke05Hn98SEvs="
                                 title="Service Item Management"
                                 action={{
                                     type: "internal",
