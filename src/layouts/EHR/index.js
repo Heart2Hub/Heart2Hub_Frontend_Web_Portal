@@ -14,6 +14,8 @@ import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { IconButton, Icon } from "@mui/material";
+import { IMAGE_SERVER } from "constants/RestEndPoint";
+
 // import DatePicker from "@mui/x-date-pickers";
 
 import MDBox from "components/MDBox";
@@ -53,7 +55,7 @@ function EHR() {
         Header: "Profile Picture",
         accessor: "profilePicture",
         width: "20%",
-        Cell: ({ value }) => <Avatar alt="Profile Picture" src={value} />,
+        Cell: ({ value }) => <Avatar alt="Profile Picture" src={`${IMAGE_SERVER}/images/id/${value}`} />,
       },
       { Header: "NRIC", accessor: "nric", width: "20%", Cell: ({ value }) => <MaskedNRIC value={value} />, },
       { Header: "First Name", accessor: "firstName", width: "20%" },
@@ -90,7 +92,7 @@ function EHR() {
         Header: "Profile Picture",
         accessor: "profilePicture",
         width: "20%",
-        Cell: ({ value }) => <Avatar alt="Profile Picture" src={value} />,
+        Cell: ({ value }) => <Avatar alt="Profile Picture" src={`${IMAGE_SERVER}/images/id/${value}`} />,
       },
       { Header: "NRIC", accessor: "nric", width: "20%" },
       { Header: "First Name", accessor: "firstName", width: "20%" },
@@ -323,7 +325,7 @@ function EHR() {
         <DialogContent>
           <Avatar
             alt="Profile Picture"
-            src={formData.profilePicture}
+            src={`${IMAGE_SERVER}/images/id/${formData.profilePicture}`}            
             sx={{ width: 100, height: 100, margin: "0 auto" }}
           />
           <TextField
