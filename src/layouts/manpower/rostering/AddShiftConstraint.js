@@ -25,7 +25,7 @@ const style = {
     p: 5,
 };
 
-function AddShiftConstraint({open, handleClose, role}) {
+function AddShiftConstraint({open, handleClose, role, facilities, unit, staff}) {
     const body = {
         startTime: "",
         endTime: "",
@@ -35,6 +35,7 @@ function AddShiftConstraint({open, handleClose, role}) {
 
     const [reqBody, setReqBody] = useState(body);
     const [selectedShift, setSelectedShift] = useState(1);
+    const [selectedFacility, setSelectedFacility] = useState();
     const [errorMsg, setErrorMsg] = useState();
     const reduxDispatch = useDispatch();
 
@@ -59,8 +60,11 @@ function AddShiftConstraint({open, handleClose, role}) {
         newReqBody.startTime = start;
         newReqBody.endTime = end;
         try {
-            console.log(newReqBody)
-            const response = await shiftConstraintsApi.createShiftConstraints(newReqBody);
+            if (role === "NURSE" && staff.unit.wardClass) {
+                const response = await shiftConstraintsApi.createShiftConstraints(newReqBody, unit);
+            } else {
+                const response = await shiftConstraintsApi.createShiftConstraints(newReqBody, selectedFacility);
+            }
             handleClose();
             setErrorMsg(null);
             reduxDispatch(
@@ -89,6 +93,10 @@ function AddShiftConstraint({open, handleClose, role}) {
         setSelectedShift(event.target.value);
     }
 
+    const handleFacilityDropdownChange = (event) => {
+        setSelectedFacility(event.target.value);
+    }
+
     const handleChange = (event) => {
         setReqBody((prevState) => ({
             ...prevState,
@@ -108,7 +116,8 @@ function AddShiftConstraint({open, handleClose, role}) {
         let temp = body;
         temp.staffRoleEnum = role;
         setReqBody(temp);
-    }, [role])
+        setSelectedFacility(facilities[0]?.name)
+    }, [role, facilities])
 
     return (
         <Modal
@@ -151,6 +160,25 @@ function AddShiftConstraint({open, handleClose, role}) {
                             onChange={handleChange}
                             value={reqBody.minPax}
                         /><br/><br/>
+                        {role === "NURSE" && staff.unit.wardClass ? 
+                        <>
+                            <Typography variant="h6">Ward: {unit}</Typography>
+                        </> :
+                        <>
+                            <InputLabel id="shift-select-label">Facility:</InputLabel>
+                            <Select
+                                labelId="facility-select-label"
+                                id="facility-select"
+                                value={selectedFacility}
+                                onChange={handleFacilityDropdownChange}
+                            >
+                                {facilities.map((facility) => (
+                                    <MenuItem key={facility.facilityId} value={facility.name}>
+                                        {facility?.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </>}
                         <Typography variant="h6">Role: {reqBody.staffRoleEnum}</Typography><br/>
                         {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                         <Button 

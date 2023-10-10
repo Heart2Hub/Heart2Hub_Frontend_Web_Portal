@@ -11,12 +11,14 @@ import Icon from "@mui/material/Icon";
 import Outpatient from "layouts/outpatient";
 import Inpatient from "layouts/inpatient";
 import EHR from "layouts/EHR";
+import EHRRecord from "layouts/EHR/record";
 //import EHRRecord from "layouts/ehr/record";
 import Administration from "layouts/administration";
 import Manpower from "layouts/manpower";
 import Finance from "layouts/finance";
 import StaffManagement from "layouts/administration/staff-management";
 import FacilityManagement from "layouts/administration/facility-management";
+import FacilityBooking from "layouts/administration/facility-booking";
 import Home from "layouts/home";
 import Account from "layouts/account";
 import ErrorPage from "layouts/error";
@@ -28,6 +30,10 @@ import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
 import { StaffRoleEnum } from "constants/StaffRoleEnum";
+import ConsumableEquipmentManagement from "layouts/administration/inventory-management/consumable-equipment";
+import InventoryManagement from "layouts/administration/inventory-management";
+import MedicationManagement from "layouts/administration/inventory-management/medication-management";
+import ServiceItemManagement from "layouts/administration/inventory-management/service-item-management";
 
 const routes = [
   {
@@ -67,17 +73,49 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Outpatient",
-    key: "outpatient",
-    icon: <Icon fontSize="small">local_hospital</Icon>,
-    route: "/outpatient",
+    name: "Administration",
+    key: "administration",
+    icon: <Icon fontSize="small">build</Icon>,
+    route: "/administration",
     authorizedRoles: [StaffRoleEnum.ALL],
     component: (
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
       >
-        <Outpatient />
+        <Administration />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "EHR",
+    key: "ehr",
+    icon: <Icon fontSize="small">receipt_long</Icon>,
+    route: "/ehr",
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <EHR />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "Finance",
+    key: "finance",
+    icon: <Icon fontSize="small">attach_money</Icon>,
+    route: "/finance",
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Finance />
       </ProtectedRoute>
     ),
   },
@@ -99,42 +137,44 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "EHR",
-    key: "ehr",
-    icon: <Icon fontSize="small">receipt_long</Icon>,
-    route: "/ehr",
+    name: "Manpower",
+    key: "manpower",
+    icon: <Icon fontSize="small">group</Icon>,
+    route: "/manpower",
     authorizedRoles: [StaffRoleEnum.ALL],
     component: (
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
       >
-        <EHR />
+        <Manpower />
       </ProtectedRoute>
     ),
   },
-  // {
-  //   name: "EHR",
-  //   key: "ehr",
-  //   icon: <Icon fontSize="small">receipt_long</Icon>,
-  //   route: "/ehr/record",
-  //   component: <EHRRecord />,
-  // },
   {
     type: "collapse",
-    name: "Administration",
-    key: "administration",
-    icon: <Icon fontSize="small">build</Icon>,
-    route: "/administration",
+    name: "Outpatient",
+    key: "outpatient",
+    icon: <Icon fontSize="small">local_hospital</Icon>,
+    route: "/outpatient",
     authorizedRoles: [StaffRoleEnum.ALL],
     component: (
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
       >
-        <Administration />
+        <Outpatient />
       </ProtectedRoute>
     ),
+  },
+
+
+  {
+    name: "EHR",
+    key: "ehr",
+    icon: <Icon fontSize="small">receipt_long</Icon>,
+    route: "/ehr/ehrRecord",
+    component: <EHRRecord />,
   },
   {
     name: "Staff Management",
@@ -163,21 +203,19 @@ const routes = [
     ),
   },
   {
-    type: "collapse",
-    name: "Manpower",
-    key: "manpower",
-    icon: <Icon fontSize="small">group</Icon>,
-    route: "/manpower",
-    authorizedRoles: [StaffRoleEnum.ALL],
+    name: "Facility Booking",
+    key: "facilitybooking",
+    route: "/administration/facility-booking",
     component: (
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
       >
-        <Manpower />
+        <FacilityBooking />
       </ProtectedRoute>
     ),
   },
+
   {
     name: "Rostering",
     key: "rostering",
@@ -237,22 +275,7 @@ const routes = [
       </ProtectedRoute>
     ),
   },
-  {
-    type: "collapse",
-    name: "Finance",
-    key: "finance",
-    icon: <Icon fontSize="small">attach_money</Icon>,
-    route: "/finance",
-    authorizedRoles: [StaffRoleEnum.ALL],
-    component: (
-      <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
-        forHeadsOnly={false}
-      >
-        <Finance />
-      </ProtectedRoute>
-    ),
-  },
+
   {
     name: "Error",
     key: "error",
@@ -263,6 +286,71 @@ const routes = [
         forHeadsOnly={false}
       >
         <ErrorPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Inventory Management",
+    key: "inventorymanagement",
+    route: "/administration/inventory-management",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
+        forHeadsOnly={false}
+      >
+        <InventoryManagement />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Consumable Equipment Management",
+    key: "consumableequipmentmanagement",
+    route: "/administration/inventory-management/consumable-equipment-management",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
+        forHeadsOnly={false}
+      >
+        <ConsumableEquipmentManagement />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "MedicationManagement",
+    key: "medicationmanagement",
+    route: "/administration/inventory-management/medication-management",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
+        forHeadsOnly={false}
+      >
+        <MedicationManagement />
+      </ProtectedRoute>
+    ),
+  },
+  // {
+  //   name: "Consumable Equipment Management",
+  //   key: "consumableequipmentmanagement",
+  //   route: "/administration/inventory-management/consumable-equipment-management",
+  //   component: (
+  //     <ProtectedRoute
+  //       authorizedRoles={[StaffRoleEnum.ADMIN]}
+  //       forHeadsOnly={false}
+  //     >
+  //       <ConsumableEquipmentManagement />
+  //     </ProtectedRoute>
+  //   ),
+  // },
+  {
+    name: "Service Item Management",
+    key: "serviceItemManagement",
+    route: "/administration/inventory-management/service-item-management",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <ServiceItemManagement />
       </ProtectedRoute>
     ),
   },

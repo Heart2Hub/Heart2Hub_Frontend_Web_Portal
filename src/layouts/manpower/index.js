@@ -23,7 +23,7 @@ function Manpower() {
           <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <SimpleBlogCard
-                image="https://bit.ly/3Hlw1MQ"
+                image="https://i.ibb.co/CBCnQSN/eric-rothermel-Fo-KO4-Dp-Xam-Q-unsplash.jpg" 
                 title="Rostering"
                 action={{
                   type: 'internal',
@@ -37,7 +37,7 @@ function Manpower() {
           <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <SimpleBlogCard
-                image="https://bit.ly/3Hlw1MQ"
+                image="https://i.ibb.co/pds2kbT/link-hoang-Uoq-AR2p-Ox-Mo-unsplash.jpg"
                 title="Leave Application"
                 action={{
                   type: 'internal',
@@ -52,7 +52,7 @@ function Manpower() {
             <Grid item xs={12} md={6} lg={3}>
               <MDBox mb={1.5}>
                 <SimpleBlogCard
-                  image="https://bit.ly/3Hlw1MQ"
+                  image="https://i.ibb.co/7NwtGXx/agence-olloweb-d9-ILr-db-Edg-unsplash.jpg"
                   title="Leave Approval"
                   action={{
                     type: 'internal',

@@ -23,7 +23,7 @@ const buttonStyles = {
     fontSize: "1.3rem"
 }
 
-function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, setUpdateAddShift }) {
+function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, setUpdateAddShift, facilities }) {
 
     const [listOfDates, setListOfDates] = useState(dateList);
     const [addShiftDate, setAddShiftDate] = useState(weekStartDate);
@@ -92,7 +92,8 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
     return (
         <TableRow role="checkbox" tabIndex={-1} key={username} sx={{ display: 'flex'}}>
             <TableCell key={username} sx={{ width: 230, paddingLeft: "30px", marginTop: "10px"  }} align="left">
-                {username === localStorage.getItem('staffUsername') ? <b>{truncate(staff.firstname + " " + staff.lastname) + " (You)"}</b> : truncate(staff.firstname + " " + staff.lastname)}
+                {username === localStorage.getItem('staffUsername') ? <b>{truncate(staff.firstname + " " + staff.lastname) + " (You)"}</b> : truncate(staff.firstname + " " + staff.lastname)}<br/>
+                <i style={{fontSize: "14px"}}>{staff.unit.name + " " + staff.staffRoleEnum.toString().toLowerCase()}{staff.isHead ? " (Head)" : null}</i> 
             </TableCell>
             {listOfDates?.map(date => {   
                 if (i < shifts?.length && moment(shifts[i]?.startTime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD") === date.date) {
@@ -116,7 +117,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                                             {getTime(shift.startTime)} - {getTime(shift.endTime)}
                                         </Typography>
                                         <Typography variant="body3" sx={{fontSize: 11}}>
-                                            {shift.facilityBooking.facility.name}
+                                            {staff.staffRoleEnum === "NURSE" && staff.unit.wardClass ? staff.unit.name : shift.facilityBooking?.facility?.name}
                                         </Typography>
                                     </CardContent>
                                 </CardActionArea>
@@ -165,12 +166,13 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
             <ViewShift 
                 open={viewShiftOpen}
                 shift={currShift}
-                facilityId={currShift ? currShift.facilityBooking.facility.facilityId : 1}
+                facilityId={currShift && currShift.facilityBooking ? currShift.facilityBooking?.facility?.facilityId : 1}
                 handleClose={handleClose}
                 username={username}
                 staff={staff}
                 updateAddShift={updateAddShift}
                 setUpdateAddShift={setUpdateAddShift}
+                facilities={facilities}
                 />
             <AddShift 
                 username={username}
@@ -180,6 +182,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                 date={addShiftDate}
                 updateAddShift={updateAddShift}
                 setUpdateAddShift={setUpdateAddShift}
+                facilities={facilities}
                 />
         </TableRow>
     );

@@ -14,6 +14,8 @@ import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { IconButton, Icon } from "@mui/material";
+import { IMAGE_SERVER } from "constants/RestEndPoint";
+
 // import DatePicker from "@mui/x-date-pickers";
 
 import MDBox from "components/MDBox";
@@ -24,13 +26,16 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { patientApi, ehrApi } from "api/Api";
 import { useDispatch } from "react-redux";
 import { displayMessage } from "../../store/slices/snackbarSlice";
 import { Label } from "@mui/icons-material";
+import { setEHRRecord } from '../../store/slices/ehrSlice';
 
 function EHR() {
+  const navigate = useNavigate(); 
   const MaskedNRIC = ({ value }) => {
     // Mask the NRIC to display only the first and last characters
     const maskedValue = value ? value.charAt(0) + 'XXXX' + value.slice(-4) : '';
@@ -50,7 +55,7 @@ function EHR() {
         Header: "Profile Picture",
         accessor: "profilePicture",
         width: "20%",
-        Cell: ({ value }) => <Avatar alt="Profile Picture" src={value} />,
+        Cell: ({ value }) => <Avatar alt="Profile Picture" src={`${IMAGE_SERVER}/images/id/${value}`} />,
       },
       { Header: "NRIC", accessor: "nric", width: "20%", Cell: ({ value }) => <MaskedNRIC value={value} />, },
       { Header: "First Name", accessor: "firstName", width: "20%" },
@@ -87,7 +92,7 @@ function EHR() {
         Header: "Profile Picture",
         accessor: "profilePicture",
         width: "20%",
-        Cell: ({ value }) => <Avatar alt="Profile Picture" src={value} />,
+        Cell: ({ value }) => <Avatar alt="Profile Picture" src={`${IMAGE_SERVER}/images/id/${value}`} />,
       },
       { Header: "NRIC", accessor: "nric", width: "20%" },
       { Header: "First Name", accessor: "firstName", width: "20%" },
@@ -197,8 +202,16 @@ function EHR() {
             );
             setIsModalOpen(false);
             // ROUTE HERE
+            response.data = {
+              ...response.data,
+              username: formData.username,
+              profilePicture: formData.profilePicture
+            }
+            reduxDispatch(setEHRRecord(response));
+            navigate('/ehr/ehrRecord');
           })
           .catch((err) => {
+            console.log(err);
             // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with redux.
             if (err.response.data.detail) {
               reduxDispatch(
@@ -312,7 +325,7 @@ function EHR() {
         <DialogContent>
           <Avatar
             alt="Profile Picture"
-            src={formData.profilePicture}
+            src={`${IMAGE_SERVER}/images/id/${formData.profilePicture}`}            
             sx={{ width: 100, height: 100, margin: "0 auto" }}
           />
           <TextField

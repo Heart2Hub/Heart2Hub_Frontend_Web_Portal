@@ -370,7 +370,17 @@ function CreateLeave() {
 									sx={{ lineHeight: "2.5em", width: "30%" }}
 
 								>
-									{staffList.filter(user => user.username !== localStorage.getItem('staffUsername')).map((staffItem, index) => (
+									{staff.isHead ?
+									staffList
+									.filter(user => user.username !== localStorage.getItem('staffUsername'))
+									.map((staffItem, index) => (
+										<MenuItem key={index} value={staffItem.staffId}>
+											{staffItem.firstname + " " + staffItem.lastname}
+										</MenuItem>
+									)) :
+									staffList
+									.filter(user => user.unit?.name === staff.unit?.name)
+									.map((staffItem, index) => (
 										<MenuItem key={index} value={staffItem.staffId}>
 											{staffItem.firstname + " " + staffItem.lastname}
 										</MenuItem>

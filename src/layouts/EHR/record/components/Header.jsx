@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { IMAGE_SERVER } from "constants/RestEndPoint";
 
 // prop-types is a library for typechecking of props.
@@ -12,12 +13,23 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDAvatar from "components/MDAvatar";
 
+// Material Dashboard 2 React base styles
+import breakpoints from "assets/theme/base/breakpoints";
+
+// Images
+import burceMars from "assets/images/bruce-mars.jpg";
+
 import { useSelector } from "react-redux";
-import { selectStaff } from "../../../store/slices/staffSlice";
-import ResetPasswordModal from "./ResetPasswordModal";
+import { selectEHRRecord } from "../../../../store/slices/ehrSlice";
 
 function Header({ children }) {
-  const staff = useSelector(selectStaff);
+  const ehrRecord = useSelector(selectEHRRecord);
+
+  useEffect(() => {
+
+    console.log(ehrRecord)
+
+  }, [ehrRecord]);
 
   return (
     <MDBox position="relative" mb={5}>
@@ -34,9 +46,8 @@ function Header({ children }) {
         <Grid container spacing={5} alignItems="center" width="100%">
           <Grid item justifyContent="center">
             <MDAvatar
-              src={
-                IMAGE_SERVER + "/images/id/" + staff.profilePicture?.imageLink
-              }
+            
+              src={`${IMAGE_SERVER}/images/id/${ehrRecord?.profilePicture}`}
               alt="profile-image"
               size="xxl"
               shadow="xxl"
@@ -45,7 +56,7 @@ function Header({ children }) {
           <Grid item xs>
             <MDBox height="100%" mt={0.5} lineHeight={1}>
               <MDTypography variant="h5" fontWeight="medium">
-                {staff.firstname} {staff.lastname}
+                {ehrRecord?.firstname} {ehrRecord?.lastname}
               </MDTypography>
             </MDBox>
           </Grid>
@@ -59,11 +70,7 @@ function Header({ children }) {
                 display: "flex",
                 justifyContent: "flex-end",
               }}
-            >
-              <MDTypography variant="h5" fontWeight="medium">
-                <ResetPasswordModal username={staff.username} />
-              </MDTypography>
-            </MDBox>
+            ></MDBox>
           </Grid>
         </Grid>
         {children}

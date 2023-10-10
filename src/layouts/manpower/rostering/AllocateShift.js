@@ -32,13 +32,12 @@ const body = {
     comments: ""
 }
 
-function AddShift({ username, open, staff, handleClose, date, updateAddShift, setUpdateAddShift }) {
+function AddShift({ username, open, staff, handleClose, date, updateAddShift, setUpdateAddShift, facilities }) {
     const [reqBody, setReqBody] = useState(body);
     const [selectedShift, setSelectedShift] = useState(1);
-    const [selectedFacility, setSelectedFacility] = useState(1);
+    const [selectedFacility, setSelectedFacility] = useState(facilities ? 1*facilities[0]?.facilityId : 1);
     const [errorMsg, setErrorMsg] = useState();
     const [shiftPref, setShiftPref] = useState(0);
-    const [facilities, setFacilities] = useState([]);
     const reduxDispatch = useDispatch();
 
     const handleSubmit = async (event) => {
@@ -62,7 +61,11 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
         newReqBody.startTime = moment(start, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         newReqBody.endTime = moment(end, 'YYYY-MM-DD HH:mm').format('YYYY-MM-DD HH:mm:ss');
         try {
-            const response = await shiftApi.createShift(username, selectedFacility, newReqBody);
+            if (staff.staffRoleEnum === "NURSE" && staff.unit.wardClass) {
+                const response = await shiftApi.createShift(username, "0", newReqBody);
+            } else {
+                const response = await shiftApi.createShift(username, selectedFacility, newReqBody);
+            }
             setUpdateAddShift(updateAddShift+1);
             handleClose();
             setErrorMsg(null);
@@ -101,15 +104,6 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
         }
     }
 
-    const getFacilities = async () => {
-        try {
-            const response = await facilityApi.getAllFacilitiesByName("");
-            setFacilities(response.data)
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
     const handleDropdownChange = (event) => {
         setSelectedShift(event.target.value);
     }
@@ -132,7 +126,6 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
 
     useEffect(() => {
         getShiftPreference();
-        getFacilities();
     }, [])
 
     return (
@@ -184,20 +177,26 @@ function AddShift({ username, open, staff, handleClose, date, updateAddShift, se
                                 onChange={handleChange}
                                 value={reqBody.comments}
                             /><br/><br/>
-                            <InputLabel id="facility-select-label">Select facility:</InputLabel>
-                            <Select
-                                labelId="facility-select-label"
-                                id="facility-select"
-                                value={selectedFacility}
-                                onChange={handleFacilityDropdownChange}
-                                sx={{ lineHeight: "2.5em"}}
-                            >
-                                {facilities?.map((option) => (
-                                    <MenuItem key={option.facilityId} value={option.facilityId}>
-                                        {option.name}
-                                    </MenuItem>
-                                ))}
-                            </Select><br/><br/>
+                            {staff.staffRoleEnum === "NURSE" && staff.unit.wardClass ? 
+                            <> 
+                                <Typography variant="h6">Ward: {staff.unit.name}</Typography><br/>
+                            </> :
+                            <>
+                                <InputLabel id="shift-select-label">Facility:</InputLabel>
+                                <Select
+                                    labelId="facility-select-label"
+                                    id="facility-select"
+                                    value={selectedFacility}
+                                    onChange={handleFacilityDropdownChange}
+                                >
+                                    {facilities.map((facility) => (
+                                        <MenuItem key={facility.facilityId} value={facility.facilityId}>
+                                            {facility.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                <br/><br/>
+                            </>}
                             {/* {errorMsg ? <Typography variant="h6" style={{ color: "red" }}>{errorMsg}</Typography> : <></>} */}
                             <Button 
                                 variant="contained" 

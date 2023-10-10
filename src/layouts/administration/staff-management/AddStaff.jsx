@@ -29,6 +29,7 @@ import { displayMessage } from "../../../store/slices/snackbarSlice";
 import { useDispatch } from "react-redux";
 import MDAvatar from "components/MDAvatar";
 import { IMAGE_SERVER } from "constants/RestEndPoint";
+import { wardApi } from "api/Api";
 
 const validationSchema = yup.object({
   username: yup
@@ -47,8 +48,7 @@ const validationSchema = yup.object({
     .max(99999999, "Invalid mobile number")
     .required("Mobile number is required"),
   staffRoleEnum: yup.string().required("Staff role is required"),
-  departmentName: yup.string().required("Department is required"),
-  subDepartmentName: yup.string().required("Sub-Department is required"),
+  unitName: yup.string().required("Unit is required")
 });
 
 function AddStaff({ returnToTableHandler, formState, editing }) {
@@ -56,8 +56,8 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
 
   const [staffRoles, setStaffRoles] = useState([]);
   const [departmentNames, setDepartmentNames] = useState([]);
-  const [subDepartments, setSubDepartments] = useState([]);
-  const [subDepartmentsByDepartment, setSubDepartmentsByDepartment] = useState(
+  const [wardNames, setWardNames] = useState([]);
+  const [unitsByRole, setUnitsByRole] = useState(
     []
   );
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -112,36 +112,30 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
         console.log(error);
       }
     };
-    getDepartments();
-  }, []);
-
-  useEffect(() => {
-    const getSubDepartments = async () => {
+    const getWards = async () => {
       try {
-        const response = await subDepartmentApi.getAllSubDepartments("");
-        setSubDepartments(response.data);
+        const response = await wardApi.getAllWards("");
+        setWardNames(processDepartmentData(response.data));
       } catch (error) {
         console.log(error);
       }
     };
-    getSubDepartments();
+    getDepartments();
+    getWards();
   }, []);
+
 
   const FormObserver = () => {
     const { values } = useFormikContext();
     useEffect(() => {
-      setSubDepartmentsByDepartment(
-        subDepartments
-          .filter(
-            (subDepartment) =>
-              subDepartment.department.name === values.departmentName
-          )
-          .map((subDepartment) => subDepartment.name)
+      setUnitsByRole(
+        values.staffRoleEnum === "NURSE" ? wardNames : 
+        values.staffRoleEnum === "" ? [] : departmentNames
       );
-    }, [values.departmentName]);
+    }, [values.staffRoleEnum]);
   };
 
-  const postStaff = async (staffBody, subDepartmentName, actions) => {
+  const postStaff = async (staffBody, unitName, actions) => {
     try {
       const imageServerResponse = await imageServerApi.uploadProfilePhoto(
         "id",
@@ -160,7 +154,7 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
 
       const response = await staffApi.createStaff(
         requestBody,
-        subDepartmentName
+        unitName
       );
       returnToTableHandler();
       reduxDispatch(
@@ -185,9 +179,9 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
     }
   };
 
-  const putStaff = async (staffBody, subDepartmentName) => {
+  const putStaff = async (staffBody, unitName) => {
     try {
-      const response = await staffApi.updateStaff(staffBody, subDepartmentName);
+      const response = await staffApi.updateStaff(staffBody, unitName);
       reduxDispatch(
         displayMessage({
           color: "success",
@@ -209,7 +203,7 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
     }
   };
 
-  const putStaffWithImage = async (staffBody, subDepartmentName) => {
+  const putStaffWithImage = async (staffBody, unitName) => {
     try {
       const imageServerResponse = await imageServerApi.uploadProfilePhoto(
         "id",
@@ -228,7 +222,7 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
 
       const response = await staffApi.updateStaffWithImage(
         requestBody,
-        subDepartmentName
+        unitName
       );
       returnToTableHandler();
       reduxDispatch(
@@ -253,18 +247,18 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
   };
 
   const handleSubmit = (values, actions) => {
-    const subDepartmentName = values.subDepartmentName;
+    const unitName = values.unitName;
     const staffBody = createStaffBody(values);
     if (editing) {
       console.log("Updated staff");
       if (profilePhoto) {
-        putStaffWithImage(staffBody, subDepartmentName);
+        putStaffWithImage(staffBody, unitName);
       } else {
-        putStaff(staffBody, subDepartmentName);
+        putStaff(staffBody, unitName);
       }
     } else {
       console.log("Creating staff");
-      postStaff(staffBody, subDepartmentName, actions);
+      postStaff(staffBody, unitName, actions);
     }
   };
 
@@ -458,33 +452,19 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                   )}
                 </Grid>
 
-                <Grid item xs={6}>
+                <Grid item xs={7}>
                   <MDTypography
                     variant="button"
                     fontWeight="bold"
                     textTransform="capitalize"
                   >
-                    Department
+                    Unit
                   </MDTypography>
                   <SelectWrapper
-                    name="departmentName"
+                    name="unitName"
                     hiddenlabel
-                    options={departmentNames}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <MDTypography
-                    variant="button"
-                    fontWeight="bold"
-                    textTransform="capitalize"
-                  >
-                    Sub-Department
-                  </MDTypography>
-                  <SelectWrapper
-                    name="subDepartmentName"
-                    hiddenlabel
-                    options={subDepartmentsByDepartment}
-                    disabled={subDepartmentsByDepartment.length === 0}
+                    options={unitsByRole}
+                    disabled={unitsByRole.length === 0}
                   />
                 </Grid>
                 <Grid item xs={6}>
