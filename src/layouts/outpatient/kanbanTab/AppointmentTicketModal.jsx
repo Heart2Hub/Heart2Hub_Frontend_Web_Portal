@@ -266,7 +266,7 @@ function AppointmentTicketModal({
         response.data = {
           ...response.data,
           username: selectedAppointment.username,
-          profilePicture: selectedAppointment.profilePicture,
+          profilePicture: selectedAppointment.patientProfilePicture,
         };
         reduxDispatch(setEHRRecord(response));
         navigate("/ehr/ehrRecord");

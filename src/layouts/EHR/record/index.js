@@ -326,7 +326,6 @@ function EHRRecord() {
           <ProfileInfoCard
             title="patient EHR information:"
             info={{
-              username: ehrRecord.username,
               firstName: ehrRecord.firstName,
               lastName: ehrRecord.lastName,
               birthDate: ehrRecord.dateOfBirth.split(" ")[0],
