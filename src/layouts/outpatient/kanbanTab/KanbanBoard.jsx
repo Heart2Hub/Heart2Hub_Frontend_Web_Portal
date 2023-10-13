@@ -44,6 +44,7 @@ function KanbanBoard() {
   const [treatment, setTreatment] = useState([]);
   const [admission, setAdmission] = useState([]);
   const [pharmacy, setPharmacy] = useState([]);
+  const [referral, setReferral] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Function to open the modal
@@ -73,6 +74,7 @@ function KanbanBoard() {
       ...treatment,
       ...admission,
       ...pharmacy,
+      ...referral,
     ]);
 
     //========================== DRAG DROP LOGIC CHECKS ========================
@@ -121,6 +123,8 @@ function KanbanBoard() {
       destinationSwimlane = "Pharmacy";
     } else if (destination.droppableId === "7") {
       destinationSwimlane = "Discharge";
+    } else if (destination.droppableId === "8") {
+      destinationSwimlane = "Referral";
     } else {
       console.log("NO DESTINATION MATCH FOR " + destination.droppableId);
       reduxDispatch(
@@ -191,7 +195,9 @@ function KanbanBoard() {
       setPharmacy(removeItemById(draggableId, pharmacy));
     } else if (source.droppableId === "7") {
       setDischarge(removeItemById(draggableId, discharge));
-    } else {
+    } else if (source.droppableId === "8") {
+      setReferral(removeItemById(draggableId, referral));
+    }  else {
       console.log("NO SOURCE MATCH FOR " + source.droppableId);
       reduxDispatch(
         displayMessage({
@@ -219,6 +225,8 @@ function KanbanBoard() {
       setPharmacy([{ ...updatedAppointment }, ...pharmacy]);
     } else if (destination.droppableId === "7") {
       setDischarge([{ ...updatedAppointment }, ...discharge]);
+    } else if (destination.droppableId === "8") {
+      setReferral([{ ...updatedAppointment }, ...referral]);
     } else {
       console.log("NO DESTINATION MATCH FOR " + destination.droppableId);
       reduxDispatch(
@@ -345,6 +353,8 @@ function KanbanBoard() {
       selectedColumnList = JSON.parse(JSON.stringify(pharmacy));
     } else if (arrayName === "Discharge") {
       selectedColumnList = JSON.parse(JSON.stringify(discharge));
+    } else if (arrayName === "Referral") {
+      selectedColumnList = JSON.parse(JSON.stringify(referral));
     } else {
       console.log("ERROR");
       selectedColumnList = [];
@@ -372,6 +382,8 @@ function KanbanBoard() {
       setPharmacy(newColumnList);
     } else if (arrayName === "Discharge") {
       setDischarge(newColumnList);
+    } else if (arrayName === "Referral") {
+      setReferral(newColumnList);
     } else {
       console.log("ERROR 2");
     }
@@ -434,6 +446,11 @@ function KanbanBoard() {
     setDischarge(
       response.data
         .filter((appt) => appt.swimlaneStatusEnum === "DISCHARGE")
+        .sort((appt1, appt2) => appt2.appointmentId - appt1.appointmentId)
+    );
+    setReferral(
+      response.data
+        .filter((appt) => appt.swimlaneStatusEnum === "REFERRAL")
         .sort((appt1, appt2) => appt2.appointmentId - appt1.appointmentId)
     );
   };
@@ -521,6 +538,14 @@ function KanbanBoard() {
               title="Pharmacy"
               appointments={pharmacy}
               id={"6"}
+              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+              listOfWorkingStaff={listOfWorkingStaff}
+              forceRefresh={forceRefresh}
+            />
+             <KanbanColumn
+              title="Referral"
+              appointments={referral}
+              id={"8"}
               replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
               listOfWorkingStaff={listOfWorkingStaff}
               forceRefresh={forceRefresh}
