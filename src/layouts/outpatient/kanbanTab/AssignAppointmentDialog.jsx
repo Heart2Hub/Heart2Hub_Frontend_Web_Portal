@@ -66,7 +66,11 @@ function AssignAppointmentDialog({
       setListOfApplicableWorkingStaff(
         listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "DOCTOR")
       );
-    } else {
+    } else if (swimlaneName === "Discharge") {
+      setListOfApplicableWorkingStaff(
+        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
+      );
+    }  else {
       // console.log("No Filter result of applicable working staff");
     }
   };

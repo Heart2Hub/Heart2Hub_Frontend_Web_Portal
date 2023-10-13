@@ -538,3 +538,11 @@ export const inventoryApi = {
     );
   },
 };
+
+export const transactionItemApi = {
+  getAllConsumableEquipment(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/consumableEquipment/getAllConsumableEquipment?name=${name}`
+    );
+  },
+}

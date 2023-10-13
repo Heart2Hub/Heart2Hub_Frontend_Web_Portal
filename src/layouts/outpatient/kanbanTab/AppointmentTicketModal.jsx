@@ -8,12 +8,14 @@ import {
   Chip,
   Skeleton,
   Stack,
+  Select,
+  MenuItem
 } from "@mui/material";
 import MDTypography from "components/MDTypography";
 import { calculateAge } from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
 import MDButton from "components/MDButton";
-import { staffApi } from "api/Api";
+import { staffApi, inventoryApi } from "api/Api";
 
 import { ehrApi } from "api/Api";
 import { useNavigate } from "react-router-dom";
@@ -60,6 +62,10 @@ function AppointmentTicketModal({
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  //For Cart
+  const [medications, setMedications] = useState([]);
+  const [services, setServices] = useState([]);
+
   //for assigning appointment to staff in the AppointmentTicketModal
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   // const [assigningToSwimlane, setAssigningToSwimlane] = useState("");
@@ -69,6 +75,56 @@ function AppointmentTicketModal({
 
   const handleCommentsTouched = () => {
     setCommentsTouched(true);
+  };
+
+  // Fetch lists of all medications and service items from the API
+  const fetchMedicationsAndServices = async () => {
+    try {
+      const medicationsResponse = await inventoryApi.getAllMedication("");
+      setMedications(medicationsResponse.data);
+      console.log(medicationsResponse.data)
+
+      const servicesResponse = await inventoryApi.getAllServiceItem("");
+      setServices(servicesResponse.data);
+      console.log(servicesResponse.data)
+    } catch (error) {
+      console.error("Error fetching medications and services:", error);
+    }
+  };
+
+  const handleAddMedicationToPatient = (medicationId) => {
+    // Add the selected medication to the patient
+    // Implement the logic to add the medication to the patient
+  };
+  
+  const handleAddServiceToPatient = (serviceId) => {
+    // Add the selected service to the patient
+    // Implement the logic to add the service to the patient
+  };
+
+  const renderMedicationsDropdown = () => {
+    return (
+      <Select onChange={(e) => handleAddMedicationToPatient(e.target.value)} style={{ width: "50%" }} sx={{ lineHeight: "3em" }}>
+        {medications.map((medication) => (
+          <MenuItem key={medication.inventoryItemId} value={medication.inventoryItemId}>
+            {medication.inventoryItemName}
+          </MenuItem>
+        ))}
+      </Select>
+    );
+  };
+
+  // Render dropdown list for services
+  const renderServicesDropdown = () => {
+    return (
+      <Select onChange={(e) => handleAddServiceToPatient(e.target.value)} style={{ width: "50%" }} sx={{ lineHeight: "3em" }}>
+        {services.map((service) => (
+          <MenuItem key={service.inventoryItemId} value={service.inventoryItemId}>
+            {service.inventoryItemName}
+          </MenuItem>
+        ))}
+      </Select>
+    );
   };
 
   const handleCommentsChange = (event) => {
@@ -282,6 +338,7 @@ function AppointmentTicketModal({
         )
       );
     }
+    fetchMedicationsAndServices();
     // setAssigningToSwimlane(columnName);
   }, [selectedAppointment, listOfWorkingStaff]);
 
@@ -293,7 +350,7 @@ function AppointmentTicketModal({
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={style}>
+        <Box sx={{ ...style, maxHeight: "80vh", overflow: "auto" }}>
           {selectedAppointment && (
             <>
               <Box
@@ -316,7 +373,7 @@ function AppointmentTicketModal({
                 </MDTypography>
                 {selectedAppointment.patientProfilePicture !== null && (
                   <MDAvatar
-                    
+
                     src={`${IMAGE_SERVER}/images/id/${selectedAppointment.patientProfilePicture}`}
                     alt="profile-image"
                     size="xxl"
@@ -334,10 +391,12 @@ function AppointmentTicketModal({
               </Box>
               <List>
                 <ListItem>
-                  <ListItemText primary="Location:" secondary={""} />
+                  <MDTypography variant="h5" gutterBottom>
+                    Location:
+                  </MDTypography>
                 </ListItem>
                 <ListItem>
-                  <MDTypography variant="h6" gutterBottom>
+                  <MDTypography variant="h6" gutterBottom color="black">
                     {facilityLocation !== null
                       ? facilityLocation
                       : "No Location Yet"}
@@ -346,10 +405,9 @@ function AppointmentTicketModal({
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
                 >
-                  <ListItemText
-                    primary="Link to Electronic Health Record:"
-                    secondary={""}
-                  />
+                  <MDTypography variant="h5" gutterBottom>
+                    Link to Electronic Health Record:
+                  </MDTypography>
                   <MDBox>
                     <Stack direction="row" spacing={2}>
                       <AddAttachmentButton
@@ -377,20 +435,22 @@ function AppointmentTicketModal({
                   </MDTypography>
                 </ListItem>
                 <ListItem>
-                  <ListItemText primary="Assigned To:" secondary={""} />
+                  <MDTypography variant="h5" gutterBottom>
+                    Assigned To :
+                  </MDTypography>
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
                 >
-                  <MDTypography variant="h6" gutterBottom>
+                  <MDTypography variant="h6" gutterBottom color="black">
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
-                        " " +
-                        assignedStaff.lastname +
-                        " (" +
-                        assignedStaff.staffRoleEnum +
-                        ")"}
+                      " " +
+                      assignedStaff.lastname +
+                      " (" +
+                      assignedStaff.staffRoleEnum +
+                      ")"}
                   </MDTypography>
                   <MDButton
                     disabled={loading}
@@ -419,7 +479,10 @@ function AppointmentTicketModal({
                   />
                 </ListItem> */}
                 <ListItem>
-                  <ListItemText primary="Arrival Status:" secondary="" />
+                  <MDTypography variant="h5" gutterBottom>
+                    Arrival Status:
+                  </MDTypography>
+                  {/* <ListItemText primary="Arrival Status:" secondary="" /> */}
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
@@ -538,6 +601,23 @@ function AppointmentTicketModal({
                     Save Comments
                   </MDButton>
                 </Box>
+                <List>
+                  <ListItem>
+                    <MDTypography variant="h5" gutterBottom>
+                      Medications:
+                    </MDTypography>
+                  </ListItem>
+                  <ListItem>{renderMedicationsDropdown()}</ListItem>
+                </List>
+                <br></br>
+                <List>
+                  <ListItem>
+                    <MDTypography variant="h5" gutterBottom>
+                      Services:
+                    </MDTypography>
+                  </ListItem>
+                  <ListItem>{renderServicesDropdown()}</ListItem>
+                </List>
               </List>
             </>
           )}
