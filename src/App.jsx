@@ -116,7 +116,7 @@ export default function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      {/* <GlobalSnackbar /> */}
+      <GlobalSnackbar />
       <LoadingOverlay />
       <CssBaseline />
       {!(location.pathname === "/") && (

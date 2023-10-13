@@ -9,13 +9,23 @@ import {
   Skeleton,
   Stack,
   Select,
-  MenuItem
+  MenuItem,
+  TextField,
+  InputLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
 } from "@mui/material";
 import MDTypography from "components/MDTypography";
 import { calculateAge } from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
 import MDButton from "components/MDButton";
-import { staffApi, inventoryApi } from "api/Api";
+import { staffApi, inventoryApi, transactionItemApi } from "api/Api";
 
 import { ehrApi } from "api/Api";
 import { useNavigate } from "react-router-dom";
@@ -65,6 +75,12 @@ function AppointmentTicketModal({
   //For Cart
   const [medications, setMedications] = useState([]);
   const [services, setServices] = useState([]);
+  const [selectedMedication, setSelectedMedication] = useState(null);
+  const [selectedMedicationQuantity, setSelectedMedicationQuantity] = useState(1);
+  const [selectedService, setSelectedService] = useState(null);
+
+  //For Managing the Cart
+  const [cartItems, setCartItems] = useState([]);
 
   //for assigning appointment to staff in the AppointmentTicketModal
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -82,48 +98,219 @@ function AppointmentTicketModal({
     try {
       const medicationsResponse = await inventoryApi.getAllMedication("");
       setMedications(medicationsResponse.data);
-      console.log(medicationsResponse.data)
+      // console.log(medicationsResponse.data)
 
       const servicesResponse = await inventoryApi.getAllServiceItem("");
       setServices(servicesResponse.data);
-      console.log(servicesResponse.data)
+      // console.log(servicesResponse.data)
+      // console.log(selectedAppointment)
+
     } catch (error) {
       console.error("Error fetching medications and services:", error);
     }
   };
 
-  const handleAddMedicationToPatient = (medicationId) => {
-    // Add the selected medication to the patient
-    // Implement the logic to add the medication to the patient
+  const fetchPatientCart = async () => {
+    try {
+      const response = await transactionItemApi.getCartItems(
+        selectedAppointment.patientId
+      );
+
+      setCartItems(response.data);
+      console.log(cartItems)
+    } catch (error) {
+      console.error("Error fetching cart items:", error);
+    }
   };
-  
-  const handleAddServiceToPatient = (serviceId) => {
-    // Add the selected service to the patient
-    // Implement the logic to add the service to the patient
+
+  const handleDeleteCartItem = async (cartItemId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this item?");
+    if (confirmDelete) {
+      try {
+        await transactionItemApi.removeFromCart(selectedAppointment.patientId, cartItemId);
+        reduxDispatch(
+          displayMessage({
+            color: "success",
+            icon: "notification",
+            title: "Success",
+            content: "Item has been deleted from the cart!",
+          })
+        );
+        fetchPatientCart();
+      } catch (error) {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error",
+            content: error.response.data,
+          })
+        );
+      }
+    } else {
+      // If the user cancels the deletion
+      reduxDispatch(
+        displayMessage({
+          color: "info",
+          icon: "notification",
+          title: "Info",
+          content: "Deletion has been canceled.",
+        })
+      );
+    }
+  };
+
+  const handleAddMedicationToPatient = async (medication) => {
+    try {
+      if (selectedMedicationQuantity <= 0) {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Invalid Quantity",
+            content: "Please select a valid quantity for the medication.",
+          })
+        );
+        return;
+      }
+      const patientId = selectedAppointment.patientId; // Replace with the actual patient ID
+      const requestBody = {
+        transactionItemName: medication.inventoryItemName,
+        transactionItemDescription: medication.inventoryItemDescription,
+        transactionItemQuantity: selectedMedicationQuantity,
+        transactionItemPrice: medication.retailPricePerQuantity, // Replace with the actual price
+        inventoryItem: medication.inventoryItemId
+      };
+
+      console.log(requestBody)
+
+      transactionItemApi
+        .addToCart(patientId, requestBody)
+        .then((response) => {
+          const item = response.data;
+          console.log(item);
+          reduxDispatch(
+            displayMessage({
+              color: "success",
+              icon: "notification",
+              title: "Successfully Added Medication!",
+            })
+          );
+          setMedications([]);
+          setSelectedMedicationQuantity(1);
+          fetchPatientCart();
+        }).catch((error) => {
+          reduxDispatch(
+            displayMessage({
+              color: "error",
+              icon: "notification",
+              title: "Error Encountered",
+              content: error.response.data,
+            })
+          );
+          console.error("Error fetching data:", error);
+        });
+    } catch (error) {
+      console.error("Error fetching medications and services:", error);
+    }
+  };
+
+  const handleAddServiceToPatient = (service) => {
+    try {
+      const patientId = selectedAppointment.patientId; // Replace with the actual patient ID
+      const requestBody = {
+        transactionItemName: service.inventoryItemName,
+        transactionItemDescription: service.inventoryItemDescription,
+        transactionItemQuantity: 1,
+        transactionItemPrice: service.retailPricePerQuantity, // Replace with the actual price
+        inventoryItem: service.inventoryItemId
+      };
+
+      console.log(requestBody)
+
+      transactionItemApi
+        .addToCart(patientId, requestBody)
+        .then((response) => {
+          const item = response.data;
+          console.log(item);
+          reduxDispatch(
+            displayMessage({
+              color: "success",
+              icon: "notification",
+              title: "Successfully Added Service!",
+            })
+          );
+          setServices([]);
+          fetchPatientCart();
+        }).catch((error) => {
+          reduxDispatch(
+            displayMessage({
+              color: "error",
+              icon: "notification",
+              title: "Error Encountered",
+              content: error.response.data,
+            })
+          );
+          console.error("Error fetching data:", error);
+        });
+    } catch (error) {
+      console.error("Error fetching medications and services:", error);
+    }
   };
 
   const renderMedicationsDropdown = () => {
     return (
-      <Select onChange={(e) => handleAddMedicationToPatient(e.target.value)} style={{ width: "50%" }} sx={{ lineHeight: "3em" }}>
-        {medications.map((medication) => (
-          <MenuItem key={medication.inventoryItemId} value={medication.inventoryItemId}>
-            {medication.inventoryItemName}
-          </MenuItem>
-        ))}
-      </Select>
+      <Box style={{ width: "100%" }}>
+        <InputLabel id="medication-label"> Select Medication</InputLabel>
+        <Select onChange={(e) => setSelectedMedication(e.target.value)} style={{ width: "50%" }} sx={{ lineHeight: "3em" }}>
+          {medications.map((medication) => (
+            <MenuItem key={medication.inventoryItemId} value={medication}>
+              {medication.inventoryItemName}
+            </MenuItem>
+          ))}
+        </Select>
+        <TextField
+          label="Quantity"
+          type="number"
+          value={selectedMedicationQuantity}
+          onChange={(e) => setSelectedMedicationQuantity(e.target.value)}
+          style={{ width: "10%", marginLeft: 20 }}
+        />
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
+          <MDButton
+            onClick={() => handleAddMedicationToPatient(selectedMedication)}
+            variant="gradient"
+            color="primary"
+          >
+            Add Medication
+          </MDButton>
+        </Box>
+      </Box>
     );
   };
 
-  // Render dropdown list for services
   const renderServicesDropdown = () => {
     return (
-      <Select onChange={(e) => handleAddServiceToPatient(e.target.value)} style={{ width: "50%" }} sx={{ lineHeight: "3em" }}>
-        {services.map((service) => (
-          <MenuItem key={service.inventoryItemId} value={service.inventoryItemId}>
-            {service.inventoryItemName}
-          </MenuItem>
-        ))}
-      </Select>
+      <Box style={{ width: "100%" }}>
+        <InputLabel id="medication-label"> Select Services</InputLabel>
+
+        <Select onChange={(e) => setSelectedService(e.target.value)} style={{ width: "50%" }} sx={{ lineHeight: "3em" }}>
+          {services.map((service) => (
+            <MenuItem key={service.inventoryItemId} value={service}>
+              {service.inventoryItemName}
+            </MenuItem>
+          ))}
+        </Select>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
+          <MDButton
+            onClick={() => handleAddServiceToPatient(selectedService)}
+            variant="gradient"
+            color="primary"
+          >
+            Add Service
+          </MDButton>
+        </Box>
+      </Box>
     );
   };
 
@@ -339,6 +526,7 @@ function AppointmentTicketModal({
       );
     }
     fetchMedicationsAndServices();
+    fetchPatientCart();
     // setAssigningToSwimlane(columnName);
   }, [selectedAppointment, listOfWorkingStaff]);
 
@@ -617,6 +805,43 @@ function AppointmentTicketModal({
                     </MDTypography>
                   </ListItem>
                   <ListItem>{renderServicesDropdown()}</ListItem>
+                </List>
+                <List>
+                  <ListItem>
+                    <MDTypography variant="h5" gutterBottom>
+                      Patient's Items:
+                    </MDTypography>
+                  </ListItem>
+                  <ListItem> <TableContainer component={Paper}>
+                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell> Name</TableCell>
+                          
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {cartItems.map((item) => (
+                          <TableRow
+                            key={item.transactionItemId}
+                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                          >
+                            <TableCell component="th" scope="row">{item.transactionItemName}</TableCell>
+                            <TableCell align="right"> Quantity: {item.transactionItemQuantity}</TableCell>
+                            <TableCell align="right">
+                              <Button
+                                variant="contained"
+                                style={{ backgroundColor: "#f44336", color: "white" }}
+                                onClick={() => handleDeleteCartItem(item.transactionItemId)}
+                              >
+                                Delete
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer></ListItem>
                 </List>
               </List>
             </>

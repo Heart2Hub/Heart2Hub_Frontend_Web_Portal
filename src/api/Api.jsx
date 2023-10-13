@@ -540,9 +540,19 @@ export const inventoryApi = {
 };
 
 export const transactionItemApi = {
-  getAllConsumableEquipment(name) {
-    return axiosFetch.get(
-      `${REST_ENDPOINT}/consumableEquipment/getAllConsumableEquipment?name=${name}`
+  addToCart(patientId, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/transactionItem/addToCart/${patientId}`, requestBody
     );
   },
+  removeFromCart(patientId, transactionItemId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/transactionItem/removeFromCart/${patientId}/${transactionItemId}`
+    );
+  },
+  getCartItems(patientId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/transactionItem/getCartItems/${patientId}`
+    );
+  }
 }
