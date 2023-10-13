@@ -367,6 +367,24 @@ export const shiftPreferenceApi = {
   },
 };
 
+export const subsidyApi = {
+  getAllSubsidies() {
+    return axiosFetch.get(`${REST_ENDPOINT}/subsidy/getAllSubsidies`);
+  },
+  createSubsidy(requestBody) {
+    return axiosFetch.post(`${REST_ENDPOINT}/subsidy/createSubsidy`, requestBody);
+  },
+  deleteSubsidy(subsidyId) {
+    return axiosFetch.delete(`${REST_ENDPOINT}/subsidy/deleteSubsidy/${subsidyId}`);
+  },
+  updateSubsidyRate(subsidyId, newSubsidyRate) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/subsidy/updateSubsidyRate/${subsidyId}`,
+      { newSubsidyRate }
+    );
+  },
+};
+
 export const appointmentApi = {
   viewAllAppointmentsByRange(
     startDay,
@@ -520,3 +538,21 @@ export const inventoryApi = {
     );
   },
 };
+
+export const transactionItemApi = {
+  addToCart(patientId, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/transactionItem/addToCart/${patientId}`, requestBody
+    );
+  },
+  removeFromCart(patientId, transactionItemId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/transactionItem/removeFromCart/${patientId}/${transactionItemId}`
+    );
+  },
+  getCartItems(patientId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/transactionItem/getCartItems/${patientId}`
+    );
+  }
+}
