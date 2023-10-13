@@ -196,7 +196,7 @@ function AppointmentTicketModal({
               title: "Successfully Added Medication!",
             })
           );
-          setMedications([]);
+          //setMedications([]);
           setSelectedMedicationQuantity(1);
           fetchPatientCart();
         }).catch((error) => {
@@ -240,7 +240,7 @@ function AppointmentTicketModal({
               title: "Successfully Added Service!",
             })
           );
-          setServices([]);
+          //setServices([]);
           fetchPatientCart();
         }).catch((error) => {
           reduxDispatch(
