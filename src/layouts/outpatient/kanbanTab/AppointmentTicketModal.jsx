@@ -328,6 +328,8 @@ function AppointmentTicketModal({
       (staff) => staff.staffId === staffId
     )[0];
 
+    console.log("Facility Id: " + facility.facilityId);
+
     if (facility) {
       setFacility(facility);
       return facility.name + " (" + facility.location + ")";
@@ -585,15 +587,19 @@ function AppointmentTicketModal({
                     Location:
                   </MDTypography>
                 </ListItem>
-                <ListItem>
+                <ListItem style={{ display: "flex", justifyContent: "space-between", paddingBottom: 10 }}>
                   <MDTypography variant="h6" gutterBottom color="black">
                     {facilityLocation !== null
                       ? facilityLocation
                       : "No Location Yet"}
                   </MDTypography>
-                  {facilityLocation !== null && (<ViewFacilityInventoryButton
-                    selectedFacility={facility}
-                  />)}
+                  <MDBox>
+                    <Stack direction="row" spacing={2}>
+                      {facilityLocation !== null && (<ViewFacilityInventoryButton
+                        selectedFacility={facility}
+                      />)}
+                    </Stack>
+                  </MDBox>
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}

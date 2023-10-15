@@ -186,6 +186,12 @@ export const allocatedInventoryApi = {
       requestBody
     );
   },
+  useAllocatedInventory(requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/allocatedInventory/useAllocatedInventory`,
+      requestBody
+    );
+  },
   createAllocatedInventory(requestBody) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/allocatedInventory/createAllocatedInventory`,

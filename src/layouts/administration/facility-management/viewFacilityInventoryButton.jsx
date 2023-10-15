@@ -6,15 +6,12 @@ import DataTable from "examples/Tables/DataTable";
 import MDButton from "components/MDButton";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
 import { useDispatch } from "react-redux";
-
-
-
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
 
 function ViewFacilityInventoryButton({ selectedFacility }) {
   const reduxDispatch = useDispatch();
   const [openFacilityInventoryDialog, setOpenFacilityInventoryDialog] = useState(false);
-  const [listOfAttachments, setListOfAttachments] = useState([]);
-  const [selectedAttachment, setSelectedAttachment] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFacilityInventory, setSelectedFacilityInventory] = useState([]);
   const [allocatedInventoryIdForUpdate, setAllocatedInventoryIdForUpdate] = useState(null);
@@ -27,7 +24,6 @@ function ViewFacilityInventoryButton({ selectedFacility }) {
   };
 
   const handleCloseFacilityInventoryDialog = () => {
-    setSelectedAttachment(null);
     setOpenFacilityInventoryDialog(false);
   };
 
@@ -35,7 +31,9 @@ function ViewFacilityInventoryButton({ selectedFacility }) {
     setIsLoading(true);
     try {
       const response = await allocatedInventoryApi.findAllAllocatedInventoryOfFacility(selectedFacility.facilityId);
+      console.log(selectedFacility.facilityId);
       const items = response.data;
+      console.log(items);
       setSelectedFacilityInventory(items);
     } catch (error) {
       console.log(error.response.data);
@@ -45,27 +43,88 @@ function ViewFacilityInventoryButton({ selectedFacility }) {
   };
 
   const handleDecreaseQuantity = (inventoryItem) => {
-    console.log(inventoryItem);
-    setNewQuantity(inventoryItem - 1);
+    console.log("Decrease" + inventoryItem.allocatedInventoryCurrentQuantity);
+    const updatedQuantity = inventoryItem.allocatedInventoryCurrentQuantity - 1;
+    setNewQuantity(updatedQuantity);
     try {
       const requestBody = {
-        allocatedInventoryIdForUpdate,
-        newQuantity,
-        minQuantity
+        allocatedInventoryIdForUpdate: inventoryItem.allocatedInventoryId,
+        newQuantity: updatedQuantity,
       }
+      console.log("New quantity " + updatedQuantity)
+
+      console.log("Request body " + requestBody.newQuantity);
 
       allocatedInventoryApi
-        .updateAllocatedInventory(requestBody)
+        .useAllocatedInventory(requestBody)
         .then(() => {
-          handleGetInventory();
           const updatedInventory = selectedFacilityInventory.map((item) => {
-            if (item.allocatedInventoryId === allocatedInventoryIdForUpdate) {
+            console.log("update " + item.allocatedInventoryId);
+            console.log("update 2 " + inventoryItem.allocatedInventoryId);
+
+            if (item.allocatedInventoryId === inventoryItem.allocatedInventoryId) {
               // Update the quantity with the new value
-              return { ...item, allocatedInventoryCurrentQuantity: newQuantity, minimumQuantityBeforeRestock: minQuantity };
+              return { ...item, allocatedInventoryCurrentQuantity: updatedQuantity };
             }
             return item;
           });
+
           setSelectedFacilityInventory(updatedInventory);
+          // handleGetInventory();
+          reduxDispatch(
+            displayMessage({
+              color: "success",
+              icon: "notification",
+              title: "Successfully Updated Inventory Item! ",
+              content: "Inventory Item with Id " + requestBody.allocatedInventoryIdForUpdate + " updated",
+            })
+          );
+        }).catch((err) => {
+          reduxDispatch(
+            displayMessage({
+              color: "error",
+              icon: "notification",
+              title: "Error Encountered",
+              content: err.response.data,
+            })
+          );
+          console.log(err)
+        });
+    } catch (ex) {
+      console.log(ex);
+    }
+  }
+
+  const handleIncreaseQuantity = (inventoryItem) => {
+    console.log("Increase" + inventoryItem.allocatedInventoryCurrentQuantity);
+    const updatedQuantity = inventoryItem.allocatedInventoryCurrentQuantity + 1;
+    setNewQuantity(updatedQuantity);
+    try {
+      const requestBody = {
+        allocatedInventoryIdForUpdate: inventoryItem.allocatedInventoryId,
+        newQuantity: updatedQuantity,
+        minQuantity: inventoryItem.minimumQuantityBeforeRestock
+      }
+      console.log("New quantity " + updatedQuantity)
+
+      console.log("Request body " + requestBody.newQuantity);
+
+      allocatedInventoryApi
+        .useAllocatedInventory(requestBody)
+        .then(() => {
+          const updatedInventory = selectedFacilityInventory.map((item) => {
+            console.log("update " + item.allocatedInventoryId);
+            console.log("update 2 " + inventoryItem.allocatedInventoryId);
+
+            if (item.allocatedInventoryId === inventoryItem.allocatedInventoryId) {
+              // Update the quantity with the new value
+              return { ...item, allocatedInventoryCurrentQuantity: updatedQuantity };
+            }
+            return item;
+          });
+
+          setSelectedFacilityInventory(updatedInventory);
+          // handleGetInventory();
           reduxDispatch(
             displayMessage({
               color: "success",
@@ -92,11 +151,10 @@ function ViewFacilityInventoryButton({ selectedFacility }) {
 
   const inventoryColumns = [
     { Header: "Name", accessor: "consumableEquipment.inventoryItemName" },
+    { Header: "Minimum Quantity", accessor: "minimumQuantityBeforeRestock" },
+    { Header: "Current Quantity", accessor: "allocatedInventoryCurrentQuantity" },
     {
-      Header: "Current Quantity", accessor: "allocatedInventoryCurrentQuantity",
-    },
-    {
-      Header: "Actions", accessor: "inventoryItemId",
+      Header: "Use Item", accessor: "allocatedInventoryId",
       Cell: ({ row }) => (
 
         <div>
@@ -105,13 +163,57 @@ function ViewFacilityInventoryButton({ selectedFacility }) {
             color="secondary"
             onClick={() => handleDecreaseQuantity(row.original)}
           >
-            <Icon>create</Icon>
+            <RemoveCircleIcon />
+          </IconButton>
+          <IconButton
+            variant="contained"
+            color="secondary"
+            onClick={() => handleIncreaseQuantity(row.original)}
+          >
+            <AddCircleIcon />
           </IconButton>
         </div>
 
       )
-    }
+    },
+    {
+      Header: 'Restock Status',
+      accessor: "restockStatus",
+      Cell: ({ row }) => {
+        const isNeedRestock = row.original.allocatedInventoryCurrentQuantity < row.original.minimumQuantityBeforeRestock;
+        const symbolColor = isNeedRestock ? 'red' : 'green';
+
+        return (
+          <div>
+            <div
+              style={{
+                backgroundColor: symbolColor,
+                width: '20px',
+                height: '20px',
+                display: 'inline-block',
+                marginRight: '5px',
+                borderRadius: '50%',
+              }}
+            ></div>
+            {isNeedRestock ? 'Restock Needed' : 'No Restock Needed'}
+          </div>
+        )
+      }
+    },
   ]
+
+  const rows = selectedFacilityInventory?.map((inventoryItem) => ({
+    allocatedInventoryId: inventoryItem.allocatedInventoryId,
+    inventoryItemName: inventoryItem.inventoryItemName,
+    allocatedInventoryCurrentQuantity: inventoryItem.allocatedInventoryCurrentQuantity
+  }));
+
+
+
+  useEffect(() => {
+    handleGetInventory(selectedFacility);
+  }, [selectedFacility]);
+
   // {
   //   Header: 'Restock Status',
   //   accessor: "restockStatus",
@@ -175,12 +277,6 @@ function ViewFacilityInventoryButton({ selectedFacility }) {
   //     },
   //   });
   // }
-
-
-  useEffect(() => {
-    handleGetInventory(selectedFacility);
-  }, [selectedFacilityInventory]);
-
   return (
     <>
       <MDButton

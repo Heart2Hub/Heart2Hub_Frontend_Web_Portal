@@ -486,7 +486,7 @@ function FacilityManagement() {
     { Header: "Item ID", accessor: "allocatedInventoryId" },
     { Header: "Name", accessor: "consumableEquipment.inventoryItemName" },
     { Header: "Description", accessor: "consumableEquipment.inventoryItemDescription" },
-    { Header: "Quantity Before Restock", accessor: "minimumQuantityBeforeRestock" },
+    { Header: "Minimum Quantity", accessor: "minimumQuantityBeforeRestock" },
     { Header: "Current Quantity", accessor: "allocatedInventoryCurrentQuantity" },
     {
       Header: 'Restock Status',
