@@ -30,7 +30,7 @@ import MDButton from "components/MDButton";
 
 function Subsidy() {
 	// const [subsidies, setSubsidies] = useState([]);
-	const [selectedSubsidy, setSelectedSubsidy] = useState(null);
+	const [selectedSubsidy, setSelectedSubsidy] = useState([]);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
 	const [subsidyToDeleteId, setSubsidyToDeleteId] = useState(null);
@@ -54,7 +54,20 @@ function Subsidy() {
 		try {
 			const updatedSubsidy = { ...selectedSubsidy, subsidyRate: editFormData.subsidyRate };
 			console.log(updatedSubsidy)
-			console.log(updatedSubsidy.subsidyRate/100)
+			console.log(updatedSubsidy.subsidyRate / 100)
+
+			if (updatedSubsidy.subsidyRate / 100 <= 0) {
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Invalid Quantity",
+						content: "Please select a valid Subsidy Rate.",
+					})
+				);
+				return;
+			}
+
 			await subsidyApi.updateSubsidyRate(updatedSubsidy.subsidyId, updatedSubsidy);
 
 			// Reset the edit form data
@@ -197,6 +210,38 @@ function Subsidy() {
 				throw new Error('Invalid subsidy rate format');
 			}
 			const subsidyRateBigDecimal = subsidyRatePercentage / 100;
+
+			if (subsidyRateBigDecimal <= 0) {
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Invalid Quantity",
+						content: "Please select a valid Subsidy Rate",
+					})
+				);
+				return;
+			}
+
+			if (
+				!formData.subsidyRate ||
+				!formData.itemTypeEnum ||
+				!formData.minDOB ||
+				!formData.sex ||
+				!formData.race ||
+				!formData.nationality ||
+				!formData.subsidyName
+			) {
+				reduxDispatch(
+					displayMessage({
+						color: 'error',
+						icon: 'notification',
+						title: 'Missing Fields',
+						content: 'Please fill in all mandatory fields.',
+					})
+				);
+				return;
+			}
 
 			// Update formData with the converted subsidy rate
 			const updatedFormData = { ...formData, subsidyRate: subsidyRateBigDecimal.toString() };
