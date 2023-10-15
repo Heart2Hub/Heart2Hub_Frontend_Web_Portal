@@ -190,15 +190,14 @@ export const allocatedInventoryApi = {
     return axiosFetch.post(
       `${REST_ENDPOINT}/allocatedInventory/createAllocatedInventory`,
       requestBody
-    )
+    );
   },
   findAllAllocatedInventoryOfFacility(id) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/allocatedInventory/findAllAllocatedInventoryOfFacility/${id}`
-    )
-  }
-
-}
+    );
+  },
+};
 
 export const patientApi = {
   getAllPatientsWithElectronicHealthRecordSummaryByName(name) {
@@ -213,7 +212,7 @@ export const patientApi = {
     return axiosFetch.get(
       `${REST_ENDPOINT}/electronicHealthRecord/getAllElectronicHealthRecords`
     );
-  }
+  },
 };
 
 export const ehrApi = {
@@ -225,9 +224,7 @@ export const ehrApi = {
       `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordByIdAndDateOfBirth?electronicHealthRecordId=${electronicHealthRecordId}&dateOfBirth=${dateOfBirth}`
     );
   },
-  getElectronicHealthRecordByNric(
-    nric
-  ) {
+  getElectronicHealthRecordByNric(nric) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordByNric?nric=${nric}`
     );
@@ -370,6 +367,24 @@ export const shiftPreferenceApi = {
   },
 };
 
+export const subsidyApi = {
+  getAllSubsidies() {
+    return axiosFetch.get(`${REST_ENDPOINT}/subsidy/getAllSubsidies`);
+  },
+  createSubsidy(requestBody) {
+    return axiosFetch.post(`${REST_ENDPOINT}/subsidy/createSubsidy`, requestBody);
+  },
+  deleteSubsidy(subsidyId) {
+    return axiosFetch.delete(`${REST_ENDPOINT}/subsidy/deleteSubsidy/${subsidyId}`);
+  },
+  updateSubsidyRate(subsidyId, newSubsidyRate) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/subsidy/updateSubsidyRate/${subsidyId}`,
+      { newSubsidyRate }
+    );
+  },
+};
+
 export const appointmentApi = {
   viewAllAppointmentsByRange(
     startDay,
@@ -400,12 +415,25 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/updateAppointmentSwimlaneStatus?appointmentId=${appointmentId}&swimlaneStatus=${swimlaneStatus}`
     );
   },
-  assignAppointmentToStaff(appointmentId, staffId) {
+  assignAppointmentToStaff(appointmentId, toStaffId, fromStaffId) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/appointment/assignAppointmentToStaff?appointmentId=${appointmentId}&staffId=${staffId}`
+      `${REST_ENDPOINT}/appointment/assignAppointmentToStaff?appointmentId=${appointmentId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
     );
   },
   createNewAppointment(
+    description,
+    // actualDateTime,
+    bookedDateTime,
+    priority,
+    patientUsername,
+    departmentName
+  ) {
+    return axiosFetch.post(
+      // `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
+      `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
+    );
+  },
+  createNewAppointmentOnWeb(
     description,
     actualDateTime,
     bookedDateTime,
@@ -414,17 +442,27 @@ export const appointmentApi = {
     departmentName
   ) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
+      `${REST_ENDPOINT}/appointment/createNewAppointmentOnWeb?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
     );
   },
-  addImageAttachmentToAppointment(appointmentId, imageLink, createdDate) {
+  addImageAttachmentToAppointment(
+    appointmentId,
+    imageLink,
+    createdDate,
+    staffId
+  ) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/appointment/addImageAttachmentToAppointment?appointmentId=${appointmentId}&imageLink=${imageLink}&createdDate=${createdDate}`
+      `${REST_ENDPOINT}/appointment/addImageAttachmentToAppointment?appointmentId=${appointmentId}&imageLink=${imageLink}&createdDate=${createdDate}&staffId=${staffId}`
     );
   },
   viewAppointmentAttachments(appointmentId) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/appointment/viewAppointmentAttachments?appointmentId=${appointmentId}`
+    );
+  },
+  viewPatientAppointments(patientUsername) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/appointment/viewPatientAppointments?patientUsername=${patientUsername}`
     );
   },
 };
@@ -500,3 +538,21 @@ export const inventoryApi = {
     );
   },
 };
+
+export const transactionItemApi = {
+  addToCart(patientId, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/transactionItem/addToCart/${patientId}`, requestBody
+    );
+  },
+  removeFromCart(patientId, transactionItemId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/transactionItem/removeFromCart/${patientId}/${transactionItemId}`
+    );
+  },
+  getCartItems(patientId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/transactionItem/getCartItems/${patientId}`
+    );
+  }
+}

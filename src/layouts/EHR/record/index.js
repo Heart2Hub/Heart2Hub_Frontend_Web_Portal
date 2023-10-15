@@ -10,6 +10,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import DialogContentText from '@mui/material/DialogContentText';
 import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
@@ -38,14 +39,21 @@ import {
 } from "../../../store/slices/ehrSlice";
 import { selectStaff } from "../../../store/slices/staffSlice";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
-import { parseDateFromLocalDateTime } from "utility/Utility";
+import {
+  parseDateFromLocalDateTime,
+  formatDateToYYYYMMDD,
+} from "utility/Utility";
+import { appointmentApi } from "api/Api";
 
 function EHRRecord() {
   const reduxDispatch = useDispatch();
   const ehrRecord = useSelector(selectEHRRecord);
   const loggedInStaff = useSelector(selectStaff);
   const [nextOfKinEhrs, setNextOfKinEhrs] = useState([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [openResolveProblemRecordModal, setOpenResolveProblemRecordModal] =
+    useState(false);
   const [formData, setFormData] = useState({
     description: "",
     createdBy: "",
@@ -60,6 +68,14 @@ function EHRRecord() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleOpenResolveProblemRecordModal = () => {
+    setOpenResolveProblemRecordModal(true);
+  };
+
+  const handleCloseResolveProblemRecordModal = () => {
+    setOpenResolveProblemRecordModal(false);
   };
 
   const handleChange = (event) => {
@@ -130,7 +146,6 @@ function EHRRecord() {
         .toString()
         .padStart(2, "0")}`;
       formData.createdDate = formattedDate;
-      console.log(formData);
       problemRecordApi
         .createProblemRecord(ehrRecord.electronicHealthRecordId, formData)
         .then((response) => {
@@ -253,8 +268,6 @@ function EHRRecord() {
     }
   };
 
-  console.log(ehrRecord);
-
   useEffect(() => {
     const fetchDataSequentially = async () => {
       const nextOfKinDataArray = [];
@@ -270,11 +283,38 @@ function EHRRecord() {
         }
       }
       setNextOfKinEhrs(nextOfKinDataArray);
+      try {
+        const response = await appointmentApi.viewPatientAppointments(
+          ehrRecord.username
+        );
+        const allAppointments = response.data;
+        setUpcomingAppointments([]);
+        for (const appointment of allAppointments) {
+          if (
+            parseDateFromLocalDateTime(appointment.bookedDateTime) > new Date()
+          ) {
+            if (
+              !upcomingAppointments.some(
+                (existingAppointment) =>
+                  existingAppointment.appointmentId ===
+                  appointment.appointmentId
+              )
+            ) {
+              setUpcomingAppointments((prevAppointments) => [
+                ...prevAppointments,
+                appointment,
+              ]);
+            }
+          } else {
+            // ADD PAST APPOINTMENT LOGIC HERE LATER ON
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching appointment data:", error);
+      }
     };
     fetchDataSequentially();
   }, [ehrRecord.listOfNextOfKinRecords]);
-
-  console.log(nextOfKinEhrs);
 
   return (
     <DashboardLayout>
@@ -331,15 +371,44 @@ function EHRRecord() {
                 <Grid item xs={12} md={6} lg={3}>
                   <MDBox mb={1.5}>
                     {loggedInStaff.staffRoleEnum === "DOCTOR" && (
-                      <MDButton
-                        variant="contained"
-                        color="primary"
-                        onClick={() =>
-                          handleResolveProblemRecord(problemRecord)
-                        }
-                      >
-                        Resolve Problem Record
-                      </MDButton>
+                      <>
+                        <MDButton
+                          variant="contained"
+                          color="primary"
+                          onClick={handleOpenResolveProblemRecordModal}
+                        >
+                          Resolve Problem Record
+                        </MDButton>
+                        <Dialog
+                          open={openResolveProblemRecordModal}
+                          onClose={handleCloseResolveProblemRecordModal}
+                        >
+                          <DialogTitle>Confirm Resolution</DialogTitle>
+                          <DialogContent>
+                            <DialogContentText>
+                              Are you sure you want to resolve this problem
+                              record?
+                            </DialogContentText>
+                          </DialogContent>
+                          <DialogActions>
+                            <MDButton
+                              onClick={handleCloseResolveProblemRecordModal}
+                              color="primary"
+                            >
+                              Cancel
+                            </MDButton>
+                            <MDButton
+                              onClick={() => {
+                                handleCloseResolveProblemRecordModal();
+                                handleResolveProblemRecord(problemRecord);
+                              }}
+                              color="primary"
+                            >
+                              Confirm
+                            </MDButton>
+                          </DialogActions>
+                        </Dialog>
+                      </>
                     )}
                   </MDBox>
                 </Grid>
@@ -374,20 +443,24 @@ function EHRRecord() {
           }}
         >
           <Typography variant="h6" gutterBottom>
-            List of Appointments:
-            {ehrRecord.listOfProblemRecords.map((problemRecord, index) => (
-              <Grid container spacing={3} justify="center" alignItems="center">
+            List of Upcoming Appointments:
+            {upcomingAppointments.map((upcomingAppointment, index) => (
+              <Grid container spacing={2} justify="center" alignItems="center">
                 <Grid item xs={12} md={6} lg={3}>
                   <MDBox mb={1.5}>
                     <ProfileInfoCard
                       key={index}
-                      title={`Problem ${index + 1}`}
+                      title={`Appointment ${index + 1}`}
                       info={{
-                        createdBy: problemRecord.createdBy,
-                        createdDate: problemRecord.createdDate.split(" ")[0],
-                        description: problemRecord.description,
-                        priority: problemRecord.priorityEnum,
-                        problemType: problemRecord.problemTypeEnum,
+                        bookedDateTime: formatDateToYYYYMMDD(
+                          parseDateFromLocalDateTime(
+                            upcomingAppointment.bookedDateTime
+                          )
+                        ),
+                        departmentName: upcomingAppointment.departmentName,
+                        description: upcomingAppointment.description,
+                        estimatedDuration:
+                          upcomingAppointment.estimatedDuration,
                       }}
                       shadow={false}
                     />

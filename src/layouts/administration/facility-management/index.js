@@ -353,6 +353,7 @@ function FacilityManagement() {
     };
   };
 
+
   const [data, setData] = useState({
     columns: [
       { Header: "Facility ID", accessor: "facilityId", width: "10%" },
@@ -396,6 +397,8 @@ function FacilityManagement() {
     rows: [],
   });
   const [departments, setDepartments] = useState([]);
+  const [facilityTypes, setFacilityTypes] = useState([]);
+
   const dataRef = useRef({
     columns: [
       { Header: "Facility ID", accessor: "facilityId", width: "10%" },
@@ -1072,7 +1075,9 @@ function FacilityManagement() {
               onChange={handleChange}
               sx={{ lineHeight: "3em" }}
             >
-              <MenuItem value="WARD_BED">Ward Bed</MenuItem>
+              {facilityTypes?.map(facilityTypes =>
+                <MenuItem value={facilityTypes}>{facilityTypes}</MenuItem>
+              )}
               <MenuItem value="CONSULTATION_ROOM">Consultation Room</MenuItem>
               <MenuItem value="TRIAGE_ROOM">Triage Room</MenuItem>
               <MenuItem value="OPERATING_ROOM">Operating Room</MenuItem>
@@ -1148,7 +1153,6 @@ function FacilityManagement() {
               onChange={handleUpdateChange}
               sx={{ lineHeight: "3em" }}
             >
-              <MenuItem value="WARD_BED">Ward Bed</MenuItem>
               <MenuItem value="CONSULTATION_ROOM">Consultation Room</MenuItem>
               <MenuItem value="TRIAGE_ROOM">Triage Room</MenuItem>
               <MenuItem value="OPERATING_ROOM">Operating Room</MenuItem>

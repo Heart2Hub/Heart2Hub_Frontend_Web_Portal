@@ -10,7 +10,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import { IconButton, Icon, Button, Tabs, Tab } from "@mui/material";
+import { IconButton, Icon, Button, Tabs, Tab, ListItemText, ListItem } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 
 
@@ -50,6 +50,7 @@ function FacilityBooking() {
 	const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
 	const [bookingToDeleteId, setBookingToDeleteId] = useState(null);
 	const [bookingToDeleteStartDate, setBookingToDeleteStartDate] = useState(null);
+	const [isDeleteConfirmationCalendarOpen, setIsDeleteConfirmationCalendarOpen] = useState(false);
 
 
 	const handleTabChange = (event, newValue) => {
@@ -284,7 +285,7 @@ function FacilityBooking() {
 					<MDBox>
 						<IconButton
 							color="secondary"
-							onClick={() => handleDeleteFacility(row.original.facilityBookingId, row.original.startDateTime)}
+							onClick={() => handleDeleteFacilityBooking(row.original.facilityBookingId, row.original.startDateTime)}
 						>
 							<Icon>delete</Icon>
 						</IconButton>
@@ -310,7 +311,7 @@ function FacilityBooking() {
 					<MDBox>
 						<IconButton
 							color="secondary"
-							onClick={() => handleDeleteFacility(row.original.facilityBookingId, row.original.startDateTime)}
+							onClick={() => handleDeleteFacilityBooking(row.original.facilityBookingId, row.original.startDateTime)}
 						>
 							<Icon>delete</Icon>
 						</IconButton>
@@ -340,53 +341,53 @@ function FacilityBooking() {
 		console.log("selected facility: " + facility.facilityStatusEnum);
 		setSelectedFacility(facility);
 		setIsCalendarModalOpen(true);
-	    
+
 		facilityApi
-		    .findAllBookingsOfAFacility(facility.facilityId)
-		    .then((response) => {
-			const facilityBookings = response.data;
-			console.log(facilityBookings);
-	    
-			// Create an array of promises for fetching staff details
-			const staffPromises = facilityBookings.map((booking) => {
-			    return staffApi.getStaffByUsername(booking.staffUsername); // Replace with your API call
-			});
-	    
-			// Use Promise.all to resolve all staff detail requests
-			Promise.all(staffPromises)
-			    .then((staffDetails) => {
-				const mappedEvents = facilityBookings.map((booking, index) => {
-				    const staff = staffDetails[index];
-				    console.log("Staff details:", staff);
-				    const title = `Booked by ${staff.data.firstname} ${staff.data.lastname}`;
-				    const ownerFullName = `${staff.data.firstname} ${staff.data.lastname}`;
-	    
-				    return {
-					title,
-					ownerFullName,
-					facilityBookingId: booking.facilityBookingId,
-					comments: booking.comments,
-					staffUsername: booking.staffUsername,
-					start: new Date(booking.startDateTime),
-					end: new Date(booking.endDateTime),
-					facilityBookingId: booking.facilityBookingId,
-					owner: booking.staffUsername,
-					resizable: true,
-					draggable: true,
-				    };
+			.findAllBookingsOfAFacility(facility.facilityId)
+			.then((response) => {
+				const facilityBookings = response.data;
+				console.log(facilityBookings);
+
+				// Create an array of promises for fetching staff details
+				const staffPromises = facilityBookings.map((booking) => {
+					return staffApi.getStaffByUsername(booking.staffUsername); // Replace with your API call
 				});
-	    
-				setCalendarEvents(mappedEvents);
-			    })
-			    .catch((error) => {
-				console.error("Error fetching staff data:", error);
-			    });
-		    })
-		    .catch((error) => {
-			console.error("Error fetching data:", error);
-		    });
-	    };
-	    
+
+				// Use Promise.all to resolve all staff detail requests
+				Promise.all(staffPromises)
+					.then((staffDetails) => {
+						const mappedEvents = facilityBookings.map((booking, index) => {
+							const staff = staffDetails[index];
+							console.log("Staff details:", staff);
+							const title = `Booked by ${staff.data.firstname} ${staff.data.lastname}`;
+							const ownerFullName = `${staff.data.firstname} ${staff.data.lastname}`;
+
+							return {
+								title,
+								ownerFullName,
+								facilityBookingId: booking.facilityBookingId,
+								comments: booking.comments,
+								staffUsername: booking.staffUsername,
+								start: new Date(booking.startDateTime),
+								end: new Date(booking.endDateTime),
+								facilityBookingId: booking.facilityBookingId,
+								owner: booking.staffUsername,
+								resizable: true,
+								draggable: true,
+							};
+						});
+
+						setCalendarEvents(mappedEvents);
+					})
+					.catch((error) => {
+						console.error("Error fetching staff data:", error);
+					});
+			})
+			.catch((error) => {
+				console.error("Error fetching data:", error);
+			});
+	};
+
 	const eventStyleGetter = (event) => {
 
 		if (event.owner === staff.username) {
@@ -432,8 +433,12 @@ function FacilityBooking() {
 				.deleteFacilityBooking(id)
 				.then((response) => {
 					const updatedEvents = calendarEvents.filter((event) => event.facilityBookingId !== id);
+					fetchData();
+					fetchBookingData();
 					setCalendarEvents(updatedEvents);
 					setIsBookingDetailsOpen(false);
+					setIsDeleteConfirmationCalendarOpen(false);
+
 					reduxDispatch(
 						displayMessage({
 							color: "success",
@@ -442,6 +447,15 @@ function FacilityBooking() {
 						})
 					);
 				}).catch((error) => {
+					setIsDeleteConfirmationCalendarOpen(false);
+					reduxDispatch(
+						displayMessage({
+							color: "error",
+							icon: "notification",
+							title: "Error Encountered",
+							content: error.response.data,
+						})
+					);
 					console.error("Error fetching data:", error);
 				});
 		} catch (ex) {
@@ -449,7 +463,13 @@ function FacilityBooking() {
 		}
 	};
 
-	const handleDeleteFacility = (facilityBookingId, startDateTime) => {
+	const handleDeleteFacilityBookingCalendar = (facilityBookingId, startDateTime) => {
+		setBookingToDeleteId(facilityBookingId);
+		setBookingToDeleteStartDate(startDateTime);
+		setIsDeleteConfirmationCalendarOpen(true);
+	};
+
+	const handleDeleteFacilityBooking = (facilityBookingId, startDateTime) => {
 		setBookingToDeleteId(facilityBookingId);
 		setBookingToDeleteStartDate(startDateTime);
 		setDeleteConfirmationOpen(true);
@@ -881,21 +901,47 @@ function FacilityBooking() {
 									<DialogTitle>Facility Booking Details</DialogTitle>
 									<DialogContent>
 										{selectedBooking && (
-											<div>
-												<p>Booking ID: {selectedBooking.facilityBookingId}</p>
-												<p>Start Time: {moment(selectedBooking.start).format('MMMM Do YYYY, h:mm:ss a')}</p>
-												<p>End Time: {moment(selectedBooking.end).format('MMMM Do YYYY, h:mm:ss a')}</p>
-												<p>Booked by: {selectedBooking.ownerFullName}</p>
-												<p>Comments: {selectedBooking.comments}</p>
+											<>
+												<ListItem>
+													<ListItemText primary="Booking ID:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
+														{selectedBooking.facilityBookingId}
+													</MDTypography>
+												</ListItem>
+												<ListItem>
+													<ListItemText primary="Start Time:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
+														{moment(selectedBooking.start).format('MMMM Do YYYY, h:mm:ss a')}
+													</MDTypography>
+												</ListItem>
+												<ListItem>
+													<ListItemText primary="End Time:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
+														{moment(selectedBooking.end).format('MMMM Do YYYY, h:mm:ss a')}
+													</MDTypography>
+												</ListItem>
+												<ListItem>
+													<ListItemText primary="Booked by:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
+														{selectedBooking.ownerFullName}
+													</MDTypography>
+												</ListItem>
+												<ListItem>
+													<ListItemText primary="Comments:" secondary={""} />
+													<MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
+														{selectedBooking.comments}
+													</MDTypography>
+												</ListItem>
+
 												{selectedBooking.staffUsername === staff.username && (
 													<Button
 														variant="contained"
 														style={{ backgroundColor: 'red', color: 'white' }}
-														onClick={() => handleDeleteBooking(selectedBooking.facilityBookingId, selectedBooking.start)}													>
+														onClick={() => handleDeleteFacilityBookingCalendar(selectedBooking.facilityBookingId, selectedBooking.start)}													>
 														Delete Booking
 													</Button>
 												)}
-											</div>
+											</>
 										)}
 									</DialogContent>
 								</Dialog>
@@ -950,6 +996,20 @@ function FacilityBooking() {
 										</Button>
 									</DialogActions>
 								</Dialog>
+								<Dialog open={isDeleteConfirmationCalendarOpen} onClose={() => setIsDeleteConfirmationCalendarOpen(false)}>
+									<DialogTitle>Confirm Deletion</DialogTitle>
+									<DialogContent>
+										Are you sure you want to delete this booking?
+									</DialogContent>
+									<DialogActions>
+										<Button onClick={() => setIsDeleteConfirmationCalendarOpen(false)} color="primary">
+											Cancel
+										</Button>
+										<Button onClick={() => handleDeleteBooking(bookingToDeleteId, bookingToDeleteStartDate)} color="primary">
+											Confirm
+										</Button>
+									</DialogActions>
+								</Dialog>
 
 							</MDBox>
 						</Card>
@@ -957,7 +1017,7 @@ function FacilityBooking() {
 				</Grid>
 			</MDBox>
 
-		</DashboardLayout>
+		</DashboardLayout >
 	);
 }
 
