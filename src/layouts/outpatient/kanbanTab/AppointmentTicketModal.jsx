@@ -93,6 +93,40 @@ function AppointmentTicketModal({
     setCommentsTouched(true);
   };
 
+  //Only for Discharge ticket, will create an Invoice after discharfe
+  const handleDischarge = async () => {
+    const confirmed = window.confirm("Are you sure you want to discharge the patient?");
+
+    if (confirmed) {
+      try {
+        await transactionItemApi.checkout(selectedAppointment.patientId, selectedAppointment.appointmentId);
+        // Perform any necessary actions after discharge
+        console.log("Patient has been discharged.");
+
+        reduxDispatch(
+          displayMessage({
+            color: "success",
+            icon: "notification",
+            title: "Success",
+            content: "Patient has been discharged.",
+          })
+        );
+
+        handleCloseModal();
+        forceRefresh();
+      } catch (error) {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error",
+            content: error.response.data,
+          })
+        );
+      }
+    }
+  };
+
   // Fetch lists of all medications and service items from the API
   const fetchMedicationsAndServices = async () => {
     try {
@@ -196,7 +230,7 @@ function AppointmentTicketModal({
               title: "Successfully Added Medication!",
             })
           );
-          setMedications([]);
+          //setMedications([]);
           setSelectedMedicationQuantity(1);
           fetchPatientCart();
         }).catch((error) => {
@@ -240,7 +274,7 @@ function AppointmentTicketModal({
               title: "Successfully Added Service!",
             })
           );
-          setServices([]);
+          //setServices([]);
           fetchPatientCart();
         }).catch((error) => {
           reduxDispatch(
@@ -817,7 +851,7 @@ function AppointmentTicketModal({
                       <TableHead>
                         <TableRow>
                           <TableCell> Name</TableCell>
-                          
+
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -843,6 +877,25 @@ function AppointmentTicketModal({
                     </Table>
                   </TableContainer></ListItem>
                 </List>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    width: "100%",
+                    marginTop: "10px",
+                  }}
+                >
+                  {selectedAppointment.swimlaneStatusEnum === "DISCHARGE" && (
+                    <MDButton
+                      onClick={handleDischarge}
+                      variant="gradient"
+                      color="success"
+                      style={{ marginTop: "20px" }}
+                    >
+                      Discharge
+                    </MDButton>
+                  )}
+                </Box>
               </List>
             </>
           )}

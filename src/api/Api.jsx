@@ -377,10 +377,9 @@ export const subsidyApi = {
   deleteSubsidy(subsidyId) {
     return axiosFetch.delete(`${REST_ENDPOINT}/subsidy/deleteSubsidy/${subsidyId}`);
   },
-  updateSubsidyRate(subsidyId, newSubsidyRate) {
+  updateSubsidyRate(subsidyId, requestBody) {
     return axiosFetch.put(
-      `${REST_ENDPOINT}/subsidy/updateSubsidyRate/${subsidyId}`,
-      { newSubsidyRate }
+      `${REST_ENDPOINT}/subsidy/updateSubsidyRate/${subsidyId}`, requestBody
     );
   },
 };
@@ -553,6 +552,11 @@ export const transactionItemApi = {
   getCartItems(patientId) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/transactionItem/getCartItems/${patientId}`
+    );
+  },
+  checkout(patientId, appointmentId) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/transactionItem/checkout/${patientId}/${appointmentId}`
     );
   }
 }

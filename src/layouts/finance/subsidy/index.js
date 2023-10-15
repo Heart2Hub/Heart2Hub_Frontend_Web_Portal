@@ -14,6 +14,7 @@ import {
 	InputLabel,
 	Select,
 	MenuItem,
+	InputAdornment
 } from '@mui/material';
 
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -27,8 +28,6 @@ import { displayMessage } from "../../../store/slices/snackbarSlice";
 import MDButton from "components/MDButton";
 
 
-
-
 function Subsidy() {
 	// const [subsidies, setSubsidies] = useState([]);
 	const [selectedSubsidy, setSelectedSubsidy] = useState(null);
@@ -36,8 +35,54 @@ function Subsidy() {
 	const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
 	const [subsidyToDeleteId, setSubsidyToDeleteId] = useState(null);
 
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+	const [editFormData, setEditFormData] = useState({
+		subsidyRate: '',
+	});
 
 	const reduxDispatch = useDispatch();
+
+	const handleEdit = (subsidy) => {
+		setSelectedSubsidy(subsidy);
+		setEditFormData({
+			subsidyRate: subsidy.subsidyRate,
+		});
+		setIsEditModalOpen(true);
+	};
+
+	const handleUpdateSubsidy = async () => {
+		try {
+			const updatedSubsidy = { ...selectedSubsidy, subsidyRate: editFormData.subsidyRate };
+			console.log(updatedSubsidy)
+			console.log(updatedSubsidy.subsidyRate/100)
+			await subsidyApi.updateSubsidyRate(updatedSubsidy.subsidyId, updatedSubsidy);
+
+			// Reset the edit form data
+			setEditFormData({ subsidyRate: '' });
+			setIsEditModalOpen(false);
+
+			fetchData();
+			reduxDispatch(
+				displayMessage({
+					color: 'success',
+					icon: 'notification',
+					title: 'Successfully Updated Subsidy!',
+				})
+			);
+		} catch (error) {
+			// Handle error and display an error message to the user
+			reduxDispatch(
+				displayMessage({
+					color: 'error',
+					icon: 'notification',
+					title: 'Error Encountered',
+					content: error.message || 'An error occurred while updating the subsidy.',
+				})
+			);
+			console.error('Error updating subsidy:', error);
+		}
+	};
+
 
 	const [data, setData] = useState({
 		columns: [
@@ -69,12 +114,12 @@ function Subsidy() {
 				Header: 'Actions',
 				Cell: ({ row }) => (
 					<>
-						<Button variant="outlined" onClick={() => handleEdit(row.original)} style={{ backgroundColor: 'blue', color: 'white' }}>
+						<MDButton onClick={() => handleEdit(row.original)} variant="gradient" color="success">
 							Edit
-						</Button>
-						<Button variant="outlined" onClick={() => handleDelete(row.original.subsidyId)} style={{ backgroundColor: 'red', color: 'white' }}>
+						</MDButton>
+						<MDButton onClick={() => handleDelete(row.original.subsidyId)} variant="gradient" color="error" style={{ marginLeft: "20px" }}>
 							Delete
-						</Button>
+						</MDButton>
 					</>
 				),
 				width: '10%',
@@ -137,64 +182,65 @@ function Subsidy() {
 		nationality: '',
 		subsidyName: '',
 		subsidyDescription: '',
-	      });
-	    
-	      const handleInputChange = (e) => {
+	});
+
+	const handleInputChange = (e) => {
 		const { name, value } = e.target;
 		setFormData({ ...formData, [name]: value });
-	      };
-	    
-	      const handleCreateSubsidy = async () => {
+	};
+
+	const handleCreateSubsidy = async () => {
 		try {
-		  // Convert the subsidy rate from a percentage string to BigDecimal
-		  const subsidyRatePercentage = parseFloat(formData.subsidyRate);
-		  if (isNaN(subsidyRatePercentage)) {
-		    throw new Error('Invalid subsidy rate format');
-		  }
-		  const subsidyRateBigDecimal = subsidyRatePercentage / 100;
-	    
-		  // Update formData with the converted subsidy rate
-		  const updatedFormData = { ...formData, subsidyRate: subsidyRateBigDecimal.toString() };
-	    
-		  // You can make an API request here to create the new subsidy using updatedFormData
-		  const response = await subsidyApi.createSubsidy(updatedFormData);
-	    
-		  // Handle success, reset form, and fetch updated data
-		  console.log(response);
-		  setFormData({
-		    subsidyRate: '',
-		    itemTypeEnum: '',
-		    minDOB: new Date().getFullYear(),
-		    sex: '',
-		    race: '',
-		    nationality: '',
-		    subsidyName: '',
-		    subsidyDescription: '',
-		  });
-		  fetchData(); // Fetch updated data
-		  setIsModalOpen(false); // Close the modal
-		  // Display a success message to the user
-		  reduxDispatch(
-		    displayMessage({
-		      color: 'success',
-		      icon: 'notification',
-		      title: 'Successfully Created Subsidy!',
-		    })
-		  );
+			// Convert the subsidy rate from a percentage string to BigDecimal
+			const subsidyRatePercentage = parseFloat(formData.subsidyRate);
+			if (isNaN(subsidyRatePercentage)) {
+				throw new Error('Invalid subsidy rate format');
+			}
+			const subsidyRateBigDecimal = subsidyRatePercentage / 100;
+
+			// Update formData with the converted subsidy rate
+			const updatedFormData = { ...formData, subsidyRate: subsidyRateBigDecimal.toString() };
+			console.log(updatedFormData)
+
+			// You can make an API request here to create the new subsidy using updatedFormData
+			const response = await subsidyApi.createSubsidy(updatedFormData);
+
+			// Handle success, reset form, and fetch updated data
+			console.log(response);
+			setFormData({
+				subsidyRate: '',
+				itemTypeEnum: '',
+				minDOB: new Date().getFullYear(),
+				sex: '',
+				race: '',
+				nationality: '',
+				subsidyName: '',
+				subsidyDescription: '',
+			});
+			fetchData(); // Fetch updated data
+			setIsModalOpen(false); // Close the modal
+			// Display a success message to the user
+			reduxDispatch(
+				displayMessage({
+					color: 'success',
+					icon: 'notification',
+					title: 'Successfully Created Subsidy!',
+				})
+			);
 		} catch (error) {
-		  // Handle error and display an error message to the user
-		  reduxDispatch(
-		    displayMessage({
-		      color: 'error',
-		      icon: 'notification',
-		      title: 'Error Encountered',
-		      content: error.message || 'An error occurred while creating the subsidy.',
-		    })
-		  );
-		  console.error('Error creating subsidy:', error);
+			// Handle error and display an error message to the user
+			reduxDispatch(
+				displayMessage({
+					color: 'error',
+					icon: 'notification',
+					title: 'Error Encountered',
+					content: error.message || 'An error occurred while creating the subsidy.',
+				})
+			);
+			console.error('Error creating subsidy:', error);
 		}
-	      };
-	    
+	};
+
 
 	useEffect(() => {
 		// Fetch subsidies data and populate the "subsidies" state
@@ -236,15 +282,6 @@ function Subsidy() {
 		}
 	};
 
-	const handleAdd = () => {
-		// Implement code to open the modal for adding a new subsidy
-		// Initialize any necessary state variables for the modal
-	};
-
-	const handleEdit = (subsidy) => {
-		// Implement code to open the modal for editing an existing subsidy
-		// Initialize state variables for the modal with the selected subsidy data
-	};
 
 	const handleDelete = (subsidyId) => {
 		console.log(subsidyId);
@@ -391,6 +428,9 @@ function Subsidy() {
 						name="subsidyRate"
 						value={formData.subsidyRate}
 						onChange={handleInputChange}
+						InputProps={{
+							endAdornment: <InputAdornment position="end">%</InputAdornment>,
+						}}
 						fullWidth
 					/>
 					<FormControl fullWidth margin="dense">
@@ -399,13 +439,13 @@ function Subsidy() {
 							name="itemTypeEnum"
 							value={formData.itemTypeEnum}
 							onChange={handleInputChange}
-							sx={{ lineHeight: "2.5em"}}
+							sx={{ lineHeight: "2.5em" }}
 
 						>
 							<MenuItem value="INPATIENT">INPATIENT</MenuItem>
 							<MenuItem value="OUTPATIENT">OUTPATIENT</MenuItem>
 							<MenuItem value="MEDICINE">MEDICINE</MenuItem>
-							<MenuItem value="CONSUMABLE">CONSUMABLE</MenuItem>
+							{/* <MenuItem value="CONSUMABLE">CONSUMABLE</MenuItem> */}
 						</Select>
 					</FormControl>
 					{/* Create form inputs for minDOB, sex, race, nationality, subsidyName, and subsidyDescription */}
@@ -424,14 +464,14 @@ function Subsidy() {
 							name="sex"
 							value={formData.sex}
 							onChange={handleInputChange}
-							sx={{ lineHeight: "2.5em"}}
+							sx={{ lineHeight: "2.5em" }}
 						>
 							<MenuItem value="All">All</MenuItem>
 							<MenuItem value="Female">Female</MenuItem>
 							<MenuItem value="Male">Male</MenuItem>
 						</Select>
 					</FormControl>
-					
+
 					<FormControl fullWidth margin="dense">
 						<InputLabel>Nationality</InputLabel>
 						<Select
@@ -441,7 +481,8 @@ function Subsidy() {
 							sx={{ lineHeight: "2.5em" }}
 
 						>
-							<MenuItem value="Singaporean">Singaporean</MenuItem>
+							<MenuItem value="All">All</MenuItem>
+							<MenuItem value="Singaporean">Singapore Citizen</MenuItem>
 							<MenuItem value="PR">PR</MenuItem>
 							<MenuItem value="Foreigner">Foreigner</MenuItem>
 						</Select>
@@ -450,11 +491,12 @@ function Subsidy() {
 					<FormControl fullWidth margin="dense">
 						<InputLabel>Race</InputLabel>
 						<Select
-							name="sex"
+							name="race"
 							value={formData.race}
 							onChange={handleInputChange}
 							sx={{ lineHeight: "2.5em" }}
 						>
+							<MenuItem value="All">All</MenuItem>
 							<MenuItem value="Chinese">Chinese</MenuItem>
 							<MenuItem value="Malay">Malay</MenuItem>
 							<MenuItem value="Indian">Indian</MenuItem>
@@ -462,7 +504,7 @@ function Subsidy() {
 						</Select>
 					</FormControl>
 					{/* Create similar form inputs for race and nationality */}
-					
+
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setIsModalOpen(false)} color="primary">
@@ -473,6 +515,38 @@ function Subsidy() {
 					</Button>
 				</DialogActions>
 			</Dialog>
+
+			<Dialog
+				open={isEditModalOpen}
+				onClose={() => setIsEditModalOpen(false)}
+				aria-labelledby="form-dialog-title"
+			>
+				<DialogTitle id="form-dialog-title">Edit Subsidy Rate</DialogTitle>
+				<DialogContent>
+					{/* Create form inputs for editing the subsidy rate */}
+					<TextField
+						autoFocus
+						margin="dense"
+						label="Subsidy Rate"
+						type="text"
+						placeholder={`${selectedSubsidy.subsidyRate * 100}%`}
+						onChange={(e) => setEditFormData({ ...editFormData, subsidyRate: e.target.value })}
+						fullWidth
+						InputProps={{
+							endAdornment: <InputAdornment position="end">%</InputAdornment>,
+						}}
+					/>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setIsEditModalOpen(false)} color="primary">
+						Cancel
+					</Button>
+					<Button onClick={handleUpdateSubsidy} color="primary">
+						Confirm
+					</Button>
+				</DialogActions>
+			</Dialog>
+
 		</DashboardLayout>
 
 	);
