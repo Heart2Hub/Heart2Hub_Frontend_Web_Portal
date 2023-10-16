@@ -170,7 +170,8 @@ function Rostering() {
     const getFacilitiesByDepartment = async (unitName) => {
         try {
             const response = await facilityApi.getAllFacilitiesByDepartmentName(unitName);
-            setFacilities(response.data);
+            const availableFacilities = response.data.filter(facility => facility.facilityStatusEnum === 'BOOKABLE');
+            setFacilities(availableFacilities);
         } catch (error) {
             console.log(error);
         }

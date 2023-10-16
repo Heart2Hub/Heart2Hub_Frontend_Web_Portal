@@ -61,15 +61,16 @@ function CalenderView() {
         appointmentId,
         firstName,
         lastName,
-        actualDateTime,
+        // actualDateTime,
+        bookedDateTime,
         estimatedDuration,
       } = appointment;
       data.push({
         id: appointmentId,
         title: firstName + " " + lastName,
-        start: parseDateFromLocalDateTime(actualDateTime),
+        start: parseDateFromLocalDateTime(bookedDateTime),
         end: addDurationToDate(
-          parseDateFromLocalDateTime(actualDateTime),
+          parseDateFromLocalDateTime(bookedDateTime),
           estimatedDuration
         ),
         data: appointment,

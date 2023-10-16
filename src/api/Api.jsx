@@ -88,16 +88,14 @@ export const staffApi = {
 };
 
 export const departmentApi = {
-  getAllDepartments(name) {
-    return axiosFetch.get(
-      `${REST_ENDPOINT}/department/getAllDepartments?name=${name}`
-    );
+  getAllDepartments() {
+    return axiosFetch.get(`${REST_ENDPOINT}/department/getAllDepartments?name`);
   },
 };
 
 export const wardApi = {
-  getAllWards(name) {
-    return axiosFetch.get(`${REST_ENDPOINT}/ward/getAllWards?name=${name}`);
+  getAllWards() {
+    return axiosFetch.get(`${REST_ENDPOINT}/ward/getAllWards?name`);
   },
 };
 
@@ -125,9 +123,9 @@ export const facilityApi = {
       `${REST_ENDPOINT}/facility/getAllFacilitiesByDepartmentName?name=${name}`
     );
   },
-  createFacility(subDepartmentId, requestBody) {
+  createFacility(departmentId, requestBody) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/facility/createFacility?subDepartmentId=${subDepartmentId}`,
+      `${REST_ENDPOINT}/facility/createFacility?departmentId=${departmentId}`,
       requestBody
     );
   },
@@ -143,9 +141,7 @@ export const facilityApi = {
     );
   },
   findAllFacility() {
-    return axiosFetch.get(
-      `${REST_ENDPOINT}/facility/findAllFacility`
-    );
+    return axiosFetch.get(`${REST_ENDPOINT}/facility/findAllFacility`);
   },
   findAllBookingsOfAFacility(id) {
     return axiosFetch.get(
@@ -155,51 +151,56 @@ export const facilityApi = {
   deleteFacilityBooking(id) {
     return axiosFetch.delete(
       `${REST_ENDPOINT}/facilityBooking/deleteFacilityBooking/${id}`
-    )
+    );
   },
   createFacilityBooking(requestBody) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/facilityBooking/createFacilityBooking`,
       requestBody
-    )
+    );
   },
   getAllBookingsOfAStaff(username) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/facilityBooking/getAllBookingsOfAStaff/${username}`
-    )
+    );
   },
   updateFacilityBooking(requestBody) {
     return axiosFetch.put(
-      `${REST_ENDPOINT}/facilityBooking/updateFacilityBooking`, requestBody
-    )
+      `${REST_ENDPOINT}/facilityBooking/updateFacilityBooking`,
+      requestBody
+    );
   },
   getAllConsumableInventory() {
     return axiosFetch.get(
       `${REST_ENDPOINT}/consumableEquipment/getAllConsumableEquipment`
-    )
-  }
+    );
+  },
 };
 
 export const allocatedInventoryApi = {
   deleteAllocatedInventory(id) {
     return axiosFetch.delete(
       `${REST_ENDPOINT}/allocatedInventory/deleteAllocatedInventory/${id}`
-    )
+    );
   },
   updateAllocatedInventory(requestBody) {
     return axiosFetch.put(
       `${REST_ENDPOINT}/allocatedInventory/updateAllocatedInventory`,
       requestBody
-    )
+    );
   },
   createAllocatedInventory(requestBody) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/allocatedInventory/createAllocatedInventory`,
       requestBody
-    )
-  }
-
-}
+    );
+  },
+  findAllAllocatedInventoryOfFacility(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/allocatedInventory/findAllAllocatedInventoryOfFacility/${id}`
+    );
+  },
+};
 
 export const patientApi = {
   getAllPatientsWithElectronicHealthRecordSummaryByName(name) {
@@ -208,16 +209,14 @@ export const patientApi = {
     );
   },
   getAllPatientUsername() {
-    return axiosFetch.get(
-      `${REST_ENDPOINT}/patient/findAllPatientsUsername`
-    );
+    return axiosFetch.get(`${REST_ENDPOINT}/patient/findAllPatientsUsername`);
   },
   getAllPatients() {
     return axiosFetch.get(
       `${REST_ENDPOINT}/electronicHealthRecord/getAllElectronicHealthRecords`
     );
-  }
-}; 
+  },
+};
 
 export const ehrApi = {
   getElectronicHealthRecordByIdAndDateOfBirth(
@@ -228,19 +227,21 @@ export const ehrApi = {
       `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordByIdAndDateOfBirth?electronicHealthRecordId=${electronicHealthRecordId}&dateOfBirth=${dateOfBirth}`
     );
   },
+  getElectronicHealthRecordByNric(nric) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordByNric?nric=${nric}`
+    );
+  },
 };
 
 export const problemRecordApi = {
-  createProblemRecord(
-    electronicHealthRecordId,
-    requestBody
-  ) {
+  createProblemRecord(electronicHealthRecordId, requestBody) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/problemRecord/createProblemRecord?electronicHealthRecordId=${electronicHealthRecordId}`,
       requestBody
     );
   },
-  resolveProblemRecord(electronicHealthRecordId,problemRecordId) {
+  resolveProblemRecord(electronicHealthRecordId, problemRecordId) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/problemRecord/resolveProblemRecord?electronicHealthRecordId=${electronicHealthRecordId}&problemRecordId=${problemRecordId}`
     );
@@ -369,6 +370,24 @@ export const shiftPreferenceApi = {
   },
 };
 
+export const subsidyApi = {
+  getAllSubsidies() {
+    return axiosFetch.get(`${REST_ENDPOINT}/subsidy/getAllSubsidies`);
+  },
+  createSubsidy(requestBody) {
+    return axiosFetch.post(`${REST_ENDPOINT}/subsidy/createSubsidy`, requestBody);
+  },
+  deleteSubsidy(subsidyId) {
+    return axiosFetch.delete(`${REST_ENDPOINT}/subsidy/deleteSubsidy/${subsidyId}`);
+  },
+  updateSubsidyRate(subsidyId, newSubsidyRate) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/subsidy/updateSubsidyRate/${subsidyId}`,
+      { newSubsidyRate }
+    );
+  },
+};
+
 export const appointmentApi = {
   viewAllAppointmentsByRange(
     startDay,
@@ -384,14 +403,14 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/viewAllAppointmentsByRange?startDay=${startDay}&startMonth=${startMonth}&startYear=${startYear}&endDay=${endDay}&endMonth=${endMonth}&endYear=${endYear}&departmentName=${departmentName}&selectStaffId=${selectStaffId}`
     );
   },
-  updateAppointmentArrival(appointmentId, arrivalStatus) {
+  updateAppointmentArrival(appointmentId, arrivalStatus, staffId) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/appointment/updateAppointmentArrival?appointmentId=${appointmentId}&arrivalStatus=${arrivalStatus}`
+      `${REST_ENDPOINT}/appointment/updateAppointmentArrival?appointmentId=${appointmentId}&arrivalStatus=${arrivalStatus}&staffId=${staffId}`
     );
   },
-  updateAppointmentComments(appointmentId, comments) {
+  updateAppointmentComments(appointmentId, comments, staffId) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/appointment/updateAppointmentComments?appointmentId=${appointmentId}&comments=${comments}`
+      `${REST_ENDPOINT}/appointment/updateAppointmentComments?appointmentId=${appointmentId}&comments=${comments}&staffId=${staffId}`
     );
   },
   updateAppointmentSwimlaneStatus(appointmentId, swimlaneStatus) {
@@ -399,12 +418,25 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/updateAppointmentSwimlaneStatus?appointmentId=${appointmentId}&swimlaneStatus=${swimlaneStatus}`
     );
   },
-  assignAppointmentToStaff(appointmentId, staffId) {
+  assignAppointmentToStaff(appointmentId, toStaffId, fromStaffId) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/appointment/assignAppointmentToStaff?appointmentId=${appointmentId}&staffId=${staffId}`
+      `${REST_ENDPOINT}/appointment/assignAppointmentToStaff?appointmentId=${appointmentId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
     );
   },
   createNewAppointment(
+    description,
+    // actualDateTime,
+    bookedDateTime,
+    priority,
+    patientUsername,
+    departmentName
+  ) {
+    return axiosFetch.post(
+      // `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
+      `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
+    );
+  },
+  createNewAppointmentOnWeb(
     description,
     actualDateTime,
     bookedDateTime,
@@ -413,9 +445,29 @@ export const appointmentApi = {
     departmentName
   ) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/appointment/createNewAppointment?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
+      `${REST_ENDPOINT}/appointment/createNewAppointmentOnWeb?description=${description}&actualDateTime=${actualDateTime}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
     );
-  }
+  },
+  addImageAttachmentToAppointment(
+    appointmentId,
+    imageLink,
+    createdDate,
+    staffId
+  ) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/addImageAttachmentToAppointment?appointmentId=${appointmentId}&imageLink=${imageLink}&createdDate=${createdDate}&staffId=${staffId}`
+    );
+  },
+  viewAppointmentAttachments(appointmentId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/appointment/viewAppointmentAttachments?appointmentId=${appointmentId}`
+    );
+  },
+  viewPatientAppointments(patientUsername) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/appointment/viewPatientAppointments?patientUsername=${patientUsername}`
+    );
+  },
 };
 
 export const inventoryApi = {
@@ -425,7 +477,7 @@ export const inventoryApi = {
     );
   },
   updateConsumableEquipment(inventoryItemId, requestBody) {
-    console.log("Request Sent: " + requestBody.name)
+    console.log("Request Sent: " + requestBody.name);
     return axiosFetch.put(
       `${REST_ENDPOINT}/consumableEquipment/updateConsumableEquipment?inventoryItemId=${inventoryItemId}`,
       requestBody
@@ -434,7 +486,7 @@ export const inventoryApi = {
   createConsumableEquipment(requestBody) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/consumableEquipment/createConsumableEquipment`,
-      requestBody,
+      requestBody
     );
   },
   deleteConsumableEquipment(inventoryItemId) {
@@ -448,7 +500,7 @@ export const inventoryApi = {
     );
   },
   updateMedication(inventoryItemId, requestBody) {
-    console.log("Request Sent: " + requestBody.name)
+    console.log("Request Sent: " + requestBody.name);
     return axiosFetch.put(
       `${REST_ENDPOINT}/medication/updateMedication?inventoryItemId=${inventoryItemId}`,
       requestBody
@@ -457,7 +509,7 @@ export const inventoryApi = {
   createMedication(requestBody) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/medication/createMedication`,
-      requestBody,
+      requestBody
     );
   },
   deleteMedication(inventoryItemId) {
@@ -471,7 +523,7 @@ export const inventoryApi = {
     );
   },
   updateServiceItem(inventoryItemId, requestBody) {
-    console.log("Request Sent: " + requestBody.name)
+    console.log("Request Sent: " + requestBody.name);
     return axiosFetch.put(
       `${REST_ENDPOINT}/serviceItem/updateServiceItem?inventoryItemId=${inventoryItemId}`,
       requestBody
@@ -480,7 +532,7 @@ export const inventoryApi = {
   createServiceItem(requestBody) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/serviceItem/createServiceItem`,
-      requestBody,
+      requestBody
     );
   },
   deleteServiceItem(inventoryItemId) {
@@ -488,4 +540,22 @@ export const inventoryApi = {
       `${REST_ENDPOINT}/serviceItem/deleteServiceItem?inventoryItemId=${inventoryItemId}`
     );
   },
+};
+
+export const transactionItemApi = {
+  addToCart(patientId, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/transactionItem/addToCart/${patientId}`, requestBody
+    );
+  },
+  removeFromCart(patientId, transactionItemId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/transactionItem/removeFromCart/${patientId}/${transactionItemId}`
+    );
+  },
+  getCartItems(patientId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/transactionItem/getCartItems/${patientId}`
+    );
+  }
 }

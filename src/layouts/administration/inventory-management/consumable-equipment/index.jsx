@@ -352,7 +352,7 @@ function ConsumableEquipmentManagement() {
                 );
                 return
             }
-            console.log("Request: " + requestBody.inventoryItemName);
+            console.log("Request: " + requestBody.quantityInStock);
             inventoryApi
                 .updateConsumableEquipment(inventoryItemId, requestBody)
                 .then(() => {
@@ -376,15 +376,26 @@ function ConsumableEquipmentManagement() {
                     handleCloseUpdateModal();
                 })
                 .catch((err) => {
-                    reduxDispatch(
-                        displayMessage({
-                            color: "error",
-                            icon: "notification",
-                            title: "Error Encountered",
-                            content: err.response.data,
-                        })
-                    );
-                    console.log(err)
+                    if (err.response.data.detail) {
+                        reduxDispatch(
+                            displayMessage({
+                                color: "error",
+                                icon: "notification",
+                                title: "Error Encountered",
+                                content: err.response.data.detail,
+                            })
+                        );
+                    } else {
+                        reduxDispatch(
+                            displayMessage({
+                                color: "error",
+                                icon: "notification",
+                                title: "Error Encountered",
+                                content: err.response.data,
+                            })
+                        );
+                    }
+                    console.log(err.response.data.detail)
                 });
         } catch (ex) {
             console.log(ex);

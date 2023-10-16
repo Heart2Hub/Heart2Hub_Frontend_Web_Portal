@@ -26,6 +26,7 @@ import Rostering from "layouts/manpower/rostering/ShiftOverallRoster";
 import CalendarRoster from "layouts/manpower/rostering/CalendarRoster";
 import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
 import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
+import Subsidy from "layouts/finance/subsidy";
 
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
@@ -167,8 +168,8 @@ const routes = [
       </ProtectedRoute>
     ),
   },
-  
-  
+
+
   {
     name: "EHR",
     key: "ehr",
@@ -208,14 +209,14 @@ const routes = [
     route: "/administration/facility-booking",
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ADMIN]}
+        authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
       >
         <FacilityBooking />
       </ProtectedRoute>
     ),
   },
-  
+
   {
     name: "Rostering",
     key: "rostering",
@@ -275,7 +276,7 @@ const routes = [
       </ProtectedRoute>
     ),
   },
-  
+
   {
     name: "Error",
     key: "error",
@@ -295,7 +296,7 @@ const routes = [
     route: "/administration/inventory-management",
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
       >
         <InventoryManagement />
@@ -308,7 +309,7 @@ const routes = [
     route: "/administration/inventory-management/consumable-equipment-management",
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
       >
         <ConsumableEquipmentManagement />
@@ -321,26 +322,26 @@ const routes = [
     route: "/administration/inventory-management/medication-management",
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
       >
         <MedicationManagement />
       </ProtectedRoute>
     ),
   },
-  {
-    name: "Consumable Equipment Management",
-    key: "consumableequipmentmanagement",
-    route: "/administration/inventory-management/consumable-equipment-management",
-    component: (
-      <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
-        forHeadsOnly={false}
-      >
-        <ConsumableEquipmentManagement />
-      </ProtectedRoute>
-    ),
-  },
+  // {
+  //   name: "Consumable Equipment Management",
+  //   key: "consumableequipmentmanagement",
+  //   route: "/administration/inventory-management/consumable-equipment-management",
+  //   component: (
+  //     <ProtectedRoute
+  //       authorizedRoles={[StaffRoleEnum.ADMIN]}
+  //       forHeadsOnly={false}
+  //     >
+  //       <ConsumableEquipmentManagement />
+  //     </ProtectedRoute>
+  //   ),
+  // },
   {
     name: "Service Item Management",
     key: "serviceItemManagement",
@@ -351,6 +352,19 @@ const routes = [
         forHeadsOnly={false}
       >
         <ServiceItemManagement />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Subsidy Management",
+    key: "subsidy",
+    route: "/finance/subsidy",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Subsidy />
       </ProtectedRoute>
     ),
   },

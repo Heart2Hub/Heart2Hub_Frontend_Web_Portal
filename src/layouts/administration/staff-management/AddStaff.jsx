@@ -48,7 +48,7 @@ const validationSchema = yup.object({
     .max(99999999, "Invalid mobile number")
     .required("Mobile number is required"),
   staffRoleEnum: yup.string().required("Staff role is required"),
-  unitName: yup.string().required("Unit is required")
+  unitName: yup.string().required("Unit is required"),
 });
 
 function AddStaff({ returnToTableHandler, formState, editing }) {
@@ -57,9 +57,7 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
   const [staffRoles, setStaffRoles] = useState([]);
   const [departmentNames, setDepartmentNames] = useState([]);
   const [wardNames, setWardNames] = useState([]);
-  const [unitsByRole, setUnitsByRole] = useState(
-    []
-  );
+  const [unitsByRole, setUnitsByRole] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [imageSrc, setImageSrc] = useState("");
@@ -92,48 +90,59 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
   };
 
   useEffect(() => {
-    const getStaffRoles = async () => {
+    const getSelectOptions = async () => {
       try {
-        const response = await staffApi.getStaffRoles();
-        setStaffRoles(response.data);
+        const staffRoleResponse = await staffApi.getStaffRoles();
+        const departmentsResponse = await departmentApi.getAllDepartments();
+        const wardsResponse = await wardApi.getAllWards();
+        setStaffRoles(staffRoleResponse.data);
+        setDepartmentNames(
+          departmentsResponse.data.map((department) => department.name)
+        );
+        setWardNames(wardsResponse.data.map((ward) => ward.name));
+        console.log(departmentsResponse.data);
+        console.log(wardsResponse.data);
       } catch (error) {
         console.log(error);
       }
     };
-    getStaffRoles();
+    getSelectOptions();
   }, []);
 
-  useEffect(() => {
-    const getDepartments = async () => {
-      try {
-        const response = await departmentApi.getAllDepartments("");
-        setDepartmentNames(processDepartmentData(response.data));
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    const getWards = async () => {
-      try {
-        const response = await wardApi.getAllWards("");
-        setWardNames(processDepartmentData(response.data));
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    getDepartments();
-    getWards();
-  }, []);
+  // useEffect(() => {
+  //   const getDepartments = async () => {
+  //     try {
+  //       const response = await departmentApi.getAllDepartments("");
+  //       console.log(response.data)
+  //       //setDepartmentNames(processDepartmentData(response.data));
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
+  //   const getWards = async () => {
+  //     try {
+  //       const response = await wardApi.getAllWards("");
+  //       setWardNames(processDepartmentData(response.data));
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
+  //   getDepartments();
+  //   getWards();
+  // }, []);
 
-
-  const FormObserver = () => {
-    const { values } = useFormikContext();
-    useEffect(() => {
-      setUnitsByRole(
-        values.staffRoleEnum === "NURSE" ? wardNames : 
-        values.staffRoleEnum === "" ? [] : departmentNames
-      );
-    }, [values.staffRoleEnum]);
-  };
+  // const FormObserver = () => {
+  //   const { values } = useFormikContext();
+  //   useEffect(() => {
+  //     setUnitsByRole(
+  //       values.staffRoleEnum === "NURSE"
+  //         ? wardNames
+  //         : values.staffRoleEnum === ""
+  //         ? []
+  //         : departmentNames
+  //     );
+  //   }, [values.staffRoleEnum]);
+  // };
 
   const postStaff = async (staffBody, unitName, actions) => {
     try {
@@ -152,10 +161,7 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
 
       console.log(requestBody);
 
-      const response = await staffApi.createStaff(
-        requestBody,
-        unitName
-      );
+      const response = await staffApi.createStaff(requestBody, unitName);
       returnToTableHandler();
       reduxDispatch(
         displayMessage({
@@ -354,7 +360,7 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
         >
           {({ status, values }) => (
             <Form>
-              <FormObserver />
+              {/* <FormObserver /> */}
               <Grid container spacing={6}>
                 <Grid item xs={6}>
                   <MDTypography
@@ -463,8 +469,12 @@ function AddStaff({ returnToTableHandler, formState, editing }) {
                   <SelectWrapper
                     name="unitName"
                     hiddenlabel
-                    options={unitsByRole}
-                    disabled={unitsByRole.length === 0}
+                    options={[
+                      "Departments",
+                      ...departmentNames,
+                      "Wards",
+                      ...wardNames,
+                    ]}
                   />
                 </Grid>
                 <Grid item xs={6}>
