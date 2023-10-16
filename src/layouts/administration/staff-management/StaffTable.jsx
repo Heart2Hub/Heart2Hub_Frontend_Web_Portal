@@ -20,8 +20,7 @@ function StaffTable({ addStaffHandler, editStaffHandler }) {
     { Header: "last name", accessor: "lastname", width: "10%" },
     { Header: "username", accessor: "username", width: "10%" },
     { Header: "role", accessor: "staffRoleEnum", width: "10%" },
-    { Header: "department", accessor: "departmentName", width: "15%" },
-    { Header: "sub-department", accessor: "subDepartmentName", width: "15%" },
+    { Header: "unit", accessor: "unitName", width: "20%" },
     { Header: "mobile", accessor: "mobileNumber", width: "10%" },
     { Header: "rosterer", accessor: "isHeadCheckbox", width: "10%" },
     {
@@ -45,15 +44,9 @@ function StaffTable({ addStaffHandler, editStaffHandler }) {
       .sort((staff1, staff2) => staff1.staffId - staff2.staffId)
       .filter((staff) => !staff.disabled)
       .map((staff) => {
-        let subDepartmentName = "-";
-        let departmentName = "-";
-        if (staff.subDepartment) {
-          subDepartmentName = staff.subDepartment.name;
-          departmentName = staff.subDepartment.department.name;
-        }
-
-        staff.subDepartmentName = subDepartmentName;
-        staff.departmentName = departmentName;
+        let unitName = "-";
+        unitName = staff.unit?.name;
+        staff.unitName = unitName;
         staff.isHeadCheckbox = <Checkbox disabled checked={staff.isHead} />;
         return staff;
       });

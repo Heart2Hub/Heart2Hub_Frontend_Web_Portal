@@ -83,16 +83,14 @@ export const staffApi = {
 };
 
 export const departmentApi = {
-  getAllDepartments(name) {
-    return axiosFetch.get(
-      `${REST_ENDPOINT}/department/getAllDepartments?name=${name}`
-    );
+  getAllDepartments() {
+    return axiosFetch.get(`${REST_ENDPOINT}/department/getAllDepartments?name`);
   },
 };
 
 export const wardApi = {
-  getAllWards(name) {
-    return axiosFetch.get(`${REST_ENDPOINT}/ward/getAllWards?name=${name}`);
+  getAllWards() {
+    return axiosFetch.get(`${REST_ENDPOINT}/ward/getAllWards?name`);
   },
 };
 
