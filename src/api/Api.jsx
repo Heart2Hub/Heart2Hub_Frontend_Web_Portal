@@ -12,6 +12,11 @@ export const imageServerApi = {
   uploadProfilePhoto(type, image) {
     return axiosFetch.post(`${IMAGE_SERVER}/upload/${type}`, image);
   },
+  getImageFromImageServer(type, image) {
+    return axiosFetch.get(`${IMAGE_SERVER}/images/${type}/${image}`, {
+      responseType: "blob",
+    });
+  },
 };
 
 export const authApi = {

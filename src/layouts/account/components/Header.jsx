@@ -1,13 +1,8 @@
-import { IMAGE_SERVER } from "constants/RestEndPoint";
-
-// prop-types is a library for typechecking of props.
 import PropTypes from "prop-types";
 
-// @mui material components
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 
-// Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDAvatar from "components/MDAvatar";
@@ -15,9 +10,28 @@ import MDAvatar from "components/MDAvatar";
 import { useSelector } from "react-redux";
 import { selectStaff } from "../../../store/slices/staffSlice";
 import ResetPasswordModal from "./ResetPasswordModal";
+import { useEffect, useState } from "react";
+import { imageServerApi } from "api/Api";
 
 function Header({ children }) {
   const staff = useSelector(selectStaff);
+
+  const [profileImage, setProfileImage] = useState(null);
+
+  const handleGetProfileImage = async () => {
+    if (staff.profilePicture !== null) {
+      const response = await imageServerApi.getImageFromImageServer(
+        "id",
+        staff.profilePicture?.imageLink
+      );
+      const imageURL = URL.createObjectURL(response.data);
+      setProfileImage(imageURL);
+    }
+  };
+
+  useEffect(() => {
+    handleGetProfileImage();
+  }, []);
 
   return (
     <MDBox position="relative" mb={5}>
@@ -34,9 +48,8 @@ function Header({ children }) {
         <Grid container spacing={5} alignItems="center" width="100%">
           <Grid item justifyContent="center">
             <MDAvatar
-              src={
-                IMAGE_SERVER + "/images/id/" + staff.profilePicture?.imageLink
-              }
+              src={profileImage}
+              // src={`${IMAGE_SERVER}/images/id/${staff.profilePicture?.imageLink}`}
               alt="profile-image"
               size="xxl"
               shadow="xxl"
