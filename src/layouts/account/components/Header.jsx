@@ -22,9 +22,28 @@ import burceMars from "assets/images/bruce-mars.jpg";
 import { useSelector } from "react-redux";
 import { selectStaff } from "../../../store/slices/staffSlice";
 import ResetPasswordModal from "./ResetPasswordModal";
+import { useEffect, useState } from "react";
+import { imageServerApi } from "api/Api";
 
 function Header({ children }) {
   const staff = useSelector(selectStaff);
+
+  const [profileImage, setProfileImage] = useState(null);
+
+  const handleGetProfileImage = async () => {
+    if (staff.profilePicture !== null) {
+      const response = await imageServerApi.getImageFromImageServer(
+        "id",
+        staff.profilePicture?.imageLink
+      );
+      const imageURL = URL.createObjectURL(response.data);
+      setProfileImage(imageURL);
+    }
+  };
+
+  useEffect(() => {
+    handleGetProfileImage();
+  }, []);
 
   return (
     <MDBox position="relative" mb={5}>
@@ -41,9 +60,8 @@ function Header({ children }) {
         <Grid container spacing={5} alignItems="center" width="100%">
           <Grid item justifyContent="center">
             <MDAvatar
-              src={
-                IMAGE_SERVER + "/images/id/" + staff.profilePicture?.imageLink
-              }
+              src={profileImage}
+              // src={`${IMAGE_SERVER}/images/id/${staff.profilePicture?.imageLink}`}
               alt="profile-image"
               size="xxl"
               shadow="xxl"
