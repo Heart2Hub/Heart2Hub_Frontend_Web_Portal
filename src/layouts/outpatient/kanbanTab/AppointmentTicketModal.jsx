@@ -20,7 +20,10 @@ import {
   TableRow,
   Paper,
   Button,
+  IconButton
 } from "@mui/material";
+import PrescriptionDialog from "./PrescriptionRecord";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import MDTypography from "components/MDTypography";
 import { calculateAge } from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
@@ -91,6 +94,13 @@ function AppointmentTicketModal({
 
   const handleCommentsTouched = () => {
     setCommentsTouched(true);
+  };
+
+  const [isPrescriptionDialogOpen, setIsPrescriptionDialogOpen] = useState(false);
+
+  // function to open the prescription dialog
+  const handleOpenPrescriptionDialog = () => {
+    setIsPrescriptionDialogOpen(true);
   };
 
   //Only for Discharge ticket, will create an Invoice after discharfe
@@ -618,7 +628,7 @@ function AppointmentTicketModal({
                   </MDTypography>
                 </ListItem>
                 <ListItem>
-                  <MDTypography variant="h6" gutterBottom color="black">
+                  <MDTypography variant="h6" gutterBottom>
                     {facilityLocation !== null
                       ? facilityLocation
                       : "No Location Yet"}
@@ -664,7 +674,7 @@ function AppointmentTicketModal({
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
                 >
-                  <MDTypography variant="h6" gutterBottom color="black">
+                  <MDTypography variant="h6" gutterBottom>
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
@@ -823,6 +833,32 @@ function AppointmentTicketModal({
                     Save Comments
                   </MDButton>
                 </Box>
+                <List>
+                  {/* ... existing list items ... */}
+                  <ListItem>
+                    <MDTypography variant="h5" gutterBottom>
+                      Prescription Records:
+                    </MDTypography>
+                  </ListItem>
+                  <ListItem>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
+                      <MDButton
+                        onClick={handleOpenPrescriptionDialog}
+                        variant="gradient"
+                        color="primary"
+                      >
+                        View Prescription Records
+                      </MDButton>
+                    </Box>
+                  </ListItem>
+                </List>
+                {/* ... rest of the existing code ... */}
+                <PrescriptionDialog
+                  open={isPrescriptionDialogOpen}
+                  onClose={() => setIsPrescriptionDialogOpen(false)}
+                  electronicHealthRecordId={selectedAppointment.electronicHealthRecordId} 
+                />                
+                <br></br>
                 <List>
                   <ListItem>
                     <MDTypography variant="h5" gutterBottom>

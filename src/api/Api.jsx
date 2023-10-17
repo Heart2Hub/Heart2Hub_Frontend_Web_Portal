@@ -560,3 +560,15 @@ export const transactionItemApi = {
     );
   }
 }
+
+export const prescriptionRecordApi = {
+  getAllPrescriptionRecord(id) {
+    return axiosFetch.get(`${REST_ENDPOINT}/prescriptionRecord/getPrescriptionRecordsByEHRId/${id}`);
+  },
+  deletePrescriptionRecord(prescriptionRecordId) {
+    return axiosFetch.delete(`${REST_ENDPOINT}/prescriptionRecord/deletePrescriptionRecord/${prescriptionRecordId}`);
+  },
+  updatePrescriptionRecord(id, requestBody) {
+    return axiosFetch.put(`${REST_ENDPOINT}/prescriptionRecord/updatePrescriptionRecord/${id}`, requestBody);
+  }
+};
