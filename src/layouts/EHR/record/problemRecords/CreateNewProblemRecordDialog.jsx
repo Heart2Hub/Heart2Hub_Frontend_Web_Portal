@@ -1,42 +1,31 @@
-import React from "react";
 import {
-  Card,
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
   FormControl,
-  Grid,
-  Icon,
   InputLabel,
   MenuItem,
   Select,
   TextField,
 } from "@mui/material";
-import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
-import MDTypography from "components/MDTypography";
-import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
-import { displayMessage } from "../../../../store/slices/snackbarSlice";
-import {
-  selectEHRRecord,
-  setEHRRecord,
-  updateEHRRecord,
-} from "../../../../store/slices/ehrSlice";
+import React from "react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import { useDispatch } from "react-redux";
 import { problemRecordApi, ehrApi } from "api/Api";
+import { displayMessage } from "store/slices/snackbarSlice";
+import { selectEHRRecord, updateEHRRecord } from "store/slices/ehrSlice";
 
-function ProblemRecordsBox() {
+function CreateNewProblemRecordDialog({
+  openCreateProblemRecordDialog,
+  handleCloseCreateProblemRecordDialog,
+}) {
   const reduxDispatch = useDispatch();
   const ehrRecord = useSelector(selectEHRRecord);
   const loggedInStaff = useSelector(selectStaff);
-  const [openResolveProblemRecordModal, setOpenResolveProblemRecordModal] =
-    useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     description: "",
     createdBy: "",
@@ -45,23 +34,7 @@ function ProblemRecordsBox() {
     problemTypeEnum: "",
   });
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const handleOpenResolveProblemRecordModal = () => {
-    setOpenResolveProblemRecordModal(true);
-  };
-
-  const handleCloseResolveProblemRecordModal = () => {
-    setOpenResolveProblemRecordModal(false);
-  };
-
-  const handleChange = (event) => {
+  const handleFormChange = (event) => {
     const { name, value } = event.target;
     setFormData((prevData) => ({
       ...prevData,
@@ -77,7 +50,7 @@ function ProblemRecordsBox() {
             color: "error",
             icon: "notification",
             title: "Error Encountered",
-            content: "Description cannot be null",
+            content: "Description cannot be empty",
           })
         );
         return;
@@ -88,7 +61,7 @@ function ProblemRecordsBox() {
             color: "error",
             icon: "notification",
             title: "Error Encountered",
-            content: "Priority cannot be null",
+            content: "Priority cannot be empty",
           })
         );
         return;
@@ -99,7 +72,7 @@ function ProblemRecordsBox() {
             color: "error",
             icon: "notification",
             title: "Error Encountered",
-            content: "Problem type cannot be null",
+            content: "Problem type cannot be empty",
           })
         );
         return;
@@ -155,7 +128,7 @@ function ProblemRecordsBox() {
               content: formData.problemTypeEnum + " created",
             })
           );
-          handleCloseModal();
+          handleCloseCreateProblemRecordDialog();
         })
         .catch((err) => {
           console.log(err);
@@ -193,160 +166,13 @@ function ProblemRecordsBox() {
     }
   };
 
-  const handleResolveProblemRecord = (problemRecord) => {
-    try {
-      problemRecordApi
-        .resolveProblemRecord(
-          ehrRecord.electronicHealthRecordId,
-          problemRecord.problemRecordId
-        )
-        .then((response) => {
-          const updatedEhrRecord = {
-            ...ehrRecord,
-            listOfProblemRecords: ehrRecord.listOfProblemRecords.filter(
-              (record) =>
-                record.problemRecordId !== problemRecord.problemRecordId
-            ),
-            listOfMedicalHistoryRecords: [
-              ...ehrRecord.listOfMedicalHistoryRecords,
-              response.data,
-            ],
-          };
-          reduxDispatch(updateEHRRecord(updatedEhrRecord));
-          reduxDispatch(
-            displayMessage({
-              color: "success",
-              icon: "notification",
-              title: "Successfully Resolved Problem Record!",
-              content: response.data.problemTypeEnum + " resolved",
-            })
-          );
-        })
-        .catch((err) => {
-          console.log(err);
-          // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
-          if (err.response.data.detail) {
-            reduxDispatch(
-              displayMessage({
-                color: "error",
-                icon: "notification",
-                title: "Error Encountered",
-                content: err.response.data.detail,
-              })
-            );
-          } else {
-            reduxDispatch(
-              displayMessage({
-                color: "error",
-                icon: "notification",
-                title: "Error Encountered",
-                content: err.response.data,
-              })
-            );
-          }
-          console.log(err.response.data.detail);
-        });
-    } catch (ex) {
-      console.log(ex);
-    }
-  };
-
   return (
     <>
-      <MDBox position="relative" mb={5}>
-        <MDBox position="relative" minHeight="5rem" />
-        <Card
-          sx={{
-            position: "relative",
-            mt: -8,
-            mx: 3,
-            py: 2,
-            px: 2,
-          }}
-        >
-          <MDTypography variant="h6" gutterBottom>
-            List of Problem Records:
-            {ehrRecord.listOfProblemRecords.map((problemRecord, index) => (
-              <Grid container spacing={3} justify="center" alignItems="center">
-                <Grid item xs={12} md={6} lg={3}>
-                  <MDBox mb={1.5}>
-                    <ProfileInfoCard
-                      key={index}
-                      title={`Problem ${index + 1}`}
-                      info={{
-                        createdBy: problemRecord.createdBy,
-                        createdDate: problemRecord.createdDate.split(" ")[0],
-                        description: problemRecord.description,
-                        priority: problemRecord.priorityEnum,
-                        problemType: problemRecord.problemTypeEnum,
-                      }}
-                      shadow={false}
-                    />
-                  </MDBox>
-                </Grid>
-                <Grid item xs={12} md={6} lg={3}>
-                  <MDBox mb={1.5}>
-                    {loggedInStaff.staffRoleEnum === "DOCTOR" && (
-                      <>
-                        <MDButton
-                          variant="contained"
-                          color="primary"
-                          onClick={handleOpenResolveProblemRecordModal}
-                        >
-                          Resolve Problem Record
-                        </MDButton>
-                        <Dialog
-                          open={openResolveProblemRecordModal}
-                          onClose={handleCloseResolveProblemRecordModal}
-                        >
-                          <DialogTitle>Confirm Resolution</DialogTitle>
-                          <DialogContent>
-                            <DialogContentText>
-                              Are you sure you want to resolve this problem
-                              record?
-                            </DialogContentText>
-                          </DialogContent>
-                          <DialogActions>
-                            <MDButton
-                              onClick={handleCloseResolveProblemRecordModal}
-                              color="primary"
-                            >
-                              Cancel
-                            </MDButton>
-                            <MDButton
-                              onClick={() => {
-                                handleCloseResolveProblemRecordModal();
-                                handleResolveProblemRecord(problemRecord);
-                              }}
-                              color="primary"
-                            >
-                              Confirm
-                            </MDButton>
-                          </DialogActions>
-                        </Dialog>
-                      </>
-                    )}
-                  </MDBox>
-                </Grid>
-              </Grid>
-            ))}
-            {loggedInStaff.staffRoleEnum === "DOCTOR" && (
-              <MDBox mx={2} mt={3} px={2}>
-                <MDButton
-                  Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleOpenModal}
-                >
-                  Create New Problem Record
-                  <Icon>add</Icon>
-                </MDButton>
-              </MDBox>
-            )}
-          </MDTypography>
-        </Card>
-      </MDBox>
-      <Dialog open={isModalOpen} onClose={handleCloseModal}>
+      <Dialog
+        open={openCreateProblemRecordDialog}
+        onClose={handleCloseCreateProblemRecordDialog}
+        sx={{ "& .MuiDialog-paper": { width: "500px", height: "350px" } }}
+      >
         <DialogTitle>Create New Problem Record</DialogTitle>
         <DialogContent>
           <TextField
@@ -354,7 +180,7 @@ function ProblemRecordsBox() {
             label="Description"
             name="description"
             value={formData.description}
-            onChange={handleChange}
+            onChange={handleFormChange}
             margin="dense"
           />
           <FormControl fullWidth margin="dense">
@@ -362,7 +188,7 @@ function ProblemRecordsBox() {
             <Select
               name="priorityEnum"
               value={formData.priorityEnum}
-              onChange={handleChange}
+              onChange={handleFormChange}
               sx={{ lineHeight: "3em" }}
             >
               <MenuItem value="LOW">Low</MenuItem>
@@ -375,7 +201,7 @@ function ProblemRecordsBox() {
             <Select
               name="problemTypeEnum"
               value={formData.problemTypeEnum}
-              onChange={handleChange}
+              onChange={handleFormChange}
               sx={{ lineHeight: "3em" }}
             >
               <MenuItem value="ALLERGIES_AND_IMMUNOLOGIC">
@@ -438,7 +264,10 @@ function ProblemRecordsBox() {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <MDButton onClick={handleCloseModal} color="primary">
+          <MDButton
+            onClick={handleCloseCreateProblemRecordDialog}
+            color="primary"
+          >
             Cancel
           </MDButton>
           <MDButton onClick={handleCreateProblemRecord} color="primary">
@@ -450,4 +279,4 @@ function ProblemRecordsBox() {
   );
 }
 
-export default ProblemRecordsBox;
+export default CreateNewProblemRecordDialog;

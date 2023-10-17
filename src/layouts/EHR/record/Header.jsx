@@ -10,7 +10,7 @@ import MDTypography from "components/MDTypography";
 import MDAvatar from "components/MDAvatar";
 
 import { useSelector } from "react-redux";
-import { selectEHRRecord } from "../../../../store/slices/ehrSlice";
+import { selectEHRRecord } from "../../../store/slices/ehrSlice";
 import { imageServerApi } from "api/Api";
 import { Divider } from "@mui/material";
 import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
