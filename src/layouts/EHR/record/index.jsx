@@ -17,9 +17,9 @@ import VaccinesIcon from "@mui/icons-material/Vaccines";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 
 import ProblemRecordsBox from "./problemRecords/ProblemRecordsBox";
-import AppointmentsBox from "./AppointmentsBox";
-import NextOfKinBox from "./NextOfKinBox";
-import MedicalRecordsBox from "./MedicalRecordsBox";
+import AppointmentsBox from "./appointmentRecords/AppointmentsBox";
+import NextOfKinBox from "./nextOfKinRecords/NextOfKinBox";
+import MedicalRecordsBox from "./medicalRecords/MedicalRecordsBox";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { useState } from "react";
 import { Tab } from "@mui/material";

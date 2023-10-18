@@ -9,7 +9,7 @@ import {
   selectEHRRecord,
   setEHRRecord,
   updateEHRRecord,
-} from "../../../store/slices/ehrSlice";
+} from "../../../../store/slices/ehrSlice";
 import { parseDateFromLocalDateTime } from "utility/Utility";
 import { useState } from "react";
 import { appointmentApi } from "api/Api";
