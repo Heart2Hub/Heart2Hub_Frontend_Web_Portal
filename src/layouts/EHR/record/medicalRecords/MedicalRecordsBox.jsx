@@ -1,7 +1,5 @@
 import { Card, CardContent, Chip, Grid } from "@mui/material";
-import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -68,7 +66,7 @@ function MedicalRecordsBox() {
 
   const recordCardStyles = {
     width: "92%",
-    margin: "auto",
+    margin: "20px",
     border: "1px solid #e0e0e0",
     boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
     transition: "all 0.3s ease",
@@ -86,7 +84,7 @@ function MedicalRecordsBox() {
   };
 
   const invisibleScrollBarStyles = {
-    "&::-webkit-scrollbar": {
+    "&::WebkitScrollbar": {
       display: "none",
     },
     scrollbarWidth: "none",
@@ -112,7 +110,7 @@ function MedicalRecordsBox() {
               allMedicalRecords.map((medicalRecord, index) => (
                 <Card key={index} style={recordCardStyles}>
                   <CardContent style={{ position: "relative" }}>
-                    <MDTypography variant="h4" color="textSecondary">
+                    <MDTypography variant="h4" color="info">
                       Medical History {index + 1}
                     </MDTypography>
                     <Chip
@@ -131,7 +129,7 @@ function MedicalRecordsBox() {
                       label={medicalRecord.priorityEnum + " PRIORITY"}
                     />
                     <MDTypography
-                      variant="body1"
+                      variant="h6"
                       style={{ marginTop: "8px", fontWeight: "bold" }}
                     >
                       Created By: {medicalRecord.createdBy}
@@ -174,7 +172,7 @@ function MedicalRecordsBox() {
               allergyList.map((allergy, index) => (
                 <Card key={index} style={recordCardStyles}>
                   <CardContent style={{ position: "relative" }}>
-                    <MDTypography variant="h4" color="secondary">
+                    <MDTypography variant="h4" color="info">
                       Allergy History {index + 1}
                     </MDTypography>
                     <Chip
@@ -193,7 +191,7 @@ function MedicalRecordsBox() {
                       label={allergy.priorityEnum + " PRIORITY"}
                     />
                     <MDTypography
-                      variant="body1"
+                      variant="h6"
                       style={{ marginTop: "8px", fontWeight: "bold" }}
                     >
                       Created By: {allergy.createdBy}

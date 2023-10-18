@@ -15,7 +15,7 @@ import { imageServerApi } from "api/Api";
 import { Divider } from "@mui/material";
 import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
 
-function Header({ children }) {
+function Header() {
   const ehrRecord = useSelector(selectEHRRecord);
 
   const [profileImage, setProfileImage] = useState(null);
@@ -51,7 +51,6 @@ function Header({ children }) {
         <Grid container spacing={5} alignItems="center" width="100%">
           <Grid item justifyContent="center">
             <MDAvatar
-              // src={ehrRecord?.profilePicture}
               src={profileImage}
               alt="profile-image"
               size="xxl"

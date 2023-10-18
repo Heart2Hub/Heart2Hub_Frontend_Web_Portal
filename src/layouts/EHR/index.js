@@ -193,7 +193,6 @@ function EHR() {
             dateOfBirthFormatted
           )
           .then((response) => {
-            console.log(response);
             reduxDispatch(
               displayMessage({
                 color: "success",
@@ -206,18 +205,12 @@ function EHR() {
             );
             setIsModalOpen(false);
 
-            console.log(formData.profilePicture);
-
             // ROUTE HERE
             response.data = {
               ...response.data,
               username: formData.username,
               profilePicture: formData.profilePicturePath,
             };
-
-            console.log(response.data.profilePicture);
-            console.log(response.data.profilePicturePath);
-            console.log(formData.profilePicture);
             reduxDispatch(setEHRRecord(response.data));
             navigate("/ehr/ehrRecord");
           })
@@ -262,27 +255,6 @@ function EHR() {
 
   const fetchData = async () => {
     setIsLoading(true);
-    // try {
-    //   const response =
-    //     await patientApi.getAllPatientsWithElectronicHealthRecordSummaryByName(
-    //       ""
-    //     );
-    //   const patientsWithElectronicHealthRecordSummary = response.data;
-
-    //   const newImageURLs = {};
-    //   for (const patient of patientsWithElectronicHealthRecordSummary) {
-    //     if (patient.profilePicture) {
-    //       const imageResponse = await imageServerApi.getImageFromImageServer(
-    //         "id",
-    //         patient.profilePicture
-    //       );
-    //       newImageURLs[patient.profilePicture] = URL.createObjectURL(
-    //         imageResponse.data
-    //       );
-    //     }
-    //   }
-
-    //   setImageURLs(newImageURLs);
 
     try {
       const response =
@@ -317,29 +289,13 @@ function EHR() {
       });
 
       setImageURLs(newImageURLs);
-      console.log(newImageURLs);
+      // console.log(newImageURLs);
 
       const mappedRows = patientsWithElectronicHealthRecordSummary.map(
         (patientWithElectronicHealthRecordSummary) => {
-          console.log(
-            newImageURLs[
-              patientWithElectronicHealthRecordSummary.profilePicture
-            ]
-          );
-
-          console.log(patientWithElectronicHealthRecordSummary.profilePicture);
-          console.log(
-            imageURLs[patientWithElectronicHealthRecordSummary.profilePicture]
-          );
           return {
             electronicHealthRecordId:
               patientWithElectronicHealthRecordSummary.electronicHealthRecordId,
-
-            //if you set image here it will apepar everywhere
-            // profilePicture:
-            //   patientWithElectronicHealthRecordSummary.profilePicture,
-            // profilePicture:
-            //    || patientWithElectronicHealthRecordSummary.profilePicture,
             profilePicture:
               newImageURLs[
                 patientWithElectronicHealthRecordSummary.profilePicture
@@ -355,14 +311,10 @@ function EHR() {
         }
       );
 
-      console.log(mappedRows);
-
       dataRef.current = {
         ...dataRef.current,
         rows: [mappedRows],
       };
-
-      console.log(dataRef.current);
 
       setData((prevData) => ({
         ...prevData,
@@ -383,9 +335,8 @@ function EHR() {
     <DashboardLayout>
       <DashboardNavbar />
       {isLoading ? (
-        <p>Loading...</p> // or a spinner component
+        <p>Loading...</p>
       ) : (
-        // your DataTable component
         <>
           <MDBox pt={6} pb={3}>
             <Grid container spacing={6}>

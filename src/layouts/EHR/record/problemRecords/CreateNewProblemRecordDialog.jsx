@@ -15,7 +15,7 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import { useDispatch } from "react-redux";
-import { problemRecordApi, ehrApi } from "api/Api";
+import { problemRecordApi } from "api/Api";
 import { displayMessage } from "store/slices/snackbarSlice";
 import { selectEHRRecord, updateEHRRecord } from "store/slices/ehrSlice";
 
