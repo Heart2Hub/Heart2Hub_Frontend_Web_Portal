@@ -468,6 +468,17 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/viewPatientAppointments?patientUsername=${patientUsername}`
     );
   },
+  createReferral(
+    prevAppointmentId,
+    description,
+    bookedDate,
+    departmentName,
+    staffUsername
+  ) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/createReferral?prevAppointmentId=${prevAppointmentId}&description=${description}&bookedDate=${bookedDate}&departmentName=${departmentName}&staffUsername=${staffUsername}`
+    );
+  },
 };
 
 export const inventoryApi = {
