@@ -13,31 +13,57 @@ import {
 	CardContent,
 	CardActions,
 	Typography,
-	TextField
+	TextField,
+	Select,
+	MenuItem,
 } from "@mui/material";
 import EditIcon from '@mui/icons-material/Edit';
+import InputLabel from "@mui/material/InputLabel";
 
 import DeleteIcon from "@mui/icons-material/Delete";
 import { displayMessage } from "store/slices/snackbarSlice";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { prescriptionRecordApi } from "api/Api";
+import { prescriptionRecordApi, inventoryApi } from "api/Api";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import MDButton from "components/MDButton";
 
 
-const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId }) => {
+const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePageRefresh }) => {
 
 	const [prescriptionRecords, setPrescriptionRecords] = useState([]);
 	const [editMode, setEditMode] = useState(false);
+	const [inventoryItems, setInventoryItems] = useState([]);
 	const [editedRecord, setEditedRecord] = useState(null);
+	const [selectedInventoryItem, setSelectedInventoryItem] = useState("");
+
 	const [editedFields, setEditedFields] = useState({
 		medicationQuantity: "",
 		dosage: "",
 		description: "",
 		comments: "",
 	});
+	const [openForm, setOpenForm] = useState(false);
+	const [newRecord, setNewRecord] = useState({
+		medicationName: "",
+		medicationQuantity: 0,
+		dosage: 0,
+		description: "",
+		comments: "",
+		prescriptionStatusEnum: "", // Set the initial value according to your enum options
+		inventoryItem: "" // Set the initial value according to your medication options
+	});
+
+	const handleOpenForm = () => {
+		setOpenForm(true);
+	};
+
+	const handleCloseForm = () => {
+		clearFormFields();
+		setOpenForm(false);
+	};
+
 
 	const loggedInStaff = useSelector(selectStaff);
 
@@ -60,6 +86,14 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId }) => {
 		}
 	};
 
+	const prescriptionStatusOptions = [
+		"COLLECTED",
+		"UNCOLLECTED",
+		"PENDING",
+		"INPATIENT_TAKEN",
+		"INPATIENT_OVERDUE"
+	];
+
 	const renderStatusWithColor = (status) => (
 		<div
 			style={{
@@ -74,22 +108,134 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId }) => {
 		</div>
 	);
 
-	const handleEdit = (prescriptionRecord) => {
+	const handleAddToCart = async (prescriptionId, ehrId) => {
+		try {
+			const response = await prescriptionRecordApi.checkOutPrescriptionRecord(prescriptionId, ehrId);
+			handlePageRefresh();
+			reduxDispatch(
+				displayMessage({
+					color: "success",
+					icon: "notification",
+					title: "Success",
+					content: "Prescription added to patient's cart!",
+				})
+			);
+		} catch (error) {
+			console.error("Error adding prescription to cart: ", error);
+			reduxDispatch(
+				displayMessage({
+					color: "error",
+					icon: "notification",
+					title: "Error",
+					content: error.response.data,
+				})
+			);
+		}
+	};
+
+
+	const handleEdit =  (prescriptionRecord) => {
 		setEditMode(true);
 		setEditedRecord(prescriptionRecord);
 		setEditedFields({
-			medicationQuantity: prescriptionRecord.medicationQuantity,
-			dosage: prescriptionRecord.dosage,
-			description: prescriptionRecord.description,
-			comments: prescriptionRecord.comments
+		  medicationQuantity: prescriptionRecord.medicationQuantity,
+		  dosage: prescriptionRecord.dosage,
+		  description: prescriptionRecord.description,
+		  comments: prescriptionRecord.comments,
 		});
-	};
+		
+	      };
 
 	const handleFieldChange = (field, value) => {
 		setEditedFields((prev) => ({
 			...prev,
 			[field]: value,
 		}));
+	};
+
+	const handleCreateFieldChange = (field, value) => {
+		setNewRecord((prev) => ({
+			...prev,
+			[field]: value,
+		}));
+	};
+
+	const handleCreatePrescription = async () => {
+		try {
+			if (
+				newRecord.medicationQuantity <= 0 ||
+				newRecord.dosage <= 0 ||
+				newRecord.medicationQuantity === "" ||
+				newRecord.dosage === "" ||
+				newRecord.inventoryItem === "" ||
+				newRecord.prescriptionStatusEnum === ""
+			) {
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Error",
+						content: "Please fill all the required fields with valid values.",
+					})
+				);
+				return;
+			}
+			const currentDate = new Date().toLocaleString();
+
+			console.log(selectedInventoryItem);
+
+			// Update the newRecord object with the required fields
+			const updatedRecord = {
+				...newRecord,
+				createdDate: currentDate,
+				prescribedBy: `Doctor ${loggedInStaff.firstname} ${loggedInStaff.lastname}`,
+			};
+			console.log(updatedRecord);
+
+			const response = await prescriptionRecordApi.createNewPrescriptionRecord(updatedRecord, electronicHealthRecordId, selectedInventoryItem)
+			console.log("New record data:", response.data);
+
+			reduxDispatch(
+				displayMessage({
+					color: "success",
+					icon: "notification",
+					title: "Success",
+					content: "New prescription record created successfully.",
+				})
+			);
+			fetchPrescriptionRecords();
+			setOpenForm(false)
+			setNewRecord({
+				medicationName: "",
+				medicationQuantity: 0,
+				dosage: 0,
+				description: "",
+				comments: "",
+				prescriptionStatusEnum: "",
+				selectedInventoryItem: "",
+			});
+		} catch (error) {
+			console.error("Error creating new prescription record:", error);
+			reduxDispatch(
+				displayMessage({
+					color: "error",
+					icon: "notification",
+					title: "Error",
+					content: "Failed to create a new prescription record. Please try again.",
+				})
+			);
+		}
+	};
+	const clearFormFields = () => {
+		setNewRecord({
+			medicationName: "",
+			medicationQuantity: 0,
+			dosage: 0,
+			description: "",
+			comments: "",
+			prescriptionStatusEnum: "",
+			selectedInventoryItem: "",
+		});
 	};
 	const handleSaveEdit = async () => {
 		try {
@@ -145,6 +291,7 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId }) => {
 	};
 
 	const handleDelete = async (prescriptionRecordId) => {
+		console.log(prescriptionRecordId)
 		const confirmDelete = window.confirm("Are you sure you want to delete this record?");
 		if (confirmDelete) {
 			try {
@@ -172,7 +319,17 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId }) => {
 		}
 	};
 
+	const fetchInventoryItems = async () => {
+		try {
+			const response = await inventoryApi.getAllMedication("");
+			setInventoryItems(response.data);
+		} catch (error) {
+			console.error("Error fetching inventory items: ", error);
+		}
+	};
+
 	useEffect(() => {
+		fetchInventoryItems();
 		fetchPrescriptionRecords();
 	}, []);
 
@@ -281,11 +438,10 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId }) => {
 											</IconButton>
 										)}
 										{loggedInStaff.staffRoleEnum === "DOCTOR" && (
-											<Button
-
-											>
+											<Button onClick={() => handleAddToCart(prescriptionRecord.prescriptionRecordId, electronicHealthRecordId)}>
 												Add to Patient's Cart
 											</Button>
+
 										)}
 									</>
 								)}
@@ -303,11 +459,106 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId }) => {
 					<MDButton
 						variant="gradient"
 						color="primary"
+						onClick={handleOpenForm}
 					>
 						Create New Prescription
 					</MDButton>)}
 			</DialogActions>
+			<Dialog open={openForm} onClose={handleCloseForm} fullWidth maxWidth="md">
+				<DialogTitle>Create New Prescription</DialogTitle>
+				<DialogContent dividers>
+					{/* <TextField
+						label="Medication Name"
+						value={newRecord.medicationName}
+						onChange={(e) => handleCreateFieldChange("medicationName", e.target.value)}
+						fullWidth
+						margin="normal"
+					/> */}
+					<InputLabel>Select Medication</InputLabel>
+
+					<Select
+						value={selectedInventoryItem} // Use the selectedInventoryItem state to manage the selection
+						onChange={(e) => {
+							handleCreateFieldChange("inventoryItem", e.target.value);
+							setSelectedInventoryItem(e.target.value); // Update the selected inventory item
+						}}
+						displayEmpty
+						fullWidth
+						margin="normal"
+						sx={{ lineHeight: "3em" }}
+					>
+						<MenuItem value="" disabled>
+							Select Medication
+						</MenuItem>
+						{inventoryItems.map((item) => (
+							<MenuItem key={item.inventoryItemId} value={item.inventoryItemId}>
+								{item.inventoryItemName}
+							</MenuItem>
+						))}
+					</Select>
+					<TextField
+						label="Medication Quantity"
+						type="number"
+						value={newRecord.medicationQuantity}
+						onChange={(e) => handleCreateFieldChange("medicationQuantity", e.target.value)}
+						fullWidth
+						margin="normal"
+					/>
+					<TextField
+						label="Dosage"
+						type="number"
+						value={newRecord.dosage}
+						onChange={(e) => handleCreateFieldChange("dosage", e.target.value)}
+						fullWidth
+						margin="normal"
+					/>
+					<TextField
+						label="Description"
+						value={newRecord.description}
+						onChange={(e) => handleCreateFieldChange("description", e.target.value)}
+						fullWidth
+						margin="normal"
+					/>
+					<TextField
+						label="Comments"
+						value={newRecord.comments}
+						onChange={(e) => handleCreateFieldChange("comments", e.target.value)}
+						fullWidth
+						margin="normal"
+					/>
+					<InputLabel>Select Prescription Status</InputLabel>
+					<Select
+						value={newRecord.prescriptionStatusEnum}
+						onChange={(e) => handleCreateFieldChange("prescriptionStatusEnum", e.target.value)}
+						displayEmpty
+						fullWidth
+						margin="normal"
+						sx={{ lineHeight: "3em" }}
+					>
+						{/* <MenuItem value="" disabled>
+							Select Prescription Status
+						</MenuItem> */}
+						{prescriptionStatusOptions.map((option, index) => (
+							<MenuItem key={index} value={option}>
+								{option}
+							</MenuItem>
+						))}
+					</Select>
+
+
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCloseForm}>Cancel</Button>
+					<Button onClick={() => {
+						handleCreatePrescription();
+						clearFormFields();
+					}} color="primary">
+						Create
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</Dialog>
+
 	);
 };
 

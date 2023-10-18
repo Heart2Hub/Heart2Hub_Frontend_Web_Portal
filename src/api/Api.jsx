@@ -570,5 +570,11 @@ export const prescriptionRecordApi = {
   },
   updatePrescriptionRecord(id, requestBody) {
     return axiosFetch.put(`${REST_ENDPOINT}/prescriptionRecord/updatePrescriptionRecord/${id}`, requestBody);
+  },
+  createNewPrescriptionRecord(requestBody, ehrId, itemId) {
+    return axiosFetch.post(`${REST_ENDPOINT}/prescriptionRecord/createNewPrescription/${ehrId}/${itemId}`, requestBody);
+  },
+  checkOutPrescriptionRecord(prescriptionId, ehrId) {
+    return axiosFetch.post(`${REST_ENDPOINT}/prescriptionRecord/checkOutPrescription/${prescriptionId}/${ehrId}`);
   }
 };
