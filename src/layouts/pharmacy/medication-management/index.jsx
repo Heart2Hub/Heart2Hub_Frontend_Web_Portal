@@ -39,7 +39,7 @@ function MedicationManagement() {
     const reduxDispatch = useDispatch();
     const [data, setData] = useState({
         columns: [
-            { Header: "No.", accessor: "inventoryItemId", width: "10%" },
+            // { Header: "No.", accessor: "inventoryItemId", width: "10%" },
             { Header: "Medication Name", accessor: "inventoryItemName", width: "20%" },
             { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
             { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
@@ -74,7 +74,7 @@ function MedicationManagement() {
 
     const dataRef = useRef({
         columns: [
-            { Header: "No.", accessor: "inventoryItemId", width: "10%" },
+            // { Header: "No.", accessor: "inventoryItemId", width: "10%" },
             { Header: "Medication Name", accessor: "inventoryItemName", width: "20%" },
             { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
             { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
