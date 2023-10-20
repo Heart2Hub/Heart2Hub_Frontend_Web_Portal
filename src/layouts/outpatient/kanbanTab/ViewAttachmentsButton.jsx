@@ -10,8 +10,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
-import { appointmentApi } from "../../../api/Api";
-import { IMAGE_SERVER } from "constants/RestEndPoint";
+import { appointmentApi, imageServerApi } from "../../../api/Api";
 import MDButton from "components/MDButton";
 import MDTypography from "components/MDTypography";
 
@@ -42,11 +41,24 @@ function ViewAttachmentsButton({ selectedAppointment }) {
       const response = await appointmentApi.viewAppointmentAttachments(
         selectedAppointment.appointmentId
       );
-      setListOfAttachments(response.data);
+
+      const fetchedAttachments = response.data;
+      const imageURLs = [];
+
+      for (const image of fetchedAttachments) {
+        if (image.imageLink) {
+          const imageResponse = await imageServerApi.getImageFromImageServer(
+            "general",
+            image.imageLink
+          );
+          imageURLs.push(URL.createObjectURL(imageResponse.data));
+        }
+      }
+
+      setListOfAttachments(imageURLs);
     } catch (error) {
       console.log(error.response.data);
     }
-
     setIsLoading(false);
   };
 
@@ -68,7 +80,7 @@ function ViewAttachmentsButton({ selectedAppointment }) {
         open={openViewAttachmentsDialog}
         onClose={handleCloseViewAttachmentsDialog}
         maxWidth="lg"
-        fullWidth={true} // This will make the dialog take up full width
+        fullWidth={true}
       >
         <DialogTitle>View Attachment:</DialogTitle>
         <DialogContent>
@@ -85,11 +97,7 @@ function ViewAttachmentsButton({ selectedAppointment }) {
                     component="img"
                     width="100%"
                     height="100%"
-                    image={
-                      IMAGE_SERVER +
-                      "/images/general/" +
-                      selectedAttachment.imageLink
-                    }
+                    image={selectedAttachment}
                     alt="Selected Preview"
                   />
                 </Card>
@@ -123,7 +131,7 @@ function ViewAttachmentsButton({ selectedAppointment }) {
                   <CardMedia
                     component="img"
                     height="100"
-                    image={IMAGE_SERVER + "/images/general/" + image.imageLink}
+                    image={image}
                     alt={`Image ${index}`}
                   />
                   <CardContent>

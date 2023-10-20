@@ -5,15 +5,15 @@ import {
   ButtonBase,
   Skeleton,
 } from "@mui/material";
-import React from "react";
+import React, { useEffect } from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import "./kanbanStyles.css";
 import MDTypography from "components/MDTypography";
 import AppointmentTicketModal from "./AppointmentTicketModal";
 import { useState } from "react";
 import MDAvatar from "components/MDAvatar";
-import { IMAGE_SERVER } from "constants/RestEndPoint";
 import { truncateText } from "utility/Utility";
+import { imageServerApi } from "../../../api/Api";
 
 function KanbanDraggable({
   appointment,
@@ -25,6 +25,18 @@ function KanbanDraggable({
 }) {
   const [openModal, setOpenModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
+
+  const handleGetProfileImage = async () => {
+    if (appointment.patientProfilePicture !== null) {
+      const response = await imageServerApi.getImageFromImageServer(
+        "id",
+        appointment.patientProfilePicture
+      );
+      const imageURL = URL.createObjectURL(response.data);
+      setProfileImage(imageURL);
+    }
+  };
 
   const handleCloseModal = () => {
     setOpenModal(false);
@@ -34,6 +46,10 @@ function KanbanDraggable({
     setSelectedAppointment(appointment);
     setOpenModal(true);
   };
+
+  useEffect(() => {
+    handleGetProfileImage();
+  }, [appointment]);
 
   return (
     <>
@@ -92,11 +108,7 @@ function KanbanDraggable({
                     <MDAvatar
                       size="xl"
                       className="avatar-right"
-                      src={
-                        IMAGE_SERVER +
-                        "/images/id/" +
-                        appointment.patientProfilePicture
-                      }
+                      src={profileImage}
                       alt={"Loading"}
                     />
                   )}

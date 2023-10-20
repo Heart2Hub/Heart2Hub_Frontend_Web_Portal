@@ -4,7 +4,6 @@ import {
   Box,
   List,
   ListItem,
-  ListItemText,
   Chip,
   Skeleton,
   Stack,
@@ -25,7 +24,12 @@ import MDTypography from "components/MDTypography";
 import { calculateAge } from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
 import MDButton from "components/MDButton";
-import { staffApi, inventoryApi, transactionItemApi } from "api/Api";
+import {
+  staffApi,
+  inventoryApi,
+  transactionItemApi,
+  imageServerApi,
+} from "api/Api";
 
 import { ehrApi } from "api/Api";
 import { useNavigate } from "react-router-dom";
@@ -37,7 +41,6 @@ import { appointmentApi } from "../../../api/Api";
 import AssignAppointmentDialog from "./AssignAppointmentDialog";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
-import { IMAGE_SERVER } from "constants/RestEndPoint";
 import MDBox from "components/MDBox";
 import AddAttachmentButton from "./AddAttachmentButton";
 import ViewAttachmentsButton from "./ViewAttachmentsButton";
@@ -77,7 +80,8 @@ function AppointmentTicketModal({
   const [medications, setMedications] = useState([]);
   const [services, setServices] = useState([]);
   const [selectedMedication, setSelectedMedication] = useState(null);
-  const [selectedMedicationQuantity, setSelectedMedicationQuantity] = useState(1);
+  const [selectedMedicationQuantity, setSelectedMedicationQuantity] =
+    useState(1);
   const [selectedService, setSelectedService] = useState(null);
 
   //For Managing the Cart
@@ -89,6 +93,20 @@ function AppointmentTicketModal({
 
   //logged in staff
   const loggedInStaff = useSelector(selectStaff);
+
+  //for fetching image
+  const [profileImage, setProfileImage] = useState(null);
+
+  const handleGetProfileImage = async () => {
+    if (selectedAppointment.patientProfilePicture !== null) {
+      const response = await imageServerApi.getImageFromImageServer(
+        "id",
+        selectedAppointment.patientProfilePicture
+      );
+      const imageURL = URL.createObjectURL(response.data);
+      setProfileImage(imageURL);
+    }
+  };
 
   const handleCommentsTouched = () => {
     setCommentsTouched(true);
@@ -105,7 +123,6 @@ function AppointmentTicketModal({
       setServices(servicesResponse.data);
       // console.log(servicesResponse.data)
       // console.log(selectedAppointment)
-
     } catch (error) {
       console.error("Error fetching medications and services:", error);
     }
@@ -118,17 +135,22 @@ function AppointmentTicketModal({
       );
 
       setCartItems(response.data);
-      console.log(cartItems)
+      console.log(cartItems);
     } catch (error) {
       console.error("Error fetching cart items:", error);
     }
   };
 
   const handleDeleteCartItem = async (cartItemId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this item?");
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this item?"
+    );
     if (confirmDelete) {
       try {
-        await transactionItemApi.removeFromCart(selectedAppointment.patientId, cartItemId);
+        await transactionItemApi.removeFromCart(
+          selectedAppointment.patientId,
+          cartItemId
+        );
         reduxDispatch(
           displayMessage({
             color: "success",
@@ -180,10 +202,10 @@ function AppointmentTicketModal({
         transactionItemDescription: medication.inventoryItemDescription,
         transactionItemQuantity: selectedMedicationQuantity,
         transactionItemPrice: medication.retailPricePerQuantity, // Replace with the actual price
-        inventoryItem: medication.inventoryItemId
+        inventoryItem: medication.inventoryItemId,
       };
 
-      console.log(requestBody)
+      console.log(requestBody);
 
       transactionItemApi
         .addToCart(patientId, requestBody)
@@ -200,7 +222,8 @@ function AppointmentTicketModal({
           //setMedications([]);
           setSelectedMedicationQuantity(1);
           fetchPatientCart();
-        }).catch((error) => {
+        })
+        .catch((error) => {
           reduxDispatch(
             displayMessage({
               color: "error",
@@ -224,10 +247,10 @@ function AppointmentTicketModal({
         transactionItemDescription: service.inventoryItemDescription,
         transactionItemQuantity: 1,
         transactionItemPrice: service.retailPricePerQuantity, // Replace with the actual price
-        inventoryItem: service.inventoryItemId
+        inventoryItem: service.inventoryItemId,
       };
 
-      console.log(requestBody)
+      console.log(requestBody);
 
       transactionItemApi
         .addToCart(patientId, requestBody)
@@ -243,7 +266,8 @@ function AppointmentTicketModal({
           );
           //setServices([]);
           fetchPatientCart();
-        }).catch((error) => {
+        })
+        .catch((error) => {
           reduxDispatch(
             displayMessage({
               color: "error",
@@ -263,7 +287,11 @@ function AppointmentTicketModal({
     return (
       <Box style={{ width: "100%" }}>
         <InputLabel id="medication-label"> Select Medication</InputLabel>
-        <Select onChange={(e) => setSelectedMedication(e.target.value)} style={{ width: "50%" }} sx={{ lineHeight: "3em" }}>
+        <Select
+          onChange={(e) => setSelectedMedication(e.target.value)}
+          style={{ width: "50%" }}
+          sx={{ lineHeight: "3em" }}
+        >
           {medications.map((medication) => (
             <MenuItem key={medication.inventoryItemId} value={medication}>
               {medication.inventoryItemName}
@@ -277,7 +305,7 @@ function AppointmentTicketModal({
           onChange={(e) => setSelectedMedicationQuantity(e.target.value)}
           style={{ width: "10%", marginLeft: 20 }}
         />
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
           <MDButton
             onClick={() => handleAddMedicationToPatient(selectedMedication)}
             variant="gradient"
@@ -295,14 +323,18 @@ function AppointmentTicketModal({
       <Box style={{ width: "100%" }}>
         <InputLabel id="medication-label"> Select Services</InputLabel>
 
-        <Select onChange={(e) => setSelectedService(e.target.value)} style={{ width: "50%" }} sx={{ lineHeight: "3em" }}>
+        <Select
+          onChange={(e) => setSelectedService(e.target.value)}
+          style={{ width: "50%" }}
+          sx={{ lineHeight: "3em" }}
+        >
           {services.map((service) => (
             <MenuItem key={service.inventoryItemId} value={service}>
               {service.inventoryItemName}
             </MenuItem>
           ))}
         </Select>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
           <MDButton
             onClick={() => handleAddServiceToPatient(selectedService)}
             variant="gradient"
@@ -494,7 +526,7 @@ function AppointmentTicketModal({
 
   const handleClickToEhr = () => {
     // Can refactor to util
-    console.log(selectedAppointment)
+    console.log(selectedAppointment);
     const dateComponents = selectedAppointment.dateOfBirth;
     const [year, month, day, hours, minutes] = dateComponents;
     const formattedMonth = String(month).padStart(2, "0");
@@ -529,6 +561,7 @@ function AppointmentTicketModal({
         )
       );
     }
+    handleGetProfileImage();
     fetchMedicationsAndServices();
     fetchPatientCart();
     // setAssigningToSwimlane(columnName);
@@ -565,8 +598,7 @@ function AppointmentTicketModal({
                 </MDTypography>
                 {selectedAppointment.patientProfilePicture !== null && (
                   <MDAvatar
-
-                    src={`${IMAGE_SERVER}/images/id/${selectedAppointment.patientProfilePicture}`}
+                    src={profileImage}
                     alt="profile-image"
                     size="xxl"
                     shadow="xxl"
@@ -823,36 +855,52 @@ function AppointmentTicketModal({
                       Patient's Items:
                     </MDTypography>
                   </ListItem>
-                  <ListItem> <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell> Name</TableCell>
-
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {cartItems.map((item) => (
-                          <TableRow
-                            key={item.transactionItemId}
-                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                          >
-                            <TableCell component="th" scope="row">{item.transactionItemName}</TableCell>
-                            <TableCell align="right"> Quantity: {item.transactionItemQuantity}</TableCell>
-                            <TableCell align="right">
-                              <Button
-                                variant="contained"
-                                style={{ backgroundColor: "#f44336", color: "white" }}
-                                onClick={() => handleDeleteCartItem(item.transactionItemId)}
-                              >
-                                Delete
-                              </Button>
-                            </TableCell>
+                  <ListItem>
+                    {" "}
+                    <TableContainer component={Paper}>
+                      <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell> Name</TableCell>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer></ListItem>
+                        </TableHead>
+                        <TableBody>
+                          {cartItems.map((item) => (
+                            <TableRow
+                              key={item.transactionItemId}
+                              sx={{
+                                "&:last-child td, &:last-child th": {
+                                  border: 0,
+                                },
+                              }}
+                            >
+                              <TableCell component="th" scope="row">
+                                {item.transactionItemName}
+                              </TableCell>
+                              <TableCell align="right">
+                                {" "}
+                                Quantity: {item.transactionItemQuantity}
+                              </TableCell>
+                              <TableCell align="right">
+                                <Button
+                                  variant="contained"
+                                  style={{
+                                    backgroundColor: "#f44336",
+                                    color: "white",
+                                  }}
+                                  onClick={() =>
+                                    handleDeleteCartItem(item.transactionItemId)
+                                  }
+                                >
+                                  Delete
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </ListItem>
                 </List>
               </List>
             </>
