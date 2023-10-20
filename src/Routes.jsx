@@ -11,7 +11,7 @@ import Icon from "@mui/material/Icon";
 import Outpatient from "layouts/outpatient";
 import Inpatient from "layouts/inpatient";
 import EHR from "layouts/EHR";
-import EHRRecord from "layouts/EHR/record";
+import EHRRecord from "layouts/EHR/record/index.jsx";
 //import EHRRecord from "layouts/ehr/record";
 import Administration from "layouts/administration";
 import Manpower from "layouts/manpower";
