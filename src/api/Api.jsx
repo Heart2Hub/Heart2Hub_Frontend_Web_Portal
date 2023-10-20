@@ -246,6 +246,17 @@ export const problemRecordApi = {
       `${REST_ENDPOINT}/problemRecord/resolveProblemRecord?electronicHealthRecordId=${electronicHealthRecordId}&problemRecordId=${problemRecordId}`
     );
   },
+  updateProblemRecord(problemRecordId, requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/problemRecord/updateProblemRecord?&problemRecordId=${problemRecordId}`,
+      requestBody
+    );
+  },
+  deleteProblemRecord(electronicHealthRecordId, problemRecordId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/problemRecord/deleteProblemRecord?electronicHealthRecordId=${electronicHealthRecordId}&problemRecordId=${problemRecordId}`
+    );
+  },
 };
 
 export const leaveApi = {
@@ -375,10 +386,15 @@ export const subsidyApi = {
     return axiosFetch.get(`${REST_ENDPOINT}/subsidy/getAllSubsidies`);
   },
   createSubsidy(requestBody) {
-    return axiosFetch.post(`${REST_ENDPOINT}/subsidy/createSubsidy`, requestBody);
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/subsidy/createSubsidy`,
+      requestBody
+    );
   },
   deleteSubsidy(subsidyId) {
-    return axiosFetch.delete(`${REST_ENDPOINT}/subsidy/deleteSubsidy/${subsidyId}`);
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/subsidy/deleteSubsidy/${subsidyId}`
+    );
   },
   updateSubsidyRate(subsidyId, newSubsidyRate) {
     return axiosFetch.put(
@@ -556,7 +572,8 @@ export const inventoryApi = {
 export const transactionItemApi = {
   addToCart(patientId, requestBody) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/transactionItem/addToCart/${patientId}`, requestBody
+      `${REST_ENDPOINT}/transactionItem/addToCart/${patientId}`,
+      requestBody
     );
   },
   removeFromCart(patientId, transactionItemId) {
@@ -568,5 +585,5 @@ export const transactionItemApi = {
     return axiosFetch.get(
       `${REST_ENDPOINT}/transactionItem/getCartItems/${patientId}`
     );
-  }
-}
+  },
+};

@@ -522,7 +522,7 @@ function AppointmentTicketModal({
 
   const handleClickToEhr = () => {
     // Can refactor to util
-    console.log(selectedAppointment);
+    // console.log(selectedAppointment);
     const dateComponents = selectedAppointment.dateOfBirth;
     const [year, month, day, hours, minutes] = dateComponents;
     const formattedMonth = String(month).padStart(2, "0");
@@ -543,7 +543,9 @@ function AppointmentTicketModal({
           username: selectedAppointment.username,
           profilePicture: selectedAppointment.patientProfilePicture,
         };
-        reduxDispatch(setEHRRecord(response));
+        console.log(response);
+        console.log(response.data);
+        reduxDispatch(setEHRRecord(response.data));
         navigate("/ehr/ehrRecord");
       });
   };

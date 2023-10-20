@@ -10,28 +10,30 @@ import MDTypography from "components/MDTypography";
 import MDAvatar from "components/MDAvatar";
 
 import { useSelector } from "react-redux";
-import { selectEHRRecord } from "../../../../store/slices/ehrSlice";
+import { selectEHRRecord } from "../../../store/slices/ehrSlice";
 import { imageServerApi } from "api/Api";
+import { Divider } from "@mui/material";
+import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
 
 function Header({ children }) {
   const ehrRecord = useSelector(selectEHRRecord);
 
-  // const [profileImage, setProfileImage] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
 
-  // const handleGetProfileImage = async () => {
-  //   if (ehrRecord.electronicHealthRecordId !== null) {
-  //     const response = await imageServerApi.getImageFromImageServer(
-  //       "id",
-  //       ehrRecord?.electronicHealthRecordId
-  //     );
-  //     const imageURL = URL.createObjectURL(response.data);
-  //     setProfileImage(imageURL);
-  //   }
-  // };
+  const handleGetProfileImage = async () => {
+    if (ehrRecord.profilePicture !== null) {
+      const response = await imageServerApi.getImageFromImageServer(
+        "id",
+        ehrRecord?.profilePicture
+      );
+      const imageURL = URL.createObjectURL(response.data);
+      setProfileImage(imageURL);
+    }
+  };
 
   useEffect(() => {
     console.log(ehrRecord);
-    // handleGetProfileImage();
+    handleGetProfileImage();
   }, [ehrRecord]);
 
   return (
@@ -49,8 +51,8 @@ function Header({ children }) {
         <Grid container spacing={5} alignItems="center" width="100%">
           <Grid item justifyContent="center">
             <MDAvatar
-              src={ehrRecord?.profilePicture}
-              // src={profileImage}
+              // src={ehrRecord?.profilePicture}
+              src={profileImage}
               alt="profile-image"
               size="xxl"
               shadow="xxl"
@@ -59,7 +61,7 @@ function Header({ children }) {
           <Grid item xs>
             <MDBox height="100%" mt={0.5} lineHeight={1}>
               <MDTypography variant="h5" fontWeight="medium">
-                {ehrRecord?.firstname} {ehrRecord?.lastname}
+                {ehrRecord?.firstName} {ehrRecord?.lastName}
               </MDTypography>
             </MDBox>
           </Grid>
@@ -76,7 +78,20 @@ function Header({ children }) {
             ></MDBox>
           </Grid>
         </Grid>
-        {children}
+        <Divider orientation="horizontal" sx={{ ml: -2, mr: 1 }} />
+        <MDBox mt={3} mb={3}>
+          <ProfileInfoCard
+            title="patient EHR information:"
+            info={{
+              firstName: ehrRecord.firstName,
+              lastName: ehrRecord.lastName,
+              birthDate: ehrRecord.dateOfBirth.split(" ")[0],
+              address: ehrRecord.address,
+              contactNumber: ehrRecord.contactNumber,
+            }}
+            shadow={false}
+          />
+        </MDBox>
       </Card>
     </MDBox>
   );
