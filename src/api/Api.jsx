@@ -497,9 +497,9 @@ export const inventoryApi = {
       `${REST_ENDPOINT}/consumableEquipment/deleteConsumableEquipment?inventoryItemId=${inventoryItemId}`
     );
   },
-  getAllMedication(name) {
+  getAllMedication() {
     return axiosFetch.get(
-      `${REST_ENDPOINT}/medication/getAllMedication?name=${name}`
+      `${REST_ENDPOINT}/medication/getAllMedication`
     );
   },
   updateMedication(inventoryItemId, requestBody) {
@@ -518,6 +518,16 @@ export const inventoryApi = {
   deleteMedication(inventoryItemId) {
     return axiosFetch.delete(
       `${REST_ENDPOINT}/medication/deleteMedication?inventoryItemId=${inventoryItemId}`
+    );
+  },
+  getAllergenEnums() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medication/getAllergenEnums`
+    );
+  },
+  findMedicationByInventoryItemId(inventoryItemId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medication/findMedicationByInventoryItemId?inventoryItemId=${inventoryItemId}`
     );
   },
   getAllServiceItem(name) {
