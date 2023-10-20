@@ -10,7 +10,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import { IconButton, Icon } from "@mui/material";
+import { IconButton, Icon, FormGroup, FormControlLabel, Checkbox } from "@mui/material";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -22,16 +22,19 @@ import DataTable from "examples/Tables/DataTable";
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 
-import { facilityApi, departmentApi } from "api/Api";
-// import { displayMessage } from "../../../store/slices/snackbarSlice";
 import { inventoryApi } from "api/Api";
+
+import ViewMedicationDetailsDialog from "./viewMedicationDetailsDialog";
 import { displayMessage } from "store/slices/snackbarSlice";
+
 
 function MedicationManagement() {
 
     function priceFormat(num) {
         return `${num.toFixed(2)}`;
     }
+
+    const [allergenEnums, setAllergenEnums] = useState([]);
 
     const reduxDispatch = useDispatch();
     const [data, setData] = useState({
@@ -46,15 +49,18 @@ function MedicationManagement() {
                 Header: "Actions",
                 Cell: ({ row }) => (
                     <MDBox>
+                        <ViewMedicationDetailsDialog inventoryItemId={row.original.inventoryItemId} />
                         <IconButton
                             color="secondary"
                             onClick={() => handleDeleteInventory(row.original.inventoryItemId)}
+                            title="Delete"
                         >
                             <Icon>delete</Icon>
                         </IconButton>
                         <IconButton
                             color="secondary"
                             onClick={() => handleOpenUpdateModal(row.original.inventoryItemId)}
+                            title="Update"
                         >
                             <Icon>create</Icon>
                         </IconButton>
@@ -69,7 +75,7 @@ function MedicationManagement() {
     const dataRef = useRef({
         columns: [
             { Header: "No.", accessor: "inventoryItemId", width: "10%" },
-            { Header: "Equipment Name", accessor: "inventoryItemName", width: "20%" },
+            { Header: "Medication Name", accessor: "inventoryItemName", width: "20%" },
             { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
             { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
             { Header: "Restock Price ($)", accessor: "restockPricePerQuantity", width: "10%" },
@@ -78,15 +84,20 @@ function MedicationManagement() {
                 Header: "Actions",
                 Cell: ({ row }) => (
                     <MDBox>
+                        <ViewMedicationDetailsDialog
+                            inventoryItemId={row.original.inventoryItemId} />
+
                         <IconButton
                             color="secondary"
                             onClick={() => handleDeleteInventory(row.original.inventoryItemId)}
+                            title="Delete"
                         >
                             <Icon>delete</Icon>
                         </IconButton>
                         <IconButton
                             color="secondary"
                             onClick={() => handleOpenUpdateModal(row.original.inventoryItemId)}
+                            title="Update"
                         >
                             <Icon>create</Icon>
                         </IconButton>
@@ -98,6 +109,19 @@ function MedicationManagement() {
         rows: [],
     });
 
+    useEffect(() => {
+        const getAllergenEnums = async () => {
+            try {
+                const response = await inventoryApi.getAllergenEnums();
+                setAllergenEnums(response.data);
+                console.log(allergenEnums);
+            } catch (error) {
+                console.log(error);
+            }
+        };
+        getAllergenEnums();
+    }, []);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
         inventoryItemName: "",
@@ -106,6 +130,7 @@ function MedicationManagement() {
         quantityInStock: "",
         restockPricePerQuantity: "",
         retailPricePerQuantity: "",
+        allergenEnumList: [],
     });
 
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -117,6 +142,7 @@ function MedicationManagement() {
         quantityInStock: "",
         restockPricePerQuantity: "",
         retailPricePerQuantity: "",
+        allergenEnumList: [],
     });
 
     const handleOpenModal = () => {
@@ -147,6 +173,7 @@ function MedicationManagement() {
                     quantityInStock: "",
                     restockPricePerQuantity: "",
                     retailPricePerQuantity: "",
+                    allergenEnumList: [],
                 });
                 reduxDispatch(
                     displayMessage({
@@ -185,6 +212,7 @@ function MedicationManagement() {
                     quantityInStock: "",
                     restockPricePerQuantity: "",
                     retailPricePerQuantity: "",
+                    allergenEnumList: [],
                 });
                 reduxDispatch(
                     displayMessage({
@@ -204,6 +232,7 @@ function MedicationManagement() {
                     quantityInStock: "",
                     restockPricePerQuantity: "",
                     retailPricePerQuantity: "",
+                    allergenEnumList: [],
                 });
                 reduxDispatch(
                     displayMessage({
@@ -223,6 +252,7 @@ function MedicationManagement() {
                     quantityInStock: "",
                     restockPricePerQuantity: "",
                     retailPricePerQuantity: "",
+                    allergenEnumList: [],
                 });
                 reduxDispatch(
                     displayMessage({
@@ -245,6 +275,7 @@ function MedicationManagement() {
                         quantityInStock: "",
                         restockPricePerQuantity: "",
                         retailPricePerQuantity: "",
+                        allergenEnumList: [],
                     });
                     reduxDispatch(
                         displayMessage({
@@ -264,6 +295,7 @@ function MedicationManagement() {
                         quantityInStock: "",
                         restockPricePerQuantity: "",
                         retailPricePerQuantity: "",
+                        allergenEnumList: [],
                     });
                     // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
                     if (err.response.data.detail) {
@@ -309,6 +341,7 @@ function MedicationManagement() {
                 quantityInStock: medicationToUpdate.quantityInStock,
                 restockPricePerQuantity: medicationToUpdate.restockPricePerQuantity,
                 retailPricePerQuantity: medicationToUpdate.retailPricePerQuantity,
+                allergenEnumList: medicationToUpdate.allergenEnumList,
             });
         }
 
@@ -406,6 +439,7 @@ function MedicationManagement() {
                         quantityInStock: "",
                         restockPricePerQuantity: "",
                         retailPricePerQuantity: "",
+                        allergenEnumList: [],
                     });
                     reduxDispatch(
                         displayMessage({
@@ -480,6 +514,7 @@ function MedicationManagement() {
                     quantityInStock: medication.quantityInStock,
                     restockPricePerQuantity: priceFormat(medication.restockPricePerQuantity),
                     retailPricePerQuantity: priceFormat(medication.retailPricePerQuantity),
+                    allergenEnumList: medication.allergenEnumList,
                 }));
 
                 dataRef.current = {
@@ -587,6 +622,24 @@ function MedicationManagement() {
                         onChange={handleChange}
                         margin="dense"
                     />
+                    <FormControl fullWidth margin="dense">
+                        <InputLabel>Allergens</InputLabel>
+                        <Select
+                            name="allergenEnumList"
+                            multiple
+                            value={formData.allergenEnumList}
+                            onChange={handleChange}
+                            renderValue={(selected) => selected.join(', ')}
+                            sx={{ lineHeight: "3em" }}
+                        >
+                            {allergenEnums?.map(allergenEnum => (
+                                <MenuItem key={allergenEnum} value={allergenEnum}>
+                                    <Checkbox checked={formData.allergenEnumList.includes(allergenEnum)} />
+                                    {allergenEnum}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                     <TextField
                         fullWidth
                         label="Type"
@@ -650,6 +703,24 @@ function MedicationManagement() {
                         onChange={handleUpdateChange}
                         margin="dense"
                     />
+                    <FormControl fullWidth margin="dense">
+                        <InputLabel>Allergens</InputLabel>
+                        <Select
+                            name="allergenEnumList"
+                            multiple
+                            value={updateFormData.allergenEnumList}
+                            onChange={handleUpdateChange}
+                            renderValue={(selected) => selected.join(', ')}
+                            sx={{ lineHeight: "3em" }}
+                        >
+                            {allergenEnums?.map(allergenEnum => (
+                                <MenuItem key={allergenEnum} value={allergenEnum}>
+                                    <Checkbox checked={updateFormData.allergenEnumList.includes(allergenEnum)} />
+                                    {allergenEnum}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                 </DialogContent>
                 <DialogActions>
                     <MDButton onClick={handleCloseUpdateModal} color="primary">

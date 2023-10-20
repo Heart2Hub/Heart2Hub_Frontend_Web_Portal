@@ -49,6 +49,7 @@ import { selectStaff } from "store/slices/staffSlice";
 import MDBox from "components/MDBox";
 import AddAttachmentButton from "./AddAttachmentButton";
 import ViewAttachmentsButton from "./ViewAttachmentsButton";
+import ViewFacilityInventoryButton from "layouts/administration/facility-management/viewFacilityInventoryButton";
 
 const style = {
   position: "absolute",
@@ -79,7 +80,7 @@ function AppointmentTicketModal({
   const [editableComments, setEditableComments] = useState("");
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [facility, setFacility] = useState("");
   //For Cart
   const [medications, setMedications] = useState([]);
   const [services, setServices] = useState([]);
@@ -409,7 +410,10 @@ function AppointmentTicketModal({
       (staff) => staff.staffId === staffId
     )[0];
 
+    console.log("Facility Id: " + facility.facilityId);
+
     if (facility) {
+      setFacility(facility);
       return facility.name + " (" + facility.location + ")";
     } else {
       return null;
@@ -673,6 +677,13 @@ function AppointmentTicketModal({
                       ? facilityLocation
                       : "No Location Yet"}
                   </MDTypography>
+                  <MDBox>
+                    <Stack direction="row" spacing={2}>
+                      {facilityLocation !== null && (<ViewFacilityInventoryButton
+                        selectedFacility={facility}
+                      />)}
+                    </Stack>
+                  </MDBox>
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
