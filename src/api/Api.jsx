@@ -12,6 +12,11 @@ export const imageServerApi = {
   uploadProfilePhoto(type, image) {
     return axiosFetch.post(`${IMAGE_SERVER}/upload/${type}`, image);
   },
+  getImageFromImageServer(type, image) {
+    return axiosFetch.get(`${IMAGE_SERVER}/images/${type}/${image}`, {
+      responseType: "blob",
+    });
+  },
 };
 
 export const authApi = {
@@ -83,16 +88,14 @@ export const staffApi = {
 };
 
 export const departmentApi = {
-  getAllDepartments(name) {
-    return axiosFetch.get(
-      `${REST_ENDPOINT}/department/getAllDepartments?name=${name}`
-    );
+  getAllDepartments() {
+    return axiosFetch.get(`${REST_ENDPOINT}/department/getAllDepartments?name`);
   },
 };
 
 export const wardApi = {
-  getAllWards(name) {
-    return axiosFetch.get(`${REST_ENDPOINT}/ward/getAllWards?name=${name}`);
+  getAllWards() {
+    return axiosFetch.get(`${REST_ENDPOINT}/ward/getAllWards?name`);
   },
 };
 

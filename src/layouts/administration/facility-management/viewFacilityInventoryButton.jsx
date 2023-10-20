@@ -214,69 +214,6 @@ function ViewFacilityInventoryButton({ selectedFacility }) {
     handleGetInventory(selectedFacility);
   }, [selectedFacility]);
 
-  // {
-  //   Header: 'Restock Status',
-  //   accessor: "restockStatus",
-  //   Cell: ({ row }) => {
-  //     const isNeedRestock = row.original.allocatedInventoryCurrentQuantity < row.original.minimumQuantityBeforeRestock;
-  //     const symbolColor = isNeedRestock ? 'red' : 'green';
-
-  //     return (
-  //       <div>
-  //         <div
-  //           style={{
-  //             backgroundColor: symbolColor,
-  //             width: '20px',
-  //             height: '20px',
-  //             display: 'inline-block',
-  //             marginRight: '5px',
-  //             borderRadius: '50%',
-  //           }}
-  //         ></div>
-  //         {isNeedRestock ? 'Restock Needed' : 'No Restock Needed'}
-  //       </div>
-  //     )
-  //   }
-  // },
-
-  // if (isAdmin || isNurse) {
-  //   inventoryColumns.push({
-  //     Header: "Actions",
-  //     accessor: "inventoryItemId",
-  //     Cell: ({ row }) => {
-  //       const isAllowedToUpdate = isAdmin || isNurse;
-  //       const isAllowedToDelete = isAdmin || isNurse;
-
-  //       return (
-  //         <div>
-  //           {isAllowedToUpdate && (
-  //             <IconButton
-  //               variant="contained"
-  //               color="secondary"
-  //               onClick={() => handleUpdateInventory(row.original)}
-  //             >
-  //               <Icon>create</Icon>
-  //             </IconButton>
-  //           )}
-  //           {isAllowedToDelete && (
-  //             <IconButton
-  //               variant="contained"
-  //               color="secondary"
-  //               onClick={() => handleDeleteInventory(row.original.allocatedInventoryId)}
-  //             >
-  //               <Icon>delete</Icon>
-  //             </IconButton>
-  //           )}
-  //           <ConfirmationDialogComponent
-  //             open={isConfirmationDialogOpen}
-  //             onClose={() => setIsConfirmationDialogOpen(false)}
-  //             onConfirm={confirmDeletion}
-  //           />
-  //         </div>
-  //       );
-  //     },
-  //   });
-  // }
   return (
     <>
       <MDButton

@@ -1,18 +1,35 @@
-import React from "react";
-import { Card, Typography, List, ButtonBase } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Card, List, ButtonBase } from "@mui/material";
 import MDTypography from "components/MDTypography";
 import MDBox from "components/MDBox";
 import MDAvatar from "components/MDAvatar";
 import "./kanbanStyles.css";
-import { IMAGE_SERVER } from "constants/RestEndPoint";
 import { truncateText } from "utility/Utility";
+import { imageServerApi } from "../../../api/Api";
 
 function StaffListSidePanel({
   handleSelectStaffToFilter,
   selectStaffToFilter,
   listOfWorkingStaff,
 }) {
-  console.log(listOfWorkingStaff);
+  const [imageURLs, setImageURLs] = useState({});
+
+  const fetchImageURLs = async () => {
+    const newImageURLs = {};
+
+    for (const staff of listOfWorkingStaff) {
+      if (staff.imageLink) {
+        const response = await imageServerApi.getImageFromImageServer(
+          "id",
+          staff.imageLink
+        );
+        newImageURLs[staff.staffId] = URL.createObjectURL(response.data);
+      }
+    }
+
+    setImageURLs(newImageURLs);
+  };
+
   const handleClick = (staffId) => {
     if (selectStaffToFilter === staffId) {
       handleSelectStaffToFilter(0);
@@ -20,6 +37,10 @@ function StaffListSidePanel({
       handleSelectStaffToFilter(staffId);
     }
   };
+
+  useEffect(() => {
+    fetchImageURLs();
+  }, [listOfWorkingStaff]);
 
   return (
     <MDBox className="panel-container" sx={{ backgroundColor: "#D3E5F9" }}>
@@ -65,7 +86,7 @@ function StaffListSidePanel({
                   }}
                 >
                   <MDAvatar
-                    src={IMAGE_SERVER + "/images/id/" + staff.imageLink}
+                    src={imageURLs[staff.staffId] || ""}
                     alt="profile-image"
                     size="xl"
                     shadow="xl"

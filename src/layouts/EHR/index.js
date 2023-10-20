@@ -1,4 +1,3 @@
-// @mui material components
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import Avatar from "@mui/material/Avatar";
@@ -8,15 +7,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import Checkbox from "@mui/material/Checkbox";
-import FormControl from "@mui/material/FormControl";
-import FormControlLabel from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
 import { IconButton, Icon } from "@mui/material";
-import { IMAGE_SERVER } from "constants/RestEndPoint";
-
-// import DatePicker from "@mui/x-date-pickers";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -28,22 +19,20 @@ import DataTable from "examples/Tables/DataTable";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { patientApi, ehrApi } from "api/Api";
+import { patientApi, ehrApi, imageServerApi } from "api/Api";
 import { useDispatch } from "react-redux";
 import { displayMessage } from "../../store/slices/snackbarSlice";
-import { Label } from "@mui/icons-material";
-import { setEHRRecord } from '../../store/slices/ehrSlice';
+import { setEHRRecord } from "../../store/slices/ehrSlice";
+import MDAvatar from "components/MDAvatar";
+import { maskNric } from "utility/Utility";
 
 function EHR() {
-  const navigate = useNavigate(); 
-  const MaskedNRIC = ({ value }) => {
-    // Mask the NRIC to display only the first and last characters
-    const maskedValue = value ? value.charAt(0) + 'XXXX' + value.slice(-4) : '';
-  
-    return <span>{maskedValue}</span>;
-  };
-
+  const navigate = useNavigate();
   const reduxDispatch = useDispatch();
+
+  const [imageURLs, setImageURLs] = useState({});
+
+  //for opening the eyeball
   const [data, setData] = useState({
     columns: [
       {
@@ -55,9 +44,16 @@ function EHR() {
         Header: "Profile Picture",
         accessor: "profilePicture",
         width: "20%",
-        Cell: ({ value }) => <Avatar alt="Profile Picture" src={`${IMAGE_SERVER}/images/id/${value}`} />,
+        Cell: ({ value }) => {
+          return <MDAvatar alt="Profile Picture" src={value} />;
+        },
       },
-      { Header: "NRIC", accessor: "nric", width: "20%", Cell: ({ value }) => <MaskedNRIC value={value} />, },
+      {
+        Header: "NRIC",
+        accessor: "nric",
+        width: "20%",
+        Cell: ({ value }) => maskNric(value),
+      },
       { Header: "First Name", accessor: "firstName", width: "20%" },
       { Header: "Last Name", accessor: "lastName", width: "20%" },
       { Header: "Sex", accessor: "sex", width: "10%" },
@@ -81,6 +77,8 @@ function EHR() {
     ],
     rows: [],
   });
+
+  //for datatable
   const dataRef = useRef({
     columns: [
       {
@@ -92,7 +90,7 @@ function EHR() {
         Header: "Profile Picture",
         accessor: "profilePicture",
         width: "20%",
-        Cell: ({ value }) => <Avatar alt="Profile Picture" src={`${IMAGE_SERVER}/images/id/${value}`} />,
+        Cell: ({ value }) => <Avatar alt="Profile Picture" src={value} />,
       },
       { Header: "NRIC", accessor: "nric", width: "20%" },
       { Header: "First Name", accessor: "firstName", width: "20%" },
@@ -180,7 +178,7 @@ function EHR() {
               content: "Date must be present",
             })
           );
-        return
+          return;
         }
         const dateOfBirthFormatted = dateOfBirth + "T00:00:00";
         ehrApi
@@ -205,10 +203,10 @@ function EHR() {
             response.data = {
               ...response.data,
               username: formData.username,
-              profilePicture: formData.profilePicture
-            }
+              profilePicture: formData.profilePicture,
+            };
             reduxDispatch(setEHRRecord(response));
-            navigate('/ehr/ehrRecord');
+            navigate("/ehr/ehrRecord");
           })
           .catch((err) => {
             console.log(err);
@@ -250,41 +248,56 @@ function EHR() {
   };
 
   const fetchData = async () => {
-    // Consider adding buffering to load API data. Cause this part may get quite huge
-    patientApi
-      .getAllPatientsWithElectronicHealthRecordSummaryByName("")
-      .then((response) => {
-        const patientsWithElectronicHealthRecordSummary = response.data; // Assuming 'facilities' is an array of facility objects
-
-        // Map the fetched data to match your table structure
-        const mappedRows = patientsWithElectronicHealthRecordSummary.map(
-          (patientWithElectronicHealthRecordSummary) => ({
-            electronicHealthRecordId:
-              patientWithElectronicHealthRecordSummary.electronicHealthRecordId,
-            profilePicture:
-              patientWithElectronicHealthRecordSummary.profilePicture,
-            nric: patientWithElectronicHealthRecordSummary.nric,
-            firstName: patientWithElectronicHealthRecordSummary.firstName,
-            lastName: patientWithElectronicHealthRecordSummary.lastName,
-            sex: patientWithElectronicHealthRecordSummary.sex,
-            username: patientWithElectronicHealthRecordSummary.username,
-            // Map other columns as needed
-          })
+    try {
+      const response =
+        await patientApi.getAllPatientsWithElectronicHealthRecordSummaryByName(
+          ""
         );
+      const patientsWithElectronicHealthRecordSummary = response.data;
 
-        dataRef.current = {
-          ...dataRef.current,
-          rows: [mappedRows],
-        };
+      const newImageURLs = {};
+      for (const patient of patientsWithElectronicHealthRecordSummary) {
+        if (patient.profilePicture) {
+          const imageResponse = await imageServerApi.getImageFromImageServer(
+            "id",
+            patient.profilePicture
+          );
+          newImageURLs[patient.electronicHealthRecordId] = URL.createObjectURL(
+            imageResponse.data
+          );
+        }
+      }
 
-        setData((prevData) => ({
-          ...prevData,
-          rows: mappedRows,
-        }));
-      })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
-      });
+      setImageURLs(newImageURLs);
+
+      const mappedRows = patientsWithElectronicHealthRecordSummary.map(
+        (patientWithElectronicHealthRecordSummary) => ({
+          electronicHealthRecordId:
+            patientWithElectronicHealthRecordSummary.electronicHealthRecordId,
+          profilePicture:
+            newImageURLs[
+              patientWithElectronicHealthRecordSummary.electronicHealthRecordId
+            ],
+          nric: patientWithElectronicHealthRecordSummary.nric,
+          firstName: patientWithElectronicHealthRecordSummary.firstName,
+          lastName: patientWithElectronicHealthRecordSummary.lastName,
+          sex: patientWithElectronicHealthRecordSummary.sex,
+          username: patientWithElectronicHealthRecordSummary.username,
+        })
+      );
+
+      dataRef.current = {
+        ...dataRef.current,
+        rows: [mappedRows],
+      };
+
+      setData((prevData) => ({
+        ...prevData,
+        rows: mappedRows,
+      }));
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   };
 
   useEffect(() => {
@@ -325,7 +338,7 @@ function EHR() {
         <DialogContent>
           <Avatar
             alt="Profile Picture"
-            src={`${IMAGE_SERVER}/images/id/${formData.profilePicture}`}            
+            src={formData.profilePicture}
             sx={{ width: 100, height: 100, margin: "0 auto" }}
           />
           <TextField
@@ -333,7 +346,7 @@ function EHR() {
             label="Electronic Health Record ID"
             name="electronicHealthRecordId"
             value={formData.electronicHealthRecordId}
-            readonly
+            readOnly
             margin="dense"
             variant="standard"
           />
@@ -342,7 +355,7 @@ function EHR() {
             label="NRIC"
             name="nric"
             value={formData.nric}
-            readonly
+            readOnly
             margin="dense"
             variant="standard"
           />
@@ -351,7 +364,7 @@ function EHR() {
             label="First Name"
             name="firstName"
             value={formData.firstName}
-            readonly
+            readOnly
             margin="dense"
             variant="standard"
           />
@@ -360,7 +373,7 @@ function EHR() {
             label="Last Name"
             name="lastName"
             value={formData.lastName}
-            readonly
+            readOnly
             margin="dense"
             variant="standard"
           />
@@ -369,7 +382,7 @@ function EHR() {
             label="Sex"
             name="sex"
             value={formData.sex}
-            readonly
+            readOnly
             margin="dense"
             variant="standard"
           />
@@ -378,7 +391,7 @@ function EHR() {
             label="Username"
             name="username"
             value={formData.username}
-            readonly
+            readOnly
             margin="dense"
             variant="standard"
           />
