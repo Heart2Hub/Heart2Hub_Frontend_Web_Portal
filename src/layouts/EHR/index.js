@@ -28,6 +28,7 @@ import { maskNric } from "utility/Utility";
 
 function EHR() {
   const navigate = useNavigate();
+  const navigate = useNavigate();
   const reduxDispatch = useDispatch();
 
   const [imageURLs, setImageURLs] = useState({});

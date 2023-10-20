@@ -11,19 +11,14 @@ import { inventoryApi } from "api/Api";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
 
-
-
-
 function ViewMedicationDetailsDialog({ inventoryItemId }) {
 
   function priceFormat(num) {
     return `${num.toFixed(2)}`;
   }
-  const reduxDispatch = useDispatch();
   const [openMedicationDialog, setOpenMedicationDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMedication, setSelectedMedication] = useState(null);
-
 
 
   const handleOpenMedicationDialog = () => {

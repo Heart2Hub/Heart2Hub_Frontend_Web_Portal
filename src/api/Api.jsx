@@ -560,9 +560,9 @@ export const inventoryApi = {
       requestBody
     );
   },
-  createServiceItem(requestBody) {
+  createServiceItem(unitId, requestBody) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/serviceItem/createServiceItem`,
+      `${REST_ENDPOINT}/serviceItem/createServiceItem?unitId=${unitId}`,
       requestBody
     );
   },

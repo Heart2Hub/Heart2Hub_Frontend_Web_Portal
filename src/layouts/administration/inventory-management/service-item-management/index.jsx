@@ -22,24 +22,47 @@ import DataTable from "examples/Tables/DataTable";
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 
-import { facilityApi, departmentApi } from "api/Api";
+import { facilityApi, departmentApi, wardApi } from "api/Api";
 // import { displayMessage } from "../../../store/slices/snackbarSlice";
 import { inventoryApi } from "api/Api";
 import { displayMessage } from "store/slices/snackbarSlice";
+import SelectWrapper from "components/Select";
 
 function ServiceItemManagement() {
+    const [departments, setDepartments] = useState([]);
+    const [wards, setWards] = useState([]);
 
     function priceFormat(num) {
         return `${num.toFixed(2)}`;
     }
 
+    const getUnits = async () => {
+        try {
+            const departmentsResponse = await departmentApi.getAllDepartments("");
+            const wardsResponse = await wardApi.getAllWards("");
+            setDepartments(departmentsResponse.data);
+            setWards(wardsResponse.data);
+            console.log(departments);
+            console.log(wards);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    useEffect(() => {
+        getUnits();
+    }, []);
+
+
+
     const reduxDispatch = useDispatch();
     const [data, setData] = useState({
         columns: [
-            { Header: "No.", accessor: "inventoryItemId", width: "10%" },
+            // { Header: "No.", accessor: "inventoryItemId", width: "10%" },
             { Header: "Medication Name", accessor: "inventoryItemName", width: "20%" },
             { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
-            { Header: "Retail Price ($)", accessor: "retailPricePerQuantity", width: "10%" },
+            { Header: "Retail Price ($)", accessor: "retailPricePerQuantity", width: "15%" },
+            { Header: "Unit", accessor: "unitId", width: "10%" },
             { Header: "Item Type", accessor: "itemTypeEnum", width: "10%" },
             {
                 Header: "Actions",
@@ -48,11 +71,13 @@ function ServiceItemManagement() {
                         <IconButton
                             color="secondary"
                             onClick={() => handleDeleteInventory(row.original.inventoryItemId)}
+                            title="Delete"
                         >
                             <Icon>delete</Icon>
                         </IconButton>
                         <IconButton
                             color="secondary"
+                            title="Update"
                             onClick={() => handleOpenUpdateModal(row.original.inventoryItemId)}
                         >
                             <Icon>create</Icon>
@@ -67,10 +92,11 @@ function ServiceItemManagement() {
 
     const dataRef = useRef({
         columns: [
-            { Header: "No.", accessor: "inventoryItemId", width: "10%" },
+            // { Header: "No.", accessor: "inventoryItemId", width: "10%" },
             { Header: "Equipment Name", accessor: "inventoryItemName", width: "20%" },
             { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
-            { Header: "Retail Price ($)", accessor: "retailPricePerQuantity", width: "10%" },
+            { Header: "Retail Price ($)", accessor: "retailPricePerQuantity", width: "20%" },
+            { Header: "Unit", accessor: "unitId", width: "10%" },
             { Header: "Item Type", accessor: "itemTypeEnum", width: "10%" },
             {
                 Header: "Actions",
@@ -79,12 +105,14 @@ function ServiceItemManagement() {
                         <IconButton
                             color="secondary"
                             onClick={() => handleDeleteInventory(row.original.inventoryItemId)}
+                            title="Delete"
                         >
                             <Icon>delete</Icon>
                         </IconButton>
                         <IconButton
                             color="secondary"
                             onClick={() => handleOpenUpdateModal(row.original.inventoryItemId)}
+                            title="Update"
                         >
                             <Icon>create</Icon>
                         </IconButton>
@@ -98,6 +126,7 @@ function ServiceItemManagement() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
+        unitId: null,
         inventoryItemName: "",
         inventoryItemDescription: "",
         itemTypeEnum: "",
@@ -111,6 +140,7 @@ function ServiceItemManagement() {
         inventoryItemDescription: "",
         itemTypeEnum: "",
         retailPricePerQuantity: "",
+        unitId: null,
     });
 
     const handleOpenModal = () => {
@@ -131,10 +161,29 @@ function ServiceItemManagement() {
 
     const handleCreateServiceItem = () => {
         try {
-            const { ...requestBody } = formData;
-            console.log("Type:" + requestBody.itemTypeEnum)
+            const { unitId, ...requestBody } = formData;
+            console.log("Type:" + unitId)
+            if (unitId == null) {
+                setFormData({
+                    unitId: null,
+                    inventoryItemName: "",
+                    inventoryItemDescription: "",
+                    itemTypeEnum: "",
+                    retailPricePerQuantity: "",
+                });
+                reduxDispatch(
+                    displayMessage({
+                        color: "error",
+                        icon: "notification",
+                        title: "Error Encountered",
+                        content: "Unit cannot be null",
+                    })
+                );
+                return
+            }
             if (requestBody.inventoryItemName == "") {
                 setFormData({
+                    unitId: null,
                     inventoryItemName: "",
                     inventoryItemDescription: "",
                     itemTypeEnum: "",
@@ -152,6 +201,7 @@ function ServiceItemManagement() {
             }
             if (requestBody.inventoryItemDescription == "") {
                 setFormData({
+                    unitId: null,
                     inventoryItemName: "",
                     inventoryItemDescription: "",
                     itemTypeEnum: "",
@@ -169,6 +219,7 @@ function ServiceItemManagement() {
             }
             if (requestBody.retailPricePerQuantity == "") {
                 setFormData({
+                    unitId: null,
                     inventoryItemName: "",
                     inventoryItemDescription: "",
                     itemTypeEnum: "",
@@ -184,8 +235,9 @@ function ServiceItemManagement() {
                 );
                 return
             }
+            console.log(formData)
             inventoryApi
-                .createServiceItem(requestBody)
+                .createServiceItem(unitId, requestBody)
                 .then(() => {
                     fetchData();
                     setFormData({
@@ -193,6 +245,7 @@ function ServiceItemManagement() {
                         inventoryItemDescription: "",
                         itemTypeEnum: "",
                         retailPricePerQuantity: "",
+                        unitId: null,
                     });
                     reduxDispatch(
                         displayMessage({
@@ -210,6 +263,7 @@ function ServiceItemManagement() {
                         inventoryItemDescription: "",
                         itemTypeEnum: "",
                         retailPricePerQuantity: "",
+                        unitId: null,
                     });
                     // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
                     if (err.response.data.detail) {
@@ -395,6 +449,7 @@ function ServiceItemManagement() {
                     inventoryItemDescription: serviceItem.inventoryItemDescription,
                     itemTypeEnum: serviceItem.itemTypeEnum,
                     retailPricePerQuantity: priceFormat(serviceItem.retailPricePerQuantity),
+                    unitId: serviceItem.unit.name,
                 }));
 
                 dataRef.current = {
@@ -484,6 +539,23 @@ function ServiceItemManagement() {
                         onChange={handleChange}
                         margin="dense"
                     />
+                    <FormControl fullWidth margin="dense">
+                        <InputLabel>Unit</InputLabel>
+                        <Select
+                            name="unitId"
+                            value={formData.unitId}
+                            onChange={handleChange}
+                            sx={{ lineHeight: "3em" }}>
+                            <MenuItem disabled>Departments</MenuItem>
+                            {departments?.map(department =>
+                                <MenuItem value={department.unitId}>{department.name}</MenuItem>
+                            )}
+                            <MenuItem disabled>Wards</MenuItem>
+                            {wards?.map(ward =>
+                                <MenuItem value={ward.unitId}>{ward.name}</MenuItem>
+                            )}
+                        </Select>
+                    </FormControl>
                     <FormControl fullWidth margin="dense">
                         <InputLabel>Item Type</InputLabel>
                         <Select
