@@ -19,6 +19,8 @@ import {
 } from "@mui/material";
 import EditIcon from '@mui/icons-material/Edit';
 import InputLabel from "@mui/material/InputLabel";
+import RefreshIcon from '@mui/icons-material/Refresh';
+
 
 import DeleteIcon from "@mui/icons-material/Delete";
 import { displayMessage } from "store/slices/snackbarSlice";
@@ -111,6 +113,7 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 	const handleAddToCart = async (prescriptionId, ehrId) => {
 		try {
 			const response = await prescriptionRecordApi.checkOutPrescriptionRecord(prescriptionId, ehrId);
+			fetchPrescriptionRecords();
 			handlePageRefresh();
 			reduxDispatch(
 				displayMessage({
@@ -134,17 +137,17 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 	};
 
 
-	const handleEdit =  (prescriptionRecord) => {
+	const handleEdit = (prescriptionRecord) => {
 		setEditMode(true);
 		setEditedRecord(prescriptionRecord);
 		setEditedFields({
-		  medicationQuantity: prescriptionRecord.medicationQuantity,
-		  dosage: prescriptionRecord.dosage,
-		  description: prescriptionRecord.description,
-		  comments: prescriptionRecord.comments,
+			medicationQuantity: prescriptionRecord.medicationQuantity,
+			dosage: prescriptionRecord.dosage,
+			description: prescriptionRecord.description,
+			comments: prescriptionRecord.comments,
 		});
-		
-	      };
+
+	};
 
 	const handleFieldChange = (field, value) => {
 		setEditedFields((prev) => ({
@@ -335,7 +338,15 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 
 	return (
 		<Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-			<DialogTitle>Prescription Records</DialogTitle>
+			<DialogTitle>Prescription Records
+				<IconButton
+					onClick={fetchPrescriptionRecords}
+					aria-label="refresh"
+				>
+					<RefreshIcon />
+				</IconButton>
+			</DialogTitle>
+
 			<DialogContent dividers>
 				{prescriptionRecords.length === 0 ? (
 					<Typography variant="subtitle1" align="center">
@@ -357,60 +368,18 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 									<div>
 										<b>Medication Name:</b> {prescriptionRecord.medicationName}
 									</div>
-									<br></br>
 									<div>
-
-
-										<TextField
-											label="Medication Quantity"
-											value={editMode ? editedFields.medicationQuantity : prescriptionRecord.medicationQuantity}
-											onChange={(e) => handleFieldChange("medicationQuantity", e.target.value)}
-											style={{
-												background: editMode ? "#f6f6f6" : "white",
-												marginRight: 10
-											}}
-											InputProps={{ readOnly: !editMode }}
-										/>
-
-										<TextField
-											label="Dosage"
-											value={editMode ? editedFields.dosage : prescriptionRecord.dosage}
-											onChange={(e) => handleFieldChange("dosage", e.target.value)}
-											style={{
-												background: editMode ? "#f6f6f6" : "white",
-												marginRight: 10
-											}}
-											InputProps={{ readOnly: !editMode }}
-										/>
-
+										<b>Medication Quantity:</b> {prescriptionRecord.medicationQuantity}
 									</div>
-									<br></br>
-
 									<div>
-										<TextField
-											label="Description"
-											value={editMode ? editedFields.description : prescriptionRecord.description}
-											onChange={(e) => handleFieldChange("description", e.target.value)}
-											style={{
-												background: editMode ? "#f6f6f6" : "white",
-												marginRight: 10
-											}}
-											InputProps={{ readOnly: !editMode }}
-										/>
-
-										<TextField
-											label="Comments"
-											value={editMode ? editedFields.comments : prescriptionRecord.comments}
-											onChange={(e) => handleFieldChange("comments", e.target.value)}
-											style={{
-												background: editMode ? "#f6f6f6" : "white",
-												marginRight: 10
-											}}
-											InputProps={{ readOnly: !editMode }}
-										/>
+										<b>Dosage:</b> {prescriptionRecord.dosage}
 									</div>
-									<br></br>
-
+									<div>
+										<b>Description:</b> {prescriptionRecord.description}
+									</div>
+									<div>
+										<b>Comments:</b> {prescriptionRecord.comments}
+									</div>
 									<div><b>Prescribed By:</b> {prescriptionRecord.prescribedBy}</div>
 									<div>
 										<b>Prescription Status:</b>{" "}
@@ -427,7 +396,7 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 								) : (
 									<>
 
-										{loggedInStaff.staffRoleEnum === "DOCTOR" && (
+										{/* {loggedInStaff.staffRoleEnum === "DOCTOR" && (
 											<IconButton onClick={() => handleEdit(prescriptionRecord)}>
 												<EditIcon />
 											</IconButton>
@@ -436,7 +405,7 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 											<IconButton onClick={() => handleDelete(prescriptionRecord.prescriptionRecordId)}>
 												<DeleteIcon />
 											</IconButton>
-										)}
+										)} */}
 										{loggedInStaff.staffRoleEnum === "DOCTOR" && (
 											<Button onClick={() => handleAddToCart(prescriptionRecord.prescriptionRecordId, electronicHealthRecordId)}>
 												Add to Patient's Cart
@@ -455,14 +424,14 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 				<Button onClick={onClose} >
 					Close
 				</Button>
-				{loggedInStaff.staffRoleEnum === 'DOCTOR' && (
+				{/* {loggedInStaff.staffRoleEnum === 'DOCTOR' && (
 					<MDButton
 						variant="gradient"
 						color="primary"
 						onClick={handleOpenForm}
 					>
 						Create New Prescription
-					</MDButton>)}
+					</MDButton>)} */}
 			</DialogActions>
 			<Dialog open={openForm} onClose={handleCloseForm} fullWidth maxWidth="md">
 				<DialogTitle>Create New Prescription</DialogTitle>

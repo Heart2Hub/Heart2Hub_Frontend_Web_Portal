@@ -21,6 +21,8 @@ import {
   Button,
   IconButton
 } from "@mui/material";
+import RefreshIcon from '@mui/icons-material/Refresh';
+
 import PrescriptionDialog from "./PrescriptionRecord";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import MDTypography from "components/MDTypography";
@@ -716,11 +718,11 @@ function AppointmentTicketModal({
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
-                        " " +
-                        assignedStaff.lastname +
-                        " (" +
-                        assignedStaff.staffRoleEnum +
-                        ")"}
+                      " " +
+                      assignedStaff.lastname +
+                      " (" +
+                      assignedStaff.staffRoleEnum +
+                      ")"}
                   </MDTypography>
                   <MDButton
                     disabled={loading}
@@ -916,55 +918,61 @@ function AppointmentTicketModal({
                   <ListItem>{renderServicesDropdown()}</ListItem>
                 </List>
                 <List>
-      <ListItem>
-        <MDTypography variant="h5" gutterBottom>
-          Patient's Cart:
-        </MDTypography>
-      </ListItem>
-      {cartItems.length === 0 ? (
-        <ListItem>
-          <MDTypography variant="subtitle1">
-            Patient's cart is empty.
-          </MDTypography>
-        </ListItem>
-      ) : (
-        <ListItem>
-          <TableContainer component={Paper}>
-            <Table sx={{ minWidth: 650 }} aria-label="simple table">
-              <TableHead>
-                <TableRow>
-                  <TableCell> Name</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {cartItems.map((item) => (
-                  <TableRow
-                    key={item.transactionItemId}
-                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                  >
-                    <TableCell component="th" scope="row">
-                      {item.transactionItemName}
-                    </TableCell>
-                    <TableCell align="right">
-                      Quantity: {item.transactionItemQuantity}
-                    </TableCell>
-                    <TableCell align="right">
-                      <Button
-                        variant="contained"
-                        style={{ backgroundColor: "#f44336", color: "white" }}
-                        onClick={() => handleDeleteCartItem(item.transactionItemId)}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </ListItem>
-      )}
-    </List>
+                  <ListItem>
+                    <MDTypography variant="h5" gutterBottom>
+                      Patient's Cart:
+                    </MDTypography>
+                    <IconButton
+                      onClick={fetchPatientCart} 
+                      aria-label="refresh"
+                    >
+                      <RefreshIcon />
+                    </IconButton>
+                  </ListItem>
+                  {cartItems.length === 0 ? (
+                    <ListItem>
+                      <MDTypography variant="subtitle1">
+                        Patient's cart is empty.
+                      </MDTypography>
+                    </ListItem>
+                  ) : (
+                    <ListItem>
+                      <TableContainer component={Paper}>
+                        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell> Name</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {cartItems.map((item) => (
+                              <TableRow
+                                key={item.transactionItemId}
+                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                              >
+                                <TableCell component="th" scope="row">
+                                  {item.transactionItemName}
+                                </TableCell>
+                                <TableCell align="right">
+                                  Quantity: {item.transactionItemQuantity}
+                                </TableCell>
+                                <TableCell align="right">
+                                  <Button
+                                    variant="contained"
+                                    style={{ backgroundColor: "#f44336", color: "white" }}
+                                    onClick={() => handleDeleteCartItem(item.transactionItemId)}
+                                  >
+                                    Delete
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </ListItem>
+                  )}
+                </List>
 
                 <Box
                   sx={{

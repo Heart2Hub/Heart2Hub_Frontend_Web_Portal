@@ -43,7 +43,7 @@ function Finance() {
                 title="Invoice Managment"
                 action={{
                   type: 'internal',
-                  route: '',
+                  route: '/finance/invoice',
                   color: 'info',
                   label: 'Continue',
                 }}

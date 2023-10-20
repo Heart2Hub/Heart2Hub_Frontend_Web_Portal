@@ -598,4 +598,26 @@ export const prescriptionRecordApi = {
     return axiosFetch.post(`${REST_ENDPOINT}/prescriptionRecord/checkOutPrescription/${prescriptionId}/${ehrId}`);
   }
 };
+
+export const invoiceApi = {
+  getAllInvoices() {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/getAllInvoices`);
+  },
+  getInvoicesByPatientId(id) {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/getInvoicesByPatientId/${id}`);
+  },
+  findPatientOfInvoice(id) {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/findPatientOfInvoice/${id}`);
+  },
+  findItemsOfInvoice(id) {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/findItemsOfInvoice/${id}`);
+  },
+  createInsuranceClaim(invoiceId) {
+    return axiosFetch.post(`${REST_ENDPOINT}/invoice/createMedishieldClaim/${invoiceId}`);
+  },
+  createMedishieldClaim(invoiceId) {
+    return axiosFetch.post(`${REST_ENDPOINT}/invoice/createMedishieldClaim/${invoiceId}`);
+  },
+  
+};
   

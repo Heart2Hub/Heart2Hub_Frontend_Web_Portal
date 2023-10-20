@@ -27,6 +27,7 @@ import CalendarRoster from "layouts/manpower/rostering/CalendarRoster";
 import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
 import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 import Subsidy from "layouts/finance/subsidy";
+import Invoice from "layouts/finance/invoice";
 
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
@@ -365,6 +366,19 @@ const routes = [
         forHeadsOnly={false}
       >
         <Subsidy />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Invoice Management",
+    key: "invoice",
+    route: "/finance/invoice",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Invoice />
       </ProtectedRoute>
     ),
   },
