@@ -19,7 +19,7 @@ import DataTable from "examples/Tables/DataTable";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { patientApi, ehrApi, imageServerApi, imageServerApi } from "api/Api";
+import { patientApi, ehrApi, imageServerApi } from "api/Api";
 import { useDispatch } from "react-redux";
 import { displayMessage } from "../../store/slices/snackbarSlice";
 import { setEHRRecord } from "../../store/slices/ehrSlice";
