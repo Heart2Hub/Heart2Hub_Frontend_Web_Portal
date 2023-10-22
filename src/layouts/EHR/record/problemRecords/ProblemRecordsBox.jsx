@@ -95,7 +95,7 @@ function ProblemRecordsBox() {
           px: 2,
           height: "600px",
           overflowY: "auto",
-          "&::-webkit-scrollbar": {
+          "&::WebkitScrollbar": {
             width: "0px",
             background: "transparent",
           },

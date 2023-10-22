@@ -259,6 +259,59 @@ export const problemRecordApi = {
   },
 };
 
+export const treatmentPlanRecordApi = {
+  createTreatmentPlanRecord(electronicHealthRecordId, staffId, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/treatmentPlanRecord/createTreatmentPlanRecord?electronicHealthRecordId=${electronicHealthRecordId}&staffId=${staffId}`,
+      requestBody
+    );
+  },
+  updateTreatmentPlanRecord(
+    electronicHealthRecordId,
+    treatmentPlanRecordId,
+    staffId,
+    requestBody
+  ) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/treatmentPlanRecord/updateTreatmentPlanRecord?electronicHealthRecordId=${electronicHealthRecordId}&treatmentPlanRecordId=${treatmentPlanRecordId}&staffId=${staffId}`,
+      requestBody
+    );
+  },
+  completeTreatmentPlanRecord(
+    electronicHealthRecordId,
+    treatmentPlanRecordId,
+    staffId
+  ) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/treatmentPlanRecord/completeTreatmentPlanRecord?electronicHealthRecordId=${electronicHealthRecordId}&treatmentPlanRecordId=${treatmentPlanRecordId}&staffId=${staffId}`
+    );
+  },
+  deleteTreatmentPlanRecord(
+    electronicHealthRecordId,
+    treatmentPlanRecordId,
+    staffId
+  ) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/treatmentPlanRecord/deleteTreatmentPlanRecord?electronicHealthRecordId=${electronicHealthRecordId}&treatmentPlanRecordId=${treatmentPlanRecordId}&staffId=${staffId}`
+    );
+  },
+  viewTreatmentPlanRecordImages(treatmentPlanRecordId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/treatmentPlanRecord/viewTreatmentPlanRecordImages?treatmentPlanRecordId=${treatmentPlanRecordId}`
+    );
+  },
+  addImageAttachmentToTreatmentPlan(
+    treatmentPlanRecordId,
+    imageLink,
+    createdDate,
+    staffId
+  ) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/treatmentPlanRecord/addImageAttachmentToTreatmentPlan?treatmentPlanRecordId=${treatmentPlanRecordId}&imageLink=${imageLink}&createdDate=${createdDate}&staffId=${staffId}`
+    );
+  },
+};
+
 export const leaveApi = {
   getAllManagedLeaves(staffId) {
     console.log(staffId);

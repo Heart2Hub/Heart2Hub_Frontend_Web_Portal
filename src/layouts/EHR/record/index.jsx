@@ -24,6 +24,7 @@ import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { useState } from "react";
 import { Tab } from "@mui/material";
 import MDBox from "components/MDBox";
+import TreatmentPlansBox from "./treatmentPlanRecords/TreatmentPlansBox";
 
 function EHRRecord() {
   const reduxDispatch = useDispatch();
@@ -111,7 +112,9 @@ function EHRRecord() {
           </TabPanel>
         )}
         <TabPanel value="View Prescription">prescription</TabPanel>
-        <TabPanel value="View TreatmentPlan">treatment</TabPanel>
+        <TabPanel value="View TreatmentPlan">
+          <TreatmentPlansBox />
+        </TabPanel>
       </TabContext>
     </DashboardLayout>
   );
