@@ -90,12 +90,14 @@ function AssignAppointmentDialog({
       getPharmacyStaff();
     }
     handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
-  }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
+    console.log(selectedAppointmentToAssign)
+  }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff, listOfWorkingStaff, selectedAppointmentToAssign]);
 
   return (
     <>
       <Dialog open={open} onClose={onClose}>
-        <DialogTitle>Staff Assignment to Ticket:</DialogTitle>
+      <DialogTitle sx={{color: "green"}}>Dispense success!</DialogTitle>
+        <DialogTitle>Staff Assignment for Discharge:</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Please choose from the list of available staff members to assign
@@ -125,7 +127,7 @@ function AssignAppointmentDialog({
           <Button onClick={onClose} color="primary">
             Cancel
           </Button>
-          <Button onClick={() => onConfirm(selectedStaff)} color="primary">
+          <Button onClick={() => onConfirm(selectedStaff, selectedAppointmentToAssign)} color="primary">
             Confirm
           </Button>
         </DialogActions>

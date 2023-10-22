@@ -11,7 +11,7 @@ import Icon from "@mui/material/Icon";
 import Outpatient from "layouts/outpatient";
 import Inpatient from "layouts/inpatient";
 import EHR from "layouts/EHR";
-import EHRRecord from "layouts/EHR/record";
+import EHRRecord from "layouts/EHR/record/index.jsx";
 //import EHRRecord from "layouts/ehr/record";
 import Administration from "layouts/administration";
 import Manpower from "layouts/manpower";
@@ -27,6 +27,8 @@ import CalendarRoster from "layouts/manpower/rostering/CalendarRoster";
 import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
 import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 import Subsidy from "layouts/finance/subsidy";
+import Pharmacy from "layouts/pharmacy";
+
 
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
@@ -35,7 +37,6 @@ import ConsumableEquipmentManagement from "layouts/administration/inventory-mana
 import InventoryManagement from "layouts/administration/inventory-management";
 import MedicationManagement from "layouts/pharmacy/medication-management";
 import ServiceItemManagement from "layouts/administration/inventory-management/service-item-management";
-import Pharmacy from "layouts/pharmacy";
 
 const routes = [
   {
@@ -169,12 +170,11 @@ const routes = [
       </ProtectedRoute>
     ),
   },
-
   {
     type: "collapse",
     name: "Pharmacy",
     key: "pharmacy",
-    icon: <Icon fontSize="small">medication</Icon>,
+    icon: <Icon fontSize="small">local_pharmacy</Icon>,
     route: "/pharmacy",
     authorizedRoles: [StaffRoleEnum.ALL],
     component: (
@@ -186,6 +186,23 @@ const routes = [
       </ProtectedRoute>
     ),
   },
+
+  // {
+  //   type: "collapse",
+  //   name: "Pharmacy",
+  //   key: "pharmacy",
+  //   icon: <Icon fontSize="small">medication</Icon>,
+  //   route: "/pharmacy",
+  //   authorizedRoles: [StaffRoleEnum.ALL],
+  //   component: (
+  //     <ProtectedRoute
+  //       authorizedRoles={[StaffRoleEnum.ALL]}
+  //       forHeadsOnly={false}
+  //     >
+  //       <Pharmacy />
+  //     </ProtectedRoute>
+  //   ),
+  // },
 
   {
     name: "EHR",

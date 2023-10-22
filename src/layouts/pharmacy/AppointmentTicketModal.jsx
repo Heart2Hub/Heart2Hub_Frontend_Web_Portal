@@ -34,17 +34,16 @@ import {
 import { ehrApi } from "api/Api";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setEHRRecord } from "../../../store/slices/ehrSlice";
-import ArrivalButton from "./ArrivalButton";
+import { setEHRRecord } from "store/slices/ehrSlice";
+import ArrivalButton from "../outpatient/kanbanTab/ArrivalButton";
 import { displayMessage } from "store/slices/snackbarSlice";
-import { appointmentApi } from "../../../api/Api";
-import AssignAppointmentDialog from "./AssignAppointmentDialog";
+import { appointmentApi } from "api/Api";
+import AssignAppointmentDialog from "../outpatient/kanbanTab/AssignAppointmentDialog";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import MDBox from "components/MDBox";
-import AddAttachmentButton from "./AddAttachmentButton";
-import ViewAttachmentsButton from "./ViewAttachmentsButton";
-import ViewFacilityInventoryButton from "layouts/administration/facility-management/viewFacilityInventoryButton";
+import AddAttachmentButton from "../outpatient/kanbanTab/AddAttachmentButton";
+import ViewAttachmentsButton from "../outpatient/kanbanTab/ViewAttachmentsButton";
 
 const style = {
   position: "absolute",
@@ -67,6 +66,7 @@ function AppointmentTicketModal({
   columnName,
   listOfWorkingStaff,
   forceRefresh,
+  setCart
 }) {
   const navigate = useNavigate();
   const reduxDispatch = useDispatch();
@@ -75,7 +75,7 @@ function AppointmentTicketModal({
   const [editableComments, setEditableComments] = useState("");
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [facility, setFacility] = useState("");
+
   //For Cart
   const [medications, setMedications] = useState([]);
   const [services, setServices] = useState([]);
@@ -135,6 +135,7 @@ function AppointmentTicketModal({
       );
 
       setCartItems(response.data);
+      setCart(response.data)
       console.log(cartItems);
     } catch (error) {
       console.error("Error fetching cart items:", error);
@@ -360,10 +361,7 @@ function AppointmentTicketModal({
       (staff) => staff.staffId === staffId
     )[0];
 
-    console.log("Facility Id: " + facility.facilityId);
-
     if (facility) {
-      setFacility(facility);
       return facility.name + " (" + facility.location + ")";
     } else {
       return null;
@@ -389,7 +387,6 @@ function AppointmentTicketModal({
       //update the old appt
       replaceItemByIdWithUpdated(
         updatedAppointment.appointmentId,
-        columnName,
         updatedAppointment
       );
 
@@ -428,7 +425,6 @@ function AppointmentTicketModal({
       //update the old appt
       replaceItemByIdWithUpdated(
         updatedAppointment.appointmentId,
-        columnName,
         updatedAppointment
       );
 
@@ -621,19 +617,12 @@ function AppointmentTicketModal({
                     Location:
                   </MDTypography>
                 </ListItem>
-                <ListItem style={{ display: "flex", justifyContent: "space-between", paddingBottom: 10 }}>
+                <ListItem>
                   <MDTypography variant="h6" gutterBottom color="black">
                     {facilityLocation !== null
                       ? facilityLocation
                       : "No Location Yet"}
                   </MDTypography>
-                  <MDBox>
-                    <Stack direction="row" spacing={2}>
-                      {facilityLocation !== null && (<ViewFacilityInventoryButton
-                        selectedFacility={facility}
-                      />)}
-                    </Stack>
-                  </MDBox>
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
@@ -657,6 +646,7 @@ function AppointmentTicketModal({
                     <MDButton
                       onClick={handleClickToEhr}
                       color="primary"
+
                       //quick fix for SR2
                       disabled={
                         selectedAppointment.currentAssignedStaffId !=
@@ -728,13 +718,14 @@ function AppointmentTicketModal({
                       label={selectedAppointment.arrived ? "Yes" : "No"}
                     />
                   </MDTypography>
+                  {selectedAppointment.dispensaryStatusEnum === "READY_TO_COLLECT" ?
                   <ArrivalButton
                     selectedAppointment={selectedAppointment}
                     handleUpdateAppointmentArrival={
                       handleUpdateAppointmentArrival
                     }
                     disableButton={loading}
-                  />
+                  /> : null}
                 </ListItem>
                 <ListItem sx={{ marginTop: "10px" }}>
                   <MDTypography variant="h5" gutterBottom>
