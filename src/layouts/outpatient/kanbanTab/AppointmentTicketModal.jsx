@@ -677,11 +677,11 @@ function AppointmentTicketModal({
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
-                      " " +
-                      assignedStaff.lastname +
-                      " (" +
-                      assignedStaff.staffRoleEnum +
-                      ")"}
+                        " " +
+                        assignedStaff.lastname +
+                        " (" +
+                        assignedStaff.staffRoleEnum +
+                        ")"}
                   </MDTypography>
                   <MDButton
                     disabled={loading}
