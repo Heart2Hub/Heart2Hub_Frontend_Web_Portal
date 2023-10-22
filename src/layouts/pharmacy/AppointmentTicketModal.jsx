@@ -66,6 +66,7 @@ function AppointmentTicketModal({
   columnName,
   listOfWorkingStaff,
   forceRefresh,
+  setCart
 }) {
   const navigate = useNavigate();
   const reduxDispatch = useDispatch();
@@ -134,6 +135,7 @@ function AppointmentTicketModal({
       );
 
       setCartItems(response.data);
+      setCart(response.data)
       console.log(cartItems);
     } catch (error) {
       console.error("Error fetching cart items:", error);
@@ -644,6 +646,7 @@ function AppointmentTicketModal({
                     <MDButton
                       onClick={handleClickToEhr}
                       color="primary"
+
                       //quick fix for SR2
                       disabled={
                         selectedAppointment.currentAssignedStaffId !=
@@ -715,13 +718,14 @@ function AppointmentTicketModal({
                       label={selectedAppointment.arrived ? "Yes" : "No"}
                     />
                   </MDTypography>
+                  {selectedAppointment.dispensaryStatusEnum === "READY_TO_COLLECT" ?
                   <ArrivalButton
                     selectedAppointment={selectedAppointment}
                     handleUpdateAppointmentArrival={
                       handleUpdateAppointmentArrival
                     }
                     disableButton={loading}
-                  />
+                  /> : null}
                 </ListItem>
                 <ListItem sx={{ marginTop: "10px" }}>
                   <MDTypography variant="h5" gutterBottom>

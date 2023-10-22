@@ -500,6 +500,11 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/viewPharmacyTickets`
     );
   },
+  updateAppointmentDispensaryStatus(appointmentId, dispensaryStatus) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/updateAppointmentDispensaryStatus?appointmentId=${appointmentId}&dispensaryStatus=${dispensaryStatus}`
+    );
+  },
 };
 
 export const inventoryApi = {
