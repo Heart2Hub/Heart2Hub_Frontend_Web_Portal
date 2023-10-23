@@ -29,14 +29,16 @@ import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 import Subsidy from "layouts/finance/subsidy";
 import Pharmacy from "layouts/pharmacy";
 
+import Invoice from "layouts/finance/invoice";
 
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
 import { StaffRoleEnum } from "constants/StaffRoleEnum";
 import ConsumableEquipmentManagement from "layouts/administration/inventory-management/consumable-equipment";
 import InventoryManagement from "layouts/administration/inventory-management";
-import MedicationManagement from "layouts/administration/inventory-management/medication-management";
+import MedicationManagement from "layouts/pharmacy/medication-management";
 import ServiceItemManagement from "layouts/administration/inventory-management/service-item-management";
+import Pharmacy from "layouts/pharmacy";
 
 const routes = [
   {
@@ -187,6 +189,22 @@ const routes = [
     ),
   },
 
+  {
+    type: "collapse",
+    name: "Pharmacy",
+    key: "pharmacy",
+    icon: <Icon fontSize="small">medication</Icon>,
+    route: "/pharmacy",
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Pharmacy />
+      </ProtectedRoute>
+    ),
+  },
 
   {
     name: "EHR",
@@ -195,6 +213,7 @@ const routes = [
     route: "/ehr/ehrRecord",
     component: <EHRRecord />,
   },
+
   {
     name: "Staff Management",
     key: "staffmanagement",
@@ -337,7 +356,7 @@ const routes = [
   {
     name: "MedicationManagement",
     key: "medicationmanagement",
-    route: "/administration/inventory-management/medication-management",
+    route: "/pharmacy/medication-management",
     component: (
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ADMIN]}
@@ -347,19 +366,6 @@ const routes = [
       </ProtectedRoute>
     ),
   },
-  // {
-  //   name: "Consumable Equipment Management",
-  //   key: "consumableequipmentmanagement",
-  //   route: "/administration/inventory-management/consumable-equipment-management",
-  //   component: (
-  //     <ProtectedRoute
-  //       authorizedRoles={[StaffRoleEnum.ADMIN]}
-  //       forHeadsOnly={false}
-  //     >
-  //       <ConsumableEquipmentManagement />
-  //     </ProtectedRoute>
-  //   ),
-  // },
   {
     name: "Service Item Management",
     key: "serviceItemManagement",
@@ -383,6 +389,19 @@ const routes = [
         forHeadsOnly={false}
       >
         <Subsidy />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Invoice Management",
+    key: "invoice",
+    route: "/finance/invoice",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Invoice />
       </ProtectedRoute>
     ),
   },
