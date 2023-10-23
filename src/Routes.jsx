@@ -27,6 +27,8 @@ import CalendarRoster from "layouts/manpower/rostering/CalendarRoster";
 import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
 import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 import Subsidy from "layouts/finance/subsidy";
+import Pharmacy from "layouts/pharmacy";
+
 
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
@@ -165,6 +167,22 @@ const routes = [
         forHeadsOnly={false}
       >
         <Outpatient />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "Pharmacy",
+    key: "pharmacy",
+    icon: <Icon fontSize="small">local_pharmacy</Icon>,
+    route: "/pharmacy",
+    authorizedRoles: [StaffRoleEnum.PHARMACIST],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.PHARMACIST]}
+        forHeadsOnly={false}
+      >
+        <Pharmacy />
       </ProtectedRoute>
     ),
   },

@@ -495,6 +495,11 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/createReferral?prevAppointmentId=${prevAppointmentId}&description=${description}&bookedDate=${bookedDate}&departmentName=${departmentName}&staffUsername=${staffUsername}`
     );
   },
+  viewPharmacyTickets() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/appointment/viewPharmacyTickets`
+    );
+  },
 };
 
 export const inventoryApi = {
