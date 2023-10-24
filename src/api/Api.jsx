@@ -402,10 +402,9 @@ export const subsidyApi = {
       `${REST_ENDPOINT}/subsidy/deleteSubsidy/${subsidyId}`
     );
   },
-  updateSubsidyRate(subsidyId, newSubsidyRate) {
+  updateSubsidyRate(subsidyId, requestBody) {
     return axiosFetch.put(
-      `${REST_ENDPOINT}/subsidy/updateSubsidyRate/${subsidyId}`,
-      { newSubsidyRate }
+      `${REST_ENDPOINT}/subsidy/updateSubsidyRate/${subsidyId}`, requestBody
     );
   },
 };
@@ -542,6 +541,11 @@ export const inventoryApi = {
       `${REST_ENDPOINT}/medication/getAllMedication`
     );
   },
+  getAllMedicationsByAllergy(pId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medication/getAllMedicationsByAllergy/${pId}`
+    );
+  },
   updateMedication(inventoryItemId, requestBody) {
     console.log("Request Sent: " + requestBody.name);
     return axiosFetch.put(
@@ -573,6 +577,11 @@ export const inventoryApi = {
   getAllServiceItem(name) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/serviceItem/getAllServiceItem?name=${name}`
+    );
+  },
+  getAllServiceItemByUnit(unitId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/serviceItem/getAllServiceItemByUnit/${unitId}`
     );
   },
   updateServiceItem(inventoryItemId, requestBody) {
@@ -612,4 +621,51 @@ export const transactionItemApi = {
       `${REST_ENDPOINT}/transactionItem/getCartItems/${patientId}`
     );
   },
+  checkout(patientId, appointmentId) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/transactionItem/checkout/${patientId}/${appointmentId}`
+    );
+  }
+}
+
+export const prescriptionRecordApi = {
+  getAllPrescriptionRecord(id) {
+    return axiosFetch.get(`${REST_ENDPOINT}/prescriptionRecord/getPrescriptionRecordsByEHRId/${id}`);
+  },
+  deletePrescriptionRecord(prescriptionRecordId) {
+    return axiosFetch.delete(`${REST_ENDPOINT}/prescriptionRecord/deletePrescriptionRecord/${prescriptionRecordId}`);
+  },
+  updatePrescriptionRecord(id, requestBody) {
+    return axiosFetch.put(`${REST_ENDPOINT}/prescriptionRecord/updatePrescriptionRecord/${id}`, requestBody);
+  },
+  createNewPrescriptionRecord(requestBody, ehrId, itemId) {
+    return axiosFetch.post(`${REST_ENDPOINT}/prescriptionRecord/createNewPrescription/${ehrId}/${itemId}`, requestBody);
+  },
+  checkOutPrescriptionRecord(prescriptionId, ehrId) {
+    return axiosFetch.post(`${REST_ENDPOINT}/prescriptionRecord/checkOutPrescription/${prescriptionId}/${ehrId}`);
+  }
 };
+
+export const invoiceApi = {
+  getAllInvoices() {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/getAllInvoices`);
+  },
+  getInvoicesByPatientId(id) {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/getInvoicesByPatientId/${id}`);
+  },
+  findPatientOfInvoice(id) {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/findPatientOfInvoice/${id}`);
+  },
+  findItemsOfInvoice(id) {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/findItemsOfInvoice/${id}`);
+  },
+  createInsuranceClaim(invoiceId, requestBody) {
+    return axiosFetch.post(`${REST_ENDPOINT}/invoice/createInsuranceClaim/${invoiceId}`,
+     requestBody);
+  },
+  createMedishieldClaim(invoiceId, requestBody) {
+    return axiosFetch.post(`${REST_ENDPOINT}/invoice/createMedishieldClaim/${invoiceId}`, requestBody);
+  },
+  
+};
+  
