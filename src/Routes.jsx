@@ -176,10 +176,10 @@ const routes = [
     key: "pharmacy",
     icon: <Icon fontSize="small">local_pharmacy</Icon>,
     route: "/pharmacy",
-    authorizedRoles: [StaffRoleEnum.ALL],
+    authorizedRoles: [StaffRoleEnum.PHARMACIST],
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.PHARMACIST]}
         forHeadsOnly={false}
       >
         <Pharmacy />

@@ -310,6 +310,7 @@ function MedicationManagement() {
             inventoryApi
                 .createMedication(requestBody)
                 .then(() => {
+                    getDrugRestrictions();
                     fetchData();
                     setFormData({
                         inventoryItemName: "",
@@ -486,6 +487,7 @@ function MedicationManagement() {
             inventoryApi
                 .updateMedication(inventoryItemId, requestBody)
                 .then(() => {
+                    getDrugRestrictions();
                     fetchData();
                     setUpdateFormData({
                         inventoryItemId: null,
@@ -530,6 +532,7 @@ function MedicationManagement() {
             inventoryApi
                 .deleteMedication(inventoryItemId)
                 .then(() => {
+                    getDrugRestrictions();
                     fetchData();
                     reduxDispatch(
                         displayMessage({
@@ -601,8 +604,9 @@ function MedicationManagement() {
     const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
     return (
-        <DashboardLayout>
-            <DashboardNavbar />
+        // <DashboardLayout>
+        //     <DashboardNavbar />
+        <>
             <MDBox pt={6} pb={3}>
                 <Grid container spacing={6}>
                     <Grid item xs={12}>
@@ -916,8 +920,8 @@ function MedicationManagement() {
                     </MDButton>
                 </DialogActions>
             </Dialog>
-
-        </DashboardLayout>
+        </>
+        // </DashboardLayout>
     );
 
 }
