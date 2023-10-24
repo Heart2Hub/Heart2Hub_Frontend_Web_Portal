@@ -14,6 +14,9 @@ import MDBox from "components/MDBox";
 
 import Medication from "@mui/icons-material/Medication";
 import TableRestaurantIcon from '@mui/icons-material/TableRestaurant';
+import { Grid } from "react-loader-spinner";
+import SimpleBlogCard from "examples/Cards/BlogCards/SimpleBlogCard";
+import MedicationManagement from "./medication-management";
 
 function Outpatient() {
   const staff = useSelector(selectStaff);
@@ -36,7 +39,7 @@ function Outpatient() {
           marginBottom: "1rem", // Adds some bottom margin
         }}
       >
-       Pharmacy
+        Pharmacy
       </MDTypography>
       <TabContext value={tabValue}>
         <MDBox
@@ -73,6 +76,24 @@ function Outpatient() {
         </TabPanel>
         <TabPanel value="Medication">
           <MedicationManagement />
+          {/* <MDBox py={3}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6} lg={3}>
+                <MDBox mb={1.5}> */}
+          {/* <SimpleBlogCard
+            image="https://st.depositphotos.com/1151871/3045/i/450/depositphotos_30459135-stock-photo-medication.jpg"
+            title="Medication Management"
+            action={{
+              type: "internal",
+              route: "/pharmacy/medication-management",
+              color: "info",
+              label: "Continue",
+            }}
+          />{" "} */}
+          {/* </MDBox>
+              </Grid>
+            </Grid>
+          </MDBox> */}
         </TabPanel>
       </TabContext>
     </DashboardLayout>

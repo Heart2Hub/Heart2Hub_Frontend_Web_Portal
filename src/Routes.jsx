@@ -27,9 +27,9 @@ import CalendarRoster from "layouts/manpower/rostering/CalendarRoster";
 import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
 import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 import Subsidy from "layouts/finance/subsidy";
+import Invoice from "layouts/finance/invoice";
 import Pharmacy from "layouts/pharmacy";
 
-import Invoice from "layouts/finance/invoice";
 
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
@@ -187,6 +187,23 @@ const routes = [
       </ProtectedRoute>
     ),
   },
+
+  // {
+  //   type: "collapse",
+  //   name: "Pharmacy",
+  //   key: "pharmacy",
+  //   icon: <Icon fontSize="small">medication</Icon>,
+  //   route: "/pharmacy",
+  //   authorizedRoles: [StaffRoleEnum.ALL],
+  //   component: (
+  //     <ProtectedRoute
+  //       authorizedRoles={[StaffRoleEnum.ALL]}
+  //       forHeadsOnly={false}
+  //     >
+  //       <Pharmacy />
+  //     </ProtectedRoute>
+  //   ),
+  // },
 
   {
     name: "EHR",

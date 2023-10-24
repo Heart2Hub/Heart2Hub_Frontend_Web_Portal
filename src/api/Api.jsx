@@ -541,6 +541,11 @@ export const inventoryApi = {
       `${REST_ENDPOINT}/medication/getAllMedication`
     );
   },
+  getAllMedicationsByAllergy(pId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medication/getAllMedicationsByAllergy/${pId}`
+    );
+  },
   updateMedication(inventoryItemId, requestBody) {
     console.log("Request Sent: " + requestBody.name);
     return axiosFetch.put(
@@ -572,6 +577,11 @@ export const inventoryApi = {
   getAllServiceItem(name) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/serviceItem/getAllServiceItem?name=${name}`
+    );
+  },
+  getAllServiceItemByUnit(unitId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/serviceItem/getAllServiceItemByUnit/${unitId}`
     );
   },
   updateServiceItem(inventoryItemId, requestBody) {
@@ -649,11 +659,12 @@ export const invoiceApi = {
   findItemsOfInvoice(id) {
     return axiosFetch.get(`${REST_ENDPOINT}/invoice/findItemsOfInvoice/${id}`);
   },
-  createInsuranceClaim(invoiceId) {
-    return axiosFetch.post(`${REST_ENDPOINT}/invoice/createMedishieldClaim/${invoiceId}`);
+  createInsuranceClaim(invoiceId, requestBody) {
+    return axiosFetch.post(`${REST_ENDPOINT}/invoice/createInsuranceClaim/${invoiceId}`,
+     requestBody);
   },
-  createMedishieldClaim(invoiceId) {
-    return axiosFetch.post(`${REST_ENDPOINT}/invoice/createMedishieldClaim/${invoiceId}`);
+  createMedishieldClaim(invoiceId, requestBody) {
+    return axiosFetch.post(`${REST_ENDPOINT}/invoice/createMedishieldClaim/${invoiceId}`, requestBody);
   },
   
 };

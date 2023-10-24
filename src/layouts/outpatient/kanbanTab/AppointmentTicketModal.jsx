@@ -161,11 +161,11 @@ function AppointmentTicketModal({
   // Fetch lists of all medications and service items from the API
   const fetchMedicationsAndServices = async () => {
     try {
-      const medicationsResponse = await inventoryApi.getAllMedication("");
+      const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(selectedAppointment.patientId);
       setMedications(medicationsResponse.data);
       // console.log(medicationsResponse.data)
 
-      const servicesResponse = await inventoryApi.getAllServiceItem("");
+      const servicesResponse = await inventoryApi.getAllServiceItemByUnit(loggedInStaff.unit.unitId);
       setServices(servicesResponse.data);
       // console.log(servicesResponse.data)
       // console.log(selectedAppointment)

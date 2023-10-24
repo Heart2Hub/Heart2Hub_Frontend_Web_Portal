@@ -113,7 +113,9 @@ function EHRRecord() {
           </TabPanel>
         )}
         <TabPanel value="View Prescription">
-          <PrescriptionRecordsBox/>
+          <PrescriptionRecordsBox
+          ehrRecord = {ehrRecord}
+          />
         </TabPanel>
         <TabPanel value="View TreatmentPlan">treatment</TabPanel>
       </TabContext>
