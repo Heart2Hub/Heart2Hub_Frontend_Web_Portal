@@ -16,7 +16,6 @@ import Medication from "@mui/icons-material/Medication";
 import TableRestaurantIcon from '@mui/icons-material/TableRestaurant';
 import { Grid } from "react-loader-spinner";
 import SimpleBlogCard from "examples/Cards/BlogCards/SimpleBlogCard";
-import MedicationManagement from "./medication-management";
 
 function Outpatient() {
   const staff = useSelector(selectStaff);
