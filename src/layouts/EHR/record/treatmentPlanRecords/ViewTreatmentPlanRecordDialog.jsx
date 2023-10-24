@@ -23,6 +23,7 @@ import MDTypography from "components/MDTypography";
 import ViewImageDialog from "./ViewImageDialog";
 import UploadImageDialog from "./UploadImageDialog";
 import CompleteTreatmentPlanRecordDialog from "./CompleteTreatmentPlanRecordDialog";
+import ViewInvitationDialog from "./ViewInvitationDialog";
 
 function ViewTreatmentPlanRecordDialog({
   openViewTreatmentPlanRecordDialog,
@@ -49,6 +50,9 @@ function ViewTreatmentPlanRecordDialog({
     setOpenCompleteTreatmentPlanRecordDialog,
   ] = useState(false);
 
+  //view invitations to treatment plan record
+  const [openInvitationDialog, setOpenInvitationDialog] = useState(false);
+
   //view image in treatment plan records
   const handleOpenViewImageDialog = () => {
     setOpenViewImageDialog(true);
@@ -73,6 +77,14 @@ function ViewTreatmentPlanRecordDialog({
   };
   const handleCloseCompleteTreatmentPlanRecordDialog = () => {
     setOpenCompleteTreatmentPlanRecordDialog(false);
+  };
+
+  //view invitations
+  const handleOpenInvitationDialog = () => {
+    setOpenInvitationDialog(true);
+  };
+  const handleCloseInvitationDialog = () => {
+    setOpenInvitationDialog(false);
   };
 
   const handleFormChange = (event) => {
@@ -310,7 +322,7 @@ function ViewTreatmentPlanRecordDialog({
             <DialogActions
               style={{ display: "flex", justifyContent: "space-between" }}
             >
-              <MDButton onClick={() => null} color="dark">
+              <MDButton onClick={handleOpenInvitationDialog} color="dark">
                 View Invitations
               </MDButton>
               <div>
@@ -438,6 +450,11 @@ function ViewTreatmentPlanRecordDialog({
             handleCloseCompleteTreatmentPlanRecordDialog={
               handleCloseCompleteTreatmentPlanRecordDialog
             }
+          />
+          <ViewInvitationDialog
+            openInvitationDialog={openInvitationDialog}
+            handleCloseInvitationDialog={handleCloseInvitationDialog}
+            selectedTreatmentPlanRecord={selectedTreatmentPlanRecordToView}
           />
         </>
       )}
