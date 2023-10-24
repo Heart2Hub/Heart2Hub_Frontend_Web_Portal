@@ -301,7 +301,7 @@ function PrescriptionRecordsBox() {
 
 	const fetchInventoryItems = async () => {
 		try {
-			const response = await inventoryApi.getAllMedication("");
+			const response = await inventoryApi.getAllMedicationsByAllergy(ehrRecord.electronicHealthRecordId);
 			setInventoryItems(response.data);
 		} catch (error) {
 			console.error("Error fetching inventory items: ", error);

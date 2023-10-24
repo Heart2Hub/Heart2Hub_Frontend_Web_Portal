@@ -20,6 +20,7 @@ import {
         Paper,
 } from '@mui/material';
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import CreateInsuranceClaimDialog from './CreateInsuranceClaimDialog';
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import MDBox from "components/MDBox";
@@ -38,6 +39,19 @@ function Invoice() {
 
         const [isModalOpen, setIsModalOpen] = useState(false);
         const reduxDispatch = useDispatch();
+
+        const [isCreateInsuranceDialogOpen, setIsCreateInsuranceDialogOpen] = useState(false);
+
+        const handleCreateInsuranceDialogOpen = (invoiceId) => {
+                setIsCreateInsuranceDialogOpen(true);
+                setSelectedInvoice(invoiceId); // Assuming you have a state to hold the selected invoice
+        };
+
+        const handleCreateInsuranceClaim = (data) => {
+                // Perform action with the insurance claim data
+                console.log('Insurance Claim Data:', data);
+        };
+
         const getStatusColor = (status) => {
                 switch (status) {
                         case "PAID":
@@ -64,6 +78,7 @@ function Invoice() {
                         setSelectedEHR(ehr.data);
                         setSelectedItems(items.data);
 
+                        fetchData()
                         console.log(ehr.data);
                         console.log(items.data);
                         setDialogOpen(true);
@@ -324,17 +339,20 @@ function Invoice() {
                                                         <ListItem>
 
                                                                 <MDButton
-                                                                        style={{
-                                                                                // width: "120px",
-                                                                                marginRight: "10px",
-                                                                                marginBottom: "8px",
-                                                                        }}
+                                                                        style={{ marginRight: '10px', marginBottom: '8px' }}
                                                                         variant="contained"
                                                                         color="info"
-                                                                // onClick={() => handleEdit(row.original)}
+                                                                        onClick={handleCreateInsuranceDialogOpen}
                                                                 >
                                                                         Create Insurance Claim
                                                                 </MDButton>
+                                                                <CreateInsuranceClaimDialog
+                                                                        isOpen={isCreateInsuranceDialogOpen}
+                                                                        onClose={() => setIsCreateInsuranceDialogOpen(false)}
+                                                                        onCreate={handleCreateInsuranceClaim}
+                                                                        invoiceId={selectedInvoiceDetails.invoiceId}
+                                                                        fetchData={fetchData} // Pass the selectedInvoice to the dialog component
+                                                                />
                                                         </ListItem>
                                                 )}
                                         </List>
@@ -437,6 +455,16 @@ function Invoice() {
                                                                                                 </TableRow>
                                                                                         ))}
                                                                                 </TableBody>
+                                                                                <TableRow>
+                                                                                        <TableCell colSpan={2} align="right">
+                                                                                                <strong>Total:</strong>
+                                                                                        </TableCell>
+                                                                                        <TableCell align="right">
+                                                                                                <strong>
+                                                                                                        ${selectedItems.reduce((total, item) => total + item.transactionItemPrice, 0)}
+                                                                                                </strong>
+                                                                                        </TableCell>
+                                                                                </TableRow>
                                                                         </Table>
                                                                 </TableContainer>
                                                         </ListItem>
