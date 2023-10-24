@@ -18,7 +18,7 @@
   display: flex;
   flex-direction: column;
   height: 80vh;
-  width: calc(13% - 20px);
+  width: calc(15% - 20px);
   background-color: #f4f5f7;
   border: 1px solid #ddd;
   border-radius: 10px;

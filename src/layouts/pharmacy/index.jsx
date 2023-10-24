@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { selectStaff } from "../../store/slices/staffSlice";
 import MDTypography from "components/MDTypography";
 import LiveQueue from "./LiveQueue";
+import MedicationManagement from "./medication-management";
 import MDBox from "components/MDBox";
 
 import Medication from "@mui/icons-material/Medication";
@@ -71,7 +72,7 @@ function Outpatient() {
           <LiveQueue />
         </TabPanel>
         <TabPanel value="Medication">
-          amelia medication here
+          <MedicationManagement />
         </TabPanel>
       </TabContext>
     </DashboardLayout>

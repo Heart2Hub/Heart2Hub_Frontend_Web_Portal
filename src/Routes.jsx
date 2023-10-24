@@ -38,7 +38,6 @@ import ConsumableEquipmentManagement from "layouts/administration/inventory-mana
 import InventoryManagement from "layouts/administration/inventory-management";
 import MedicationManagement from "layouts/pharmacy/medication-management";
 import ServiceItemManagement from "layouts/administration/inventory-management/service-item-management";
-import Pharmacy from "layouts/pharmacy";
 
 const routes = [
   {
@@ -182,23 +181,6 @@ const routes = [
     component: (
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.PHARMACIST]}
-        forHeadsOnly={false}
-      >
-        <Pharmacy />
-      </ProtectedRoute>
-    ),
-  },
-
-  {
-    type: "collapse",
-    name: "Pharmacy",
-    key: "pharmacy",
-    icon: <Icon fontSize="small">medication</Icon>,
-    route: "/pharmacy",
-    authorizedRoles: [StaffRoleEnum.ALL],
-    component: (
-      <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
       >
         <Pharmacy />
@@ -353,19 +335,19 @@ const routes = [
       </ProtectedRoute>
     ),
   },
-  {
-    name: "MedicationManagement",
-    key: "medicationmanagement",
-    route: "/pharmacy/medication-management",
-    component: (
-      <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ADMIN]}
-        forHeadsOnly={false}
-      >
-        <MedicationManagement />
-      </ProtectedRoute>
-    ),
-  },
+  // {
+  //   name: "MedicationManagement",
+  //   key: "medicationmanagement",
+  //   route: "/pharmacy/medication-management",
+  //   component: (
+  //     <ProtectedRoute
+  //       authorizedRoles={[StaffRoleEnum.ADMIN]}
+  //       forHeadsOnly={false}
+  //     >
+  //       <MedicationManagement />
+  //     </ProtectedRoute>
+  //   ),
+  // },
   {
     name: "Service Item Management",
     key: "serviceItemManagement",
