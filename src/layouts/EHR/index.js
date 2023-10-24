@@ -4,6 +4,7 @@ import Avatar from "@mui/material/Avatar";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import Checkbox from "@mui/material/Checkbox";
@@ -25,10 +26,15 @@ import { displayMessage } from "../../store/slices/snackbarSlice";
 import { setEHRRecord } from "../../store/slices/ehrSlice";
 import MDAvatar from "components/MDAvatar";
 import { maskNric } from "utility/Utility";
+import { treatmentPlanRecordApi } from "api/Api";
+import { selectEHRRecord } from "store/slices/ehrSlice";
+import { useSelector } from "react-redux";
+
 
 function EHR() {
   const navigate = useNavigate();
   const reduxDispatch = useDispatch();
+  const ehrRecord = useSelector(selectEHRRecord);
 
   const [imageURLs, setImageURLs] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -133,6 +139,7 @@ function EHR() {
   });
   const [isDetailsCorrect, setIsDetailsCorrect] = useState(false);
   const [isPictureCorrect, setIsPictureCorrect] = useState(false);
+  const [invitationOpen, setInvitationOpen] = useState(false);
 
   const handleOpenModal = (electronicHealthRecordId) => {
     const patientWithElectronicHealthRecordSummary =
@@ -320,6 +327,7 @@ function EHR() {
         ...prevData,
         rows: mappedRows,
       }));
+      console.log(ehrRecord)
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -338,6 +346,12 @@ function EHR() {
         <p>Loading...</p>
       ) : (
         <>
+          <MDButton 
+            color="primary"
+            sx={{ float: "right"}}
+            onClick={() => setInvitationOpen(true)}>
+            My Invitations
+          </MDButton>
           <MDBox pt={6} pb={3}>
             <Grid container spacing={6}>
               <Grid item xs={12}>
@@ -464,6 +478,20 @@ function EHR() {
             color="primary"
           >
             Submit
+          </MDButton>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={invitationOpen} onClose={() => setInvitationOpen(false)}>
+        <DialogTitle>My Invitations</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Please choose from the list of available staff members to assign
+            this appointment ticket.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <MDButton onClick={() => setInvitationOpen(false)} color="primary">
+            Cancel
           </MDButton>
         </DialogActions>
       </Dialog>
