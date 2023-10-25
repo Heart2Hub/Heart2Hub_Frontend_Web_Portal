@@ -7,13 +7,13 @@ import {
 } from "@mui/material";
 import React, { useEffect } from "react";
 import { Draggable } from "@hello-pangea/dnd";
-import "./kanbanStyles.css";
+import "./inpatient.css";
 import MDTypography from "components/MDTypography";
 import AppointmentTicketModal from "./AppointmentTicketModal";
 import { useState } from "react";
 import MDAvatar from "components/MDAvatar";
 import { truncateText } from "utility/Utility";
-import { imageServerApi } from "../../../api/Api";
+import { imageServerApi } from "api/Api";
 import ScheduleAdmissionModal from "./ScheduleAdmissionModal";
 
 function KanbanDraggable({
@@ -120,7 +120,7 @@ function KanbanDraggable({
           </ButtonBase>
         )}
       </Draggable>
-      {selectedAppointment && columnName !== "Admission" && (
+      {selectedAppointment && columnName !== "Registration" && (
         <AppointmentTicketModal
           openModal={openModal}
           handleCloseModal={handleCloseModal}
@@ -131,7 +131,7 @@ function KanbanDraggable({
           forceRefresh={forceRefresh}
         />
       )}
-      {selectedAppointment && columnName === "Admission" && (
+      {selectedAppointment && columnName === "Registration" && (
         <ScheduleAdmissionModal
           openModal={openModal}
           handleCloseModal={handleCloseModal}
