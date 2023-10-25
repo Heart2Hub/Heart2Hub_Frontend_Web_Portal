@@ -85,6 +85,11 @@ export const staffApi = {
       `${REST_ENDPOINT}/staff/getStaffsWorkingInCurrentShiftAndDepartment?departmentName=${departmentName}`
     );
   },
+  getStaffsWorkingInCurrentShiftAndWard(wardName) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/staff/getStaffsWorkingInCurrentShiftAndWard?wardName=${wardName}`
+    );
+  },
 };
 
 export const departmentApi = {
@@ -96,6 +101,11 @@ export const departmentApi = {
 export const wardApi = {
   getAllWards() {
     return axiosFetch.get(`${REST_ENDPOINT}/ward/getAllWards?name`);
+  },
+  getAllWardsByWardClass(wardClass) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/ward/getAllWardsByWardClass?wardClass=${wardClass}`
+    );
   },
 };
 
@@ -375,10 +385,15 @@ export const subsidyApi = {
     return axiosFetch.get(`${REST_ENDPOINT}/subsidy/getAllSubsidies`);
   },
   createSubsidy(requestBody) {
-    return axiosFetch.post(`${REST_ENDPOINT}/subsidy/createSubsidy`, requestBody);
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/subsidy/createSubsidy`,
+      requestBody
+    );
   },
   deleteSubsidy(subsidyId) {
-    return axiosFetch.delete(`${REST_ENDPOINT}/subsidy/deleteSubsidy/${subsidyId}`);
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/subsidy/deleteSubsidy/${subsidyId}`
+    );
   },
   updateSubsidyRate(subsidyId, newSubsidyRate) {
     return axiosFetch.put(
@@ -545,7 +560,8 @@ export const inventoryApi = {
 export const transactionItemApi = {
   addToCart(patientId, requestBody) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/transactionItem/addToCart/${patientId}`, requestBody
+      `${REST_ENDPOINT}/transactionItem/addToCart/${patientId}`,
+      requestBody
     );
   },
   removeFromCart(patientId, transactionItemId) {
@@ -557,5 +573,38 @@ export const transactionItemApi = {
     return axiosFetch.get(
       `${REST_ENDPOINT}/transactionItem/getCartItems/${patientId}`
     );
-  }
-}
+  },
+};
+
+export const admissionApi = {
+  createAdmission(duration, reason, patientId, doctorId) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/admission/createAdmission?duration=${duration}&reason=${reason}&patientId=${patientId}&doctorId=${doctorId}`
+    );
+  },
+  scheduleAdmission(admissionId, wardAvailabilityId, admission, discharge) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/scheduleAdmission?admissionId=${admissionId}&wardAvailabilityId=${wardAvailabilityId}&admission=${admission}&discharge=${discharge}`
+    );
+  },
+  getAdmissionsForWard(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/admission/getAdmissionsForWard?wardName=${name}`
+    );
+  },
+  assignAdmissionToStaff(admissionId, toStaffId, fromStaffId) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+    );
+  },
+  handleDischarge(date) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/handleDischarge?date=${date}`
+    );
+  },
+  handleAllocateIncoming(date) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/handleAllocateIncoming?date=${date}`
+    );
+  },
+};

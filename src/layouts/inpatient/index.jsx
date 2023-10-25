@@ -3,13 +3,15 @@ import { useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import KanbanColumn from "./KanbanColumn";
 import { useSelector } from "react-redux";
-import { selectStaff } from "../../../store/slices/staffSlice";
-import { appointmentApi, staffApi, admissionApi } from "../../../api/Api";
+import { selectStaff } from "store/slices/staffSlice";
+import { appointmentApi, staffApi, admissionApi, wardApi } from "api/Api";
 import { useEffect } from "react";
 import MDButton from "components/MDButton";
+import MDTypography from "components/MDTypography";
 
-import { Icon, Box } from "@mui/material";
-import "./kanbanStyles.css";
+import { Icon, Box, Tab, Tabs } from "@mui/material";
+import { TabContext, TabList, TabPanel } from "@mui/lab";
+import "./inpatient.css";
 import CreateAppointmentModal from "./CreateAppointmentModal";
 
 import StaffListSidePanel from "./StaffListSidePanel";
@@ -19,8 +21,15 @@ import { displayMessage } from "store/slices/snackbarSlice";
 import AssignAppointmentDialog from "./AssignAppointmentDialog";
 import { useRef } from "react";
 import AdmissionDialog from "./AdmissionDialog";
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 
-function KanbanBoard() {
+import { Calendar, Views, momentLocalizer } from "react-big-calendar";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import moment from "moment";
+import AdmissionCard from "./AdmissionCard";
+
+function Inpatient() {
   const staff = useSelector(selectStaff);
   const [loading, setLoading] = useState(false);
   const reduxDispatch = useDispatch();
@@ -350,8 +359,7 @@ function KanbanBoard() {
           const admissionResponse = await admissionApi.createAdmission(
             duration,
             reason,
-            selectedAppointmentToAssign.patientId,
-            selectedAppointmentToAssign.currentAssignedStaffId
+            selectedAppointmentToAssign.patientId
           );
         }
 
@@ -380,7 +388,7 @@ function KanbanBoard() {
   //force a refresh for modal assigning
   const forceRefresh = () => {
     setLoading(true);
-    getAppointmentsForToday();
+    getAdmissions();
     getStaffCurrentlyWorking();
     setLoading(false);
   };
@@ -516,7 +524,7 @@ function KanbanBoard() {
 
   //get List of currently working staffs
   const getStaffCurrentlyWorking = async () => {
-    const response = await staffApi.getStaffsWorkingInCurrentShiftAndDepartment(
+    const response = await staffApi.getStaffsWorkingInCurrentShiftAndWard(
       staff.unit.name
     );
     setListOfWorkingStaff(response.data);
@@ -526,123 +534,231 @@ function KanbanBoard() {
     getAppointmentsForToday();
   };
 
+  //get admissions for ward
+  const [currentDayAdmissions, setCurrentDayAdmissions] = useState([]);
+  const [admissionsByRoom, setAdmissionsByRoom] = useState([]);
+  const getAdmissions = async () => {
+    const response = await admissionApi.getAdmissionsForWard(staff.unit.name);
+
+    setCurrentDayAdmissions(response.data);
+  };
+
   useEffect(() => {
-    getAppointmentsForToday();
     getStaffCurrentlyWorking();
+    getAdmissions();
     console.log(staff);
   }, [loading, selectStaffToFilter]);
 
+  //   useEffect(() => {
+  //     console.log(registration);
+  //   }, [registration]);
+
+  {
+    /* INPATIENT */
+  }
+  const localizer = momentLocalizer(moment);
+
+  const [room, setRoom] = useState(1);
+
+  const handleChange = (event, selectedRoom) => {
+    setRoom(selectedRoom);
+  };
+
+  useEffect(() => {
+    const filtered = currentDayAdmissions.filter(
+      (admission) => admission.room === room
+    );
+    const admissionsInBedOrder = filtered.sort((a, b) => a.bed - b.bed);
+    setAdmissionsByRoom(admissionsInBedOrder);
+  }, [room, currentDayAdmissions]);
+
+  useEffect(() => {
+    console.log(admissionsByRoom);
+  }, [admissionsByRoom]);
+
+  const dischargeTomorrow = async () => {
+    const tomorrow = moment().add(1, "days");
+    tomorrow.seconds(0);
+    tomorrow.minutes(0);
+    tomorrow.hours(12);
+    const tomorrowDateString = tomorrow.format("YYYY-MM-DDTHH:mm:ss");
+    await admissionApi.handleDischarge(tomorrowDateString);
+    forceRefresh();
+  };
+
+  const allocateTomorrow = async () => {
+    const tomorrow = moment().add(1, "days");
+    tomorrow.seconds(0);
+    tomorrow.minutes(0);
+    tomorrow.hours(13);
+    const tomorrowDateString = tomorrow.format("YYYY-MM-DDTHH:mm:ss");
+    await admissionApi.handleAllocateIncoming(tomorrowDateString);
+    forceRefresh();
+  };
+
   return (
-    <>
-      <Box display="flex" justifyContent="left" alignItems="left" mb={2}>
-        <MDButton variant="contained" color="primary" onClick={openModal}>
-          Create New Appointment
-          <Icon>add</Icon>
-        </MDButton>
-      </Box>
-      <CreateAppointmentModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onAppointmentCreated={handleAppointmentCreated}
-      />
-      <MDBox sx={{ display: "flex", flexDirection: "row", width: "100%" }}>
-        <StaffListSidePanel
-          handleSelectStaffToFilter={handleSelectStaffToFilter}
-          selectStaffToFilter={selectStaffToFilter}
-          listOfWorkingStaff={listOfWorkingStaff}
-        />
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="kanban-board">
-            <KanbanColumn
-              title="Registration"
-              appointments={registration}
-              id={"1"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            />
-            <KanbanColumn
-              title="Triage"
-              appointments={triage}
-              id={"2"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            />
-            <KanbanColumn
-              title="Consultation"
-              appointments={consultation}
-              id={"3"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            />
-            <KanbanColumn
-              title="Treatment"
-              appointments={treatment}
-              id={"4"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            />
-            <KanbanColumn
-              title="Admission"
-              appointments={admission}
-              id={"5"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            />
-            <KanbanColumn
-              title="Pharmacy"
-              appointments={pharmacy}
-              id={"6"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            />
-            <KanbanColumn
-              title="Referral"
-              appointments={referral}
-              id={"8"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            />
-            <KanbanColumn
-              title="Discharge"
-              appointments={discharge}
-              id={"7"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            />
-          </div>
-        </DragDropContext>
+    <DashboardLayout>
+      <DashboardNavbar />
+      <MDTypography
+        sx={{
+          fontSize: "2.5rem", // Adjust the size as per your preference
+          textAlign: "center",
+          fontWeight: "bold", // Makes the font-weight bold
+          marginTop: "1rem", // Adds some top margin
+          marginBottom: "1rem", // Adds some bottom margin
+        }}
+      >
+        Ward {staff.unit.name}
+      </MDTypography>
+
+      <MDBox sx={{ display: "flex", width: "100%" }}>
+        <div className="staff-list">
+          <StaffListSidePanel
+            handleSelectStaffToFilter={handleSelectStaffToFilter}
+            selectStaffToFilter={selectStaffToFilter}
+            listOfWorkingStaff={listOfWorkingStaff}
+          />
+        </div>
+
+        <MDBox>
+          <MDButton onClick={dischargeTomorrow}>Discharge</MDButton>
+          <MDButton onClick={allocateTomorrow}>Allocate</MDButton>
+          <Tabs value={room} onChange={handleChange}>
+            <Tab label="Room 1" value={1} />
+            <Tab label="Room 2" value={2} />
+            <Tab label="Room 3" value={3} />
+          </Tabs>
+
+          <MDBox className="admission-calendar">
+            {admissionsByRoom.map((admission, index) => (
+              <Calendar
+                className={index === 0 ? "has-time" : "no-time"}
+                localizer={localizer}
+                defaultView={Views.DAY}
+                startAccessor="start"
+                endAccesor="end"
+                events={[
+                  {
+                    title: "Admission Ticket",
+                    start: new Date(),
+                    end: new Date(),
+                    allDay: true,
+                  },
+                ]}
+                components={{
+                  event: () =>
+                    admission.duration === null ? (
+                      <div>No admission</div>
+                    ) : selectStaffToFilter &&
+                      selectStaffToFilter !== admission.assignedNurseId ? (
+                      <div>No admission</div>
+                    ) : (
+                      <AdmissionCard
+                        appointment={admission}
+                        index={index}
+                        listOfWorkingStaff={listOfWorkingStaff}
+                        forceRefresh={forceRefresh}
+                      />
+                    ),
+                }}
+              />
+            ))}
+          </MDBox>
+        </MDBox>
+
+        {/* <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="kanban-board">
+              <KanbanColumn
+                title="Registration"
+                appointments={registration}
+                id={"1"}
+                replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+                listOfWorkingStaff={listOfWorkingStaff}
+                forceRefresh={forceRefresh}
+              />
+              <KanbanColumn
+                title="Triage"
+                appointments={triage}
+                id={"2"}
+                replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+                listOfWorkingStaff={listOfWorkingStaff}
+                forceRefresh={forceRefresh}
+              />
+              <KanbanColumn
+                title="Consultation"
+                appointments={consultation}
+                id={"3"}
+                replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+                listOfWorkingStaff={listOfWorkingStaff}
+                forceRefresh={forceRefresh}
+              />
+              <KanbanColumn
+                title="Treatment"
+                appointments={treatment}
+                id={"4"}
+                replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+                listOfWorkingStaff={listOfWorkingStaff}
+                forceRefresh={forceRefresh}
+              />
+              <KanbanColumn
+                title="Admission"
+                appointments={admission}
+                id={"5"}
+                replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+                listOfWorkingStaff={listOfWorkingStaff}
+                forceRefresh={forceRefresh}
+              />
+              <KanbanColumn
+                title="Pharmacy"
+                appointments={pharmacy}
+                id={"6"}
+                replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+                listOfWorkingStaff={listOfWorkingStaff}
+                forceRefresh={forceRefresh}
+              />
+              <KanbanColumn
+                title="Referral"
+                appointments={referral}
+                id={"8"}
+                replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+                listOfWorkingStaff={listOfWorkingStaff}
+                forceRefresh={forceRefresh}
+              />
+              <KanbanColumn
+                title="Discharge"
+                appointments={discharge}
+                id={"7"}
+                replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+                listOfWorkingStaff={listOfWorkingStaff}
+                forceRefresh={forceRefresh}
+              />
+            </div>
+          </DragDropContext> */}
+
+        {/* {assigningToSwimlane === "Admission" ? (
+          <AdmissionDialog
+            step={step}
+            open={isDialogOpen}
+            onConfirm={handleAdmissionConfirm}
+            onClose={handleClose}
+            onNext={handleNext}
+            listOfWorkingStaff={listOfWorkingStaff}
+            selectedAppointmentToAssign={selectedAppointmentToAssign}
+            assigningToSwimlane={assigningToSwimlane}
+          />
+        ) : (
+          <AssignAppointmentDialog
+            open={isDialogOpen}
+            onConfirm={handleConfirm}
+            onClose={handleClose}
+            listOfWorkingStaff={listOfWorkingStaff}
+            selectedAppointmentToAssign={selectedAppointmentToAssign}
+            assigningToSwimlane={assigningToSwimlane}
+          />
+        )} */}
       </MDBox>
-      {assigningToSwimlane === "Admission" ? (
-        <AdmissionDialog
-          step={step}
-          open={isDialogOpen}
-          onConfirm={handleAdmissionConfirm}
-          onClose={handleClose}
-          onNext={handleNext}
-          listOfWorkingStaff={listOfWorkingStaff}
-          selectedAppointmentToAssign={selectedAppointmentToAssign}
-          assigningToSwimlane={assigningToSwimlane}
-        />
-      ) : (
-        <AssignAppointmentDialog
-          open={isDialogOpen}
-          onConfirm={handleConfirm}
-          onClose={handleClose}
-          listOfWorkingStaff={listOfWorkingStaff}
-          selectedAppointmentToAssign={selectedAppointmentToAssign}
-          assigningToSwimlane={assigningToSwimlane}
-        />
-      )}
-    </>
+    </DashboardLayout>
   );
 }
 
-export default KanbanBoard;
+export default Inpatient;

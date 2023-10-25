@@ -3,8 +3,8 @@ import { useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import KanbanColumn from "./KanbanColumn";
 import { useSelector } from "react-redux";
-import { selectStaff } from "../../../store/slices/staffSlice";
-import { appointmentApi, staffApi, admissionApi } from "../../../api/Api";
+import { selectStaff } from "store/slices/staffSlice";
+import { appointmentApi, staffApi, admissionApi } from "api/Api";
 import { useEffect } from "react";
 import MDButton from "components/MDButton";
 
@@ -350,8 +350,7 @@ function KanbanBoard() {
           const admissionResponse = await admissionApi.createAdmission(
             duration,
             reason,
-            selectedAppointmentToAssign.patientId,
-            selectedAppointmentToAssign.currentAssignedStaffId
+            selectedAppointmentToAssign.patientId
           );
         }
 

@@ -34,10 +34,10 @@ import {
 import { ehrApi } from "api/Api";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setEHRRecord } from "../../../store/slices/ehrSlice";
+import { setEHRRecord } from "store/slices/ehrSlice";
 import ArrivalButton from "./ArrivalButton";
 import { displayMessage } from "store/slices/snackbarSlice";
-import { appointmentApi } from "../../../api/Api";
+import { appointmentApi } from "api/Api";
 import AssignAppointmentDialog from "./AssignAppointmentDialog";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";

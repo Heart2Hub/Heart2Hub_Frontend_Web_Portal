@@ -13,18 +13,17 @@ import {
 import React, { useState } from "react";
 import { useEffect } from "react";
 
-function AssignAppointmentDialog({
+function AssignAdmissionDialog({
   open,
   onClose,
   onConfirm,
   listOfWorkingStaff,
   selectedAppointmentToAssign,
-  assigningToSwimlane,
 }) {
   const [selectedStaff, setSelectedStaff] = useState(
     selectedAppointmentToAssign !== null &&
-      selectedAppointmentToAssign.currentAssignedStaffId !== null
-      ? selectedAppointmentToAssign.currentAssignedStaffId
+      selectedAppointmentToAssign.assignedNurseId !== null
+      ? selectedAppointmentToAssign.assignedNurseId
       : 0
   );
   const [listOfApplicableWorkingStaff, setListOfApplicableWorkingStaff] =
@@ -79,9 +78,9 @@ function AssignAppointmentDialog({
     }
   };
 
-  useEffect(() => {
-    handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
-  }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
+  //   useEffect(() => {
+  //     handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
+  //   }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
 
   return (
     <>
@@ -103,8 +102,14 @@ function AssignAppointmentDialog({
               sx={{ height: "50px" }}
             >
               <MenuItem value={0}>Not assigned</MenuItem>
-              {listOfApplicableWorkingStaff.length !== 0 &&
+              {/* {listOfApplicableWorkingStaff.length !== 0 &&
                 listOfApplicableWorkingStaff.map((staff) => (
+                  <MenuItem key={staff.staffId} value={staff.staffId}>
+                    {findStaffInListByStaffId(staff.staffId)}
+                  </MenuItem>
+                ))} */}
+              {listOfWorkingStaff.length !== 0 &&
+                listOfWorkingStaff.map((staff) => (
                   <MenuItem key={staff.staffId} value={staff.staffId}>
                     {findStaffInListByStaffId(staff.staffId)}
                   </MenuItem>
@@ -125,4 +130,4 @@ function AssignAppointmentDialog({
   );
 }
 
-export default AssignAppointmentDialog;
+export default AssignAdmissionDialog;
