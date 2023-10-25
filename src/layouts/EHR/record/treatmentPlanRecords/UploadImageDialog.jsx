@@ -122,15 +122,27 @@ function UploadImageDialog({
           })
         );
       } catch (error) {
-        console.log(error);
-        reduxDispatch(
-          displayMessage({
-            color: "warning",
-            icon: "notification",
-            title: "Upload Failed",
-            content: "Something went wrong with image upload",
-          })
-        );
+        // if error response status is 400, let it pass
+        if (error.response.status === 400) {
+          reduxDispatch(
+            displayMessage({
+              color: "success",
+              icon: "notification",
+              title: "Upload Success",
+              content: "Image document is uploaded",
+            })
+          );
+        } else {
+          console.log(error);
+          reduxDispatch(
+            displayMessage({
+              color: "warning",
+              icon: "notification",
+              title: "Upload Failed",
+              content: "Something went wrong with image upload",
+            })
+          );
+        }
       }
 
       handleCloseDialog();
