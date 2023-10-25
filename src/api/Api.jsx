@@ -756,6 +756,11 @@ export const transactionItemApi = {
       `${REST_ENDPOINT}/transactionItem/checkout/${patientId}/${appointmentId}`
     );
   },
+  updateTransactionItem(transactionItemId, quantity) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/transactionItem/updateTransactionItem?transactionItemId=${transactionItemId}&quantity=${quantity}`
+    );
+  },
 };
 
 export const prescriptionRecordApi = {
