@@ -489,6 +489,11 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/viewPatientAppointments?patientUsername=${patientUsername}`
     );
   },
+  findAppointmentTimeDiff(apppointmentId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/appointment/findAppointmentTimeDiff/${apppointmentId}`
+    );
+  },
 };
 
 export const inventoryApi = {
