@@ -5,7 +5,7 @@ import {
   ButtonBase,
   Skeleton,
 } from "@mui/material";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import "./kanbanStyles.css";
 import MDTypography from "components/MDTypography";
@@ -13,7 +13,7 @@ import AppointmentTicketModal from "./AppointmentTicketModal";
 import { useState } from "react";
 import MDAvatar from "components/MDAvatar";
 import { truncateText } from "utility/Utility";
-import { imageServerApi, appointmentApi } from "../../../api/Api";
+import { imageServerApi } from "../../../api/Api";
 import ScheduleAdmissionModal from "./ScheduleAdmissionModal";
 
 function KanbanDraggable({
@@ -27,11 +27,6 @@ function KanbanDraggable({
   const [openModal, setOpenModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
-  const [timeDifference, setTimeDifference] = useState(0);
-  // const [priorityColor, setPriorityColor] = useState("");
-  const priorityColor = useRef(null);
-
-  const [waitingTime, setWaitingTime] = useState(0);
 
   const handleGetProfileImage = async () => {
     if (appointment.patientProfilePicture !== null) {
@@ -104,7 +99,7 @@ function KanbanDraggable({
     // }
     // fetchTimeDifference();
     handleGetProfileImage();
-  }, [appointment.appointmentId]);
+  }, [appointment]);
 
   return (
     <>
