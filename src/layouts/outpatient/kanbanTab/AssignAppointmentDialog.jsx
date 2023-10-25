@@ -84,6 +84,10 @@ function AssignAppointmentDialog({
       setListOfApplicableWorkingStaff(
         listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "DOCTOR")
       );
+    } else if (swimlaneName === "Admission") {
+      setListOfApplicableWorkingStaff(
+        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
+      );
     } else if (swimlaneName === "Treatment") {
       setListOfApplicableWorkingStaff(
         listOfWorkingStaff.filter(
@@ -95,18 +99,18 @@ function AssignAppointmentDialog({
         listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
       );
     } else if (swimlaneName === "Pharmacy") {
-      setListOfApplicableWorkingStaff(
-        listOfWorkingStaff
-      );
+      setListOfApplicableWorkingStaff(listOfWorkingStaff);
     } else {
       // console.log("No Filter result of applicable working staff");
     }
   };
 
   const getPharmacyStaff = async () => {
-    const response = await staffApi.getStaffsWorkingInCurrentShiftAndDepartment("Pharmacy");
+    const response = await staffApi.getStaffsWorkingInCurrentShiftAndDepartment(
+      "Pharmacy"
+    );
     listOfWorkingStaff = response.data;
-  }
+  };
 
   useEffect(() => {
     if (assigningToSwimlane === "Pharmacy") {

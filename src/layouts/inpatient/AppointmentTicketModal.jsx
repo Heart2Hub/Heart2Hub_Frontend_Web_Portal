@@ -19,12 +19,7 @@ import {
   TableRow,
   Paper,
   Button,
-  IconButton,
 } from "@mui/material";
-import RefreshIcon from "@mui/icons-material/Refresh";
-
-import PrescriptionDialog from "./PrescriptionRecord";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import MDTypography from "components/MDTypography";
 import { calculateAge } from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
@@ -39,17 +34,16 @@ import {
 import { ehrApi } from "api/Api";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setEHRRecord } from "../../../store/slices/ehrSlice";
+import { setEHRRecord } from "store/slices/ehrSlice";
 import ArrivalButton from "./ArrivalButton";
 import { displayMessage } from "store/slices/snackbarSlice";
-import { appointmentApi } from "../../../api/Api";
+import { appointmentApi } from "api/Api";
 import AssignAppointmentDialog from "./AssignAppointmentDialog";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import MDBox from "components/MDBox";
 import AddAttachmentButton from "./AddAttachmentButton";
 import ViewAttachmentsButton from "./ViewAttachmentsButton";
-import ViewFacilityInventoryButton from "layouts/administration/facility-management/viewFacilityInventoryButton";
 import AdmissionDialog from "./AdmissionDialog";
 
 const style = {
@@ -81,7 +75,7 @@ function AppointmentTicketModal({
   const [editableComments, setEditableComments] = useState("");
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [facility, setFacility] = useState("");
+
   //For Cart
   const [medications, setMedications] = useState([]);
   const [services, setServices] = useState([]);
@@ -118,65 +112,14 @@ function AppointmentTicketModal({
     setCommentsTouched(true);
   };
 
-  const [isPrescriptionDialogOpen, setIsPrescriptionDialogOpen] =
-    useState(false);
-
-  // function to open the prescription dialog
-  const handleOpenPrescriptionDialog = () => {
-    setIsPrescriptionDialogOpen(true);
-  };
-
-  //Only for Discharge ticket, will create an Invoice after discharfe
-  const handleDischarge = async () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to discharge the patient?"
-    );
-
-    if (confirmed) {
-      try {
-        await transactionItemApi.checkout(
-          selectedAppointment.patientId,
-          selectedAppointment.appointmentId
-        );
-        // Perform any necessary actions after discharge
-        console.log("Patient has been discharged.");
-
-        reduxDispatch(
-          displayMessage({
-            color: "success",
-            icon: "notification",
-            title: "Success",
-            content: "Patient has been discharged.",
-          })
-        );
-
-        handleCloseModal();
-        forceRefresh();
-      } catch (error) {
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error",
-            content: error.response.data,
-          })
-        );
-      }
-    }
-  };
-
   // Fetch lists of all medications and service items from the API
   const fetchMedicationsAndServices = async () => {
     try {
-      const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(
-        selectedAppointment.patientId
-      );
+      const medicationsResponse = await inventoryApi.getAllMedication("");
       setMedications(medicationsResponse.data);
       // console.log(medicationsResponse.data)
 
-      const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
-        loggedInStaff.unit.unitId
-      );
+      const servicesResponse = await inventoryApi.getAllServiceItem("");
       setServices(servicesResponse.data);
       // console.log(servicesResponse.data)
       // console.log(selectedAppointment)
@@ -196,10 +139,6 @@ function AppointmentTicketModal({
     } catch (error) {
       console.error("Error fetching cart items:", error);
     }
-  };
-
-  const handlePageRefresh = () => {
-    fetchPatientCart();
   };
 
   const handleDeleteCartItem = async (cartItemId) => {
@@ -421,10 +360,7 @@ function AppointmentTicketModal({
       (staff) => staff.staffId === staffId
     )[0];
 
-    console.log("Facility Id: " + facility.facilityId);
-
     if (facility) {
-      setFacility(facility);
       return facility.name + " (" + facility.location + ")";
     } else {
       return null;
@@ -587,7 +523,7 @@ function AppointmentTicketModal({
 
   const handleClickToEhr = () => {
     // Can refactor to util
-    // console.log(selectedAppointment);
+    console.log(selectedAppointment);
     const dateComponents = selectedAppointment.dateOfBirth;
     const [year, month, day, hours, minutes] = dateComponents;
     const formattedMonth = String(month).padStart(2, "0");
@@ -608,9 +544,7 @@ function AppointmentTicketModal({
           username: selectedAppointment.username,
           profilePicture: selectedAppointment.patientProfilePicture,
         };
-        console.log(response);
-        console.log(response.data);
-        reduxDispatch(setEHRRecord(response.data));
+        reduxDispatch(setEHRRecord(response));
         navigate("/ehr/ehrRecord");
       });
   };
@@ -684,20 +618,11 @@ function AppointmentTicketModal({
                   </MDTypography>
                 </ListItem>
                 <ListItem>
-                  <MDTypography variant="h6" gutterBottom>
+                  <MDTypography variant="h6" gutterBottom color="black">
                     {facilityLocation !== null
                       ? facilityLocation
                       : "No Location Yet"}
                   </MDTypography>
-                  <MDBox>
-                    <Stack direction="row" spacing={2}>
-                      {facilityLocation !== null && (
-                        <ViewFacilityInventoryButton
-                          selectedFacility={facility}
-                        />
-                      )}
-                    </Stack>
-                  </MDBox>
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
@@ -739,7 +664,7 @@ function AppointmentTicketModal({
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
                 >
-                  <MDTypography variant="h6" gutterBottom>
+                  <MDTypography variant="h6" gutterBottom color="black">
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
@@ -900,41 +825,6 @@ function AppointmentTicketModal({
                 </Box>
 
                 <List>
-                  {/* ... existing list items ... */}
-                  <ListItem>
-                    <MDTypography variant="h5" gutterBottom>
-                      Prescription Records:
-                    </MDTypography>
-                  </ListItem>
-                  <ListItem>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        marginTop: 2,
-                      }}
-                    >
-                      <MDButton
-                        onClick={handleOpenPrescriptionDialog}
-                        variant="gradient"
-                        color="primary"
-                      >
-                        View Prescription Records
-                      </MDButton>
-                    </Box>
-                  </ListItem>
-                </List>
-                {/* ... rest of the existing code ... */}
-                <PrescriptionDialog
-                  open={isPrescriptionDialogOpen}
-                  onClose={() => setIsPrescriptionDialogOpen(false)}
-                  electronicHealthRecordId={
-                    selectedAppointment.electronicHealthRecordId
-                  }
-                  handlePageRefresh={handlePageRefresh}
-                />
-                <br></br>
-                <List>
                   <ListItem>
                     <MDTypography variant="h5" gutterBottom>
                       Medications:
@@ -954,87 +844,56 @@ function AppointmentTicketModal({
                 <List>
                   <ListItem>
                     <MDTypography variant="h5" gutterBottom>
-                      Patient's Cart:
+                      Patient's Items:
                     </MDTypography>
-                    <IconButton onClick={fetchPatientCart} aria-label="refresh">
-                      <RefreshIcon />
-                    </IconButton>
                   </ListItem>
-                  {cartItems.length === 0 ? (
-                    <ListItem>
-                      <MDTypography variant="subtitle1">
-                        Patient's cart is empty.
-                      </MDTypography>
-                    </ListItem>
-                  ) : (
-                    <ListItem>
-                      <TableContainer component={Paper}>
-                        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell> Name</TableCell>
+                  <ListItem>
+                    {" "}
+                    <TableContainer component={Paper}>
+                      <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell> Name</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {cartItems.map((item) => (
+                            <TableRow
+                              key={item.transactionItemId}
+                              sx={{
+                                "&:last-child td, &:last-child th": {
+                                  border: 0,
+                                },
+                              }}
+                            >
+                              <TableCell component="th" scope="row">
+                                {item.transactionItemName}
+                              </TableCell>
+                              <TableCell align="right">
+                                {" "}
+                                Quantity: {item.transactionItemQuantity}
+                              </TableCell>
+                              <TableCell align="right">
+                                <Button
+                                  variant="contained"
+                                  style={{
+                                    backgroundColor: "#f44336",
+                                    color: "white",
+                                  }}
+                                  onClick={() =>
+                                    handleDeleteCartItem(item.transactionItemId)
+                                  }
+                                >
+                                  Delete
+                                </Button>
+                              </TableCell>
                             </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {cartItems.map((item) => (
-                              <TableRow
-                                key={item.transactionItemId}
-                                sx={{
-                                  "&:last-child td, &:last-child th": {
-                                    border: 0,
-                                  },
-                                }}
-                              >
-                                <TableCell component="th" scope="row">
-                                  {item.transactionItemName}
-                                </TableCell>
-                                <TableCell align="right">
-                                  Quantity: {item.transactionItemQuantity}
-                                </TableCell>
-                                <TableCell align="right">
-                                  <Button
-                                    variant="contained"
-                                    style={{
-                                      backgroundColor: "#f44336",
-                                      color: "white",
-                                    }}
-                                    onClick={() =>
-                                      handleDeleteCartItem(
-                                        item.transactionItemId
-                                      )
-                                    }
-                                  >
-                                    Delete
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </ListItem>
-                  )}
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </ListItem>
                 </List>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    width: "100%",
-                    marginTop: "10px",
-                  }}
-                >
-                  {selectedAppointment.swimlaneStatusEnum === "DISCHARGE" && (
-                    <MDButton
-                      onClick={handleDischarge}
-                      variant="gradient"
-                      color="success"
-                      style={{ marginTop: "20px" }}
-                    >
-                      Discharge
-                    </MDButton>
-                  )}
-                </Box>
               </List>
             </>
           )}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Modal,
   Box,
@@ -19,12 +19,7 @@ import {
   TableRow,
   Paper,
   Button,
-  IconButton,
 } from "@mui/material";
-import RefreshIcon from "@mui/icons-material/Refresh";
-
-import PrescriptionDialog from "./PrescriptionRecord";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import MDTypography from "components/MDTypography";
 import { calculateAge } from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
@@ -39,18 +34,27 @@ import {
 import { ehrApi } from "api/Api";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setEHRRecord } from "../../../store/slices/ehrSlice";
+import { setEHRRecord } from "store/slices/ehrSlice";
 import ArrivalButton from "./ArrivalButton";
 import { displayMessage } from "store/slices/snackbarSlice";
-import { appointmentApi } from "../../../api/Api";
+import { admissionApi, appointmentApi, wardApi } from "api/Api";
 import AssignAppointmentDialog from "./AssignAppointmentDialog";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import MDBox from "components/MDBox";
 import AddAttachmentButton from "./AddAttachmentButton";
 import ViewAttachmentsButton from "./ViewAttachmentsButton";
-import ViewFacilityInventoryButton from "layouts/administration/facility-management/viewFacilityInventoryButton";
 import AdmissionDialog from "./AdmissionDialog";
+import {
+  Calendar,
+  Views,
+  momentLocalizer,
+  luxonLocalizer,
+} from "react-big-calendar";
+import moment from "moment";
+import "moment-timezone";
+import { DateTime } from "luxon";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 
 const style = {
   position: "absolute",
@@ -65,7 +69,7 @@ const style = {
   borderRadius: "15px",
 };
 
-function AppointmentTicketModal({
+function ScheduleAdmissionModal({
   openModal,
   handleCloseModal,
   selectedAppointment,
@@ -81,7 +85,7 @@ function AppointmentTicketModal({
   const [editableComments, setEditableComments] = useState("");
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [facility, setFacility] = useState("");
+
   //For Cart
   const [medications, setMedications] = useState([]);
   const [services, setServices] = useState([]);
@@ -118,65 +122,14 @@ function AppointmentTicketModal({
     setCommentsTouched(true);
   };
 
-  const [isPrescriptionDialogOpen, setIsPrescriptionDialogOpen] =
-    useState(false);
-
-  // function to open the prescription dialog
-  const handleOpenPrescriptionDialog = () => {
-    setIsPrescriptionDialogOpen(true);
-  };
-
-  //Only for Discharge ticket, will create an Invoice after discharfe
-  const handleDischarge = async () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to discharge the patient?"
-    );
-
-    if (confirmed) {
-      try {
-        await transactionItemApi.checkout(
-          selectedAppointment.patientId,
-          selectedAppointment.appointmentId
-        );
-        // Perform any necessary actions after discharge
-        console.log("Patient has been discharged.");
-
-        reduxDispatch(
-          displayMessage({
-            color: "success",
-            icon: "notification",
-            title: "Success",
-            content: "Patient has been discharged.",
-          })
-        );
-
-        handleCloseModal();
-        forceRefresh();
-      } catch (error) {
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error",
-            content: error.response.data,
-          })
-        );
-      }
-    }
-  };
-
   // Fetch lists of all medications and service items from the API
   const fetchMedicationsAndServices = async () => {
     try {
-      const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(
-        selectedAppointment.patientId
-      );
+      const medicationsResponse = await inventoryApi.getAllMedication("");
       setMedications(medicationsResponse.data);
       // console.log(medicationsResponse.data)
 
-      const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
-        loggedInStaff.unit.unitId
-      );
+      const servicesResponse = await inventoryApi.getAllServiceItem("");
       setServices(servicesResponse.data);
       // console.log(servicesResponse.data)
       // console.log(selectedAppointment)
@@ -196,10 +149,6 @@ function AppointmentTicketModal({
     } catch (error) {
       console.error("Error fetching cart items:", error);
     }
-  };
-
-  const handlePageRefresh = () => {
-    fetchPatientCart();
   };
 
   const handleDeleteCartItem = async (cartItemId) => {
@@ -421,10 +370,7 @@ function AppointmentTicketModal({
       (staff) => staff.staffId === staffId
     )[0];
 
-    console.log("Facility Id: " + facility.facilityId);
-
     if (facility) {
-      setFacility(facility);
       return facility.name + " (" + facility.location + ")";
     } else {
       return null;
@@ -587,7 +533,7 @@ function AppointmentTicketModal({
 
   const handleClickToEhr = () => {
     // Can refactor to util
-    // console.log(selectedAppointment);
+    console.log(selectedAppointment);
     const dateComponents = selectedAppointment.dateOfBirth;
     const [year, month, day, hours, minutes] = dateComponents;
     const formattedMonth = String(month).padStart(2, "0");
@@ -608,9 +554,7 @@ function AppointmentTicketModal({
           username: selectedAppointment.username,
           profilePicture: selectedAppointment.patientProfilePicture,
         };
-        console.log(response);
-        console.log(response.data);
-        reduxDispatch(setEHRRecord(response.data));
+        reduxDispatch(setEHRRecord(response));
         navigate("/ehr/ehrRecord");
       });
   };
@@ -630,6 +574,204 @@ function AppointmentTicketModal({
     // setAssigningToSwimlane(columnName);
     console.log(selectedAppointment);
   }, [selectedAppointment, listOfWorkingStaff]);
+
+  //FOR ADMISSION
+  const [wards, setWards] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
+
+  const fetchWards = async (wardClass) => {
+    try {
+      const response = await wardApi.getAllWardsByWardClass(wardClass);
+      const wardsData = response.data;
+      setWards(wardsData);
+
+      const duration = selectedAppointment.admissionDuration;
+      let startTime = 0;
+      const wardAvailabilityEvents = [];
+      wardsData.forEach((ward) => {
+        //console.log(startTime);
+        const wardAvailabilities = ward.listOfWardAvailabilities;
+        wardAvailabilities.forEach((wa) => {
+          const startDate = wa.date.split(" ")[0];
+          const startDateArr = startDate.split("-"); // 0: year, 1: month, 2: day
+          const selectable = 8 % wa.wardAvailabilityId >= duration;
+
+          const event = {
+            id: wa.wardAvailabilityId,
+            wardName: ward.name,
+            title: "Beds: " + wa.bedsAvailable,
+            start: new Date(
+              startDateArr[0],
+              startDateArr[1] - 1,
+              startDateArr[2],
+              startTime,
+              0,
+              0,
+              0
+            ),
+            end: new Date(
+              startDateArr[0],
+              startDateArr[1] - 1,
+              startDateArr[2],
+              startTime + 1,
+              0,
+              0,
+              0
+            ),
+            actual: new Date(wa.date.replace(" ", "T")),
+          };
+
+          wardAvailabilityEvents.push(event);
+        });
+
+        //console.log(wardAvailabilityEvents);
+
+        //setCalendarEvents([...calendarEvents, ...wardAvailabilityEvents]);
+
+        startTime++;
+      });
+
+      console.log(wardAvailabilityEvents);
+      setCalendarEvents(wardAvailabilityEvents);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchWards("A");
+  }, []);
+
+  const setCalendarStartDay = () => {
+    const today = new Date();
+    return today.getHours() < 12 ? today.getDay() : today.getDay() + 2;
+  };
+
+  moment.locale("ko", {
+    week: {
+      dow: new Date().getDay(),
+    },
+  });
+  const localizer = momentLocalizer(moment);
+
+  // Function to handle cell selection
+
+  const handleSelectSlot = ({ start, end }) => {
+    // Log the start and end times to the console
+    console.log("Start Time:", start);
+    console.log("End Time:", end);
+  };
+
+  const [admissionDateTime, setAdmissionDateTime] = useState("");
+  const [dischargeDateTime, setDischargeDateTime] = useState("");
+
+  const [selectedEventIds, setSelectedEventIds] = useState([]);
+
+  const handleSelectEvent = (event) => {
+    console.log(event.id);
+    const duration = selectedAppointment.admissionDuration;
+
+    if (8 - event.id >= duration) {
+      const eventIds = [];
+      let eventId = event.id;
+      for (let i = 0; i < duration; i++) {
+        const filteredEvent = calendarEvents.filter(
+          (calendarEvent) => calendarEvent.id === eventId
+        )[0];
+        const beds = filteredEvent.title.split(" ")[1];
+
+        if (beds === "0") {
+          reduxDispatch(
+            displayMessage({
+              color: "warning",
+              icon: "notification",
+              title: "Error",
+              content: "There are not enough beds for the entire duration",
+            })
+          );
+          break;
+        }
+
+        eventIds.push(eventId);
+        eventId = eventId + 1;
+      }
+
+      setSelectedEventIds(eventIds);
+
+      const actualDate = moment(event.actual);
+      //console.log(actualDate);
+
+      if (actualDate.subtract(1, "days").isBefore(moment())) {
+        setAdmissionDateTime(moment().format("YYYY-MM-DD HH:mm:ss"));
+      } else {
+        actualDate.hour(13);
+        setAdmissionDateTime(actualDate.format("YYYY-MM-DD HH:mm:ss"));
+      }
+    } else {
+      console.log("CANNOT");
+      setSelectedEventIds([]);
+      setAdmissionDateTime("");
+      setDischargeDateTime("");
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Error",
+          content: "Admission duration is too short for this date",
+        })
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (admissionDateTime) {
+      const duration = selectedAppointment.admissionDuration;
+      const dischargeMoment = moment(admissionDateTime, "YYYY-MM-DD HH:mm:ss");
+      dischargeMoment.add(duration, "days");
+      dischargeMoment.hour(12);
+      dischargeMoment.minute(0);
+      dischargeMoment.second(0);
+      setDischargeDateTime(dischargeMoment.format("YYYY-MM-DD HH:mm:ss"));
+    }
+  }, [admissionDateTime]);
+
+  const eventPropGetter = useCallback(
+    (event, start, end, isSelected) => ({
+      ...(isSelected && {
+        style: {
+          backgroundColor: "#000",
+        },
+      }),
+    }),
+    []
+  );
+
+  const handleScheduleAdmission = async () => {
+    try {
+      if (admissionDateTime) {
+        const admission = admissionDateTime.replace(" ", "T");
+        const discharge = dischargeDateTime.replace(" ", "T");
+        const response = await admissionApi.scheduleAdmission(
+          selectedAppointment.admissionId,
+          selectedEventIds[0],
+          admission,
+          discharge
+        );
+        console.log(response.data);
+      } else {
+        reduxDispatch(
+          displayMessage({
+            color: "warning",
+            icon: "notification",
+            title: "Error",
+            content: "Please select an admission date",
+          })
+        );
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <>
@@ -684,20 +826,11 @@ function AppointmentTicketModal({
                   </MDTypography>
                 </ListItem>
                 <ListItem>
-                  <MDTypography variant="h6" gutterBottom>
+                  <MDTypography variant="h6" gutterBottom color="black">
                     {facilityLocation !== null
                       ? facilityLocation
                       : "No Location Yet"}
                   </MDTypography>
-                  <MDBox>
-                    <Stack direction="row" spacing={2}>
-                      {facilityLocation !== null && (
-                        <ViewFacilityInventoryButton
-                          selectedFacility={facility}
-                        />
-                      )}
-                    </Stack>
-                  </MDBox>
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
@@ -739,7 +872,7 @@ function AppointmentTicketModal({
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
                 >
-                  <MDTypography variant="h6" gutterBottom>
+                  <MDTypography variant="h6" gutterBottom color="black">
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
@@ -899,123 +1032,35 @@ function AppointmentTicketModal({
                   </MDButton>
                 </Box>
 
-                <List>
-                  {/* ... existing list items ... */}
-                  <ListItem>
-                    <MDTypography variant="h5" gutterBottom>
-                      Prescription Records:
-                    </MDTypography>
-                  </ListItem>
-                  <ListItem>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        marginTop: 2,
-                      }}
-                    >
-                      <MDButton
-                        onClick={handleOpenPrescriptionDialog}
-                        variant="gradient"
-                        color="primary"
-                      >
-                        View Prescription Records
-                      </MDButton>
-                    </Box>
-                  </ListItem>
-                </List>
-                {/* ... rest of the existing code ... */}
-                <PrescriptionDialog
-                  open={isPrescriptionDialogOpen}
-                  onClose={() => setIsPrescriptionDialogOpen(false)}
-                  electronicHealthRecordId={
-                    selectedAppointment.electronicHealthRecordId
-                  }
-                  handlePageRefresh={handlePageRefresh}
-                />
-                <br></br>
-                <List>
-                  <ListItem>
-                    <MDTypography variant="h5" gutterBottom>
-                      Medications:
-                    </MDTypography>
-                  </ListItem>
-                  <ListItem>{renderMedicationsDropdown()}</ListItem>
-                </List>
-                <br></br>
-                <List>
-                  <ListItem>
-                    <MDTypography variant="h5" gutterBottom>
-                      Services:
-                    </MDTypography>
-                  </ListItem>
-                  <ListItem>{renderServicesDropdown()}</ListItem>
-                </List>
-                <List>
-                  <ListItem>
-                    <MDTypography variant="h5" gutterBottom>
-                      Patient's Cart:
-                    </MDTypography>
-                    <IconButton onClick={fetchPatientCart} aria-label="refresh">
-                      <RefreshIcon />
-                    </IconButton>
-                  </ListItem>
-                  {cartItems.length === 0 ? (
-                    <ListItem>
-                      <MDTypography variant="subtitle1">
-                        Patient's cart is empty.
-                      </MDTypography>
-                    </ListItem>
-                  ) : (
-                    <ListItem>
-                      <TableContainer component={Paper}>
-                        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell> Name</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {cartItems.map((item) => (
-                              <TableRow
-                                key={item.transactionItemId}
-                                sx={{
-                                  "&:last-child td, &:last-child th": {
-                                    border: 0,
-                                  },
-                                }}
-                              >
-                                <TableCell component="th" scope="row">
-                                  {item.transactionItemName}
-                                </TableCell>
-                                <TableCell align="right">
-                                  Quantity: {item.transactionItemQuantity}
-                                </TableCell>
-                                <TableCell align="right">
-                                  <Button
-                                    variant="contained"
-                                    style={{
-                                      backgroundColor: "#f44336",
-                                      color: "white",
-                                    }}
-                                    onClick={() =>
-                                      handleDeleteCartItem(
-                                        item.transactionItemId
-                                      )
-                                    }
-                                  >
-                                    Delete
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </ListItem>
-                  )}
-                </List>
-
+                {/* ADMISSION */}
+                <ListItem sx={{ marginTop: "10px" }}>
+                  <MDTypography variant="h5" gutterBottom>
+                    Admission:
+                  </MDTypography>
+                </ListItem>
+                <ListItem>
+                  <textarea
+                    readOnly
+                    value={`Duration: ${selectedAppointment.admissionDuration}\nReason: ${selectedAppointment.admissionReason}\nAdmission Date: ${admissionDateTime}\nDischarge Date: ${dischargeDateTime}`}
+                    style={{
+                      width: "100%",
+                      height: "60px",
+                      borderColor: "gainsboro",
+                      borderRadius: "6px",
+                      fontFamily: "Arial",
+                      padding: "10px",
+                      fontSize: "15px",
+                      overflowY: "auto",
+                      resize: "none",
+                      "::WebkitScrollbar": {
+                        width: "0px",
+                        background: "transparent",
+                      },
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
+                    }}
+                  />
+                </ListItem>
                 <Box
                   sx={{
                     display: "flex",
@@ -1024,17 +1069,48 @@ function AppointmentTicketModal({
                     marginTop: "10px",
                   }}
                 >
-                  {selectedAppointment.swimlaneStatusEnum === "DISCHARGE" && (
-                    <MDButton
-                      onClick={handleDischarge}
-                      variant="gradient"
-                      color="success"
-                      style={{ marginTop: "20px" }}
-                    >
-                      Discharge
-                    </MDButton>
-                  )}
+                  <MDButton
+                    onClick={handleScheduleAdmission}
+                    variant="gradient"
+                    color="primary"
+                  >
+                    Schedule Admission
+                  </MDButton>
                 </Box>
+
+                <MDBox pt={3}>
+                  <style>
+                    {`
+                        .rbc-event-label {
+                            display: none; /* Hide the start and end times */
+                        }
+                    `}
+                  </style>
+                  <Calendar
+                    localizer={localizer}
+                    events={calendarEvents}
+                    defaultView={Views.WEEK}
+                    startAccessor="start"
+                    endAccessor="end"
+                    formats={{
+                      timeGutterFormat: (date) => {
+                        return `Ward ${wards[date.getHours()].name}`;
+                      },
+                    }}
+                    min={new Date().setHours(0, 0, 0, 0)}
+                    max={new Date().setHours(wards.length, 0, 0, 0)}
+                    onSelectEvent={handleSelectEvent}
+                    eventPropGetter={(event) => ({
+                      style: {
+                        backgroundColor: selectedEventIds.includes(event.id)
+                          ? "green"
+                          : "blue",
+                      },
+                    })}
+                    // selectable={true}
+                    // onSelectSlot={handleSelectSlot}
+                  />
+                </MDBox>
               </List>
             </>
           )}
@@ -1052,4 +1128,4 @@ function AppointmentTicketModal({
   );
 }
 
-export default AppointmentTicketModal;
+export default ScheduleAdmissionModal;

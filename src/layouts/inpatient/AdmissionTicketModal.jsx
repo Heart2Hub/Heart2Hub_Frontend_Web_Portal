@@ -19,12 +19,7 @@ import {
   TableRow,
   Paper,
   Button,
-  IconButton,
 } from "@mui/material";
-import RefreshIcon from "@mui/icons-material/Refresh";
-
-import PrescriptionDialog from "./PrescriptionRecord";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import MDTypography from "components/MDTypography";
 import { calculateAge } from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
@@ -34,23 +29,24 @@ import {
   inventoryApi,
   transactionItemApi,
   imageServerApi,
+  appointmentApi,
+  ehrApi,
+  admissionApi,
 } from "api/Api";
 
-import { ehrApi } from "api/Api";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setEHRRecord } from "../../../store/slices/ehrSlice";
+import { setEHRRecord } from "store/slices/ehrSlice";
 import ArrivalButton from "./ArrivalButton";
 import { displayMessage } from "store/slices/snackbarSlice";
-import { appointmentApi } from "../../../api/Api";
 import AssignAppointmentDialog from "./AssignAppointmentDialog";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import MDBox from "components/MDBox";
 import AddAttachmentButton from "./AddAttachmentButton";
 import ViewAttachmentsButton from "./ViewAttachmentsButton";
-import ViewFacilityInventoryButton from "layouts/administration/facility-management/viewFacilityInventoryButton";
 import AdmissionDialog from "./AdmissionDialog";
+import AssignAdmissionDialog from "./AssignAdmissionDialog";
 
 const style = {
   position: "absolute",
@@ -65,23 +61,23 @@ const style = {
   borderRadius: "15px",
 };
 
-function AppointmentTicketModal({
+function AdmissionTicketModal({
   openModal,
   handleCloseModal,
   selectedAppointment,
-  replaceItemByIdWithUpdated,
-  columnName,
   listOfWorkingStaff,
   forceRefresh,
 }) {
   const navigate = useNavigate();
   const reduxDispatch = useDispatch();
   const [assignedStaff, setAssignedStaff] = useState(null);
+  const [assignedDoctor, setAssignedDoctor] = useState(null);
+  const [assignedNurse, setAssignedNurse] = useState(null);
   const [facilityLocation, setFacilityLocation] = useState(null);
   const [editableComments, setEditableComments] = useState("");
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [facility, setFacility] = useState("");
+
   //For Cart
   const [medications, setMedications] = useState([]);
   const [services, setServices] = useState([]);
@@ -118,65 +114,14 @@ function AppointmentTicketModal({
     setCommentsTouched(true);
   };
 
-  const [isPrescriptionDialogOpen, setIsPrescriptionDialogOpen] =
-    useState(false);
-
-  // function to open the prescription dialog
-  const handleOpenPrescriptionDialog = () => {
-    setIsPrescriptionDialogOpen(true);
-  };
-
-  //Only for Discharge ticket, will create an Invoice after discharfe
-  const handleDischarge = async () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to discharge the patient?"
-    );
-
-    if (confirmed) {
-      try {
-        await transactionItemApi.checkout(
-          selectedAppointment.patientId,
-          selectedAppointment.appointmentId
-        );
-        // Perform any necessary actions after discharge
-        console.log("Patient has been discharged.");
-
-        reduxDispatch(
-          displayMessage({
-            color: "success",
-            icon: "notification",
-            title: "Success",
-            content: "Patient has been discharged.",
-          })
-        );
-
-        handleCloseModal();
-        forceRefresh();
-      } catch (error) {
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error",
-            content: error.response.data,
-          })
-        );
-      }
-    }
-  };
-
   // Fetch lists of all medications and service items from the API
   const fetchMedicationsAndServices = async () => {
     try {
-      const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(
-        selectedAppointment.patientId
-      );
+      const medicationsResponse = await inventoryApi.getAllMedication("");
       setMedications(medicationsResponse.data);
       // console.log(medicationsResponse.data)
 
-      const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
-        loggedInStaff.unit.unitId
-      );
+      const servicesResponse = await inventoryApi.getAllServiceItem("");
       setServices(servicesResponse.data);
       // console.log(servicesResponse.data)
       // console.log(selectedAppointment)
@@ -196,10 +141,6 @@ function AppointmentTicketModal({
     } catch (error) {
       console.error("Error fetching cart items:", error);
     }
-  };
-
-  const handlePageRefresh = () => {
-    fetchPatientCart();
   };
 
   const handleDeleteCartItem = async (cartItemId) => {
@@ -421,19 +362,22 @@ function AppointmentTicketModal({
       (staff) => staff.staffId === staffId
     )[0];
 
-    console.log("Facility Id: " + facility.facilityId);
-
     if (facility) {
-      setFacility(facility);
       return facility.name + " (" + facility.location + ")";
     } else {
       return null;
     }
   };
 
-  const getAssignedStaffName = async (staffId) => {
-    const response = await staffApi.getStaffByStaffId(staffId);
-    setAssignedStaff(response.data);
+  const getAssignedDoctorName = async (doctorId) => {
+    const response = await staffApi.getStaffByStaffId(doctorId);
+    console.log(response.data);
+    setAssignedDoctor(response.data);
+  };
+
+  const getAssignedNurseName = async (nurseId) => {
+    const response = await staffApi.getStaffByStaffId(nurseId);
+    setAssignedNurse(response.data);
   };
 
   const handleUpdateAppointmentArrival = async () => {
@@ -448,11 +392,11 @@ function AppointmentTicketModal({
       let updatedAppointment = response.data;
 
       //update the old appt
-      replaceItemByIdWithUpdated(
-        updatedAppointment.appointmentId,
-        columnName,
-        updatedAppointment
-      );
+      //   replaceItemByIdWithUpdated(
+      //     updatedAppointment.appointmentId,
+      //     columnName,
+      //     updatedAppointment
+      //   );
 
       reduxDispatch(
         displayMessage({
@@ -487,11 +431,11 @@ function AppointmentTicketModal({
       let updatedAppointment = response.data;
 
       //update the old appt
-      replaceItemByIdWithUpdated(
-        updatedAppointment.appointmentId,
-        columnName,
-        updatedAppointment
-      );
+      //   replaceItemByIdWithUpdated(
+      //     updatedAppointment.appointmentId,
+      //     columnName,
+      //     updatedAppointment
+      //   );
 
       reduxDispatch(
         displayMessage({
@@ -522,28 +466,30 @@ function AppointmentTicketModal({
 
   //has its own set of logic for assignAppointmentDialog to not clash with the drag and drop version
   const handleConfirmAssignDialog = async (selectedStaffId) => {
-    if (selectedStaffId === 0) {
-      reduxDispatch(
-        displayMessage({
-          color: "warning",
-          icon: "notification",
-          title: "Error",
-          content: "Please select a staff to assign!",
-        })
-      );
-      return;
-    }
+    // if (selectedStaffId === 0) {
+    //   reduxDispatch(
+    //     displayMessage({
+    //       color: "warning",
+    //       icon: "notification",
+    //       title: "Error",
+    //       content: "Please select a staff to assign!",
+    //     })
+    //   );
+    //   return;
+    // }
 
     try {
       //send to BE to assign staff
       console.log(selectedAppointment);
-      const response = await appointmentApi.assignAppointmentToStaff(
-        selectedAppointment.appointmentId,
+      console.log(selectedStaffId);
+      console.log(loggedInStaff.staffId);
+      const response = await admissionApi.assignAdmissionToStaff(
+        selectedAppointment.admissionId,
         selectedStaffId,
         loggedInStaff.staffId
       );
 
-      const updatedAssignment = response.data;
+      //const updatedAssignment = response.data;
 
       //force a rerender instead
       forceRefresh();
@@ -587,7 +533,7 @@ function AppointmentTicketModal({
 
   const handleClickToEhr = () => {
     // Can refactor to util
-    // console.log(selectedAppointment);
+    console.log(selectedAppointment);
     const dateComponents = selectedAppointment.dateOfBirth;
     const [year, month, day, hours, minutes] = dateComponents;
     const formattedMonth = String(month).padStart(2, "0");
@@ -608,26 +554,20 @@ function AppointmentTicketModal({
           username: selectedAppointment.username,
           profilePicture: selectedAppointment.patientProfilePicture,
         };
-        console.log(response);
-        console.log(response.data);
-        reduxDispatch(setEHRRecord(response.data));
+        reduxDispatch(setEHRRecord(response));
         navigate("/ehr/ehrRecord");
       });
   };
 
   useEffect(() => {
-    if (selectedAppointment.currentAssignedStaffId !== null) {
-      getAssignedStaffName(selectedAppointment.currentAssignedStaffId);
-      setFacilityLocation(
-        getFacilityLocationByStaffIdThroughShift(
-          selectedAppointment.currentAssignedStaffId
-        )
-      );
+    if (selectedAppointment.assignedDoctorId) {
+      getAssignedDoctorName(selectedAppointment.assignedDoctorId);
     }
+    if (selectedAppointment.assignedNurseId) {
+      getAssignedNurseName(selectedAppointment.assignedNurseId);
+    }
+
     handleGetProfileImage();
-    fetchMedicationsAndServices();
-    fetchPatientCart();
-    // setAssigningToSwimlane(columnName);
     console.log(selectedAppointment);
   }, [selectedAppointment, listOfWorkingStaff]);
 
@@ -655,7 +595,7 @@ function AppointmentTicketModal({
                   component="h2"
                   gutterBottom
                 >
-                  HH-{selectedAppointment.appointmentId}:{" "}
+                  HH-{selectedAppointment.admissionId}:{" "}
                   {selectedAppointment.firstName} {selectedAppointment.lastName}{" "}
                   ({calculateAge(selectedAppointment?.dateOfBirth)}
                   {selectedAppointment.sex === "Male" ? "M" : "F"})
@@ -684,20 +624,11 @@ function AppointmentTicketModal({
                   </MDTypography>
                 </ListItem>
                 <ListItem>
-                  <MDTypography variant="h6" gutterBottom>
+                  <MDTypography variant="h6" gutterBottom color="black">
                     {facilityLocation !== null
                       ? facilityLocation
                       : "No Location Yet"}
                   </MDTypography>
-                  <MDBox>
-                    <Stack direction="row" spacing={2}>
-                      {facilityLocation !== null && (
-                        <ViewFacilityInventoryButton
-                          selectedFacility={facility}
-                        />
-                      )}
-                    </Stack>
-                  </MDBox>
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
@@ -710,9 +641,9 @@ function AppointmentTicketModal({
                       <AddAttachmentButton
                         selectedAppointment={selectedAppointment}
                       />
-                      <ViewAttachmentsButton
+                      {/* <ViewAttachmentsButton
                         selectedAppointment={selectedAppointment}
-                      />
+                      /> */}
                     </Stack>
                   </MDBox>
                 </ListItem>
@@ -721,11 +652,8 @@ function AppointmentTicketModal({
                     <MDButton
                       onClick={handleClickToEhr}
                       color="primary"
-                      //quick fix for SR2
-                      disabled={
-                        selectedAppointment.currentAssignedStaffId !=
-                        loggedInStaff.staffId
-                      }
+                      //TODO
+                      disabled
                     >
                       EHR
                     </MDButton>
@@ -733,21 +661,16 @@ function AppointmentTicketModal({
                 </ListItem>
                 <ListItem>
                   <MDTypography variant="h5" gutterBottom>
-                    Assigned To :
+                    Attending Doctor :
                   </MDTypography>
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
                 >
-                  <MDTypography variant="h6" gutterBottom>
-                    {assignedStaff === null
-                      ? "No Staff Assigned"
-                      : assignedStaff.firstname +
-                        " " +
-                        assignedStaff.lastname +
-                        " (" +
-                        assignedStaff.staffRoleEnum +
-                        ")"}
+                  <MDTypography variant="h6" gutterBottom color="black">
+                    {assignedDoctor
+                      ? `Dr. ${assignedDoctor.firstname} ${assignedDoctor.lastname}`
+                      : "No Attending Doctor"}
                   </MDTypography>
                   <MDButton
                     disabled={loading}
@@ -755,9 +678,29 @@ function AppointmentTicketModal({
                     variant="gradient"
                     color="primary"
                   >
-                    {selectedAppointment.currentAssignedStaffId === null
-                      ? "Assign"
-                      : "Reassign"}
+                    Assign Doctor
+                  </MDButton>
+                </ListItem>
+                <ListItem>
+                  <MDTypography variant="h5" gutterBottom>
+                    Attending Nurse :
+                  </MDTypography>
+                </ListItem>
+                <ListItem
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <MDTypography variant="h6" gutterBottom color="black">
+                    {assignedNurse
+                      ? `${assignedNurse.firstname} ${assignedNurse.lastname}`
+                      : "No Attending Nurse"}
+                  </MDTypography>
+                  <MDButton
+                    disabled={loading}
+                    onClick={handleOpenAssignDialog}
+                    variant="gradient"
+                    color="primary"
+                  >
+                    Assign Nurse
                   </MDButton>
                 </ListItem>
                 {/* <ListItem>
@@ -775,40 +718,16 @@ function AppointmentTicketModal({
                     label={selectedAppointment.priorityEnum}
                   />
                 </ListItem> */}
-                <ListItem>
-                  <MDTypography variant="h5" gutterBottom>
-                    Arrival Status:
-                  </MDTypography>
-                  {/* <ListItemText primary="Arrival Status:" secondary="" /> */}
-                </ListItem>
-                <ListItem
-                  style={{ display: "flex", justifyContent: "space-between" }}
-                >
-                  <MDTypography variant="h6" gutterBottom>
-                    <Chip
-                      color={
-                        selectedAppointment.arrived ? "success" : "default"
-                      }
-                      label={selectedAppointment.arrived ? "Yes" : "No"}
-                    />
-                  </MDTypography>
-                  <ArrivalButton
-                    selectedAppointment={selectedAppointment}
-                    handleUpdateAppointmentArrival={
-                      handleUpdateAppointmentArrival
-                    }
-                    disableButton={loading}
-                  />
-                </ListItem>
+
                 <ListItem sx={{ marginTop: "10px" }}>
                   <MDTypography variant="h5" gutterBottom>
-                    Description:
+                    Reason:
                   </MDTypography>
                 </ListItem>
                 <ListItem>
                   <textarea
                     readOnly
-                    value={selectedAppointment.description}
+                    value={selectedAppointment.reason}
                     placeholder="This appointment has no description yet"
                     style={{
                       width: "100%",
@@ -898,158 +817,20 @@ function AppointmentTicketModal({
                     Save Comments
                   </MDButton>
                 </Box>
-
-                <List>
-                  {/* ... existing list items ... */}
-                  <ListItem>
-                    <MDTypography variant="h5" gutterBottom>
-                      Prescription Records:
-                    </MDTypography>
-                  </ListItem>
-                  <ListItem>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        marginTop: 2,
-                      }}
-                    >
-                      <MDButton
-                        onClick={handleOpenPrescriptionDialog}
-                        variant="gradient"
-                        color="primary"
-                      >
-                        View Prescription Records
-                      </MDButton>
-                    </Box>
-                  </ListItem>
-                </List>
-                {/* ... rest of the existing code ... */}
-                <PrescriptionDialog
-                  open={isPrescriptionDialogOpen}
-                  onClose={() => setIsPrescriptionDialogOpen(false)}
-                  electronicHealthRecordId={
-                    selectedAppointment.electronicHealthRecordId
-                  }
-                  handlePageRefresh={handlePageRefresh}
-                />
-                <br></br>
-                <List>
-                  <ListItem>
-                    <MDTypography variant="h5" gutterBottom>
-                      Medications:
-                    </MDTypography>
-                  </ListItem>
-                  <ListItem>{renderMedicationsDropdown()}</ListItem>
-                </List>
-                <br></br>
-                <List>
-                  <ListItem>
-                    <MDTypography variant="h5" gutterBottom>
-                      Services:
-                    </MDTypography>
-                  </ListItem>
-                  <ListItem>{renderServicesDropdown()}</ListItem>
-                </List>
-                <List>
-                  <ListItem>
-                    <MDTypography variant="h5" gutterBottom>
-                      Patient's Cart:
-                    </MDTypography>
-                    <IconButton onClick={fetchPatientCart} aria-label="refresh">
-                      <RefreshIcon />
-                    </IconButton>
-                  </ListItem>
-                  {cartItems.length === 0 ? (
-                    <ListItem>
-                      <MDTypography variant="subtitle1">
-                        Patient's cart is empty.
-                      </MDTypography>
-                    </ListItem>
-                  ) : (
-                    <ListItem>
-                      <TableContainer component={Paper}>
-                        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell> Name</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {cartItems.map((item) => (
-                              <TableRow
-                                key={item.transactionItemId}
-                                sx={{
-                                  "&:last-child td, &:last-child th": {
-                                    border: 0,
-                                  },
-                                }}
-                              >
-                                <TableCell component="th" scope="row">
-                                  {item.transactionItemName}
-                                </TableCell>
-                                <TableCell align="right">
-                                  Quantity: {item.transactionItemQuantity}
-                                </TableCell>
-                                <TableCell align="right">
-                                  <Button
-                                    variant="contained"
-                                    style={{
-                                      backgroundColor: "#f44336",
-                                      color: "white",
-                                    }}
-                                    onClick={() =>
-                                      handleDeleteCartItem(
-                                        item.transactionItemId
-                                      )
-                                    }
-                                  >
-                                    Delete
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </ListItem>
-                  )}
-                </List>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    width: "100%",
-                    marginTop: "10px",
-                  }}
-                >
-                  {selectedAppointment.swimlaneStatusEnum === "DISCHARGE" && (
-                    <MDButton
-                      onClick={handleDischarge}
-                      variant="gradient"
-                      color="success"
-                      style={{ marginTop: "20px" }}
-                    >
-                      Discharge
-                    </MDButton>
-                  )}
-                </Box>
               </List>
             </>
           )}
         </Box>
       </Modal>
-      <AssignAppointmentDialog
+      <AssignAdmissionDialog
         open={isDialogOpen}
         onConfirm={handleConfirmAssignDialog}
         onClose={handleCloseAssignDialog}
         listOfWorkingStaff={listOfWorkingStaff}
         selectedAppointmentToAssign={selectedAppointment}
-        assigningToSwimlane={columnName}
       />
     </>
   );
 }
 
-export default AppointmentTicketModal;
+export default AdmissionTicketModal;

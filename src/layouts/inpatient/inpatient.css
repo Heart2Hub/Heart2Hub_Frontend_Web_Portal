@@ -1,0 +1,193 @@
+.kanban-board {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: start;
+  gap: 4px;
+  padding: 0 20px;
+  min-height: 100vh;
+  width: 100%;
+  flex-grow: 1;
+}
+
+.kanban-title {
+  text-align: center;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  width: calc(13% - 20px);
+  background-color: #f4f5f7;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.column::-webkit-scrollbar {
+  display: none;
+}
+
+.column-title {
+  padding: 8px;
+  background-color: #007bff;
+  color: white;
+  text-align: center;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.column-tasklist {
+  flex: 1;
+  padding: 3px;
+  background-color: #f4f5f7;
+  transition: background-color 0.2s ease;
+  min-height: 100px;
+}
+
+.column::-webkit-scrollbar {
+  display: none;
+}
+
+.draggable-container {
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  background-color: #eaf4fc;
+  margin: 10px;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: 0.2s ease;
+  width: 100%;
+  height: 100%;
+}
+
+.draggable-container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.draggable-description {
+  font-size: 14px;
+  color: #333;
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.draggable-icons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+}
+
+.draggable-id {
+  font-weight: 600;
+  color: #555;
+}
+
+.avatar-left {
+  order: 1;
+}
+
+.avatar-right {
+  order: 2;
+}
+
+.MDBox.panel-container {
+  background-color: #f4f7fb;
+}
+
+.panel-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 400px;
+  background-color: #f7f9fc;
+  border-radius: 20px;
+  padding: 20px;
+  height: 80vh;
+  margin: 15px 0;
+  transition: box-shadow 0.3s ease;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+  border: 4px solid #e0e0e0;
+}
+
+.MDTypography {
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.scrollable-box {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.scrollable-box::-webkit-scrollbar-track {
+  background-color: #f4f7fb;
+}
+
+.scrollable-box::-webkit-scrollbar-thumb {
+  background-color: #b2bec4;
+}
+
+.scrollable-box::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollable-box {
+  scrollbar-width: none;
+}
+
+.card-shadow {
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.4);
+  transition: box-shadow 0.3s ease;
+}
+
+.card-shadow:hover {
+  box-shadow: 0px 6px 25px rgba(0, 0, 0, 0.4);
+}
+
+.selected-card {
+  &.MuiPaper-root {
+    background-color: #e0e0e0;
+    box-shadow: 0px 6px 25px rgba(0, 0, 0, 0.4);
+    border: 1px solid #b0b0b0;
+  }
+}
+
+.selected-card {
+  background-color: #000000;
+  box-shadow: 0px 6px 25px rgba(0, 0, 0, 0.4);
+  border: 1px solid #b0b0b0;
+}
+
+/* INPATIENT */
+.staff-list {
+  flex: 0 0 auto;
+  margin-right: 10px;
+}
+
+.admission-calendar {
+  display: flex;
+}
+
+.rbc-toolbar {
+  display: none;
+}
+
+.no-time .rbc-time-gutter {
+  width: 0;
+}
+
+.no-time .rbc-time-header-gutter {
+  display: none;
+}
