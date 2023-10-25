@@ -172,12 +172,13 @@ function AssignAppointmentDialog({
                         !acc.some(
                           (item) => item.staffRoleEnum === staff.staffRoleEnum
                         ) &&
-                        staff.staffRoleEnum !== "doctor" &&
-                        staff.staffRoleEnum !== "nurse" &&
-                        staff.staffRoleEnum !== "admin"
+                        staff.staffRoleEnum !== "DOCTOR" &&
+                        staff.staffRoleEnum !== "NURSE" &&
+                        staff.staffRoleEnum !== "ADMIN"
                       ) {
                         acc.push(staff);
                       }
+                      console.log(acc)
                       return acc;
                     }, [])
                     .map((staff) => (
