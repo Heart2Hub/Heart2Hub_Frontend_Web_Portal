@@ -3,6 +3,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 
 import React from "react";
 import Header from "./Header";
+//comment
 
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -17,9 +18,10 @@ import VaccinesIcon from "@mui/icons-material/Vaccines";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 
 import ProblemRecordsBox from "./problemRecords/ProblemRecordsBox";
-import AppointmentsBox from "./appointmentRecords/AppointmentsBox";
-import NextOfKinBox from "./nextOfKinRecords/NextOfKinBox";
-import MedicalRecordsBox from "./medicalRecords/MedicalRecordsBox";
+import AppointmentsBox from "./AppointmentsBox";
+import NextOfKinBox from "./NextOfKinBox";
+import MedicalRecordsBox from "./MedicalRecordsBox";
+import PrescriptionRecordsBox from "./PrescriptionRecordsBox";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { useState } from "react";
 import { Tab } from "@mui/material";
@@ -111,6 +113,10 @@ function EHRRecord() {
             <NextOfKinBox />
           </TabPanel>
         )}
+        <TabPanel value="View Prescription">
+          <PrescriptionRecordsBox ehrRecord={ehrRecord} />
+        </TabPanel>
+        <TabPanel value="View TreatmentPlan">treatment</TabPanel>
         <TabPanel value="View Prescription">prescription</TabPanel>
         <TabPanel value="View TreatmentPlan">
           <TreatmentPlansBox />
