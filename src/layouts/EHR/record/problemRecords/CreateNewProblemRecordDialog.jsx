@@ -249,7 +249,11 @@ function CreateNewProblemRecordDialog({
               sx={{ lineHeight: "3em" }}
             >
               {listOfProblemTypeEnum.map((problemType) => {
-                return <MenuItem value={problemType}>{problemType}</MenuItem>;
+                return (
+                  <MenuItem key={problemType} value={problemType}>
+                    {problemType}
+                  </MenuItem>
+                );
               })}
             </Select>
           </FormControl>

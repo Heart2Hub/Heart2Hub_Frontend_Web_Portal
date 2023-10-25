@@ -68,6 +68,7 @@ function KanbanBoard() {
   //main method to handle drag and drop logic
   const handleDragEnd = async (result) => {
     const { destination, source, draggableId } = result;
+    console.log(source.droppableId);
 
     // GET ITEM
     const appointment = findItemById(draggableId, [

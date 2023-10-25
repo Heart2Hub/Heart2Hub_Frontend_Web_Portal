@@ -21,7 +21,7 @@ export const parseDateFromYYYYMMDD = (dateString) => {
 };
 
 export const parseDateFromLocalDateTime = (localDateTime) => {
-  console.log(localDateTime)
+  // console.log(localDateTime)
   if (localDateTime !== null && localDateTime.length < 6) {
     return new Date(localDateTime[0], localDateTime[1] - 1, localDateTime[2]);
   }
@@ -38,11 +38,12 @@ export const parseDateFromLocalDateTime = (localDateTime) => {
 export const parseDateFromLocalDateTimeWithSecs = (localDateTime) => {
   if (localDateTime !== null && localDateTime.length <= 6) {
     return new Date(
-      localDateTime[0], 
-      localDateTime[1] - 1, 
+      localDateTime[0],
+      localDateTime[1] - 1,
       localDateTime[2],
       localDateTime[3],
-      localDateTime[4]);
+      localDateTime[4]
+    );
   }
   return new Date(
     localDateTime[0],

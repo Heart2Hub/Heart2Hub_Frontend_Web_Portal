@@ -53,8 +53,6 @@ function EHR() {
   const [listOfUnreadInvitations, setListOfUnreadInvitations] = useState([]);
   const [listOfReadInvitations, setListOfReadInvitations] = useState([]);
 
-  const [badgeCount, setBadgeCount] = useState(0);
-
   //for opening the eyeball
   const [data, setData] = useState({
     columns: [
@@ -675,7 +673,7 @@ function EHR() {
               >
                 <ErrorOutlineIcon fontSize="large" />
                 &nbsp;
-                <MDTypography>You have no read invitations</MDTypography>
+                <MDTypography>You have no viewed invitations</MDTypography>
               </MDBox>
             )}
 
