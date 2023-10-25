@@ -19,6 +19,7 @@ function ViewMedicationDetailsDialog({ inventoryItemId }) {
   const [openMedicationDialog, setOpenMedicationDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMedication, setSelectedMedication] = useState(null);
+  const [drugRestrictions, setDrugRestrictions] = useState([]);
 
 
   const handleOpenMedicationDialog = () => {
@@ -39,6 +40,11 @@ function ViewMedicationDetailsDialog({ inventoryItemId }) {
       const medication = response.data;
       console.log(medication);
       setSelectedMedication(medication);
+      const restrictions = medication.drugRestrictions; // Check if this is the correct way to access the drug restrictions
+      console.log("Restrictions", restrictions);
+      const mapDrugs = restrictions.map((drug) => drug.drugName);
+      setDrugRestrictions(mapDrugs);
+      console.log("Drug " + mapDrugs);
     } catch (error) {
       console.log(error.response.data);
     }
@@ -99,6 +105,18 @@ function ViewMedicationDetailsDialog({ inventoryItemId }) {
                 <ListItemText primary="Allergens:" secondary={""} style={{ padding: '8px' }} />
                 <MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
                   {selectedMedication.allergenEnumList.join(", ")}
+                </MDTypography>
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Comments:" secondary={""} style={{ padding: '8px' }} />
+                <MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
+                  {selectedMedication.comments}
+                </MDTypography>
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="Drug Restrictions:" secondary={""} style={{ padding: '8px' }} />
+                <MDTypography variant="h6" gutterBottom style={{ padding: '8px' }}>
+                  {drugRestrictions.join(", ")}
                 </MDTypography>
               </ListItem>
             </>

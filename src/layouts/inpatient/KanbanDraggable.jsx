@@ -7,13 +7,13 @@ import {
 } from "@mui/material";
 import React, { useEffect } from "react";
 import { Draggable } from "@hello-pangea/dnd";
-import "./kanbanStyles.css";
+import "./inpatient.css";
 import MDTypography from "components/MDTypography";
 import AppointmentTicketModal from "./AppointmentTicketModal";
 import { useState } from "react";
 import MDAvatar from "components/MDAvatar";
 import { truncateText } from "utility/Utility";
-import { imageServerApi, appointmentApi } from "../../../api/Api";
+import { imageServerApi } from "api/Api";
 import ScheduleAdmissionModal from "./ScheduleAdmissionModal";
 
 function KanbanDraggable({
@@ -27,11 +27,6 @@ function KanbanDraggable({
   const [openModal, setOpenModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
-  const [timeDifference, setTimeDifference] = useState(0);
-
-
-  const [waitingTime, setWaitingTime] = useState(0);
-  let priorityColor = "";
 
   const handleGetProfileImage = async () => {
     if (appointment.patientProfilePicture !== null) {
@@ -44,42 +39,6 @@ function KanbanDraggable({
     }
   };
 
-
-  async function getTimeDifferenceFromAPI(appointmentId) {
-    try {
-      const response = await appointmentApi.findAppointmentTimeDiff(appointmentId)
-
-      console.log(response.data)
-      return response.data; // Assuming the API returns the time difference in minutes
-    } catch (error) {
-      console.error('Error fetching time difference from API:', error);
-      return 0; // Default to 0 in case of an error
-    }
-  }
-
-  //const timeDifference = getTimeDifferenceFromAPI(appointment.appointmentId);
-  console.log(appointment.appointmentId +  " :" + timeDifference)
-
-  if (appointment.priorityEnum === "LOW") {
-    if (timeDifference >= 40) {
-      priorityColor = "red";
-    } else if (timeDifference >= 20) {
-      priorityColor = "orange";
-    } else {
-      priorityColor = "green";
-    }
-  } else if (appointment.priorityEnum === "MEDIUM") {
-    if (timeDifference >= 40) {
-      priorityColor = "red";
-    } else {
-      priorityColor = "orange";
-    }
-  } else if (appointment.priorityEnum === "HIGH") {
-    priorityColor = "red";
-  }
-
-  console.log(appointment.appointmentId)
-
   const handleCloseModal = () => {
     setOpenModal(false);
   };
@@ -90,12 +49,8 @@ function KanbanDraggable({
   };
 
   useEffect(() => {
-    async function fetchTimeDifference() {
-      const difference = await getTimeDifferenceFromAPI(appointment.appointmentId);
-      setTimeDifference(difference);
-    }
-    fetchTimeDifference();
-  }, [appointment.appointmentId]);
+    handleGetProfileImage();
+  }, [appointment]);
 
   return (
     <>
@@ -111,13 +66,14 @@ function KanbanDraggable({
             onClick={() => handleOpenModal(appointment)}
           >
             <Card
-              className={`draggable-container ${snapshot.isDragging ? "dragging" : ""}`}
+              className={`draggable-container ${
+                snapshot.isDragging ? "dragging" : ""
+              }`}
               {...provided.draggableProps}
               {...provided.dragHandleProps}
               ref={provided.innerRef}
               elevation={3}
               raised={true}
-              style={{ borderLeft: `6px solid ${priorityColor}` }}
             >
               <CardContent>
                 <div className="draggable-icons">
@@ -164,7 +120,7 @@ function KanbanDraggable({
           </ButtonBase>
         )}
       </Draggable>
-      {selectedAppointment && columnName !== "Admission" && (
+      {selectedAppointment && columnName !== "Registration" && (
         <AppointmentTicketModal
           openModal={openModal}
           handleCloseModal={handleCloseModal}
@@ -175,7 +131,7 @@ function KanbanDraggable({
           forceRefresh={forceRefresh}
         />
       )}
-      {selectedAppointment && columnName === "Admission" && (
+      {selectedAppointment && columnName === "Registration" && (
         <ScheduleAdmissionModal
           openModal={openModal}
           handleCloseModal={handleCloseModal}

@@ -19,12 +19,9 @@ import {
   TableRow,
   Paper,
   Button,
-  IconButton,
+  IconButton
 } from "@mui/material";
-import RefreshIcon from "@mui/icons-material/Refresh";
-
-import PrescriptionDialog from "./PrescriptionRecord";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import RefreshIcon from '@mui/icons-material/Refresh';
 import MDTypography from "components/MDTypography";
 import { calculateAge } from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
@@ -39,18 +36,17 @@ import {
 import { ehrApi } from "api/Api";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setEHRRecord } from "../../../store/slices/ehrSlice";
-import ArrivalButton from "./ArrivalButton";
+import { setEHRRecord } from "store/slices/ehrSlice";
+import ArrivalButton from "../outpatient/kanbanTab/ArrivalButton";
 import { displayMessage } from "store/slices/snackbarSlice";
-import { appointmentApi } from "../../../api/Api";
-import AssignAppointmentDialog from "./AssignAppointmentDialog";
+import { appointmentApi } from "api/Api";
+import AssignAppointmentDialog from "../outpatient/kanbanTab/AssignAppointmentDialog";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import MDBox from "components/MDBox";
-import AddAttachmentButton from "./AddAttachmentButton";
-import ViewAttachmentsButton from "./ViewAttachmentsButton";
-import ViewFacilityInventoryButton from "layouts/administration/facility-management/viewFacilityInventoryButton";
-import AdmissionDialog from "./AdmissionDialog";
+import AddAttachmentButton from "../outpatient/kanbanTab/AddAttachmentButton";
+import ViewAttachmentsButton from "../outpatient/kanbanTab/ViewAttachmentsButton";
+import PrescriptionDialog from "layouts/outpatient/kanbanTab/PrescriptionRecord";
 
 const style = {
   position: "absolute",
@@ -73,6 +69,7 @@ function AppointmentTicketModal({
   columnName,
   listOfWorkingStaff,
   forceRefresh,
+  setCart
 }) {
   const navigate = useNavigate();
   const reduxDispatch = useDispatch();
@@ -81,7 +78,7 @@ function AppointmentTicketModal({
   const [editableComments, setEditableComments] = useState("");
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [facility, setFacility] = useState("");
+
   //For Cart
   const [medications, setMedications] = useState([]);
   const [services, setServices] = useState([]);
@@ -118,8 +115,7 @@ function AppointmentTicketModal({
     setCommentsTouched(true);
   };
 
-  const [isPrescriptionDialogOpen, setIsPrescriptionDialogOpen] =
-    useState(false);
+  const [isPrescriptionDialogOpen, setIsPrescriptionDialogOpen] = useState(false);
 
   // function to open the prescription dialog
   const handleOpenPrescriptionDialog = () => {
@@ -128,16 +124,11 @@ function AppointmentTicketModal({
 
   //Only for Discharge ticket, will create an Invoice after discharfe
   const handleDischarge = async () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to discharge the patient?"
-    );
+    const confirmed = window.confirm("Are you sure you want to discharge the patient?");
 
     if (confirmed) {
       try {
-        await transactionItemApi.checkout(
-          selectedAppointment.patientId,
-          selectedAppointment.appointmentId
-        );
+        await transactionItemApi.checkout(selectedAppointment.patientId, selectedAppointment.appointmentId);
         // Perform any necessary actions after discharge
         console.log("Patient has been discharged.");
 
@@ -168,15 +159,11 @@ function AppointmentTicketModal({
   // Fetch lists of all medications and service items from the API
   const fetchMedicationsAndServices = async () => {
     try {
-      const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(
-        selectedAppointment.patientId
-      );
+      const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(selectedAppointment.patientId);
       setMedications(medicationsResponse.data);
       // console.log(medicationsResponse.data)
 
-      const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
-        loggedInStaff.unit.unitId
-      );
+      const servicesResponse = await inventoryApi.getAllServiceItemByUnit(loggedInStaff.unit.unitId);
       setServices(servicesResponse.data);
       // console.log(servicesResponse.data)
       // console.log(selectedAppointment)
@@ -192,6 +179,7 @@ function AppointmentTicketModal({
       );
 
       setCartItems(response.data);
+      setCart(response.data)
       console.log(cartItems);
     } catch (error) {
       console.error("Error fetching cart items:", error);
@@ -421,10 +409,7 @@ function AppointmentTicketModal({
       (staff) => staff.staffId === staffId
     )[0];
 
-    console.log("Facility Id: " + facility.facilityId);
-
     if (facility) {
-      setFacility(facility);
       return facility.name + " (" + facility.location + ")";
     } else {
       return null;
@@ -450,7 +435,6 @@ function AppointmentTicketModal({
       //update the old appt
       replaceItemByIdWithUpdated(
         updatedAppointment.appointmentId,
-        columnName,
         updatedAppointment
       );
 
@@ -489,7 +473,6 @@ function AppointmentTicketModal({
       //update the old appt
       replaceItemByIdWithUpdated(
         updatedAppointment.appointmentId,
-        columnName,
         updatedAppointment
       );
 
@@ -628,7 +611,6 @@ function AppointmentTicketModal({
     fetchMedicationsAndServices();
     fetchPatientCart();
     // setAssigningToSwimlane(columnName);
-    console.log(selectedAppointment);
   }, [selectedAppointment, listOfWorkingStaff]);
 
   return (
@@ -684,20 +666,11 @@ function AppointmentTicketModal({
                   </MDTypography>
                 </ListItem>
                 <ListItem>
-                  <MDTypography variant="h6" gutterBottom>
+                  <MDTypography variant="h6" gutterBottom color="black">
                     {facilityLocation !== null
                       ? facilityLocation
                       : "No Location Yet"}
                   </MDTypography>
-                  <MDBox>
-                    <Stack direction="row" spacing={2}>
-                      {facilityLocation !== null && (
-                        <ViewFacilityInventoryButton
-                          selectedFacility={facility}
-                        />
-                      )}
-                    </Stack>
-                  </MDBox>
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
@@ -721,6 +694,7 @@ function AppointmentTicketModal({
                     <MDButton
                       onClick={handleClickToEhr}
                       color="primary"
+
                       //quick fix for SR2
                       disabled={
                         selectedAppointment.currentAssignedStaffId !=
@@ -792,13 +766,14 @@ function AppointmentTicketModal({
                       label={selectedAppointment.arrived ? "Yes" : "No"}
                     />
                   </MDTypography>
+                  {selectedAppointment.dispensaryStatusEnum === "READY_TO_COLLECT" ?
                   <ArrivalButton
                     selectedAppointment={selectedAppointment}
                     handleUpdateAppointmentArrival={
                       handleUpdateAppointmentArrival
                     }
                     disableButton={loading}
-                  />
+                  /> : null}
                 </ListItem>
                 <ListItem sx={{ marginTop: "10px" }}>
                   <MDTypography variant="h5" gutterBottom>
@@ -898,7 +873,6 @@ function AppointmentTicketModal({
                     Save Comments
                   </MDButton>
                 </Box>
-
                 <List>
                   {/* ... existing list items ... */}
                   <ListItem>
@@ -907,13 +881,7 @@ function AppointmentTicketModal({
                     </MDTypography>
                   </ListItem>
                   <ListItem>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        marginTop: 2,
-                      }}
-                    >
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
                       <MDButton
                         onClick={handleOpenPrescriptionDialog}
                         variant="gradient"
@@ -928,9 +896,7 @@ function AppointmentTicketModal({
                 <PrescriptionDialog
                   open={isPrescriptionDialogOpen}
                   onClose={() => setIsPrescriptionDialogOpen(false)}
-                  electronicHealthRecordId={
-                    selectedAppointment.electronicHealthRecordId
-                  }
+                  electronicHealthRecordId={selectedAppointment.electronicHealthRecordId}
                   handlePageRefresh={handlePageRefresh}
                 />
                 <br></br>
@@ -956,7 +922,10 @@ function AppointmentTicketModal({
                     <MDTypography variant="h5" gutterBottom>
                       Patient's Cart:
                     </MDTypography>
-                    <IconButton onClick={fetchPatientCart} aria-label="refresh">
+                    <IconButton
+                      onClick={fetchPatientCart} 
+                      aria-label="refresh"
+                    >
                       <RefreshIcon />
                     </IconButton>
                   </ListItem>
@@ -979,11 +948,7 @@ function AppointmentTicketModal({
                             {cartItems.map((item) => (
                               <TableRow
                                 key={item.transactionItemId}
-                                sx={{
-                                  "&:last-child td, &:last-child th": {
-                                    border: 0,
-                                  },
-                                }}
+                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                               >
                                 <TableCell component="th" scope="row">
                                   {item.transactionItemName}
@@ -994,15 +959,8 @@ function AppointmentTicketModal({
                                 <TableCell align="right">
                                   <Button
                                     variant="contained"
-                                    style={{
-                                      backgroundColor: "#f44336",
-                                      color: "white",
-                                    }}
-                                    onClick={() =>
-                                      handleDeleteCartItem(
-                                        item.transactionItemId
-                                      )
-                                    }
+                                    style={{ backgroundColor: "#f44336", color: "white" }}
+                                    onClick={() => handleDeleteCartItem(item.transactionItemId)}
                                   >
                                     Delete
                                   </Button>

@@ -3,8 +3,8 @@ import { useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import KanbanColumn from "./KanbanColumn";
 import { useSelector } from "react-redux";
-import { selectStaff } from "../../../store/slices/staffSlice";
-import { appointmentApi, staffApi, admissionApi } from "../../../api/Api";
+import { selectStaff } from "store/slices/staffSlice";
+import { appointmentApi, staffApi, admissionApi } from "api/Api";
 import { useEffect } from "react";
 import MDButton from "components/MDButton";
 
@@ -263,19 +263,7 @@ function KanbanBoard() {
       dialogResolver.current = resolve;
       setSelectedAppointmentToAssign(appointment);
       setAssigningToSwimlane(swimlaneName);
-      if (swimlaneName === "Pharmacy") {
-        const r = appointmentApi.assignAppointmentToStaff(
-          appointment.appointmentId,
-          -1,
-          staff.staffId
-        );
-        setSelectedAppointmentToAssign(null);
-
-        dialogResolver.current(true); // Resolve promise if user confirms
-        dialogResolver.current = null; // Clear it out after using
-      } else {
-        setDialogOpen(true);
-      }
+      setDialogOpen(true);
     });
   };
 
@@ -362,8 +350,7 @@ function KanbanBoard() {
           const admissionResponse = await admissionApi.createAdmission(
             duration,
             reason,
-            selectedAppointmentToAssign.patientId,
-            selectedAppointmentToAssign.currentAssignedStaffId
+            selectedAppointmentToAssign.patientId
           );
         }
 
@@ -620,7 +607,7 @@ function KanbanBoard() {
               replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
               listOfWorkingStaff={listOfWorkingStaff}
               forceRefresh={forceRefresh}
-            />{" "}
+            />
             <KanbanColumn
               title="Discharge"
               appointments={discharge}
