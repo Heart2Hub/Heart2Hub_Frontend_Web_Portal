@@ -259,7 +259,19 @@ function KanbanBoard() {
       dialogResolver.current = resolve;
       setSelectedAppointmentToAssign(appointment);
       setAssigningToSwimlane(swimlaneName);
-      setDialogOpen(true);
+      if (swimlaneName === "Pharmacy") {
+        const r = appointmentApi.assignAppointmentToStaff(
+          appointment.appointmentId,
+          -1,
+          staff.staffId
+        )
+        setSelectedAppointmentToAssign(null);
+
+        dialogResolver.current(true); // Resolve promise if user confirms
+        dialogResolver.current = null; // Clear it out after using
+      } else {
+        setDialogOpen(true);
+      }
     });
   };
 
@@ -542,14 +554,14 @@ function KanbanBoard() {
               listOfWorkingStaff={listOfWorkingStaff}
               forceRefresh={forceRefresh}
             />
-             <KanbanColumn
+             {/* <KanbanColumn
               title="Referral"
               appointments={referral}
               id={"8"}
               replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
               listOfWorkingStaff={listOfWorkingStaff}
               forceRefresh={forceRefresh}
-            />
+            /> */}
             <KanbanColumn
               title="Discharge"
               appointments={discharge}

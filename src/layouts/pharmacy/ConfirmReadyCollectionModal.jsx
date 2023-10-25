@@ -39,7 +39,7 @@ const style = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: "40%",
+  width: "30%",
   bgcolor: "background.paper",
   border: "2px solid #000",
   boxShadow: 24,
@@ -98,6 +98,7 @@ function ConfirmReadyCollectionModal({
              subheader={<li />}
            >
             {cart.map(item => 
+            item.inventoryItem && item.inventoryItem.itemTypeEnum === "MEDICINE" &&
              <ListItem sx={{display: "flex", justifyContent: "space-evenly"}}>
                 <ListItemText primary={" * " + item.inventoryItem.inventoryItemName} />
                 <ListItemText primary={"x" + item.transactionItemQuantity} />

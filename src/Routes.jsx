@@ -352,19 +352,19 @@ const routes = [
       </ProtectedRoute>
     ),
   },
-  {
-    name: "MedicationManagement",
-    key: "medicationmanagement",
-    route: "/pharmacy/medication-management",
-    component: (
-      <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ADMIN]}
-        forHeadsOnly={false}
-      >
-        <MedicationManagement />
-      </ProtectedRoute>
-    ),
-  },
+  // {
+  //   name: "MedicationManagement",
+  //   key: "medicationmanagement",
+  //   route: "/pharmacy/medication-management",
+  //   component: (
+  //     <ProtectedRoute
+  //       authorizedRoles={[StaffRoleEnum.ADMIN]}
+  //       forHeadsOnly={false}
+  //     >
+  //       <MedicationManagement />
+  //     </ProtectedRoute>
+  //   ),
+  // },
   {
     name: "Service Item Management",
     key: "serviceItemManagement",

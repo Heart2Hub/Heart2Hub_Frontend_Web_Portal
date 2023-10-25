@@ -9,13 +9,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { selectStaff } from "../../store/slices/staffSlice";
 import MDTypography from "components/MDTypography";
 import LiveQueue from "./LiveQueue";
+import MedicationManagement from "./medication-management";
 import MDBox from "components/MDBox";
 
 import Medication from "@mui/icons-material/Medication";
 import TableRestaurantIcon from '@mui/icons-material/TableRestaurant';
 import { Grid } from "react-loader-spinner";
 import SimpleBlogCard from "examples/Cards/BlogCards/SimpleBlogCard";
-import MedicationManagement from "./medication-management";
 
 function Outpatient() {
   const staff = useSelector(selectStaff);
