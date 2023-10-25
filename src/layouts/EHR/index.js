@@ -31,6 +31,7 @@ function EHR() {
   const reduxDispatch = useDispatch();
 
   const [imageURLs, setImageURLs] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   //for opening the eyeball
   const [data, setData] = useState({
@@ -78,7 +79,7 @@ function EHR() {
     rows: [],
   });
 
-  //for datatable
+  //for datatable IS THIS TABLE EVEN BEING USED???
   const dataRef = useRef({
     columns: [
       {
@@ -90,7 +91,9 @@ function EHR() {
         Header: "Profile Picture",
         accessor: "profilePicture",
         width: "20%",
-        Cell: ({ value }) => <Avatar alt="Profile Picture" src={value} />,
+        Cell: ({ value }) => {
+          return <MDAvatar alt="Profile Picture" src={value} />;
+        },
       },
       { Header: "NRIC", accessor: "nric", width: "20%" },
       { Header: "First Name", accessor: "firstName", width: "20%" },
@@ -121,6 +124,7 @@ function EHR() {
   const [formData, setFormData] = useState({
     electronicHealthRecordId: 0,
     profilePicture: "",
+    profilePicturePath: "",
     firstName: "",
     lastName: "",
     sex: "",
@@ -142,6 +146,8 @@ function EHR() {
       setFormData({
         electronicHealthRecordId: electronicHealthRecordId,
         profilePicture: patientWithElectronicHealthRecordSummary.profilePicture,
+        profilePicturePath:
+          patientWithElectronicHealthRecordSummary.profilePicturePath,
         nric: patientWithElectronicHealthRecordSummary.nric,
         firstName: patientWithElectronicHealthRecordSummary.firstName,
         lastName: patientWithElectronicHealthRecordSummary.lastName,
@@ -199,13 +205,20 @@ function EHR() {
               })
             );
             setIsModalOpen(false);
+
+            console.log(formData.profilePicture);
+
             // ROUTE HERE
             response.data = {
               ...response.data,
               username: formData.username,
-              profilePicture: formData.profilePicture,
+              profilePicture: formData.profilePicturePath,
             };
-            reduxDispatch(setEHRRecord(response));
+
+            console.log(response.data.profilePicture);
+            console.log(response.data.profilePicturePath);
+            console.log(formData.profilePicture);
+            reduxDispatch(setEHRRecord(response.data));
             navigate("/ehr/ehrRecord");
           })
           .catch((err) => {
@@ -248,6 +261,29 @@ function EHR() {
   };
 
   const fetchData = async () => {
+    setIsLoading(true);
+    // try {
+    //   const response =
+    //     await patientApi.getAllPatientsWithElectronicHealthRecordSummaryByName(
+    //       ""
+    //     );
+    //   const patientsWithElectronicHealthRecordSummary = response.data;
+
+    //   const newImageURLs = {};
+    //   for (const patient of patientsWithElectronicHealthRecordSummary) {
+    //     if (patient.profilePicture) {
+    //       const imageResponse = await imageServerApi.getImageFromImageServer(
+    //         "id",
+    //         patient.profilePicture
+    //       );
+    //       newImageURLs[patient.profilePicture] = URL.createObjectURL(
+    //         imageResponse.data
+    //       );
+    //     }
+    //   }
+
+    //   setImageURLs(newImageURLs);
+
     try {
       const response =
         await patientApi.getAllPatientsWithElectronicHealthRecordSummaryByName(
@@ -255,41 +291,78 @@ function EHR() {
         );
       const patientsWithElectronicHealthRecordSummary = response.data;
 
-      const newImageURLs = {};
-      for (const patient of patientsWithElectronicHealthRecordSummary) {
-        if (patient.profilePicture) {
-          const imageResponse = await imageServerApi.getImageFromImageServer(
-            "id",
-            patient.profilePicture
-          );
-          newImageURLs[patient.electronicHealthRecordId] = URL.createObjectURL(
-            imageResponse.data
-          );
+      const imagePromises = patientsWithElectronicHealthRecordSummary.map(
+        async (patient) => {
+          if (patient.profilePicture) {
+            const imageResponse = await imageServerApi.getImageFromImageServer(
+              "id",
+              patient.profilePicture
+            );
+            return {
+              profilePictureId: patient.profilePicture,
+              url: URL.createObjectURL(imageResponse.data),
+            };
+          }
+          return null;
         }
-      }
+      );
+
+      const imageResults = await Promise.all(imagePromises);
+
+      const newImageURLs = {};
+      imageResults.forEach((image) => {
+        if (image) {
+          newImageURLs[image.profilePictureId] = image.url;
+        }
+      });
 
       setImageURLs(newImageURLs);
+      console.log(newImageURLs);
 
       const mappedRows = patientsWithElectronicHealthRecordSummary.map(
-        (patientWithElectronicHealthRecordSummary) => ({
-          electronicHealthRecordId:
-            patientWithElectronicHealthRecordSummary.electronicHealthRecordId,
-          profilePicture:
+        (patientWithElectronicHealthRecordSummary) => {
+          console.log(
             newImageURLs[
-              patientWithElectronicHealthRecordSummary.electronicHealthRecordId
-            ],
-          nric: patientWithElectronicHealthRecordSummary.nric,
-          firstName: patientWithElectronicHealthRecordSummary.firstName,
-          lastName: patientWithElectronicHealthRecordSummary.lastName,
-          sex: patientWithElectronicHealthRecordSummary.sex,
-          username: patientWithElectronicHealthRecordSummary.username,
-        })
+              patientWithElectronicHealthRecordSummary.profilePicture
+            ]
+          );
+
+          console.log(patientWithElectronicHealthRecordSummary.profilePicture);
+          console.log(
+            imageURLs[patientWithElectronicHealthRecordSummary.profilePicture]
+          );
+          return {
+            electronicHealthRecordId:
+              patientWithElectronicHealthRecordSummary.electronicHealthRecordId,
+
+            //if you set image here it will apepar everywhere
+            // profilePicture:
+            //   patientWithElectronicHealthRecordSummary.profilePicture,
+            // profilePicture:
+            //    || patientWithElectronicHealthRecordSummary.profilePicture,
+            profilePicture:
+              newImageURLs[
+                patientWithElectronicHealthRecordSummary.profilePicture
+              ],
+            profilePicturePath:
+              patientWithElectronicHealthRecordSummary.profilePicture,
+            nric: patientWithElectronicHealthRecordSummary.nric,
+            firstName: patientWithElectronicHealthRecordSummary.firstName,
+            lastName: patientWithElectronicHealthRecordSummary.lastName,
+            sex: patientWithElectronicHealthRecordSummary.sex,
+            username: patientWithElectronicHealthRecordSummary.username,
+          };
+        }
       );
+
+      console.log(mappedRows);
 
       dataRef.current = {
         ...dataRef.current,
         rows: [mappedRows],
       };
+
+      console.log(dataRef.current);
 
       setData((prevData) => ({
         ...prevData,
@@ -298,6 +371,8 @@ function EHR() {
     } catch (error) {
       console.error("Error fetching data:", error);
     }
+
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -307,38 +382,45 @@ function EHR() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox pt={6} pb={3}>
-        <Grid container spacing={6}>
-          <Grid item xs={12}>
-            <Card>
-              <MDBox
-                mx={2}
-                mt={-3}
-                py={3}
-                px={2}
-                variant="gradient"
-                bgColor="info"
-                borderRadius="lg"
-                coloredShadow="info"
-              >
-                <MDTypography variant="h6" color="white">
-                  EHR Table
-                </MDTypography>
-              </MDBox>
-              <MDBox pt={3}>
-                <DataTable canSearch={true} table={data} />
-              </MDBox>
-            </Card>
-          </Grid>
-        </Grid>
-      </MDBox>
+      {isLoading ? (
+        <p>Loading...</p> // or a spinner component
+      ) : (
+        // your DataTable component
+        <>
+          <MDBox pt={6} pb={3}>
+            <Grid container spacing={6}>
+              <Grid item xs={12}>
+                <Card>
+                  <MDBox
+                    mx={2}
+                    mt={-3}
+                    py={3}
+                    px={2}
+                    variant="gradient"
+                    bgColor="info"
+                    borderRadius="lg"
+                    coloredShadow="info"
+                  >
+                    <MDTypography variant="h6" color="white">
+                      EHR Table
+                    </MDTypography>
+                  </MDBox>
+                  <MDBox pt={3}>
+                    <DataTable canSearch={true} table={data} />
+                  </MDBox>
+                </Card>
+              </Grid>
+            </Grid>
+          </MDBox>
+        </>
+      )}
 
       <Dialog open={isModalOpen} onClose={handleCloseModal}>
         <DialogTitle>View Patient EHR</DialogTitle>
         <DialogContent>
           <Avatar
             alt="Profile Picture"
-            src={formData.profilePicture}
+            src={imageURLs[formData.profilePicturePath]}
             sx={{ width: 100, height: 100, margin: "0 auto" }}
           />
           <TextField

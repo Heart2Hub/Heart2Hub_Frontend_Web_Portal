@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import React, { useRef, useState } from "react";
 import { useEffect } from "react";
+import { staffApi } from "api/Api";
 
 function AssignAppointmentDialog({
   open,
@@ -93,15 +94,25 @@ function AssignAppointmentDialog({
       setListOfApplicableWorkingStaff(
         listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
       );
+    } else if (swimlaneName === "Pharmacy") {
+      setListOfApplicableWorkingStaff(
+        listOfWorkingStaff
+      );
     } else {
       // console.log("No Filter result of applicable working staff");
     }
   };
 
+  const getPharmacyStaff = async () => {
+    const response = await staffApi.getStaffsWorkingInCurrentShiftAndDepartment("Pharmacy");
+    listOfWorkingStaff = response.data;
+  }
+
   useEffect(() => {
-    if (assigningToSwimlane !== "Treatment") {
-      handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
+    if (assigningToSwimlane === "Pharmacy") {
+      getPharmacyStaff();
     }
+    handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
   }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
 
   return (

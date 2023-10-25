@@ -11,7 +11,7 @@ import Icon from "@mui/material/Icon";
 import Outpatient from "layouts/outpatient";
 import Inpatient from "layouts/inpatient";
 import EHR from "layouts/EHR";
-import EHRRecord from "layouts/EHR/record";
+import EHRRecord from "layouts/EHR/record/index.jsx";
 //import EHRRecord from "layouts/ehr/record";
 import Administration from "layouts/administration";
 import Manpower from "layouts/manpower";
@@ -27,13 +27,16 @@ import CalendarRoster from "layouts/manpower/rostering/CalendarRoster";
 import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
 import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 import Subsidy from "layouts/finance/subsidy";
+import Invoice from "layouts/finance/invoice";
+import Pharmacy from "layouts/pharmacy";
+
 
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
 import { StaffRoleEnum } from "constants/StaffRoleEnum";
 import ConsumableEquipmentManagement from "layouts/administration/inventory-management/consumable-equipment";
 import InventoryManagement from "layouts/administration/inventory-management";
-import MedicationManagement from "layouts/administration/inventory-management/medication-management";
+import MedicationManagement from "layouts/pharmacy/medication-management";
 import ServiceItemManagement from "layouts/administration/inventory-management/service-item-management";
 
 const routes = [
@@ -168,7 +171,39 @@ const routes = [
       </ProtectedRoute>
     ),
   },
+  {
+    type: "collapse",
+    name: "Pharmacy",
+    key: "pharmacy",
+    icon: <Icon fontSize="small">local_pharmacy</Icon>,
+    route: "/pharmacy",
+    authorizedRoles: [StaffRoleEnum.PHARMACIST],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.PHARMACIST]}
+        forHeadsOnly={false}
+      >
+        <Pharmacy />
+      </ProtectedRoute>
+    ),
+  },
 
+  // {
+  //   type: "collapse",
+  //   name: "Pharmacy",
+  //   key: "pharmacy",
+  //   icon: <Icon fontSize="small">medication</Icon>,
+  //   route: "/pharmacy",
+  //   authorizedRoles: [StaffRoleEnum.ALL],
+  //   component: (
+  //     <ProtectedRoute
+  //       authorizedRoles={[StaffRoleEnum.ALL]}
+  //       forHeadsOnly={false}
+  //     >
+  //       <Pharmacy />
+  //     </ProtectedRoute>
+  //   ),
+  // },
 
   {
     name: "EHR",
@@ -177,6 +212,7 @@ const routes = [
     route: "/ehr/ehrRecord",
     component: <EHRRecord />,
   },
+
   {
     name: "Staff Management",
     key: "staffmanagement",
@@ -316,29 +352,16 @@ const routes = [
       </ProtectedRoute>
     ),
   },
-  {
-    name: "MedicationManagement",
-    key: "medicationmanagement",
-    route: "/administration/inventory-management/medication-management",
-    component: (
-      <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ADMIN]}
-        forHeadsOnly={false}
-      >
-        <MedicationManagement />
-      </ProtectedRoute>
-    ),
-  },
   // {
-  //   name: "Consumable Equipment Management",
-  //   key: "consumableequipmentmanagement",
-  //   route: "/administration/inventory-management/consumable-equipment-management",
+  //   name: "MedicationManagement",
+  //   key: "medicationmanagement",
+  //   route: "/pharmacy/medication-management",
   //   component: (
   //     <ProtectedRoute
   //       authorizedRoles={[StaffRoleEnum.ADMIN]}
   //       forHeadsOnly={false}
   //     >
-  //       <ConsumableEquipmentManagement />
+  //       <MedicationManagement />
   //     </ProtectedRoute>
   //   ),
   // },
@@ -365,6 +388,19 @@ const routes = [
         forHeadsOnly={false}
       >
         <Subsidy />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Invoice Management",
+    key: "invoice",
+    route: "/finance/invoice",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+      >
+        <Invoice />
       </ProtectedRoute>
     ),
   },
