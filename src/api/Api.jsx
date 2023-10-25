@@ -334,10 +334,10 @@ export const treatmentPlanRecordApi = {
   deleteInvitationToTreatmentPlanRecord(
     treatmentPlanRecordId,
     staffId,
-    invitedStaffId
+    invitationId
   ) {
     return axiosFetch.delete(
-      `${REST_ENDPOINT}/treatmentPlanRecord/deleteInvitationToTreatmentPlanRecord?treatmentPlanRecordId=${treatmentPlanRecordId}&staffId=${staffId}&invitedStaffId=${invitedStaffId}`
+      `${REST_ENDPOINT}/treatmentPlanRecord/deleteInvitationToTreatmentPlanRecord?treatmentPlanRecordId=${treatmentPlanRecordId}&staffId=${staffId}&invitationId=${invitationId}`
     );
   },
 };

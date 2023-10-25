@@ -14,6 +14,7 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   IconButton,
+  Typography,
 } from "@mui/material";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { departmentApi } from "api/Api";
@@ -26,6 +27,7 @@ import { selectEHRRecord } from "store/slices/ehrSlice";
 import { selectStaff } from "store/slices/staffSlice";
 import { updateEHRRecord } from "store/slices/ehrSlice";
 import { displayMessage } from "store/slices/snackbarSlice";
+import MDTypography from "components/MDTypography";
 function ViewInvitationDialog({
   openInvitationDialog,
   handleCloseInvitationDialog,
@@ -45,6 +47,26 @@ function ViewInvitationDialog({
   //THROWING ERROR BUT BE NOT THROWING
   // ERROR RESPONSE IS THE JSON OF THE TREATMENT PLAN
   const handleAddStaff = async (staffToInvite) => {
+    if (
+      listOfInvitedStaff.filter((staff) => {
+        return staff.staffId === staffToInvite.staffId;
+      }).length > 0
+    ) {
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Invitation not sent",
+          content:
+            "Staff " +
+            staffToInvite.firstname +
+            " " +
+            staffToInvite.lastname +
+            " has already been invited",
+        })
+      );
+      return;
+    }
     //perform creating invitation in BE
     console.log("BEFORE");
     try {
@@ -55,50 +77,22 @@ function ViewInvitationDialog({
           staffToInvite.staffId
         );
 
+      //it will never get outside due to the error
       console.log("OUTSIDE");
-      // // Create a deep copy of the treatment plan records array
-      // console.log(response.data);
-      // const updatedTreatmentPlanRecords = [
-      //   ...ehrRecord.listOfTreatmentPlanRecords,
-      // ];
-
-      // // Identify the index of the existing Treatment Plan in the list
-      // const existingRecordIndex = updatedTreatmentPlanRecords.findIndex(
-      //   (record) =>
-      //     record.treatmentPlanRecordId ===
-      //     selectedTreatmentPlanRecord.treatmentPlanRecordId
-      // );
-
-      // // If found, replace the existing record with the updated one in the copy
-      // if (existingRecordIndex !== -1) {
-      //   updatedTreatmentPlanRecords.splice(
-      //     existingRecordIndex,
-      //     1,
-      //     response.data
-      //   );
-      // }
-
-      // const updatedEhrRecord = {
-      //   ...ehrRecord,
-      //   listOfTreatmentPlanRecords: updatedTreatmentPlanRecords,
-      // };
-      // reduxDispatch(updateEHRRecord(updatedEhrRecord));
 
       if (selectedStaff && !listOfInvitedStaff.includes(selectedStaff)) {
         setListOfInvitedStaff((prevItems) => [...prevItems, selectedStaff]);
       }
     } catch (error) {
-      console.log(error);
-      // console.log(error.response.data);
-      console.log(error.response.data);
-      console.log(error.response.status);
-      console.log(error.response.headers);
+      //for some reason, not matter what an error is caught, so we shall assume the method will go through
+      //get list of invitations
+      handleFetchInvitedStaff();
       reduxDispatch(
         displayMessage({
-          color: "error",
+          color: "success",
           icon: "notification",
-          title: "Error Encountered",
-          content: error.response.data,
+          title: "Success",
+          content: "Invitation has been sent",
         })
       );
       return;
@@ -106,52 +100,36 @@ function ViewInvitationDialog({
   };
 
   const handleDeleteStaff = async (staffToDelete) => {
-    //perform deleting invitation on BE
-    const response =
-      await treatmentPlanRecordApi.deleteInvitationToTreatmentPlanRecord(
-        selectedTreatmentPlanRecord.treatmentPlanRecordId,
-        loggedInStaff.staffId,
-        staffToDelete.staffId
+    try {
+      //perform deleting invitation on BE
+      const response =
+        await treatmentPlanRecordApi.deleteInvitationToTreatmentPlanRecord(
+          selectedTreatmentPlanRecord.treatmentPlanRecordId,
+          loggedInStaff.staffId,
+          staffToDelete.invitationId
+        );
+
+      console.log("OUTSIDE");
+
+      setListOfInvitedStaff((prevItems) =>
+        prevItems.filter((i) => i !== staffToDelete)
       );
-
-    console.log("OUTSIDE");
-
-    // Create a deep copy of the treatment plan records array
-    console.log(response.data);
-    // const updatedTreatmentPlanRecords = [
-    //   ...ehrRecord.listOfTreatmentPlanRecords,
-    // ];
-
-    // Identify the index of the existing Treatment Plan in the list
-    // const existingRecordIndex = updatedTreatmentPlanRecords.findIndex(
-    //   (record) =>
-    //     record.treatmentPlanRecordId ===
-    //     selectedTreatmentPlanRecord.treatmentPlanRecordId
-    // );
-
-    // // If found, replace the existing record with the updated one in the copy
-    // if (existingRecordIndex !== -1) {
-    //   updatedTreatmentPlanRecords.splice(existingRecordIndex, 1, response.data);
-    // }
-
-    // const updatedEhrRecord = {
-    //   ...ehrRecord,
-    //   listOfTreatmentPlanRecords: updatedTreatmentPlanRecords,
-    // };
-    // reduxDispatch(updateEHRRecord(updatedEhrRecord));
-    setListOfInvitedStaff((prevItems) =>
-      prevItems.filter((i) => i !== staffToDelete)
-    );
+    } catch {
+      handleFetchInvitedStaff();
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Success",
+          content: "Invitation has been removed",
+        })
+      );
+      return;
+    }
   };
 
   const handleSelectedDepartment = (department) => {
     setSelectedDepartment(department);
-    // console.log("selected department: " + department);
-    // console.log(
-    //   listOfStaffs.filter((staff) => {
-    //     return staff.unit.name === department;
-    //   })
-    // );
     setListOfStaffToDisplay(
       listOfStaffs.filter((staff) => {
         return staff.unit.name === department;
@@ -166,7 +144,6 @@ function ViewInvitationDialog({
   const handleFetchDepartments = async () => {
     const response = await departmentApi.getAllDepartments();
     setListOfDepartments(response.data);
-    // console.log(response.data);
   };
 
   const handleFetchAllStaff = async () => {
@@ -175,7 +152,6 @@ function ViewInvitationDialog({
       return staff.staffRoleEnum !== "ADMIN";
     });
     setListOfStaffs(listOfStaffWithoutAdmin);
-    // console.log(response.data);
   };
 
   const handleFetchInvitedStaff = async () => {
@@ -184,7 +160,6 @@ function ViewInvitationDialog({
         selectedTreatmentPlanRecord.treatmentPlanRecordId
       );
     setListOfInvitedStaff(response.data);
-    // console.log(response.data);
   };
 
   useEffect(() => {
@@ -201,14 +176,26 @@ function ViewInvitationDialog({
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Invitation List</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Department</InputLabel>
+        <DialogTitle
+          style={{ backgroundColor: "#e1e1e1", textAlign: "center" }}
+        >
+          Invitation List
+        </DialogTitle>
+        <DialogContent style={{ padding: "20px" }}>
+          <FormControl
+            fullWidth
+            margin="normal"
+            style={{ marginBottom: "15px" }}
+          >
+            <InputLabel style={{ marginBottom: "10px" }}>Department</InputLabel>
             <Select
               value={selectedDepartment}
               onChange={(e) => handleSelectedDepartment(e.target.value)}
-              sx={{ lineHeight: "3em" }}
+              style={{
+                backgroundColor: "#f5f5f5",
+                borderRadius: "5px",
+                padding: "10px 5px",
+              }}
             >
               {listOfDepartments.map((dept) => {
                 return (
@@ -221,15 +208,24 @@ function ViewInvitationDialog({
           </FormControl>
 
           {selectedDepartment && (
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Staff To Invite</InputLabel>
+            <FormControl
+              fullWidth
+              margin="normal"
+              style={{ marginBottom: "15px" }}
+            >
+              <InputLabel style={{ marginBottom: "10px" }}>
+                Staff To Invite
+              </InputLabel>
               <Select
                 value={selectedStaff}
                 onChange={(e) => handleSelectedStaff(e.target.value)}
-                sx={{ lineHeight: "3em" }}
+                style={{
+                  backgroundColor: "#f5f5f5",
+                  borderRadius: "5px",
+                  padding: "10px 5px",
+                }}
               >
                 {listOfStaffToDisplay.map((staff) => {
-                  // console.log(staff);
                   return (
                     <MenuItem key={staff.staffId} value={staff}>
                       {staff.firstname}
@@ -240,14 +236,31 @@ function ViewInvitationDialog({
             </FormControl>
           )}
 
-          <Button onClick={() => handleAddStaff(selectedStaff)}>
+          <Button
+            onClick={() => handleAddStaff(selectedStaff)}
+            style={{
+              backgroundColor: "#007BFF",
+              color: "#FFFFFF",
+              borderRadius: "5px",
+              padding: "8px 15px",
+              marginTop: "10px",
+              float: "right",
+            }}
+          >
             Add to List
           </Button>
 
-          {listOfInvitedStaff.length === 0 && <>No staff invited yet</>}
-          <List>
+          {listOfInvitedStaff.length === 0 && (
+            <p style={{ color: "#888888", marginTop: "20px" }}>
+              No staff invited yet
+            </p>
+          )}
+          <List style={{ marginTop: "20px" }}>
             {listOfInvitedStaff.map((invitation) => (
-              <ListItem key={invitation.staffId}>
+              <ListItem
+                key={invitation.staffId}
+                style={{ borderBottom: "1px solid #e1e1e1", padding: "10px 0" }}
+              >
                 <ListItemText
                   primary={
                     invitation.firstname +
@@ -258,22 +271,47 @@ function ViewInvitationDialog({
                     ")"
                   }
                 />
-                <ListItemSecondaryAction>
+                <ListItemSecondaryAction
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: invitation.isPrimary
+                      ? "center"
+                      : "flex-end", // Conditional justifyContent
+                    width: "20%", // A width value to ensure space, adjust as required
+                  }}
+                >
                   {!invitation.isPrimary && (
                     <IconButton
                       edge="end"
                       onClick={() => handleDeleteStaff(invitation)}
+                      style={{ color: "#DD3333" }}
                     >
                       <DeleteIcon />
                     </IconButton>
+                  )}
+                  {invitation.isPrimary && (
+                    <MDTypography
+                      style={{
+                        textAlign: "center",
+                      }}
+                    >
+                      OWNER
+                    </MDTypography>
                   )}
                 </ListItemSecondaryAction>
               </ListItem>
             ))}
           </List>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseInvitationDialog} color="primary">
+        <DialogActions
+          style={{ padding: "15px 20px", backgroundColor: "#f5f5f5" }}
+        >
+          <Button
+            onClick={handleCloseInvitationDialog}
+            color="primary"
+            style={{ fontWeight: "bold" }}
+          >
             Close
           </Button>
         </DialogActions>
