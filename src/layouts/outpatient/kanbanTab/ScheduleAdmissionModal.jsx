@@ -21,7 +21,11 @@ import {
   Button,
 } from "@mui/material";
 import MDTypography from "components/MDTypography";
-import { calculateAge } from "utility/Utility";
+import {
+  calculateAge,
+  parseDateFromLocalDateTime,
+  formatDateToYYYYMMDDHHMM,
+} from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
 import MDButton from "components/MDButton";
 import {
@@ -78,6 +82,7 @@ function ScheduleAdmissionModal({
   listOfWorkingStaff,
   forceRefresh,
 }) {
+  const loggedInStaff = useSelector(selectStaff);
   const navigate = useNavigate();
   const reduxDispatch = useDispatch();
   const [assignedStaff, setAssignedStaff] = useState(null);
@@ -101,15 +106,26 @@ function ScheduleAdmissionModal({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   // const [assigningToSwimlane, setAssigningToSwimlane] = useState("");
 
-  //logged in staff
-  const loggedInStaff = useSelector(selectStaff);
-
   //for fetching image
   const [profileImage, setProfileImage] = useState(null);
 
-  //For inpatient
+  //for scheduling admission
   const [wardClass, setWardClass] = useState("A");
-  const [selectedWard, setSelctedWard] = useState("");
+  const [wards, setWards] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [selectedWard, setSelectedWard] = useState("");
+  const [admissionDateTime, setAdmissionDateTime] = useState("");
+  const [dischargeDateTime, setDischargeDateTime] = useState("");
+  const [selectedEventIds, setSelectedEventIds] = useState([]);
+  const [scheduled, setScheduled] = useState(false);
+
+  //for setting calendar to start today
+  moment.locale("ko", {
+    week: {
+      dow: new Date().getDay(),
+    },
+  });
+  const localizer = momentLocalizer(moment);
 
   const handleGetProfileImage = async () => {
     if (selectedAppointment.patientProfilePicture !== null) {
@@ -564,24 +580,33 @@ function ScheduleAdmissionModal({
   };
 
   useEffect(() => {
-    if (selectedAppointment.currentAssignedStaffId !== null) {
+    if (openModal) {
+      console.log(selectedAppointment);
       getAssignedStaffName(selectedAppointment.currentAssignedStaffId);
       setFacilityLocation(
         getFacilityLocationByStaffIdThroughShift(
           selectedAppointment.currentAssignedStaffId
         )
       );
-    }
-    handleGetProfileImage();
-    fetchMedicationsAndServices();
-    fetchPatientCart();
-    // setAssigningToSwimlane(columnName);
-    console.log(selectedAppointment);
-  }, [selectedAppointment, listOfWorkingStaff]);
+      handleGetProfileImage();
 
-  //FOR ADMISSION
-  const [wards, setWards] = useState([]);
-  const [calendarEvents, setCalendarEvents] = useState([]);
+      // for setting admission textarea fields
+      if (selectedAppointment.admissionDate) {
+        const admissionMoment = moment(selectedAppointment.admissionDate);
+        const dischargeMoment = moment(selectedAppointment.dischargeDate);
+        setAdmissionDateTime(admissionMoment.format("YYYY-MM-DD HH:mm:ss"));
+        setDischargeDateTime(dischargeMoment.format("YYYY-MM-DD HH:mm:ss"));
+        setSelectedWard(selectedAppointment.ward);
+        setScheduled(true);
+      }
+    }
+
+    // fetchMedicationsAndServices();
+    // fetchPatientCart();
+    // setAssigningToSwimlane(columnName);
+  }, [openModal]);
+
+  //FOR SCHEDULING ADMISSION
 
   const fetchWards = async (wardClass) => {
     try {
@@ -598,7 +623,7 @@ function ScheduleAdmissionModal({
         wardAvailabilities.forEach((wa) => {
           const startDate = wa.date.split(" ")[0];
           const startDateArr = startDate.split("-"); // 0: year, 1: month, 2: day
-          const selectable = 8 % wa.wardAvailabilityId >= duration;
+          //const selectable = 8 % wa.wardAvailabilityId >= duration;
 
           const event = {
             id: wa.wardAvailabilityId,
@@ -646,25 +671,7 @@ function ScheduleAdmissionModal({
     fetchWards(wardClass);
   }, [wardClass]);
 
-  moment.locale("ko", {
-    week: {
-      dow: new Date().getDay(),
-    },
-  });
-  const localizer = momentLocalizer(moment);
-
   // Function to handle cell selection
-
-  const handleSelectSlot = ({ start, end }) => {
-    // Log the start and end times to the console
-    console.log("Start Time:", start);
-    console.log("End Time:", end);
-  };
-
-  const [admissionDateTime, setAdmissionDateTime] = useState("");
-  const [dischargeDateTime, setDischargeDateTime] = useState("");
-
-  const [selectedEventIds, setSelectedEventIds] = useState([]);
 
   const handleSelectEvent = (event) => {
     console.log(event);
@@ -697,7 +704,7 @@ function ScheduleAdmissionModal({
         eventId = eventId + 1;
       }
 
-      setSelctedWard(event.wardName);
+      setSelectedWard(event.wardName);
       setSelectedEventIds(eventIds);
 
       const actualDate = moment(event.actual);
@@ -736,17 +743,6 @@ function ScheduleAdmissionModal({
       setDischargeDateTime(dischargeMoment.format("YYYY-MM-DD HH:mm:ss"));
     }
   }, [admissionDateTime]);
-
-  const eventPropGetter = useCallback(
-    (event, start, end, isSelected) => ({
-      ...(isSelected && {
-        style: {
-          backgroundColor: "#000",
-        },
-      }),
-    }),
-    []
-  );
 
   const handleSelectWardClass = (event) => {
     setWardClass(event.target.value);
@@ -1077,64 +1073,73 @@ function ScheduleAdmissionModal({
                     }}
                   />
                 </ListItem>
-                <InputLabel id="select-ward-class" sx={{ marginTop: "10px" }}>
-                  <MDTypography variant="h6" gutterBottom color="black">
-                    Search Ward Class
-                  </MDTypography>
-                </InputLabel>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    width: "100%",
-                  }}
-                >
-                  <Select
-                    sx={{ width: "150px", height: "40px" }}
-                    labelId="select-ward-class"
-                    value={wardClass}
-                    onChange={handleSelectWardClass}
-                  >
-                    <MenuItem value={"A"}>A</MenuItem>
-                    <MenuItem value={"B1"}>B1</MenuItem>
-                    <MenuItem value={"B2"}>B2</MenuItem>
-                    <MenuItem value={"C"}>C</MenuItem>
-                  </Select>
 
-                  <MDButton
-                    onClick={handleScheduleAdmission}
-                    variant="gradient"
-                    color="primary"
-                  >
-                    Schedule Admission
-                  </MDButton>
-                </Box>
+                {scheduled ? null : (
+                  <>
+                    <InputLabel
+                      id="select-ward-class"
+                      sx={{ marginTop: "10px" }}
+                    >
+                      <MDTypography variant="h6" gutterBottom color="black">
+                        Search Ward Class
+                      </MDTypography>
+                    </InputLabel>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        width: "100%",
+                      }}
+                    >
+                      <Select
+                        sx={{ width: "150px", height: "40px" }}
+                        labelId="select-ward-class"
+                        value={wardClass}
+                        onChange={handleSelectWardClass}
+                      >
+                        <MenuItem value={"A"}>A</MenuItem>
+                        <MenuItem value={"B1"}>B1</MenuItem>
+                        <MenuItem value={"B2"}>B2</MenuItem>
+                        <MenuItem value={"C"}>C</MenuItem>
+                      </Select>
 
-                <MDBox pt={3}>
-                  <Calendar
-                    className="schedule-admission-calendar"
-                    localizer={localizer}
-                    events={calendarEvents}
-                    defaultView={Views.WEEK}
-                    startAccessor="start"
-                    endAccessor="end"
-                    formats={{
-                      timeGutterFormat: (date) => wards[date.getHours()].name,
-                    }}
-                    min={new Date().setHours(0, 0, 0, 0)}
-                    max={new Date().setHours(wards.length, 0, 0, 0)}
-                    onSelectEvent={handleSelectEvent}
-                    eventPropGetter={(event) => ({
-                      style: {
-                        backgroundColor: selectedEventIds.includes(event.id)
-                          ? "green"
-                          : "blue",
-                      },
-                    })}
-                    // selectable={true}
-                    // onSelectSlot={handleSelectSlot}
-                  />
-                </MDBox>
+                      <MDButton
+                        onClick={handleScheduleAdmission}
+                        variant="gradient"
+                        color="primary"
+                      >
+                        Schedule Admission
+                      </MDButton>
+                    </Box>
+
+                    <MDBox pt={3}>
+                      <Calendar
+                        className="schedule-admission-calendar"
+                        localizer={localizer}
+                        events={calendarEvents}
+                        defaultView={Views.WEEK}
+                        startAccessor="start"
+                        endAccessor="end"
+                        formats={{
+                          timeGutterFormat: (date) =>
+                            wards[date.getHours()].name,
+                        }}
+                        min={new Date().setHours(0, 0, 0, 0)}
+                        max={new Date().setHours(wards.length, 0, 0, 0)}
+                        onSelectEvent={handleSelectEvent}
+                        eventPropGetter={(event) => ({
+                          style: {
+                            backgroundColor: selectedEventIds.includes(event.id)
+                              ? "green"
+                              : "blue",
+                          },
+                        })}
+                        // selectable={true}
+                        // onSelectSlot={handleSelectSlot}
+                      />
+                    </MDBox>
+                  </>
+                )}
               </List>
             </>
           )}
