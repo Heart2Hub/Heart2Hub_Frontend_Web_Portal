@@ -700,3 +700,36 @@ export const invoiceApi = {
     );
   },
 };
+
+export const admissionApi = {
+  createAdmission(duration, reason, patientId, doctorId) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/admission/createAdmission?duration=${duration}&reason=${reason}&patientId=${patientId}&doctorId=${doctorId}`
+    );
+  },
+  scheduleAdmission(admissionId, wardAvailabilityId, admission, discharge) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/scheduleAdmission?admissionId=${admissionId}&wardAvailabilityId=${wardAvailabilityId}&admission=${admission}&discharge=${discharge}`
+    );
+  },
+  getAdmissionsForWard(name) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/admission/getAdmissionsForWard?wardName=${name}`
+    );
+  },
+  assignAdmissionToStaff(admissionId, toStaffId, fromStaffId) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+    );
+  },
+  handleDischarge(date) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/handleDischarge?date=${date}`
+    );
+  },
+  handleAllocateIncoming(date) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/handleAllocateIncoming?date=${date}`
+    );
+  },
+};
