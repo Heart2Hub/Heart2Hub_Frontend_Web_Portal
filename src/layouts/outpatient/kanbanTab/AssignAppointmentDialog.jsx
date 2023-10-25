@@ -100,7 +100,9 @@ function AssignAppointmentDialog({
       );
     } else if (swimlaneName === "Pharmacy") {
       setListOfApplicableWorkingStaff(
-        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "PHARMACIST")
+        listOfWorkingStaff.filter(
+          (staff) => staff.staffRoleEnum === "PHARMACIST"
+        )
       );
     } else {
       // console.log("No Filter result of applicable working staff");
@@ -138,8 +140,6 @@ function AssignAppointmentDialog({
     handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
   }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
 
-  console.log(listOfApplicableWorkingStaff)
-
   return (
     <>
       {assigningToSwimlane === "Treatment" ? (
@@ -165,19 +165,29 @@ function AssignAppointmentDialog({
                 onChange={handleTreatmentTypeChange}
                 sx={{ height: "50px" }}
               >
-                {listOfApplicableWorkingStaff.length !== 0 &&
-                  listOfApplicableWorkingStaff.map((staff) =>
-                    staff.staffRoleEnum === "doctor" ||
-                    staff.staffRoleEnum === "nurse" ||
-                    staff.staffRoleEnum === "admin" ? null : (
+                {listOfWorkingStaff.length !== 0 &&
+                  listOfWorkingStaff
+                    .reduce((acc, staff) => {
+                      if (
+                        !acc.some(
+                          (item) => item.staffRoleEnum === staff.staffRoleEnum
+                        ) &&
+                        staff.staffRoleEnum !== "doctor" &&
+                        staff.staffRoleEnum !== "nurse" &&
+                        staff.staffRoleEnum !== "admin"
+                      ) {
+                        acc.push(staff);
+                      }
+                      return acc;
+                    }, [])
+                    .map((staff) => (
                       <MenuItem
                         key={staff.staffRoleEnum}
                         value={staff.staffRoleEnum}
                       >
                         {staffRoleEnumMapping[staff.staffRoleEnum]}
                       </MenuItem>
-                    )
-                  )}
+                    ))}
               </Select>
             </FormControl>
             {selectedTreatmentType !== "" ? (
