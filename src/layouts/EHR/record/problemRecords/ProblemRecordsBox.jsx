@@ -1,37 +1,13 @@
 import React from "react";
-import {
-  Card,
-  CardContent,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Divider,
-  FormControl,
-  Grid,
-  Icon,
-  InputLabel,
-  MenuItem,
-  Select,
-  TextField,
-} from "@mui/material";
+import { Card, CardContent, Chip, Icon, Grid, Divider } from "@mui/material";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
 import MDTypography from "components/MDTypography";
-import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
-import { displayMessage } from "../../../../store/slices/snackbarSlice";
-import {
-  selectEHRRecord,
-  setEHRRecord,
-  updateEHRRecord,
-} from "../../../../store/slices/ehrSlice";
+import { selectEHRRecord } from "../../../../store/slices/ehrSlice";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import { useDispatch } from "react-redux";
-import { problemRecordApi, ehrApi } from "api/Api";
 import CreateNewProblemRecordDialog from "./CreateNewProblemRecordDialog";
 import ResolveProblemRecordDialog from "./ResolveProblemRecordDialog";
 import UpdateProblemRecordDialog from "./UpdateProblemRecordDialog";
@@ -119,7 +95,7 @@ function ProblemRecordsBox() {
           px: 2,
           height: "600px",
           overflowY: "auto",
-          "&::-webkit-scrollbar": {
+          "&::WebkitScrollbar": {
             width: "0px",
             background: "transparent",
           },
