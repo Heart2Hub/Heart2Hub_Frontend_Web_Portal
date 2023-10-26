@@ -248,6 +248,11 @@ export const ehrApi = {
       `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordByNric?nric=${nric}`
     );
   },
+  getElectronicHealthRecordById(electronicHealthRecordId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/electronicHealthRecord/getElectronicHealthRecordById?electronicHealthRecordId=${electronicHealthRecordId}`
+    );
+  },
 };
 
 export const problemRecordApi = {
@@ -337,7 +342,11 @@ export const treatmentPlanRecordApi = {
       `${REST_ENDPOINT}/treatmentPlanRecord/getListOfInvitationsInTreatmentPlanRecord?treatmentPlanRecordId=${treatmentPlanRecordId}`
     );
   },
-
+  getListOfInvitationsByStaffId(staffId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/treatmentPlanRecord/getListOfInvitationsByStaffId?staffId=${staffId}`
+    );
+  },
   addInvitationToTreatmentPlanRecord(
     treatmentPlanRecordId,
     staffId,
@@ -354,6 +363,16 @@ export const treatmentPlanRecordApi = {
   ) {
     return axiosFetch.delete(
       `${REST_ENDPOINT}/treatmentPlanRecord/deleteInvitationToTreatmentPlanRecord?treatmentPlanRecordId=${treatmentPlanRecordId}&staffId=${staffId}&invitationId=${invitationId}`
+    );
+  },
+  setInvitationToRead(invitationId, staffId) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/treatmentPlanRecord/setInvitationToRead?invitationId=${invitationId}&staffId=${staffId}`
+    );
+  },
+  setInvitationToApproved(invitationId, staffId) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/treatmentPlanRecord/setInvitationToApproved?invitationId=${invitationId}&staffId=${staffId}`
     );
   },
 };

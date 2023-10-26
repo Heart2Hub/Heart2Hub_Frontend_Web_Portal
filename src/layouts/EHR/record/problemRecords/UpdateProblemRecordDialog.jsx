@@ -189,7 +189,7 @@ function UpdateProblemRecordDialog({
       });
     }
 
-    console.log(selectedProblemRecordToUpdate);
+    // console.log(selectedProblemRecordToUpdate);
   }, [selectedProblemRecordToUpdate]);
 
   return (

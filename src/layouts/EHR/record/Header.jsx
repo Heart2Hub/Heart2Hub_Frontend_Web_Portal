@@ -1,30 +1,34 @@
 import { useState, useEffect } from "react";
-
 import PropTypes from "prop-types";
-
-import Card from "@mui/material/Card";
-import Grid from "@mui/material/Grid";
-
-import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
-import MDAvatar from "components/MDAvatar";
+import { Card, Grid, Divider } from "@mui/material";
 
 import { useSelector } from "react-redux";
 import { selectEHRRecord } from "../../../store/slices/ehrSlice";
 import { imageServerApi } from "api/Api";
-import { Divider } from "@mui/material";
+
+import MDTypography from "components/MDTypography";
+import MDAvatar from "components/MDAvatar";
+import MDBox from "components/MDBox";
 import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
 
 function Header() {
   const ehrRecord = useSelector(selectEHRRecord);
+  const {
+    firstName,
+    lastName,
+    profilePicture,
+    dateOfBirth,
+    address,
+    contactNumber,
+  } = ehrRecord || {};
 
   const [profileImage, setProfileImage] = useState(null);
 
   const handleGetProfileImage = async () => {
-    if (ehrRecord.profilePicture !== null) {
+    if (profilePicture) {
       const response = await imageServerApi.getImageFromImageServer(
         "id",
-        ehrRecord?.profilePicture
+        profilePicture
       );
       const imageURL = URL.createObjectURL(response.data);
       setProfileImage(imageURL);
@@ -32,76 +36,61 @@ function Header() {
   };
 
   useEffect(() => {
-    console.log(ehrRecord);
     handleGetProfileImage();
   }, [ehrRecord]);
 
   return (
     <MDBox position="relative" mb={5}>
       <MDBox position="relative" minHeight="5rem" />
-      <Card
-        sx={{
-          position: "relative",
-          mt: -8,
-          mx: 3,
-          py: 2,
-          px: 2,
-        }}
-      >
-        <Grid container spacing={5} alignItems="center" width="100%">
-          <Grid item justifyContent="center">
+
+      <Card sx={{ position: "relative", mt: -8, mx: 3, py: 2, px: 2 }}>
+        <Grid container spacing={5}>
+          {/* Left Side: Image and Name */}
+          <Grid
+            item
+            sm={6}
+            container
+            justifyContent="center"
+            alignItems="center"
+            direction="column"
+          >
             <MDAvatar
               src={profileImage}
               alt="profile-image"
               size="xxl"
               shadow="xxl"
+              sx={{ height: "200px", width: "200px" }}
+            />
+            <MDTypography
+              variant="h3"
+              fontWeight="medium"
+              sx={{ mt: 0.5, marginTop: "5%" }}
+            >
+              {firstName} {lastName}
+            </MDTypography>
+          </Grid>
+
+          {/* Right Side: Details */}
+          <Grid item sm={6}>
+            <ProfileInfoCard
+              title="patient EHR information:"
+              info={{
+                firstName,
+                lastName,
+                birthDate: dateOfBirth.split(" ")[0],
+                address,
+                contactNumber,
+              }}
+              shadow={false}
             />
           </Grid>
-          <Grid item xs>
-            <MDBox height="100%" mt={0.5} lineHeight={1}>
-              <MDTypography variant="h5" fontWeight="medium">
-                {ehrRecord?.firstName} {ehrRecord?.lastName}
-              </MDTypography>
-            </MDBox>
-          </Grid>
-          <Grid item>
-            <MDBox
-              height="100%"
-              mt={0.5}
-              lineHeight={1}
-              style={{
-                flexGrow: 1,
-                display: "flex",
-                justifyContent: "flex-end",
-              }}
-            ></MDBox>
-          </Grid>
         </Grid>
-        <Divider orientation="horizontal" sx={{ ml: -2, mr: 1 }} />
-        <MDBox mt={3} mb={3}>
-          <ProfileInfoCard
-            title="patient EHR information:"
-            info={{
-              firstName: ehrRecord.firstName,
-              lastName: ehrRecord.lastName,
-              birthDate: ehrRecord.dateOfBirth.split(" ")[0],
-              address: ehrRecord.address,
-              contactNumber: ehrRecord.contactNumber,
-            }}
-            shadow={false}
-          />
-        </MDBox>
+        <Divider orientation="horizontal" sx={{ my: 2 }} />
       </Card>
     </MDBox>
   );
 }
 
-// Setting default props for the Header
-Header.defaultProps = {
-  children: "",
-};
-
-// Typechecking props for the Header
 Header.propTypes = {
   children: PropTypes.node,
 };

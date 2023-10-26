@@ -15,6 +15,7 @@ import {
   ListItemSecondaryAction,
   IconButton,
   Typography,
+  Chip,
 } from "@mui/material";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { departmentApi } from "api/Api";
@@ -28,6 +29,7 @@ import { selectStaff } from "store/slices/staffSlice";
 import { updateEHRRecord } from "store/slices/ehrSlice";
 import { displayMessage } from "store/slices/snackbarSlice";
 import MDTypography from "components/MDTypography";
+import MDBox from "components/MDBox";
 function ViewInvitationDialog({
   openInvitationDialog,
   handleCloseInvitationDialog,
@@ -68,7 +70,6 @@ function ViewInvitationDialog({
       return;
     }
     //perform creating invitation in BE
-    console.log("BEFORE");
     try {
       const response =
         await treatmentPlanRecordApi.addInvitationToTreatmentPlanRecord(
@@ -78,7 +79,6 @@ function ViewInvitationDialog({
         );
 
       //it will never get outside due to the error
-      console.log("OUTSIDE");
 
       if (selectedStaff && !listOfInvitedStaff.includes(selectedStaff)) {
         setListOfInvitedStaff((prevItems) => [...prevItems, selectedStaff]);
@@ -173,7 +173,7 @@ function ViewInvitationDialog({
       <Dialog
         open={openInvitationDialog}
         onClose={handleCloseInvitationDialog}
-        maxWidth="md"
+        maxWidth="lg"
         fullWidth
       >
         <DialogTitle
@@ -244,6 +244,7 @@ function ViewInvitationDialog({
               borderRadius: "5px",
               padding: "8px 15px",
               marginTop: "10px",
+              marginLeft: "10px",
               float: "right",
             }}
           >
@@ -255,54 +256,78 @@ function ViewInvitationDialog({
               No staff invited yet
             </p>
           )}
-          <List style={{ marginTop: "20px" }}>
-            {listOfInvitedStaff.map((invitation) => (
-              <ListItem
-                key={invitation.staffId}
-                style={{ borderBottom: "1px solid #e1e1e1", padding: "10px 0" }}
-              >
-                <ListItemText
-                  primary={
-                    invitation.firstname +
-                    " " +
-                    invitation.lastname +
-                    " (" +
-                    invitation.staffRoleEnum +
-                    ")"
-                  }
-                />
-                <ListItemSecondaryAction
+          <MDBox
+            style={{
+              maxHeight: "300px",
+              overflowY: "auto",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              "&::WebkitScrollbar": {
+                width: "0px",
+                background: "transparent",
+              },
+            }}
+          >
+            <MDTypography variant="h4" style={{ marginTop: "2%" }}>
+              List Of Invited Staff:
+            </MDTypography>
+            <List style={{ marginTop: "8%" }}>
+              {listOfInvitedStaff.map((invitation) => (
+                <ListItem
+                  key={invitation.staffId}
                   style={{
-                    display: "flex",
+                    borderBottom: "1px solid #e1e1e1",
+                    display: "grid",
+                    gridTemplateColumns: "2fr 1fr 1fr 1fr",
                     alignItems: "center",
-                    justifyContent: invitation.isPrimary
-                      ? "center"
-                      : "flex-end", // Conditional justifyContent
-                    width: "20%", // A width value to ensure space, adjust as required
+                    padding: "10px 0",
                   }}
                 >
+                  <MDTypography variant="h6" style={{ marginRight: "15px" }}>
+                    {invitation.firstname} {invitation.lastname} (
+                    {invitation.staffRoleEnum})
+                  </MDTypography>
                   {!invitation.isPrimary && (
-                    <IconButton
-                      edge="end"
-                      onClick={() => handleDeleteStaff(invitation)}
-                      style={{ color: "#DD3333" }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+                    <Chip
+                      label={invitation.isRead ? "Read " : "Not Read"}
+                      color={invitation.isRead ? "success" : "warning"}
+                      variant="outlined"
+                      style={{ marginRight: "15px" }}
+                    />
                   )}
-                  {invitation.isPrimary && (
-                    <MDTypography
-                      style={{
-                        textAlign: "center",
-                      }}
-                    >
-                      OWNER
-                    </MDTypography>
+                  {!invitation.isPrimary && (
+                    <Chip
+                      label={
+                        invitation.isApproved ? "Approved " : "Not Approved"
+                      }
+                      color={invitation.isApproved ? "success" : "warning"}
+                      variant="outlined"
+                      style={{ marginRight: "15px" }}
+                    />
                   )}
-                </ListItemSecondaryAction>
-              </ListItem>
-            ))}
-          </List>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {!invitation.isPrimary ? (
+                      <IconButton
+                        edge="end"
+                        onClick={() => handleDeleteStaff(invitation)}
+                        style={{ color: "#DD3333" }}
+                      >
+                        <DeleteIcon fontSize="medium" />
+                      </IconButton>
+                    ) : (
+                      ""
+                    )}
+                  </div>
+                </ListItem>
+              ))}
+            </List>
+          </MDBox>
         </DialogContent>
         <DialogActions
           style={{ padding: "15px 20px", backgroundColor: "#f5f5f5" }}

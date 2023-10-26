@@ -14,25 +14,25 @@ import { selectEHRRecord } from "store/slices/ehrSlice";
 import { updateEHRRecord } from "store/slices/ehrSlice";
 import { displayMessage } from "store/slices/snackbarSlice";
 import { selectStaff } from "store/slices/staffSlice";
-
-function CompleteTreatmentPlanRecordDialog({
-  openCompleteTreatmentPlanRecordDialog,
-  selectedTreatmentPlanRecordToComplete,
-  handleCloseCompleteTreatmentPlanRecordDialog,
+function ConfirmApproveTreatmentPlanDialog({
+  openConfirmApproveTreatmentPlanRecordDialog,
+  selectedTreatmentPlanRecord,
+  handleCloseConfirmApproveTreatmentPlanRecordDialog,
+  handleRefresh,
 }) {
   const reduxDispatch = useDispatch();
   const ehrRecord = useSelector(selectEHRRecord);
   const loggedInStaff = useSelector(selectStaff);
 
-  const handleCompleteTreatmentPlanRecord = (treatmentPlanRecord) => {
+  const handleConfirmApproveTreatmentPlanRecord = (treatmentPlanRecord) => {
     try {
       treatmentPlanRecordApi
-        .completeTreatmentPlanRecord(
-          ehrRecord.electronicHealthRecordId,
+        .setInvitationToApproved(
           treatmentPlanRecord.treatmentPlanRecordId,
           loggedInStaff.staffId
         )
         .then((response) => {
+          console.log(response.data);
           // Create a deep copy of the treatment plan records array
           const updatedTreatmentPlanRecords = [
             ...ehrRecord.listOfTreatmentPlanRecords,
@@ -42,7 +42,7 @@ function CompleteTreatmentPlanRecordDialog({
           const existingRecordIndex = updatedTreatmentPlanRecords.findIndex(
             (record) =>
               record.treatmentPlanRecordId ===
-              selectedTreatmentPlanRecordToComplete.treatmentPlanRecordId
+              selectedTreatmentPlanRecord.treatmentPlanRecordId
           );
 
           // If found, replace the existing record with the updated one in the copy
@@ -50,7 +50,7 @@ function CompleteTreatmentPlanRecordDialog({
             updatedTreatmentPlanRecords.splice(
               existingRecordIndex,
               1,
-              response.data
+              selectedTreatmentPlanRecord
             );
           }
 
@@ -63,65 +63,42 @@ function CompleteTreatmentPlanRecordDialog({
             displayMessage({
               color: "success",
               icon: "notification",
-              title: "Successfully Completed Treatment Plan!",
-              content: "Completed",
+              title: "Success",
+              content: "Treatment Plan has been approved!",
             })
           );
-        })
-        .catch((err) => {
-          console.log(err);
-          // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
-          if (err.response.data.detail) {
-            reduxDispatch(
-              displayMessage({
-                color: "error",
-                icon: "notification",
-                title: "Error Encountered",
-                content: err.response.data.detail,
-              })
-            );
-          } else {
-            reduxDispatch(
-              displayMessage({
-                color: "error",
-                icon: "notification",
-                title: "Error Encountered",
-                content: err.response.data,
-              })
-            );
-          }
-          console.log(err.response.data.detail);
         });
+      handleRefresh();
     } catch (ex) {
       console.log(ex);
     }
   };
 
-  const handleConfirmComplete = () => {
-    handleCompleteTreatmentPlanRecord(selectedTreatmentPlanRecordToComplete);
-    handleCloseCompleteTreatmentPlanRecordDialog();
+  const handleConfirm = () => {
+    handleConfirmApproveTreatmentPlanRecord(selectedTreatmentPlanRecord);
+    handleCloseConfirmApproveTreatmentPlanRecordDialog();
   };
 
   return (
     <>
       <Dialog
-        open={openCompleteTreatmentPlanRecordDialog}
-        onClose={handleCloseCompleteTreatmentPlanRecordDialog}
+        open={openConfirmApproveTreatmentPlanRecordDialog}
+        onClose={handleCloseConfirmApproveTreatmentPlanRecordDialog}
       >
-        <DialogTitle>Confirm Completion of Treatment Plan</DialogTitle>
+        <DialogTitle>Confirm Approve of Treatment Plan</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to complete this Treatment Plan?
+            Are you sure you want to approve this Treatment Plan?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <MDButton
-            onClick={handleCloseCompleteTreatmentPlanRecordDialog}
+            onClick={handleCloseConfirmApproveTreatmentPlanRecordDialog}
             color="primary"
           >
             Cancel
           </MDButton>
-          <MDButton onClick={handleConfirmComplete} color="primary">
+          <MDButton onClick={handleConfirm} color="primary">
             Confirm
           </MDButton>
         </DialogActions>
@@ -130,4 +107,4 @@ function CompleteTreatmentPlanRecordDialog({
   );
 }
 
-export default CompleteTreatmentPlanRecordDialog;
+export default ConfirmApproveTreatmentPlanDialog;

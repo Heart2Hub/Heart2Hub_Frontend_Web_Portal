@@ -1,4 +1,5 @@
 import {
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -24,6 +25,7 @@ import ViewImageDialog from "./ViewImageDialog";
 import UploadImageDialog from "./UploadImageDialog";
 import CompleteTreatmentPlanRecordDialog from "./CompleteTreatmentPlanRecordDialog";
 import ViewInvitationDialog from "./ViewInvitationDialog";
+import ConfirmApproveTreatmentPlanDialog from "./ConfirmApproveTreatmentPlanDialog";
 
 function ViewTreatmentPlanRecordDialog({
   openViewTreatmentPlanRecordDialog,
@@ -42,16 +44,31 @@ function ViewTreatmentPlanRecordDialog({
 
   //view image in treatment plan record
   const [openViewImageDialog, setOpenViewImageDialog] = useState(false);
+
   //upload image to treatment plan record
   const [openUploadImageDialog, setOpenUploadImageDialog] = useState(false);
+
   // complete treatment plan record
   const [
     openCompleteTreatmentPlanRecordDialog,
     setOpenCompleteTreatmentPlanRecordDialog,
   ] = useState(false);
 
+  //for checking if staff is invited to this TP record
+  const [currentStaffInvitation, setCurrentStaffInvitation] = useState(null);
+  const [primaryInvitation, setPrimaryInvitation] = useState(null);
+
   //view invitations to treatment plan record
   const [openInvitationDialog, setOpenInvitationDialog] = useState(false);
+
+  //approve treatment plan dialog
+  const [
+    openConfirmApproveTreatmentPlanDialog,
+    setOpenConfirmApproveTreatmentPlanDialog,
+  ] = useState(false);
+
+  //only for refreshing approval dialog
+  const [loading, setLoading] = useState(false);
 
   //view image in treatment plan records
   const handleOpenViewImageDialog = () => {
@@ -85,6 +102,15 @@ function ViewTreatmentPlanRecordDialog({
   };
   const handleCloseInvitationDialog = () => {
     setOpenInvitationDialog(false);
+  };
+
+  //handle approve treatment plan
+  const handleOpenConfirmApproveTreatmentPlanRecordDialog = () => {
+    setOpenConfirmApproveTreatmentPlanDialog(true);
+  };
+
+  const handleCloseConfirmApproveTreatmentPlanRecordDialog = () => {
+    setOpenConfirmApproveTreatmentPlanDialog(false);
   };
 
   const handleFormChange = (event) => {
@@ -288,9 +314,42 @@ function ViewTreatmentPlanRecordDialog({
     }
   };
 
+  const handleRetrieveListOfInvitations = async () => {
+    const response =
+      await treatmentPlanRecordApi.getListOfInvitationsInTreatmentPlanRecord(
+        selectedTreatmentPlanRecordToView.treatmentPlanRecordId
+      );
+    const listOfAllInvitations = response.data;
+
+    //to get the primary staff of the treatment plan
+    setPrimaryInvitation(
+      listOfAllInvitations.filter((invitation) => invitation.isPrimary)[0]
+    );
+    const listOfCurrentStaffInvitation = response.data.filter(
+      (invitation) => invitation.staffId === loggedInStaff.staffId
+    );
+
+    //if this staff has been invited for this treatment plan
+    if (listOfCurrentStaffInvitation.length > 0) {
+      let currentStaffInvitation = listOfCurrentStaffInvitation[0];
+      if (currentStaffInvitation.isRead === false) {
+        const invitationResponse =
+          await treatmentPlanRecordApi.setInvitationToRead(
+            currentStaffInvitation.invitationId,
+            loggedInStaff.staffId
+          );
+        currentStaffInvitation = invitationResponse.data;
+      }
+      setCurrentStaffInvitation(currentStaffInvitation);
+    }
+  };
+
+  const handleRefresh = () => {
+    setLoading(!loading);
+  };
+
   useEffect(() => {
     if (selectedTreatmentPlanRecordToView) {
-      console.log(selectedTreatmentPlanRecordToView);
       setFormData({
         description: selectedTreatmentPlanRecordToView.description,
         startDate: selectedTreatmentPlanRecordToView.startDate.split(" ")[0],
@@ -301,9 +360,9 @@ function ViewTreatmentPlanRecordDialog({
         treatmentPlanTypeEnum:
           selectedTreatmentPlanRecordToView.treatmentPlanTypeEnum,
       });
+      handleRetrieveListOfInvitations();
     }
-    console.log(selectedTreatmentPlanRecordToView);
-  }, [selectedTreatmentPlanRecordToView]);
+  }, [selectedTreatmentPlanRecordToView, loading]);
 
   return (
     <>
@@ -315,16 +374,37 @@ function ViewTreatmentPlanRecordDialog({
             sx={{ "& .MuiDialog-paper": { width: "1500px", height: "700px" } }}
           >
             <DialogTitle>
-              Treatment Plan{" "}
+              Treatment Plan &nbsp;
               {selectedTreatmentPlanRecordToView.treatmentPlanRecordId}
             </DialogTitle>
-            Created By: PRIMARY DOCTOR NEEDED
+
+            {primaryInvitation && (
+              <MDTypography variant="h5" sx={{ marginLeft: "3%" }}>
+                Created By:{" "}
+                {primaryInvitation.invitedBy === "self"
+                  ? primaryInvitation.firstname +
+                    " " +
+                    primaryInvitation.lastname +
+                    " (" +
+                    primaryInvitation.staffRoleEnum +
+                    ")"
+                  : primaryInvitation.invitedBy}
+              </MDTypography>
+            )}
+
             <DialogActions
               style={{ display: "flex", justifyContent: "space-between" }}
             >
-              <MDButton onClick={handleOpenInvitationDialog} color="dark">
-                View Invitations
-              </MDButton>
+              {primaryInvitation?.staffId === loggedInStaff.staffId && (
+                <MDButton onClick={handleOpenInvitationDialog} color="dark">
+                  View Invitations
+                </MDButton>
+              )}
+              {/* so the image related buttons will stay right */}
+              {primaryInvitation?.staffId !== loggedInStaff.staffId && (
+                <div></div>
+              )}
+
               <div>
                 <MDButton
                   onClick={handleOpenViewImageDialog}
@@ -333,14 +413,41 @@ function ViewTreatmentPlanRecordDialog({
                 >
                   View Images
                 </MDButton>
-                {!selectedTreatmentPlanRecordToView.isCompleted && (
-                  <MDButton onClick={handleOpenUploadImageDialog} color="light">
-                    Add Images
-                  </MDButton>
-                )}
+                {currentStaffInvitation !== null &&
+                  !selectedTreatmentPlanRecordToView.isCompleted && (
+                    <MDButton
+                      onClick={handleOpenUploadImageDialog}
+                      color="light"
+                    >
+                      Add Images
+                    </MDButton>
+                  )}
               </div>
             </DialogActions>
             <DialogContent>
+              <div style={{ textAlign: "left" }}>
+                {currentStaffInvitation !== null &&
+                  primaryInvitation?.staffId !== loggedInStaff.staffId && (
+                    <MDTypography
+                      variant="h6"
+                      style={{ marginTop: "8px", fontWeight: "bold" }}
+                    >
+                      Status: &nbsp;
+                      <Chip
+                        color={
+                          currentStaffInvitation?.isApproved
+                            ? "success"
+                            : "warning"
+                        }
+                        label={
+                          currentStaffInvitation?.isApproved
+                            ? "Approved"
+                            : "Unapproved"
+                        }
+                      />
+                    </MDTypography>
+                  )}
+              </div>
               <FormControl fullWidth margin="dense">
                 <MDTypography variant="h6">Start Date:</MDTypography>
                 <TextField
@@ -361,7 +468,10 @@ function ViewTreatmentPlanRecordDialog({
                   value={formData.endDate}
                   onChange={handleFormChange}
                   margin="dense"
-                  disabled={selectedTreatmentPlanRecordToView.isCompleted}
+                  disabled={
+                    selectedTreatmentPlanRecordToView.isCompleted ||
+                    currentStaffInvitation === null
+                  }
                 />
               </FormControl>
               <FormControl fullWidth margin="dense">
@@ -371,7 +481,10 @@ function ViewTreatmentPlanRecordDialog({
                   value={formData.treatmentPlanTypeEnum}
                   onChange={handleFormChange}
                   sx={{ lineHeight: "3em" }}
-                  disabled={selectedTreatmentPlanRecordToView.isCompleted}
+                  disabled={
+                    selectedTreatmentPlanRecordToView.isCompleted ||
+                    currentStaffInvitation === null
+                  }
                 >
                   {listOfTreatmentPlanTypes.length > 0 &&
                     listOfTreatmentPlanTypes.map((plan, index) => (
@@ -391,7 +504,10 @@ function ViewTreatmentPlanRecordDialog({
                   margin="dense"
                   multiline
                   rows={4}
-                  disabled={selectedTreatmentPlanRecordToView.isCompleted}
+                  disabled={
+                    selectedTreatmentPlanRecordToView.isCompleted ||
+                    currentStaffInvitation === null
+                  }
                 />
               </FormControl>
             </DialogContent>
@@ -404,30 +520,54 @@ function ViewTreatmentPlanRecordDialog({
               >
                 Close
               </MDButton>
-              {!selectedTreatmentPlanRecordToView.isCompleted && (
-                <div>
-                  <MDButton
-                    onClick={handleUpdateTreatmentPlanRecord}
-                    color="success"
-                    style={{ marginRight: "10px" }}
-                  >
-                    Update
-                  </MDButton>
-                  <MDButton
-                    onClick={handleDeleteTreatmentPlanRecord}
-                    color="primary"
-                    style={{ marginRight: "10px" }}
-                  >
-                    Delete
-                  </MDButton>
-                  <MDButton
-                    onClick={handleOpenCompleteTreatmentPlanRecordDialog}
-                    color="warning"
-                  >
-                    Complete
-                  </MDButton>
-                </div>
-              )}
+              {currentStaffInvitation !== null &&
+                !selectedTreatmentPlanRecordToView.isCompleted && (
+                  <div>
+                    <MDButton
+                      onClick={handleUpdateTreatmentPlanRecord}
+                      color="success"
+                      style={{ marginRight: "10px" }}
+                      disabled={
+                        currentStaffInvitation.isApproved &&
+                        primaryInvitation?.staffId !== loggedInStaff.staffId
+                      }
+                    >
+                      Update
+                    </MDButton>
+
+                    {primaryInvitation.staffId === loggedInStaff.staffId && (
+                      <>
+                        <MDButton
+                          onClick={handleDeleteTreatmentPlanRecord}
+                          color="primary"
+                          style={{ marginRight: "10px" }}
+                        >
+                          Delete
+                        </MDButton>
+                        <MDButton
+                          onClick={handleOpenCompleteTreatmentPlanRecordDialog}
+                          color="warning"
+                        >
+                          Complete
+                        </MDButton>
+                      </>
+                    )}
+                    {currentStaffInvitation !== null &&
+                      primaryInvitation.staffId !== loggedInStaff.staffId && (
+                        <>
+                          <MDButton
+                            onClick={
+                              handleOpenConfirmApproveTreatmentPlanRecordDialog
+                            }
+                            color="warning"
+                            disabled={currentStaffInvitation.isApproved}
+                          >
+                            Approve
+                          </MDButton>
+                        </>
+                      )}
+                  </div>
+                )}
             </DialogActions>
           </Dialog>
           <ViewImageDialog
@@ -455,6 +595,16 @@ function ViewTreatmentPlanRecordDialog({
             openInvitationDialog={openInvitationDialog}
             handleCloseInvitationDialog={handleCloseInvitationDialog}
             selectedTreatmentPlanRecord={selectedTreatmentPlanRecordToView}
+          />
+          <ConfirmApproveTreatmentPlanDialog
+            selectedTreatmentPlanRecord={selectedTreatmentPlanRecordToView}
+            openConfirmApproveTreatmentPlanRecordDialog={
+              openConfirmApproveTreatmentPlanDialog
+            }
+            handleCloseConfirmApproveTreatmentPlanRecordDialog={
+              handleCloseConfirmApproveTreatmentPlanRecordDialog
+            }
+            handleRefresh={handleRefresh}
           />
         </>
       )}

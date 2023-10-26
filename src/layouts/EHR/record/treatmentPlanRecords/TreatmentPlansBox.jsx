@@ -11,6 +11,7 @@ import CreateNewTreatmentPlanRecordDialog from "./CreateNewTreatmentPlanRecordDi
 
 import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
 import ViewTreatmentPlanRecordDialog from "./ViewTreatmentPlanRecordDialog";
+import { useEffect } from "react";
 
 function TreatmentPlansBox() {
   const reduxDispatch = useDispatch();
@@ -33,25 +34,25 @@ function TreatmentPlansBox() {
     setSelectedTreatmentPlanRecordToView,
   ] = useState(null);
 
-  //updating treatment plan records
-  const [
-    openUpdateTreatmentPlanRecordDialog,
-    setOpenUpdateTreatmentPlanRecordDialog,
-  ] = useState(false);
-  const [
-    selectedTreatmentPlanRecordToUpdate,
-    setSelectedTreatmentPlanRecordToUpdate,
-  ] = useState(null);
+  // //updating treatment plan records
+  // const [
+  //   openUpdateTreatmentPlanRecordDialog,
+  //   setOpenUpdateTreatmentPlanRecordDialog,
+  // ] = useState(false);
+  // const [
+  //   selectedTreatmentPlanRecordToUpdate,
+  //   setSelectedTreatmentPlanRecordToUpdate,
+  // ] = useState(null);
 
-  //deleting treatment plan records
-  const [
-    openDeleteTreatmentPlanRecordDialog,
-    setOpenDeleteTreatmentPlanRecordDialog,
-  ] = useState(false);
-  const [
-    selectedTreatmentPlanRecordToDelete,
-    setSelectedTreatmentPlanRecordToDelete,
-  ] = useState(null);
+  // //deleting treatment plan records
+  // const [
+  //   openDeleteTreatmentPlanRecordDialog,
+  //   setOpenDeleteTreatmentPlanRecordDialog,
+  // ] = useState(false);
+  // const [
+  //   selectedTreatmentPlanRecordToDelete,
+  //   setSelectedTreatmentPlanRecordToDelete,
+  // ] = useState(null);
 
   //create treatment plan records
   const handleOpenCreateTreatmentPlanRecordDialog = () => {
@@ -119,8 +120,6 @@ function TreatmentPlansBox() {
         </MDBox>
         <Divider variant="middle" />
 
-        {/* start of list */}
-
         {ehrRecord.listOfTreatmentPlanRecords.length === 0 ? (
           <MDTypography
             variant="h5"
@@ -180,7 +179,7 @@ function TreatmentPlansBox() {
                             variant="h6"
                             style={{ marginTop: "8px" }}
                           >
-                            {`Problem Type: ${treatmentPlan.treatmentPlanTypeEnum}`}
+                            {`Treatment Plan Type: ${treatmentPlan.treatmentPlanTypeEnum}`}
                           </MDTypography>
                         </Grid>
                         <Grid item xs={3}>
