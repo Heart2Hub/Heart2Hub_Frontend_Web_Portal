@@ -1,32 +1,33 @@
 import React from "react";
 import { useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
-import KanbanColumn from "./KanbanColumn";
+import KanbanColumn from "../outpatient/kanbanTab/KanbanColumn";
 import { useSelector } from "react-redux";
-import { selectStaff } from "../../../store/slices/staffSlice";
-import { appointmentApi, staffApi, admissionApi } from "../../../api/Api";
+import { selectStaff } from "../../store/slices/staffSlice";
+import { appointmentApi, staffApi, admissionApi } from "../../api/Api";
 import { useEffect } from "react";
 import MDButton from "components/MDButton";
 
 import { Icon, Box } from "@mui/material";
-import "./kanbanStyles.css";
-import CreateAppointmentModal from "./CreateAppointmentModal";
+import "./pharmKanbanStyles.css";
+import CreateAppointmentModal from "../outpatient/kanbanTab/CreateAppointmentModal";
 
-import StaffListSidePanel from "./StaffListSidePanel";
+import StaffListSidePanel from "../outpatient/kanbanTab/StaffListSidePanel";
 import MDBox from "components/MDBox";
 import { useDispatch } from "react-redux";
 import { displayMessage } from "store/slices/snackbarSlice";
-import AssignAppointmentDialog from "./AssignAppointmentDialog";
+import AssignAppointmentDialog from "../outpatient/kanbanTab/AssignAppointmentDialog";
 import { useRef } from "react";
-import AdmissionDialog from "./AdmissionDialog";
+import AdmissionDialog from "../outpatient/kanbanTab/AdmissionDialog";
+import CreateNewTicket from "./CreateNewTicket";
 
-function KanbanBoard() {
+function PharmacyAdminKanbanBoard() {
   const staff = useSelector(selectStaff);
   const [loading, setLoading] = useState(false);
   const reduxDispatch = useDispatch();
 
   //for assigning staff to appoint
-  const [isDialogOpen, setDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAppointmentToAssign, setSelectedAppointmentToAssign] =
     useState(null);
   const [assigningToSwimlane, setAssigningToSwimlane] = useState("");
@@ -47,6 +48,7 @@ function KanbanBoard() {
   const [pharmacy, setPharmacy] = useState([]);
   const [referral, setReferral] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
 
   //for admission dialog
   const [step, setStep] = useState(1);
@@ -274,45 +276,9 @@ function KanbanBoard() {
         dialogResolver.current(true); // Resolve promise if user confirms
         dialogResolver.current = null; // Clear it out after using
       } else {
-        setDialogOpen(true);
+        // setDialogOpen(true);
       }
     });
-  };
-
-  const handleConfirm = async (selectedStaffId) => {
-    if (dialogResolver.current) {
-      try {
-        //send to BE to assign staff
-        if (selectedAppointmentToAssign !== null) {
-          const response = await appointmentApi.assignAppointmentToStaff(
-            selectedAppointmentToAssign.appointmentId,
-            selectedStaffId,
-            staff.staffId
-          );
-
-          const updatedAssignment = response.data;
-        }
-
-        //reset
-        setSelectedAppointmentToAssign(null);
-
-        dialogResolver.current(true); // Resolve promise if user confirms
-        dialogResolver.current = null; // Clear it out after using
-        // }
-      } catch (error) {
-        console.log(error);
-        //perform error handling
-        reduxDispatch(
-          displayMessage({
-            color: "warning",
-            icon: "notification",
-            title: "Error",
-            content: error.response.data,
-          })
-        );
-      }
-    }
-    setDialogOpen(false);
   };
 
   const handleClose = () => {
@@ -331,7 +297,7 @@ function KanbanBoard() {
     );
 
     setSelectedAppointmentToAssign(null);
-    setDialogOpen(false);
+    // setDialogOpen(false);
     setStep(1);
   };
 
@@ -386,7 +352,7 @@ function KanbanBoard() {
         );
       }
     }
-    setDialogOpen(false);
+    // setDialogOpen(false);
   };
 
   //force a refresh for modal assigning
@@ -545,11 +511,14 @@ function KanbanBoard() {
   }, [loading, selectStaffToFilter]);
 
   return (
-    <>
+    <div style={{overflow: "hidden"}}>
       <Box display="flex" justifyContent="left" alignItems="left" mb={2}>
-        <MDButton variant="contained" color="primary" onClick={openModal}>
-          Create New Appointment
-          <Icon>add</Icon>
+      <MDButton 
+            variant="contained" 
+            color="primary" 
+            onClick={() => setIsDialogOpen(true)}>
+            Create New Ticket
+            <Icon>add</Icon>
         </MDButton>
       </Box>
       <CreateAppointmentModal
@@ -557,7 +526,7 @@ function KanbanBoard() {
         onClose={closeModal}
         onAppointmentCreated={handleAppointmentCreated}
       />
-      <MDBox sx={{ display: "flex", flexDirection: "row", width: "100%" }}>
+      <MDBox sx={{ display: "flex", flexDirection: "row", width: "200%" }}>
         <StaffListSidePanel
           handleSelectStaffToFilter={handleSelectStaffToFilter}
           selectStaffToFilter={selectStaffToFilter}
@@ -565,46 +534,14 @@ function KanbanBoard() {
         />
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="kanban-board">
-            <KanbanColumn
+            {/* <KanbanColumn
               title="Registration"
               appointments={registration}
               id={"1"}
               replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
               listOfWorkingStaff={listOfWorkingStaff}
               forceRefresh={forceRefresh}
-            />
-            <KanbanColumn
-              title="Triage"
-              appointments={triage}
-              id={"2"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            />
-            <KanbanColumn
-              title="Consultation"
-              appointments={consultation}
-              id={"3"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            />
-            <KanbanColumn
-              title="Treatment"
-              appointments={treatment}
-              id={"4"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            />
-            <KanbanColumn
-              title="Admission"
-              appointments={admission}
-              id={"5"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            />
+            /> */}
             <KanbanColumn
               title="Pharmacy"
               appointments={pharmacy}
@@ -624,29 +561,12 @@ function KanbanBoard() {
           </div>
         </DragDropContext>
       </MDBox>
-      {assigningToSwimlane === "Admission" ? (
-        <AdmissionDialog
-          step={step}
-          open={isDialogOpen}
-          onConfirm={handleAdmissionConfirm}
-          onClose={handleClose}
-          onNext={handleNext}
-          listOfWorkingStaff={listOfWorkingStaff}
-          selectedAppointmentToAssign={selectedAppointmentToAssign}
-          assigningToSwimlane={assigningToSwimlane}
-        />
-      ) : (
-        <AssignAppointmentDialog
-          open={isDialogOpen}
-          onConfirm={handleConfirm}
-          onClose={handleClose}
-          listOfWorkingStaff={listOfWorkingStaff}
-          selectedAppointmentToAssign={selectedAppointmentToAssign}
-          assigningToSwimlane={assigningToSwimlane}
-        />
-      )}
-    </>
+      <CreateNewTicket 
+            isOpen={isDialogOpen}
+            onClose={() => setIsDialogOpen(false)}
+            onAppointmentCreated={forceRefresh}/>
+    </div>
   );
 }
 
-export default KanbanBoard;
+export default PharmacyAdminKanbanBoard;

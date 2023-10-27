@@ -8,9 +8,13 @@ import { displayMessage } from "../../../store/slices/snackbarSlice";
 import { useDispatch } from "react-redux";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
+import { useSelector } from "react-redux";
+import { selectStaff } from "store/slices/staffSlice";
 
-function ViewFacilityInventoryButton({ selectedFacility }) {
+function ViewFacilityInventoryButton({ selectedFacility, selectedAppointment }) {
   const reduxDispatch = useDispatch();
+  const loggedInStaff = useSelector(selectStaff);
+
   const [openFacilityInventoryDialog, setOpenFacilityInventoryDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFacilityInventory, setSelectedFacilityInventory] = useState([]);
@@ -221,6 +225,11 @@ function ViewFacilityInventoryButton({ selectedFacility }) {
         color="info"
         onClick={handleOpenFacilityInventoryDialog}
         size="small"
+        disabled={
+          selectedAppointment.currentAssignedStaffId !=
+          loggedInStaff.staffId
+        }
+        sx={{ marginRight: 'auto' }}
       >
         View Inventory
       </MDButton>

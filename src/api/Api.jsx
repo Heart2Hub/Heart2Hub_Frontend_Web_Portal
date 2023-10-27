@@ -633,6 +633,17 @@ export const appointmentApi = {
       `${REST_ENDPOINT}/appointment/findAppointmentTimeDiff/${apppointmentId}`
     );
   },
+  createNewPharmacyTicket(
+    description,
+    bookedDateTime,
+    priority,
+    patientUsername,
+    departmentName
+  ) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/appointment/createNewPharmacyTicket?description=${description}&bookedDateTime=${bookedDateTime}&priority=${priority}&patientUsername=${patientUsername}&departmentName=${departmentName}`
+    );
+  },
 };
 
 export const inventoryApi = {
@@ -775,6 +786,11 @@ export const prescriptionRecordApi = {
       `${REST_ENDPOINT}/prescriptionRecord/checkOutPrescription/${prescriptionId}/${ehrId}`
     );
   },
+  getPrescriptionRecordByNric(nric) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/prescriptionRecord/getPrescriptionRecordsByNric?nric=${nric}`
+    );
+  }
 };
 
 export const invoiceApi = {

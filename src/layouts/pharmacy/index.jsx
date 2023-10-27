@@ -1,9 +1,9 @@
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import React from "react";
-import { Box, Tab } from "@mui/material";
+import { Box, Tab, Icon } from "@mui/material";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 import { selectStaff } from "../../store/slices/staffSlice";
@@ -16,6 +16,8 @@ import Medication from "@mui/icons-material/Medication";
 import TableRestaurantIcon from '@mui/icons-material/TableRestaurant';
 import { Grid } from "react-loader-spinner";
 import SimpleBlogCard from "examples/Cards/BlogCards/SimpleBlogCard";
+import ErrorPage from "layouts/error";
+import PharmacyAdminKanbanBoard from "./PharmacyAdminKanbanBoard";
 
 function Outpatient() {
   const staff = useSelector(selectStaff);
@@ -26,9 +28,13 @@ function Outpatient() {
   };
 
   return (
+    <>
+    {staff.unit.name !== "Pharmacy" ? 
+    <ErrorPage /> :
     <DashboardLayout>
       <DashboardNavbar />
-
+      {staff.staffRoleEnum === "PHARMACIST" ? 
+      <>
       <MDTypography
         sx={{
           fontSize: "2.5rem", // Adjust the size as per your preference
@@ -75,27 +81,11 @@ function Outpatient() {
         </TabPanel>
         <TabPanel value="Medication">
           <MedicationManagement />
-          {/* <MDBox py={3}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6} lg={3}>
-                <MDBox mb={1.5}> */}
-          {/* <SimpleBlogCard
-            image="https://st.depositphotos.com/1151871/3045/i/450/depositphotos_30459135-stock-photo-medication.jpg"
-            title="Medication Management"
-            action={{
-              type: "internal",
-              route: "/pharmacy/medication-management",
-              color: "info",
-              label: "Continue",
-            }}
-          />{" "} */}
-          {/* </MDBox>
-              </Grid>
-            </Grid>
-          </MDBox> */}
         </TabPanel>
       </TabContext>
-    </DashboardLayout>
+      </> : <PharmacyAdminKanbanBoard />}
+    </DashboardLayout>}
+    </>
   );
 }
 

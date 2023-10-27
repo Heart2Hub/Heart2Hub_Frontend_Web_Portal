@@ -10,7 +10,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import { IconButton, Icon, FormGroup, FormControlLabel, Checkbox, MenuProps, Autocomplete } from "@mui/material";
+import { IconButton, Icon, FormGroup, FormControlLabel, Checkbox, MenuProps, Autocomplete, Button } from "@mui/material";
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 
@@ -39,12 +39,9 @@ function MedicationManagement() {
     const [allergenEnums, setAllergenEnums] = useState([]);
     const [drugRestrictions, setDrugRestrictions] = useState([]);
     const [drugs, setDrugs] = useState([]);
+    const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+    const [inventoryToDeleteId, setInventoryToDeleteId] = useState(false);
 
-    // const [searchTerm, setSearchTerm] = useState('');
-
-    // const handleSearchChange = (event) => {
-    //     setSearchTerm(event.target.value);
-    // };
 
     const reduxDispatch = useDispatch();
     const [data, setData] = useState({
@@ -379,11 +376,6 @@ function MedicationManagement() {
         const medicationToUpdate = dataRef.current.rows[0].find(
             (medication) => medication.inventoryItemId === inventoryItemId
         );
-        // console.log("update " + medicationToUpdate.drugRestrictions);
-        // // const meds = medicationToUpdate.drugRestrictions;
-        // // setDrugs(meds.map((drug) => drug.drugName));
-        // console.log("DRUGS " + drugs)
-        // console.log("UPDATE" + updateFormData.drugRestrictions)
         if (medicationToUpdate) {
             setUpdateFormData({
                 inventoryItemId: inventoryItemId,
@@ -528,12 +520,18 @@ function MedicationManagement() {
     };
 
     const handleDeleteInventory = (inventoryItemId) => {
+        setInventoryToDeleteId(inventoryItemId);
+        setDeleteConfirmationOpen(true);
+    };
+
+    const handleConfirmDeleteInventory = (inventoryItemId) => {
         try {
             inventoryApi
                 .deleteMedication(inventoryItemId)
                 .then(() => {
                     getDrugRestrictions();
                     fetchData();
+                    setDeleteConfirmationOpen(false);
                     reduxDispatch(
                         displayMessage({
                             color: "success",
@@ -918,6 +916,20 @@ function MedicationManagement() {
                     <MDButton onClick={handleUpdateMedication} color="primary">
                         Update
                     </MDButton>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={isDeleteConfirmationOpen} onClose={() => setDeleteConfirmationOpen(false)}>
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                    Are you sure you want to delete this item?
+                </DialogContent>
+                <DialogActions sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Button onClick={() => setDeleteConfirmationOpen(false)} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={() => handleConfirmDeleteInventory(inventoryToDeleteId)} color="primary">
+                        Confirm
+                    </Button>
                 </DialogActions>
             </Dialog>
         </>
