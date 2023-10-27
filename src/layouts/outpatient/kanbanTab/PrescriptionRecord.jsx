@@ -432,10 +432,10 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 												<DeleteIcon />
 											</IconButton>
 										)} */}
-												{loggedInStaff.staffRoleEnum === "DOCTOR" && (
-													<Button onClick={() => handleAddToCart(prescriptionRecord.prescriptionRecordId, electronicHealthRecordId)}>
-														Add to Patient's Cart
-													</Button>
+										{(loggedInStaff.staffRoleEnum === "DOCTOR" || loggedInStaff.staffRoleEnum === "PHARMACIST") &&(
+											<Button onClick={() => handleAddToCart(prescriptionRecord.prescriptionRecordId, electronicHealthRecordId)}>
+												Add to Patient's Cart
+											</Button>
 
 												)}
 											</>

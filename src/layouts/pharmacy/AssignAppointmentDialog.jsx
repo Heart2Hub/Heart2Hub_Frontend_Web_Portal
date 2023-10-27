@@ -95,6 +95,7 @@ function AssignAppointmentDialog({
 
   return (
     <>
+    {/* NOT IN USE FOR NOW */}
       <Dialog open={open} onClose={onClose}>
       <DialogTitle sx={{color: "green"}}>Dispense success!</DialogTitle>
         <DialogTitle>Staff Assignment for Discharge:</DialogTitle>
