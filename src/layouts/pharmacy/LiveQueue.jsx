@@ -1,7 +1,7 @@
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import React, { useEffect } from "react";
-import { Box, Button, Card, CardActions, CardContent, Tab, Typography } from "@mui/material";
+import { Box, Button, Card, CardActions, CardContent, Icon, Tab, Typography } from "@mui/material";
 import MDButton from "components/MDButton";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -16,6 +16,7 @@ import AssignAppointmentDialog from "./AssignAppointmentDialog";
 import ConfirmReadyCollectionModal from "./ConfirmReadyCollectionModal";
 import { displayMessage } from "store/slices/snackbarSlice";
 import ViewAllTicketsModal from "./ViewAllTicketsModal";
+import CreateNewTicket from "./CreateNewTicket";
 
 
 function LiveQueue() {
@@ -37,7 +38,6 @@ function LiveQueue() {
   const getPharmacyTickets = async () => {
     try {
         const response = await appointmentApi.viewPharmacyTickets();
-        console.log(response)
         if (response.status === 200) {
             const unassigned = response.data.filter(ticket => ticket.currentAssignedStaffId === null)
             const assigned = response.data.filter(ticket => ticket.currentAssignedStaffId === staff.staffId)
@@ -92,7 +92,6 @@ function LiveQueue() {
     };
 
     const handleOpenConfirmReadyModal = (appointment) => {
-        console.log("open")
         setAppointment(appointment)
         setOpenConfirmReady(true);
     };
@@ -122,7 +121,6 @@ function LiveQueue() {
     function replaceItemByIdWithUpdated(id, newItem) {
         let newColumnList = [];
         let selectedColumnList = JSON.parse(JSON.stringify(assignedTickets));
-        console.log(selectedColumnList)
         selectedColumnList.map((item) => {
             if (item.appointmentId === Number(id)) {
                 newColumnList.push(newItem);
@@ -131,7 +129,6 @@ function LiveQueue() {
                 newColumnList.push(item);
             }
         });
-        console.log(newColumnList)
 
         setAssignedTickets(newColumnList);
     }
@@ -179,6 +176,7 @@ function LiveQueue() {
             getAdminStaffCurrentlyWorking(ticket.departmentName);
             const response = await appointmentApi.updateAppointmentDispensaryStatus(ticket.appointmentId, "DISPENSED");
             handleConfirmAssignDialog(ticket);
+            forceRefresh();
             // handleCloseModal();
             reduxDispatch(
                 displayMessage({
@@ -232,7 +230,7 @@ function LiveQueue() {
         }
         // }
     
-        setIsDialogOpen(false);
+        // setIsDialogOpen(false);
     };
 
     const handleCloseAssignDialog = () => {
@@ -258,6 +256,10 @@ function LiveQueue() {
         setListOfAdminStaff(admins);
       };
 
+    const handleCreateNewTicket = () => {
+
+    }
+
     useEffect(() => {
         if (assignedTickets.length === 0 || unassignedTickets.length === 0) getPharmacyTickets();
         getStaffCurrentlyWorking();
@@ -265,6 +267,13 @@ function LiveQueue() {
 
   return (
     <>
+        {/* <MDButton 
+            variant="contained" 
+            color="primary" 
+            onClick={() => setIsDialogOpen(true)}>
+            Create New Ticket
+            <Icon>add</Icon>
+        </MDButton><br/><br/> */}
         <Box sx={{ 
             width: "100%", 
             height: "275px",
@@ -275,6 +284,7 @@ function LiveQueue() {
             borderTopLeftRadius: "50px",
             borderBottomLeftRadius: "50px" 
         }}>
+            
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 {unassignedTickets.map((ticket, index) => 
                     index === 0 ?
@@ -479,6 +489,10 @@ function LiveQueue() {
             handleOpenModal={handleOpenModal}
             appointmentList={unassignedTickets}
         />
+        <CreateNewTicket 
+            isOpen={isDialogOpen}
+            onClose={() => setIsDialogOpen(false)}
+            onAppointmentCreated={forceRefresh}/>
     </>
   );
 }

@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { selectStaff } from "../../store/slices/staffSlice";
 import MDTypography from "components/MDTypography";
 import KanbanBoard from "./kanbanTab/KanbanBoard";
+import ErrorPage from "layouts/error";
 
 function Outpatient() {
   const staff = useSelector(selectStaff);
@@ -22,6 +23,9 @@ function Outpatient() {
   };
 
   return (
+    <>
+    {staff.unit.name === "Pharmacy" ? 
+    <ErrorPage /> :
     <DashboardLayout>
       <DashboardNavbar />
 
@@ -73,7 +77,8 @@ function Outpatient() {
           </TabPanel>
         </TabContext>
       </Box>
-    </DashboardLayout>
+    </DashboardLayout>}
+    </>
   );
 }
 

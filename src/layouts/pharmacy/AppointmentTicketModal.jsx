@@ -900,6 +900,7 @@ function AppointmentTicketModal({
                   handlePageRefresh={handlePageRefresh}
                 />
                 <br></br>
+                {loggedInStaff.staffRoleEnum === "PHARMACIST" &&
                 <List>
                   <ListItem>
                     <MDTypography variant="h5" gutterBottom>
@@ -907,16 +908,16 @@ function AppointmentTicketModal({
                     </MDTypography>
                   </ListItem>
                   <ListItem>{renderMedicationsDropdown()}</ListItem>
-                </List>
+                </List>}
                 <br></br>
-                <List>
+                {/* <List>
                   <ListItem>
                     <MDTypography variant="h5" gutterBottom>
                       Services:
                     </MDTypography>
                   </ListItem>
                   <ListItem>{renderServicesDropdown()}</ListItem>
-                </List>
+                </List> */}
                 <List>
                   <ListItem>
                     <MDTypography variant="h5" gutterBottom>
@@ -950,6 +951,7 @@ function AppointmentTicketModal({
                                 key={item.transactionItemId}
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                               >
+                                {console.log(item)}
                                 <TableCell component="th" scope="row">
                                   {item.transactionItemName}
                                 </TableCell>

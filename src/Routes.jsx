@@ -183,10 +183,10 @@ const routes = [
     key: "pharmacy",
     icon: <Icon fontSize="small">local_pharmacy</Icon>,
     route: "/pharmacy",
-    authorizedRoles: [StaffRoleEnum.PHARMACIST],
+    authorizedRoles: [StaffRoleEnum.PHARMACIST, StaffRoleEnum.ADMIN],
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.PHARMACIST]}
+        authorizedRoles={[StaffRoleEnum.PHARMACIST, StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
       >
         <Pharmacy />
