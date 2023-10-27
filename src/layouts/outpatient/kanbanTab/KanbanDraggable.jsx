@@ -5,7 +5,7 @@ import {
   ButtonBase,
   Skeleton,
 } from "@mui/material";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import "./kanbanStyles.css";
 import MDTypography from "components/MDTypography";
@@ -28,10 +28,10 @@ function KanbanDraggable({
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
   const [timeDifference, setTimeDifference] = useState(0);
-
+  // const [priorityColor, setPriorityColor] = useState("");
+  const priorityColor = useRef(null);
 
   const [waitingTime, setWaitingTime] = useState(0);
-  let priorityColor = "";
 
   const handleGetProfileImage = async () => {
     if (appointment.patientProfilePicture !== null) {
@@ -57,27 +57,30 @@ function KanbanDraggable({
     }
   }
 
-  //const timeDifference = getTimeDifferenceFromAPI(appointment.appointmentId);
-  console.log(appointment.appointmentId +  " :" + timeDifference)
+  // //const timeDifference = getTimeDifferenceFromAPI(appointment.appointmentId);
+  // console.log(appointment.appointmentId + " :" + timeDifference)
 
-  if (appointment.priorityEnum === "LOW") {
-    if (timeDifference >= 40) {
-      priorityColor = "red";
-    } else if (timeDifference >= 20) {
-      priorityColor = "orange";
-    } else {
-      priorityColor = "green";
+  const getPriorityColor = (appointment, timeDifference) => {
+    if (appointment.priorityEnum === "LOW") {
+      if (timeDifference >= 40) {
+        return "red";
+      } else if (timeDifference >= 20) {
+        return "orange";
+      } else {
+        return "green";
+      }
+    } else if (appointment.priorityEnum === "MEDIUM") {
+      if (timeDifference >= 40) {
+        return "red";
+      } else {
+        return "orange";
+      }
+    } else if (appointment.priorityEnum === "HIGH") {
+      return "red";
     }
-  } else if (appointment.priorityEnum === "MEDIUM") {
-    if (timeDifference >= 40) {
-      priorityColor = "red";
-    } else {
-      priorityColor = "orange";
-    }
-  } else if (appointment.priorityEnum === "HIGH") {
-    priorityColor = "red";
-  }
+  };
 
+  //let priorityColor = getPriorityColor(appointment, timeDifference);
   console.log(appointment.appointmentId)
 
   const handleCloseModal = () => {
@@ -93,8 +96,11 @@ function KanbanDraggable({
     async function fetchTimeDifference() {
       const difference = await getTimeDifferenceFromAPI(appointment.appointmentId);
       setTimeDifference(difference);
+      const priorityColor2 = getPriorityColor(appointment, difference);
+      priorityColor.current = priorityColor2;
     }
     fetchTimeDifference();
+    handleGetProfileImage();
   }, [appointment.appointmentId]);
 
   return (
