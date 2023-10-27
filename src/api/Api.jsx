@@ -822,6 +822,15 @@ export const invoiceApi = {
       requestBody
     );
   },
+  deleteInsuranceClaim(claimId, invoiceId) {
+    return axiosFetch.delete(`${REST_ENDPOINT}/invoice/deleteInsuranceClaim/${claimId}/${invoiceId}`);
+  },
+  deleteMedishieldClaim(claimId, invoiceId) {
+    return axiosFetch.delete(`${REST_ENDPOINT}/invoice/deleteMedishieldClaim/${claimId}/${invoiceId}`);
+  },
+  // findItemsOfInvoice(id) {
+  //   return axiosFetch.get(`${REST_ENDPOINT}/invoice/findItemsOfInvoice/${id}`);
+  // },
 };
 
 export const admissionApi = {

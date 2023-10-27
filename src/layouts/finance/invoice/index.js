@@ -31,6 +31,8 @@ import MDTypography from "components/MDTypography";
 import { invoiceApi } from 'api/Api';
 import { useDispatch } from "react-redux";
 import MDButton from "components/MDButton";
+import { displayMessage } from "store/slices/snackbarSlice";
+
 import moment from 'moment';
 
 
@@ -250,8 +252,29 @@ function Invoice() {
 
         };
 
-        const handleDelete = (invoice) => {
-
+        const handleDeleteInsuranceClaim = async (claimId, invoiceId) => {
+                try {
+			const response = await invoiceApi.deleteInsuranceClaim(claimId, invoiceId);
+                        fetchData();
+			reduxDispatch(
+				displayMessage({
+					color: "success",
+					icon: "notification",
+					title: "Success",
+					content: "Insurance Claim deleted!",
+				})
+			);
+		} catch (error) {
+			console.error("Error deleting Insurance Claim: ", error);
+			reduxDispatch(
+				displayMessage({
+					color: "error",
+					icon: "notification",
+					title: "Error",
+					content: error.response.data,
+				})
+			);
+		}
         };
 
         return (
@@ -347,7 +370,8 @@ function Invoice() {
                                                                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                                                                 <IconButton
                                                                                         aria-label="delete"
-                                                                                        // onClick={() => handleDeleteInsuranceClaim(selectedInvoiceDetails.insuranceClaim.insuranceClaimId)} // Assuming you have a handleDeleteInsuranceClaim function to handle the deletion
+                                                                                         onClick={() => handleDeleteInsuranceClaim(selectedInvoiceDetails.insuranceClaim.insuranceClaimId, 
+                                                                                                selectedInvoiceDetails.invoiceId)} // Assuming you have a handleDeleteInsuranceClaim function to handle the deletion
                                                                                 >
                                                                                         <DeleteIcon />
                                                                                 </IconButton>

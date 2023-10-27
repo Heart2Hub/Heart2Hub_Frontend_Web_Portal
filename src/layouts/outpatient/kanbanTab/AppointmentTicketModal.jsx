@@ -144,11 +144,10 @@ function AppointmentTicketModal({
 
   //Only for Discharge ticket, will create an Invoice after discharfe
   const handleDischarge = async () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to discharge the patient?"
-    );
+    // const confirmed = window.confirm(
+    //   "Are you sure you want to discharge the patient?"
+    // );
 
-    if (confirmed) {
       try {
         await transactionItemApi.checkout(
           selectedAppointment.patientId,
@@ -178,7 +177,7 @@ function AppointmentTicketModal({
           })
         );
       }
-    }
+    
   };
 
   // Fetch lists of all medications and service items from the API

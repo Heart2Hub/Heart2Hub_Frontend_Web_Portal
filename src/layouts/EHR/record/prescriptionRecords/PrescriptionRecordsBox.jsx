@@ -101,14 +101,18 @@ function PrescriptionRecordsBox() {
 			}
 			const currentDate = new Date().toLocaleString();
 
+			const date = new Date(newRecord.expirationDate);
+			const formattedDate = `${("0" + date.getDate()).slice(-2)}/${("0" + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}, 00:00:00`;
+
 			console.log(selectedInventoryItem);
 
 			// Update the newRecord object with the required fields
 			const updatedRecord = {
 				...newRecord,
 				createdDate: currentDate,
+				expirationDate: formattedDate,
 				prescribedBy: `Doctor ${loggedInStaff.firstname} ${loggedInStaff.lastname}`,
-				prescriptionStatusEnum: "PENDING"
+				prescriptionStatusEnum: "ONGOING"
 			};
 			console.log(updatedRecord);
 
@@ -206,18 +210,18 @@ function PrescriptionRecordsBox() {
 
 	const getStatusColor = (status) => {
 		switch (status) {
-			case "COLLECTED":
+			case "ONGOING":
 				return "green";
-			case "UNCOLLECTED":
+			case "EXPIRED":
 				return "red";
-			case "PENDING":
-				return "orange";
-			case "INPATIENT_TAKEN":
-				return "green";
-			case "INPATIENT_OVERDUE":
-				return "red";
+			// case "PENDING":
+			// 	return "orange";
+			// case "INPATIENT_TAKEN":
+			// 	return "green";
+			// case "INPATIENT_OVERDUE":
+			// 	return "red";
 			default:
-				return "black";
+				return "green";
 		}
 	};
 
@@ -251,7 +255,6 @@ function PrescriptionRecordsBox() {
 			dosage: record.dosage,
 			description: record.description,
 			comments: record.comments,
-			prescriptionStatusEnum: record.prescriptionStatusEnum
 		});
 		setOpenEditDialog(true);
 	};
@@ -356,13 +359,13 @@ function PrescriptionRecordsBox() {
               <b>Medication Quantity:</b> {pr.medicationQuantity}
             </div> */}
 									<div>
-										<b>Dosage:</b> {pr.dosage}
+										<b>Quantity:</b> {pr.dosage}
 									</div>
 									<div>
 										<b>Description:</b> {pr.description}
 									</div>
 									<div>
-										<b>Comments:</b> {pr.comments}
+										<b>Dosage Comments:</b> {pr.comments}
 									</div>
 									<div><b>Prescribed By:</b> {pr.prescribedBy}</div>
 									<div>
@@ -447,7 +450,7 @@ function PrescriptionRecordsBox() {
 						margin="normal"
 					/> */}
 					<TextField
-						label="Dosage"
+						label="Quantity"
 						type="number"
 						value={newRecord.dosage}
 						onChange={(e) => handleCreateFieldChange("dosage", e.target.value)}
@@ -462,7 +465,7 @@ function PrescriptionRecordsBox() {
 						margin="normal"
 					/>
 					<TextField
-						label="Comments"
+						label="Dosage Comments"
 						value={newRecord.comments}
 						onChange={(e) => handleCreateFieldChange("comments", e.target.value)}
 						fullWidth
@@ -505,7 +508,7 @@ function PrescriptionRecordsBox() {
 					<Button onClick={handleCloseForm}>Cancel</Button>
 					<Button onClick={() => {
 						handleCreatePrescription();
-						clearFormFields();
+						//clearFormFields();
 					}} color="primary">
 						Create
 					</Button>
@@ -523,7 +526,7 @@ function PrescriptionRecordsBox() {
 						margin="normal"
 					/> */}
 					<TextField
-						label="Dosage"
+						label="Quantity"
 						type="number"
 						value={editedRecord ? editedRecord.dosage : ''}
 						onChange={(e) => setEditedRecord({ ...editedRecord, dosage: e.target.value })}
@@ -538,7 +541,7 @@ function PrescriptionRecordsBox() {
 						margin="normal"
 					/>
 					<TextField
-						label="Comments"
+						label="Dosage Comments"
 						value={editedRecord ? editedRecord.comments : ''}
 						onChange={(e) => setEditedRecord({ ...editedRecord, comments: e.target.value })}
 						fullWidth
@@ -555,7 +558,7 @@ function PrescriptionRecordsBox() {
 						fullWidth
 						margin="normal"
 					/>
-					<InputLabel>Select Prescription Status</InputLabel>
+					{/* <InputLabel>Select Prescription Status</InputLabel>
 					<Select
 						value={editedRecord ? editedRecord.prescriptionStatusEnum : ''}
 						onChange={(e) => setEditedRecord({ ...editedRecord, prescriptionStatusEnum: e.target.value })}
@@ -569,7 +572,7 @@ function PrescriptionRecordsBox() {
 								{option}
 							</MenuItem>
 						))}
-					</Select>
+					</Select> */}
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={handleEditDialogClose}>Cancel</Button>
