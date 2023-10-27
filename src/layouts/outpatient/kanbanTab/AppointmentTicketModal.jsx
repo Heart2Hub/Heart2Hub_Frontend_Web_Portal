@@ -678,29 +678,30 @@ function AppointmentTicketModal({
                 )}
               </Box>
               <List>
-                <ListItem>
+                <ListItem >
                   <MDTypography variant="h5" gutterBottom>
                     Location:
                   </MDTypography>
                 </ListItem>
-                <ListItem>
+                <ListItem style={{ display: "flex", justifyContent: "space-between" }}>
                   <MDTypography variant="h6" gutterBottom>
                     {facilityLocation !== null
                       ? facilityLocation
                       : "No Location Yet"}
                   </MDTypography>
                   <MDBox>
-                    <Stack direction="row" spacing={2}>
+                    <Stack direction="row">
                       {facilityLocation !== null && (
                         <ViewFacilityInventoryButton
                           selectedFacility={facility}
+                          selectedAppointment={selectedAppointment}
                         />
                       )}
                     </Stack>
                   </MDBox>
                 </ListItem>
                 <ListItem
-                  style={{ display: "flex", justifyContent: "space-between" }}
+                  style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}
                 >
                   <MDTypography variant="h5" gutterBottom>
                     Link to Electronic Health Record:
@@ -743,11 +744,11 @@ function AppointmentTicketModal({
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
-                        " " +
-                        assignedStaff.lastname +
-                        " (" +
-                        assignedStaff.staffRoleEnum +
-                        ")"}
+                      " " +
+                      assignedStaff.lastname +
+                      " (" +
+                      assignedStaff.staffRoleEnum +
+                      ")"}
                   </MDTypography>
                   <MDButton
                     disabled={loading}
