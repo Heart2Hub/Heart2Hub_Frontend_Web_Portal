@@ -112,12 +112,32 @@ function AssignAppointmentDialog({
     listOfWorkingStaff = response.data;
   };
 
+  const staffRoleEnumMapping = {
+    DIAGNOSTIC_RADIOGRAPHERS: "X-Ray Imaging",
+    DIETITIANS: "Nutritional Counseling",
+    OCCUPATIONAL_THERAPISTS: "Occupational Therapy",
+    MEDICAL_LABORATORY_TECHNOLOGISTS: "Laboratory Testing",
+    PHYSIOTHERAPISTS: "Physical Therapy",
+    PODIATRISTS: "Podiatric Care",
+    PSYCHOLOGISTS: "Psychotherapy",
+    PROSTHETISTS: "Prosthetic Fitting",
+    ORTHOTISTS: "Orthotic Fitting",
+    RADIATION_THERAPISTS: "Radiation Therapy",
+    RESPIRATORY_THERAPISTS: "Respiratory Therapy",
+    SPEECH_THERAPISTS: "Speech Therapy",
+    AUDIOLOGISTS: "Audiology Services",
+    MEDICAL_SOCIAL_WORKERS: "Medical Social Work",
+    ORTHOPTISTS: "Orthoptics",
+  };
+
   useEffect(() => {
     if (assigningToSwimlane === "Pharmacy") {
       getPharmacyStaff();
     }
     handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
   }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
+
+  console.log(listOfApplicableWorkingStaff)
 
   return (
     <>
@@ -144,33 +164,19 @@ function AssignAppointmentDialog({
                 onChange={handleTreatmentTypeChange}
                 sx={{ height: "50px" }}
               >
-                <MenuItem value="DIAGNOSTIC_RADIOGRAPHERS">
-                  X-Ray Imaging
-                </MenuItem>
-                <MenuItem value="DIETITIANS">Nutritional Counseling</MenuItem>
-                <MenuItem value="OCCUPATIONAL_THERAPISTS">
-                  Occupational Therapy
-                </MenuItem>
-                <MenuItem value="MEDICAL_LABORATORY_TECHNOLOGISTS">
-                  Laboratory Testing
-                </MenuItem>
-                <MenuItem value="PHYSIOTHERAPISTS">Physical Therapy</MenuItem>
-                <MenuItem value="PODIATRISTS">Podiatric Care</MenuItem>
-                <MenuItem value="PSYCHOLOGISTS">Psychotherapy</MenuItem>
-                <MenuItem value="PROSTHETISTS">Prosthetic Fitting</MenuItem>
-                <MenuItem value="ORTHOTISTS">Orthotic Fitting</MenuItem>
-                <MenuItem value="RADIATION_THERAPISTS">
-                  Radiation Therapy
-                </MenuItem>
-                <MenuItem value="RESPIRATORY_THERAPISTS">
-                  Respiratory Therapy
-                </MenuItem>
-                <MenuItem value="SPEECH_THERAPISTS">Speech Therapy</MenuItem>
-                <MenuItem value="AUDIOLOGISTS">Audiology Services</MenuItem>
-                <MenuItem value="MEDICAL_SOCIAL_WORKERS">
-                  Medical Social Work
-                </MenuItem>
-                <MenuItem value="ORTHOPTISTS">Orthoptics</MenuItem>
+                {listOfApplicableWorkingStaff.length !== 0 &&
+                  listOfApplicableWorkingStaff.map((staff) =>
+                    staff.staffRoleEnum === "doctor" ||
+                    staff.staffRoleEnum === "nurse" ||
+                    staff.staffRoleEnum === "admin" ? null : (
+                      <MenuItem
+                        key={staff.staffRoleEnum}
+                        value={staff.staffRoleEnum}
+                      >
+                        {staffRoleEnumMapping[staff.staffRoleEnum]}
+                      </MenuItem>
+                    )
+                  )}
               </Select>
             </FormControl>
             {selectedTreatmentType !== "" ? (
