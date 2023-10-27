@@ -9,6 +9,7 @@ function ProtectedRoute(props) {
   const staffRole = staff.staffRoleEnum;
   const authorizedRoles = props.authorizedRoles;
   const forHeadsOnly = props.forHeadsOnly;
+  const authorizedUnits = props.authorizedUnits;
 
   //check staff is logged in
   // if (staff.staffId !== "") {
@@ -22,7 +23,17 @@ function ProtectedRoute(props) {
         if (forHeadsOnly) {
           if (staff.isHead) return props.children;
         } else {
-          return props.children;
+          if (authorizedUnits === "ALL") {
+            return props.children;
+          } else if (authorizedUnits === "DEPARTMENT") {
+            if (staff.unit.listOfFacilities) {
+              return props.children;
+            }
+          } else if (authorizedUnits === "WARD") {
+            if (staff.unit.capacity) {
+              return props.children;
+            }
+          }
         }
       }
     }

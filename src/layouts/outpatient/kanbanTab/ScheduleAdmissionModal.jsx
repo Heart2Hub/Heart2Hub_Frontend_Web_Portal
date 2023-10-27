@@ -109,6 +109,7 @@ function ScheduleAdmissionModal({
 
   //For inpatient
   const [wardClass, setWardClass] = useState("A");
+  const [selectedWard, setSelctedWard] = useState("");
 
   const handleGetProfileImage = async () => {
     if (selectedAppointment.patientProfilePicture !== null) {
@@ -645,11 +646,6 @@ function ScheduleAdmissionModal({
     fetchWards(wardClass);
   }, [wardClass]);
 
-  const setCalendarStartDay = () => {
-    const today = new Date();
-    return today.getHours() < 12 ? today.getDay() : today.getDay() + 2;
-  };
-
   moment.locale("ko", {
     week: {
       dow: new Date().getDay(),
@@ -671,10 +667,12 @@ function ScheduleAdmissionModal({
   const [selectedEventIds, setSelectedEventIds] = useState([]);
 
   const handleSelectEvent = (event) => {
-    console.log(event.id);
+    console.log(event);
     const duration = selectedAppointment.admissionDuration;
+    const startCol = (event.id - 1) % 7; //0-6
+    const endCol = (startCol + duration - 1) % 7;
 
-    if (8 - (event.id % 8) > duration) {
+    if (startCol <= endCol) {
       const eventIds = [];
       let eventId = event.id;
       for (let i = 0; i < duration; i++) {
@@ -699,6 +697,7 @@ function ScheduleAdmissionModal({
         eventId = eventId + 1;
       }
 
+      setSelctedWard(event.wardName);
       setSelectedEventIds(eventIds);
 
       const actualDate = moment(event.actual);
@@ -1058,10 +1057,10 @@ function ScheduleAdmissionModal({
                 <ListItem>
                   <textarea
                     readOnly
-                    value={`Duration: ${selectedAppointment.admissionDuration}\nReason: ${selectedAppointment.admissionReason}\nAdmission Date: ${admissionDateTime}\nDischarge Date: ${dischargeDateTime}`}
+                    value={`Duration: ${selectedAppointment.admissionDuration}\nReason: ${selectedAppointment.admissionReason}\nWard: ${selectedWard}\nAdmission Date: ${admissionDateTime}\nDischarge Date: ${dischargeDateTime}`}
                     style={{
                       width: "100%",
-                      height: "60px",
+                      height: "120px",
                       borderColor: "gainsboro",
                       borderRadius: "6px",
                       fontFamily: "Arial",
@@ -1078,30 +1077,30 @@ function ScheduleAdmissionModal({
                     }}
                   />
                 </ListItem>
+                <InputLabel id="select-ward-class" sx={{ marginTop: "10px" }}>
+                  <MDTypography variant="h6" gutterBottom color="black">
+                    Search Ward Class
+                  </MDTypography>
+                </InputLabel>
                 <Box
                   sx={{
                     display: "flex",
                     justifyContent: "space-between",
                     width: "100%",
-                    marginTop: "10px",
                   }}
                 >
-                  <Box sx={{ display: "flex" }}>
-                    <InputLabel id="select-ward-class">
-                      Select Ward Class
-                    </InputLabel>
-                    <Select
-                      labelId="select-ward-class"
-                      label="Ward Class"
-                      value={wardClass}
-                      onChange={handleSelectWardClass}
-                    >
-                      <MenuItem value={"A"}>A</MenuItem>
-                      <MenuItem value={"B1"}>B1</MenuItem>
-                      <MenuItem value={"B2"}>B2</MenuItem>
-                      <MenuItem value={"C"}>C</MenuItem>
-                    </Select>
-                  </Box>
+                  <Select
+                    sx={{ width: "150px", height: "40px" }}
+                    labelId="select-ward-class"
+                    value={wardClass}
+                    onChange={handleSelectWardClass}
+                  >
+                    <MenuItem value={"A"}>A</MenuItem>
+                    <MenuItem value={"B1"}>B1</MenuItem>
+                    <MenuItem value={"B2"}>B2</MenuItem>
+                    <MenuItem value={"C"}>C</MenuItem>
+                  </Select>
+
                   <MDButton
                     onClick={handleScheduleAdmission}
                     variant="gradient"
@@ -1112,14 +1111,8 @@ function ScheduleAdmissionModal({
                 </Box>
 
                 <MDBox pt={3}>
-                  <style>
-                    {`
-                        .rbc-event-label {
-                            display: none; /* Hide the start and end times */
-                        }
-                    `}
-                  </style>
                   <Calendar
+                    className="schedule-admission-calendar"
                     localizer={localizer}
                     events={calendarEvents}
                     defaultView={Views.WEEK}

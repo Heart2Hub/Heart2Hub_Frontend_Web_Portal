@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@bitnoi.se/react-scheduler": "^0.1.2",
     "@emotion/cache": "11.10.8",
     "@emotion/react": "^11.10.8",
     "@emotion/styled": "^11.10.8",
@@ -20,6 +21,7 @@
     "browserify-zlib": "^0.2.0",
     "chart.js": "4.3.0",
     "chroma-js": "2.4.2",
+    "daypilot-pro-react": "https://npm.daypilot.org/daypilot-pro-react/trial/2023.4.5756.tar.gz",
     "formik": "^2.4.4",
     "jwt-decode": "^3.1.2",
     "localforage": "^1.10.0",

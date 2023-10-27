@@ -756,6 +756,11 @@ export const transactionItemApi = {
       `${REST_ENDPOINT}/transactionItem/checkout/${patientId}/${appointmentId}`
     );
   },
+  updateTransactionItem(transactionItemId, quantity) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/transactionItem/updateTransactionItem?transactionItemId=${transactionItemId}&quantity=${quantity}`
+    );
+  },
 };
 
 export const prescriptionRecordApi = {
@@ -840,9 +845,24 @@ export const admissionApi = {
       `${REST_ENDPOINT}/admission/getAdmissionsForWard?wardName=${name}`
     );
   },
-  assignAdmissionToStaff(admissionId, toStaffId, fromStaffId) {
+  assignAdmissionToNurse(admissionId, toStaffId, fromStaffId) {
     return axiosFetch.put(
-      `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+      `${REST_ENDPOINT}/admission/assignAdmissionToNurse?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+    );
+  },
+  assignAdmissionToAdmin(admissionId, toStaffId, fromStaffId) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/assignAdmissionToAdmin?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+    );
+  },
+  updateAdmissionArrival(admissionId, arrivalStatus, staffId) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/updateAdmissionArrival?admissionId=${admissionId}&arrivalStatus=${arrivalStatus}&staffId=${staffId}`
+    );
+  },
+  cancelAdmission(admissionId, wardId) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/cancelAdmission?admissionId=${admissionId}&wardId=${wardId}`
     );
   },
   handleDischarge(date) {
