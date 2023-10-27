@@ -99,7 +99,9 @@ function AssignAppointmentDialog({
         listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
       );
     } else if (swimlaneName === "Pharmacy") {
-      setListOfApplicableWorkingStaff(listOfWorkingStaff);
+      setListOfApplicableWorkingStaff(
+        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "PHARMACIST")
+      );
     } else {
       // console.log("No Filter result of applicable working staff");
     }
@@ -109,7 +111,6 @@ function AssignAppointmentDialog({
     const response = await staffApi.getStaffsWorkingInCurrentShiftAndDepartment(
       "Pharmacy"
     );
-    listOfWorkingStaff = response.data;
   };
 
   const staffRoleEnumMapping = {
