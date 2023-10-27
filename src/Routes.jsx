@@ -39,6 +39,12 @@ import InventoryManagement from "layouts/administration/inventory-management";
 import MedicationManagement from "layouts/pharmacy/medication-management";
 import ServiceItemManagement from "layouts/administration/inventory-management/service-item-management";
 
+const ALL_EXCEPT_PHARMACIST = [StaffRoleEnum.ADMIN, StaffRoleEnum.DOCTOR, StaffRoleEnum.NURSE, StaffRoleEnum.DIAGNOSTIC_RADIOGRAPHERS,
+  StaffRoleEnum.DIETITIANS,StaffRoleEnum.OCCUPATIONAL_THERAPISTS,StaffRoleEnum.MEDICAL_LABORATORY_TECHNOLOGISTS,
+  StaffRoleEnum.PHYSIOTHERAPISTS,StaffRoleEnum.PODIATRISTS,StaffRoleEnum.PSYCHOLOGISTS,StaffRoleEnum.PROSTHETISTS,
+  StaffRoleEnum.ORTHOTISTS,StaffRoleEnum.RADIATION_THERAPISTS,StaffRoleEnum.RESPIRATORY_THERAPISTS,
+  StaffRoleEnum.SPEECH_THERAPISTS,StaffRoleEnum.AUDIOLOGISTS,StaffRoleEnum.MEDICAL_SOCIAL_WORKERS,StaffRoleEnum.ORTHOPTISTS]
+
 const routes = [
   {
     name: "Login",
@@ -129,10 +135,10 @@ const routes = [
     key: "inpatient",
     icon: <Icon fontSize="small">bed</Icon>,
     route: "/inpatient",
-    authorizedRoles: [StaffRoleEnum.ALL],
+    authorizedRoles: [StaffRoleEnum.ALL_EXCEPT_PHARMACIST],
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ALL_EXCEPT_PHARMACIST]}
         forHeadsOnly={false}
       >
         <Inpatient />,
@@ -161,10 +167,10 @@ const routes = [
     key: "outpatient",
     icon: <Icon fontSize="small">local_hospital</Icon>,
     route: "/outpatient",
-    authorizedRoles: [StaffRoleEnum.ALL],
+    authorizedRoles: ALL_EXCEPT_PHARMACIST,
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={ALL_EXCEPT_PHARMACIST}
         forHeadsOnly={false}
       >
         <Outpatient />
