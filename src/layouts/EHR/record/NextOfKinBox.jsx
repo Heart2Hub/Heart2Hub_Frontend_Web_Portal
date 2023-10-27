@@ -4,6 +4,7 @@ import {
   AccordionSummary,
   Card,
   Divider,
+  Chip
 } from "@mui/material";
 import { ehrApi } from "api/Api";
 import MDBox from "components/MDBox";
@@ -76,56 +77,78 @@ function NextOfKinBox() {
                   {ehrMatch ? (
                     // Render the EHR data here if a match is found
                     <MDBox>
-                      <MDTypography>NRIC: {ehrMatch.nric}</MDTypography>
+                      <MDTypography><b>NRIC: {ehrMatch.nric}</b></MDTypography>
                       <Divider
                         orientation="horizontal"
                         sx={{ ml: -2, mr: 1 }}
                       />
-                      {ehrMatch.listOfMedicalHistoryRecords.map(
-                        (medicalHistory, medicalHistoryIndex) => (
-                          <MDBox key={medicalHistoryIndex}>
-                            <MDBox mb={1.5}>
-                              <ProfileInfoCard
-                                key={index}
-                                title={`Medical History ${index + 1}`}
-                                info={{
-                                  createdBy: medicalHistory.createdBy,
-                                  createdDate:
-                                    medicalHistory.createdDate.split(" ")[0],
-                                  resolvedDate:
-                                    medicalHistory.resolvedDate.split(" ")[0],
-                                  description: medicalHistory.description,
-                                  priority: medicalHistory.priorityEnum,
-                                  problemType: medicalHistory.problemTypeEnum,
-                                }}
-                                shadow={false}
-                              />
-                            </MDBox>
-                          </MDBox>
-                        )
-                      )}
-                      <Divider
-                        orientation="horizontal"
-                        sx={{ ml: -2, mr: 1 }}
-                      />
-                      {ehrMatch.listOfProblemRecords.map(
-                        (problem, problemIndex) => (
-                          <MDBox key={problemIndex}>
-                            <ProfileInfoCard
-                              key={index}
-                              title={`Problem ${index + 1}`}
-                              info={{
-                                createdBy: problem.createdBy,
-                                createdDate: problem.createdDate.split(" ")[0],
-                                description: problem.description,
-                                priority: problem.priorityEnum,
-                                problemType: problem.problemTypeEnum,
-                              }}
-                              shadow={false}
+                      {ehrMatch.listOfMedicalHistoryRecords.map((medicalHistory, medicalHistoryIndex) => (
+                        <Card variant="outlined" sx={{ my: 2, p: 2 }} key={medicalHistoryIndex}>
+                          <MDTypography variant="h6" gutterBottom>
+                            Medical History {medicalHistoryIndex + 1}
+                          </MDTypography>
+                          <MDTypography variant="body1" gutterBottom>
+                            <strong>Created By:</strong> {medicalHistory.createdBy}
+                          </MDTypography>
+                          <MDTypography variant="body1" gutterBottom>
+                            <strong>Created Date:</strong> {medicalHistory.createdDate.split(" ")[0]}
+                          </MDTypography>
+                          <MDTypography variant="body1" gutterBottom>
+                            <strong>Resolved Date:</strong> {medicalHistory.resolvedDate.split(" ")[0]}
+                          </MDTypography>
+                          <MDTypography variant="body1" gutterBottom>
+                            <strong>Description:</strong> {medicalHistory.description}
+                          </MDTypography>
+                          <MDTypography variant="body1" gutterBottom>
+                            <strong>Priority: </strong>
+                            <Chip
+                              color={
+                                medicalHistory.priorityEnum === "LOW"
+                                  ? "success"
+                                  : medicalHistory.priorityEnum === "MEDIUM"
+                                    ? "warning"
+                                    : "error"
+                              }
+                              label={medicalHistory.priorityEnum}
                             />
-                          </MDBox>
-                        )
-                      )}
+                          </MDTypography>
+                          <MDTypography variant="body1" gutterBottom>
+                            <strong>Problem Type:</strong> {medicalHistory.problemTypeEnum}
+                          </MDTypography>
+                        </Card>
+                      ))}
+                      {ehrMatch.listOfProblemRecords.map((problem, problemIndex) => (
+                        <Card variant="outlined" sx={{ my: 2, p: 2 }} key={problemIndex}>
+                          <MDTypography variant="h6" gutterBottom>
+                            Problem {problemIndex + 1}
+                          </MDTypography>
+                          <MDTypography variant="body1" gutterBottom>
+                            <strong>Created By:</strong> {problem.createdBy}
+                          </MDTypography>
+                          <MDTypography variant="body1" gutterBottom>
+                            <strong>Created Date:</strong> {problem.createdDate.split(" ")[0]}
+                          </MDTypography>
+                          <MDTypography variant="body1" gutterBottom>
+                            <strong>Description:</strong> {problem.description}
+                          </MDTypography>
+                          <MDTypography variant="body1" gutterBottom>
+                            <strong>Priority: </strong>
+                            <Chip
+                              color={
+                                problem.priorityEnum === "LOW"
+                                  ? "success"
+                                  : problem.priorityEnum === "MEDIUM"
+                                    ? "warning"
+                                    : "error"
+                              }
+                              label={problem.priorityEnum}
+                            />
+                          </MDTypography>
+                          <MDTypography variant="body1" gutterBottom>
+                            <strong>Problem Type:</strong> {problem.problemTypeEnum}
+                          </MDTypography>
+                        </Card>
+                      ))}
                     </MDBox>
                   ) : (
                     <MDBox>

@@ -3,6 +3,9 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardActions from "@mui/material/CardActions";
+
 import Typography from "@mui/material/Typography";
 import { IconButton, Icon } from "@mui/material";
 import Dialog from "@mui/material/Dialog";
@@ -287,11 +290,11 @@ function AppointmentsBox() {
           const shiftStartYear = shiftStartTime.getFullYear();
           const shiftStartMonth = shiftStartTime.getMonth();
           const shiftStartDay = shiftStartTime.getDate();
-  
+
           const shiftEndYear = shiftEndTime.getFullYear();
           const shiftEndMonth = shiftEndTime.getMonth();
           const shiftEndDay = shiftEndTime.getDate();
-  
+
           // Compare the extracted date components
           const isShiftOnSelectedDate =
             selectedYear === shiftStartYear &&
@@ -300,10 +303,10 @@ function AppointmentsBox() {
             selectedYear === shiftEndYear &&
             selectedMonth === shiftEndMonth &&
             selectedDay === shiftEndDay;
-  
+
           const isShiftBetween8AMAnd4PM =
             shiftStartTime.getHours() >= 8 && shiftEndTime.getHours() <= 16;
-  
+
           return isShiftOnSelectedDate && isShiftBetween8AMAnd4PM;
         });
         // Check if staff has shifts on the selected date
@@ -353,46 +356,59 @@ function AppointmentsBox() {
           <Typography variant="h6" gutterBottom>
             List of Upcoming Appointments:
             {upcomingAppointments.map((upcomingAppointment, index) => (
-              <Grid container spacing={2} justify="center" alignItems="center">
-                <Grid item xs={12} md={6} lg={3}>
-                  <MDBox mb={1.5}>
-                    <ProfileInfoCard
-                      key={index}
-                      title={`Appointment ${index + 1}`}
-                      info={{
-                        bookedDateTime: formatDateToYYYYMMDD(
-                          parseDateFromLocalDateTime(
-                            upcomingAppointment.bookedDateTime
-                          )
-                        ),
-                        departmentName: upcomingAppointment.departmentName,
-                        description: upcomingAppointment.description,
-                        estimatedDuration:
-                          upcomingAppointment.estimatedDuration,
-                      }}
-                      shadow={false}
-                    />
-                  </MDBox>
-                </Grid>
-                {upcomingAppointment.swimlaneStatusEnum === "CONSULTATION" &&
-                upcomingAppointment.currentAssignedStaffId === loggedInStaff.staffId &&
-                parseDateFromLocalDateTime(upcomingAppointment.bookedDateTime).getDate() === new Date().getDate() &&
-                parseDateFromLocalDateTime(upcomingAppointment.bookedDateTime).getMonth() === new Date().getMonth() &&
-                parseDateFromLocalDateTime(upcomingAppointment.bookedDateTime).getFullYear() === new Date().getFullYear() &&
-                <MDButton
-                  onClick={() => handleOpenReferralModal(upcomingAppointment)}
-                  variant="gradient"
-                  color="primary"
-                >
-                Make A Referral
-                </MDButton>}
+              <Grid item key={index} xs={12} md={6} lg={4}>
+                <Card sx={{ minWidth: 275, marginBottom: 2, }}>
+                  <CardContent>
+                    <Typography variant="h6" component="div">
+                      Appointment {index + 1}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Booked Date:</strong>{" "}
+                      {formatDateToYYYYMMDD(
+                        parseDateFromLocalDateTime(upcomingAppointment.bookedDateTime)
+                      )}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Department:</strong> {upcomingAppointment.departmentName}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Description:</strong> {upcomingAppointment.description}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Estimated Duration:</strong>{" "}
+                      {upcomingAppointment.estimatedDuration}
+                    </Typography>
+                  </CardContent>
+                  {upcomingAppointment.swimlaneStatusEnum === "CONSULTATION" &&
+                    upcomingAppointment.currentAssignedStaffId ===
+                    loggedInStaff.staffId &&
+                    parseDateFromLocalDateTime(
+                      upcomingAppointment.bookedDateTime
+                    ).getDate() === new Date().getDate() &&
+                    parseDateFromLocalDateTime(
+                      upcomingAppointment.bookedDateTime
+                    ).getMonth() === new Date().getMonth() &&
+                    parseDateFromLocalDateTime(
+                      upcomingAppointment.bookedDateTime
+                    ).getFullYear() === new Date().getFullYear() && (
+                      <CardActions sx={{ justifyContent: "flex-end" }}>
+                        <MDButton
+                          onClick={() => handleOpenReferralModal(upcomingAppointment)}
+                          variant="gradient"
+                          color="primary"
+                        >
+                          Make A Referral
+                        </MDButton>
+                      </CardActions>
+                    )}
+                </Card>
               </Grid>
             ))}
           </Typography>
         </Card>
       </MDBox>
       <Dialog open={isReferralModalOpen} onClose={handleCloseReferralModal} fullWidth
-  maxWidth="md">
+        maxWidth="md">
         <DialogTitle>Make a Referral</DialogTitle>
         <DialogContent>
           <FormControl fullWidth margin="dense">
@@ -414,48 +430,48 @@ function AppointmentsBox() {
             </Select>
 
             {referralFormData.departmentName &&
-            referralFormData.departmentName.length > 0 &&
-            <>
-            <br/><hr/><br/>
-            <TextField
-              fullWidth
-              label="Description"
-              name="description"
-              value={referralFormData.description}
-              onChange={handleReferralChange}
-              margin="dense"
-            />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DemoContainer components={['DatePicker']}>
-                <DatePicker 
-                  label="Select Appointment Date"
-                  format="DD/MM/YYYY"
-                  value={selectedDate}
-                  minDate={dayjs().add(1, 'day')}
-                  onChange={(newValue) => setSelectedDate(newValue)} />
-              </DemoContainer>
-            </LocalizationProvider><br/>
-
-            {selectedDate && 
-            staffList.map(staff => 
+              referralFormData.departmentName.length > 0 &&
               <>
-            <Grid item xs={12} md={6} lg={3}>
-              <Typography sx={{fontSize: "16px"}}>Dr. {staff.firstname + " " + staff.lastname}</Typography>
-              {generateAvailableTimeSlots(staff,selectedDate).map(slot => 
-                <MDButton
-                  circular
-                  color={selectedStaff?.staffId === staff.staffId && 
-                    selectedTimeslot.startTime === slot.startTime && 
-                    selectedTimeslot.endTime === slot.endTime ? "dark" : "light"}
-                  sx={{ margin: '5px'}}
-                  onClick={() => handleSelectTime(staff,slot)}>
-                  {slot.startTime + " - " + slot.endTime}
-                </MDButton>)}
-            </Grid><br/></>)}
-            </>
+                <br /><hr /><br />
+                <TextField
+                  fullWidth
+                  label="Description"
+                  name="description"
+                  value={referralFormData.description}
+                  onChange={handleReferralChange}
+                  margin="dense"
+                />
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DemoContainer components={['DatePicker']}>
+                    <DatePicker
+                      label="Select Appointment Date"
+                      format="DD/MM/YYYY"
+                      value={selectedDate}
+                      minDate={dayjs().add(1, 'day')}
+                      onChange={(newValue) => setSelectedDate(newValue)} />
+                  </DemoContainer>
+                </LocalizationProvider><br />
+
+                {selectedDate &&
+                  staffList.map(staff =>
+                    <>
+                      <Grid item xs={12} md={6} lg={3}>
+                        <Typography sx={{ fontSize: "16px" }}>Dr. {staff.firstname + " " + staff.lastname}</Typography>
+                        {generateAvailableTimeSlots(staff, selectedDate).map(slot =>
+                          <MDButton
+                            circular
+                            color={selectedStaff?.staffId === staff.staffId &&
+                              selectedTimeslot.startTime === slot.startTime &&
+                              selectedTimeslot.endTime === slot.endTime ? "dark" : "light"}
+                            sx={{ margin: '5px' }}
+                            onClick={() => handleSelectTime(staff, slot)}>
+                            {slot.startTime + " - " + slot.endTime}
+                          </MDButton>)}
+                      </Grid><br /></>)}
+              </>
             }
           </FormControl>
-          
+
         </DialogContent>
         <DialogActions>
           <MDButton onClick={handleCloseReferralModal} color="primary">
