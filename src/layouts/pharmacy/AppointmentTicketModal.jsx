@@ -10,6 +10,7 @@ import {
   Select,
   MenuItem,
   TextField,
+  Icon,
   InputLabel,
   Table,
   TableBody,
@@ -47,6 +48,7 @@ import MDBox from "components/MDBox";
 import AddAttachmentButton from "../outpatient/kanbanTab/AddAttachmentButton";
 import ViewAttachmentsButton from "../outpatient/kanbanTab/ViewAttachmentsButton";
 import PrescriptionDialog from "layouts/outpatient/kanbanTab/PrescriptionRecord";
+import EditCart from "./EditCart";
 
 const style = {
   position: "absolute",
@@ -78,6 +80,7 @@ function AppointmentTicketModal({
   const [editableComments, setEditableComments] = useState("");
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [editIndex, setEditIndex] = useState();
 
   //For Cart
   const [medications, setMedications] = useState([]);
@@ -89,6 +92,7 @@ function AppointmentTicketModal({
 
   //For Managing the Cart
   const [cartItems, setCartItems] = useState([]);
+  const [isEditCartOpen, setIsEditCartOpen] = useState(false);
 
   //for assigning appointment to staff in the AppointmentTicketModal
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -367,6 +371,11 @@ function AppointmentTicketModal({
     );
   };
 
+  const handleEditCartClose = () => {
+    setEditIndex(null);
+    setIsEditCartOpen(false);
+  }
+
   const renderServicesDropdown = () => {
     return (
       <Box style={{ width: "100%" }}>
@@ -598,6 +607,19 @@ function AppointmentTicketModal({
       });
   };
 
+  const updateCartQuantity = async (lineItem) => {
+    for (let i=0; i<cartItems.length; i++) {
+      if (cartItems[i].transactionItemId === lineItem.transactionItemId) {
+        let temp = cartItems;
+        temp[i].transactionItemQuantity = Number(lineItem.transactionItemQuantity)
+        setCartItems(temp);
+        setCart(temp);
+      }
+    }
+    const r = await transactionItemApi.updateTransactionItem(lineItem.transactionItemId, lineItem.transactionItemQuantity)
+    handleEditCartClose();
+  }
+
   useEffect(() => {
     if (selectedAppointment.currentAssignedStaffId !== null) {
       getAssignedStaffName(selectedAppointment.currentAssignedStaffId);
@@ -611,7 +633,7 @@ function AppointmentTicketModal({
     fetchMedicationsAndServices();
     fetchPatientCart();
     // setAssigningToSwimlane(columnName);
-  }, [selectedAppointment, listOfWorkingStaff]);
+  }, [selectedAppointment, listOfWorkingStaff, editIndex]);
 
   return (
     <>
@@ -946,7 +968,7 @@ function AppointmentTicketModal({
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {cartItems.map((item) => (
+                            {cartItems.map((item,index) => (
                               <TableRow
                                 key={item.transactionItemId}
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -956,7 +978,13 @@ function AppointmentTicketModal({
                                   {item.transactionItemName}
                                 </TableCell>
                                 <TableCell align="right">
-                                  Quantity: {item.transactionItemQuantity}
+                                  Quantity: {item.transactionItemQuantity} &nbsp;
+                                  <IconButton
+                                    color="secondary"
+                                    onClick={() => {setEditIndex(index);setIsEditCartOpen(true);}}
+                                  >
+                                    <Icon>edit</Icon>
+                                  </IconButton>
                                 </TableCell>
                                 <TableCell align="right">
                                   <Button
@@ -1008,6 +1036,12 @@ function AppointmentTicketModal({
         selectedAppointmentToAssign={selectedAppointment}
         assigningToSwimlane={columnName}
       />
+      <EditCart 
+        open={isEditCartOpen}
+        onClose={handleEditCartClose}
+        cart={cartItems[editIndex]}
+        updateCartQuantity={updateCartQuantity}/>
+
     </>
   );
 }
