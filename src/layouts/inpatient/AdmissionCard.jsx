@@ -71,7 +71,7 @@ function AdmissionCard({
           <CardContent>
             <div className="draggable-icons">
               <MDTypography variant="h5" className="draggable-id">
-                HH-{appointment.admissionId}
+                Bed {appointment.bed}
               </MDTypography>
             </div>
 
@@ -84,10 +84,12 @@ function AdmissionCard({
                 className="avatar-left"
                 sx={{ textAlign: "left" }}
               >
-                {truncateText(
-                  appointment.firstName + " " + appointment.lastName,
-                  14
-                )}
+                {appointment.duration
+                  ? truncateText(
+                      appointment.firstName + " " + appointment.lastName,
+                      14
+                    )
+                  : "Vacant"}
                 <br />
                 {"(" + appointment.sex + ")"}
               </Typography>
@@ -120,17 +122,6 @@ function AdmissionCard({
           forceRefresh={forceRefresh}
         />
       )}
-      {/* {selectedAppointment && columnName === "Registration" && (
-        <ScheduleAdmissionModal
-          openModal={openModal}
-          handleCloseModal={handleCloseModal}
-          selectedAppointment={appointment}
-          replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-          columnName={columnName}
-          listOfWorkingStaff={listOfWorkingStaff}
-          forceRefresh={forceRefresh}
-        />
-      )} */}
     </>
   );
 }
