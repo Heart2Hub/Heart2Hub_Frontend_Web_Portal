@@ -331,6 +331,12 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 		}
 	};
 
+	function formatDate(expirationDateArray) {
+		const [year, month, day] = expirationDateArray;
+		const formattedDate = new Date(year, month - 1, day).toLocaleDateString('en-GB');
+		return formattedDate;
+	}
+
 	useEffect(() => {
 		fetchInventoryItems();
 		fetchPrescriptionRecords();
@@ -348,55 +354,75 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 			</DialogTitle>
 
 			<DialogContent dividers>
-				{prescriptionRecords.length === 0 ? (
+				{prescriptionRecords.filter((prescriptionRecord) => {
+					const expirationDate = new Date(
+						prescriptionRecord.expirationDate[0],
+						prescriptionRecord.expirationDate[1] - 1,
+						prescriptionRecord.expirationDate[2]
+					);
+					const today = new Date();
+					return expirationDate > today;
+				}).length === 0 ? (
 					<Typography variant="subtitle1" align="center">
-						The patient has no prescription records.
+						Patient has no Prescription Records.
 					</Typography>
-				) : (<List>
-					{prescriptionRecords.map((prescriptionRecord) => (
-						<Card
-							key={prescriptionRecord.prescriptionRecordId}
-							variant="outlined"
-							style={{ backgroundColor: '#e6f2ff', marginBottom: 10 }}
-						>							<CardContent>
-								<Typography variant="h6">
-									Prescription ID: {prescriptionRecord.prescriptionRecordId}
-								</Typography>
-								<div style={{ marginTop: 10 }}>
-									<div><b>Created Date:</b> {prescriptionRecord.createdDate}</div>
-									<br></br>
-									<div>
-										<b>Medication Name:</b> {prescriptionRecord.medicationName}
-									</div>
-									<div>
-										<b>Medication Quantity:</b> {prescriptionRecord.medicationQuantity}
-									</div>
-									<div>
-										<b>Dosage:</b> {prescriptionRecord.dosage}
-									</div>
-									<div>
-										<b>Description:</b> {prescriptionRecord.description}
-									</div>
-									<div>
-										<b>Comments:</b> {prescriptionRecord.comments}
-									</div>
-									<div><b>Prescribed By:</b> {prescriptionRecord.prescribedBy}</div>
-									<div>
-										<b>Prescription Status:</b>{" "}
-										{renderStatusWithColor(prescriptionRecord.prescriptionStatusEnum)}
-									</div>
-								</div>
-							</CardContent>
-							<CardActions style={{ justifyContent: "flex-end" }}>
-								{editMode && editedRecord?.prescriptionRecordId === prescriptionRecord.prescriptionRecordId ? (
-									<div>
-										<Button onClick={handleSaveEdit}>Save</Button>
-										<Button onClick={() => setEditMode(false)}>Cancel</Button>
-									</div>
-								) : (
-									<>
+				) : (
+					<List>
+						{prescriptionRecords
+							.filter((prescriptionRecord) => {
+								const expirationDate = new Date(
+									prescriptionRecord.expirationDate[0],
+									prescriptionRecord.expirationDate[1] - 1,
+									prescriptionRecord.expirationDate[2]
+								);
+								const today = new Date();
+								return expirationDate > today;
+							})
+							.map((prescriptionRecord) => (
 
-										{/* {loggedInStaff.staffRoleEnum === "DOCTOR" && (
+								<Card
+									key={prescriptionRecord.prescriptionRecordId}
+									variant="outlined"
+									style={{ backgroundColor: '#e6f2ff', marginBottom: 10 }}
+								>							<CardContent>
+										<Typography variant="h6">
+											Prescription ID: {prescriptionRecord.prescriptionRecordId}
+										</Typography>
+										<div style={{ marginTop: 10 }}>
+											{/* <div><b>Created Date:</b> {prescriptionRecord.createdDate}</div> */}
+											<div><b>Expiration Date:</b> {formatDate(prescriptionRecord.expirationDate)}</div>
+											<div>
+												<b>Medication Name:</b> {prescriptionRecord.medicationName}
+											</div>
+											{/* <div>
+										<b>Medication Quantity:</b> {prescriptionRecord.medicationQuantity}
+									</div> */}
+											<div>
+												<b>Dosage:</b> {prescriptionRecord.dosage}
+											</div>
+											<div>
+												<b>Description:</b> {prescriptionRecord.description}
+											</div>
+											<div>
+												<b>Comments:</b> {prescriptionRecord.comments}
+											</div>
+											<div><b>Prescribed By:</b> {prescriptionRecord.prescribedBy}</div>
+											<div>
+												<b>Prescription Status:</b>{" "}
+												{renderStatusWithColor(prescriptionRecord.prescriptionStatusEnum)}
+											</div>
+										</div>
+									</CardContent>
+									<CardActions style={{ justifyContent: "flex-end" }}>
+										{editMode && editedRecord?.prescriptionRecordId === prescriptionRecord.prescriptionRecordId ? (
+											<div>
+												<Button onClick={handleSaveEdit}>Save</Button>
+												<Button onClick={() => setEditMode(false)}>Cancel</Button>
+											</div>
+										) : (
+											<>
+
+												{/* {loggedInStaff.staffRoleEnum === "DOCTOR" && (
 											<IconButton onClick={() => handleEdit(prescriptionRecord)}>
 												<EditIcon />
 											</IconButton>
@@ -411,13 +437,13 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 												Add to Patient's Cart
 											</Button>
 
+												)}
+											</>
 										)}
-									</>
-								)}
-							</CardActions>
-						</Card>
-					))}
-				</List>
+									</CardActions>
+								</Card>
+							))}
+					</List>
 				)}
 			</DialogContent>
 			<DialogActions style={{ display: 'flex', justifyContent: 'space-between' }}>

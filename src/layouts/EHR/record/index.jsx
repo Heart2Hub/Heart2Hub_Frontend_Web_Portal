@@ -103,16 +103,25 @@ function EHRRecord() {
         <TabPanel value="View Appointments">
           <AppointmentsBox />
         </TabPanel>
-        {loggedInStaff.staffRoleEnum === "DOCTOR" && (
-          <TabPanel value="View Medical">
-            <MedicalRecordsBox />
-          </TabPanel>
-        )}
-        {loggedInStaff.staffRoleEnum === "DOCTOR" && (
-          <TabPanel value="View NextOfKin">
-            <NextOfKinBox />
-          </TabPanel>
-        )}
+        {loggedInStaff.staffRoleEnum === "DOCTOR" ? (
+        <TabPanel value="View Medical">
+          <MedicalRecordsBox />
+        </TabPanel>
+      ) : (
+        <TabPanel value="View Medical">
+          <b>Doctor Access Rights Required</b>
+        </TabPanel>
+      )}
+      {/* Display the component only if the staff's role is 'DOCTOR' */}
+      {loggedInStaff.staffRoleEnum === "DOCTOR" ? (
+        <TabPanel value="View NextOfKin">
+          <NextOfKinBox />
+        </TabPanel>
+      ) : (
+        <TabPanel value="View NextOfKin">
+          <b>Doctor Access Rights Required</b>
+        </TabPanel>
+      )}
         <TabPanel value="View Prescription">
           <PrescriptionRecordsBox ehrRecord={ehrRecord} />
         </TabPanel>

@@ -10,7 +10,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import { IconButton, Icon } from "@mui/material";
+import { IconButton, Icon, Button } from "@mui/material";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -31,6 +31,8 @@ import SelectWrapper from "components/Select";
 function ServiceItemManagement() {
     const [departments, setDepartments] = useState([]);
     const [wards, setWards] = useState([]);
+    const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+    const [inventoryToDeleteId, setInventoryToDeleteId] = useState(false);
 
     function priceFormat(num) {
         return `${num.toFixed(2)}`;
@@ -405,11 +407,17 @@ function ServiceItemManagement() {
     };
 
     const handleDeleteInventory = (inventoryItemId) => {
+        setInventoryToDeleteId(inventoryItemId);
+        setDeleteConfirmationOpen(true);
+    };
+
+    const handleConfirmDeleteInventory = (inventoryItemId) => {
         try {
             inventoryApi
                 .deleteServiceItem(inventoryItemId)
                 .then(() => {
                     fetchData();
+                    setDeleteConfirmationOpen(false);
                     reduxDispatch(
                         displayMessage({
                             color: "success",
@@ -626,6 +634,20 @@ function ServiceItemManagement() {
                     <MDButton onClick={handleUpdateServiceItem} color="primary">
                         Update
                     </MDButton>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={isDeleteConfirmationOpen} onClose={() => setDeleteConfirmationOpen(false)}>
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                    Are you sure you want to delete this item?
+                </DialogContent>
+                <DialogActions sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Button onClick={() => setDeleteConfirmationOpen(false)} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={() => handleConfirmDeleteInventory(inventoryToDeleteId)} color="primary">
+                        Confirm
+                    </Button>
                 </DialogActions>
             </Dialog>
 

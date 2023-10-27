@@ -20,6 +20,11 @@ import {
   Paper,
   Button,
   IconButton,
+  DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  DialogContentText
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
@@ -89,9 +94,20 @@ function AppointmentTicketModal({
   const [selectedMedicationQuantity, setSelectedMedicationQuantity] =
     useState(1);
   const [selectedService, setSelectedService] = useState(null);
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState(null);
 
   //For Managing the Cart
   const [cartItems, setCartItems] = useState([]);
+
+  const handleOpenDeleteDialog = (itemId) => {
+    setSelectedItemId(itemId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+  };
 
   //for assigning appointment to staff in the AppointmentTicketModal
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -202,46 +218,29 @@ function AppointmentTicketModal({
     fetchPatientCart();
   };
 
-  const handleDeleteCartItem = async (cartItemId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this item?"
-    );
-    if (confirmDelete) {
-      try {
-        await transactionItemApi.removeFromCart(
-          selectedAppointment.patientId,
-          cartItemId
-        );
-        reduxDispatch(
-          displayMessage({
-            color: "success",
-            icon: "notification",
-            title: "Success",
-            content: "Item has been deleted from the cart!",
-          })
-        );
-        fetchPatientCart();
-      } catch (error) {
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error",
-            content: error.response.data,
-          })
-        );
-      }
-    } else {
-      // If the user cancels the deletion
+  const handleConfirmDelete = async () => {
+    try {
+      await transactionItemApi.removeFromCart(selectedAppointment.patientId, selectedItemId);
       reduxDispatch(
         displayMessage({
-          color: "info",
-          icon: "notification",
-          title: "Info",
-          content: "Deletion has been canceled.",
+          color: 'success',
+          icon: 'notification',
+          title: 'Success',
+          content: 'Item has been deleted from the cart!',
+        })
+      );
+      fetchPatientCart();
+    } catch (error) {
+      reduxDispatch(
+        displayMessage({
+          color: 'error',
+          icon: 'notification',
+          title: 'Error',
+          content: error.response.data,
         })
       );
     }
+    handleCloseDeleteDialog();
   };
 
   const handleAddMedicationToPatient = async (medication) => {
@@ -678,29 +677,30 @@ function AppointmentTicketModal({
                 )}
               </Box>
               <List>
-                <ListItem>
+                <ListItem >
                   <MDTypography variant="h5" gutterBottom>
                     Location:
                   </MDTypography>
                 </ListItem>
-                <ListItem>
+                <ListItem style={{ display: "flex", justifyContent: "space-between" }}>
                   <MDTypography variant="h6" gutterBottom>
                     {facilityLocation !== null
                       ? facilityLocation
                       : "No Location Yet"}
                   </MDTypography>
                   <MDBox>
-                    <Stack direction="row" spacing={2}>
+                    <Stack direction="row">
                       {facilityLocation !== null && (
                         <ViewFacilityInventoryButton
                           selectedFacility={facility}
+                          selectedAppointment={selectedAppointment}
                         />
                       )}
                     </Stack>
                   </MDBox>
                 </ListItem>
                 <ListItem
-                  style={{ display: "flex", justifyContent: "space-between" }}
+                  style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}
                 >
                   <MDTypography variant="h5" gutterBottom>
                     Link to Electronic Health Record:
@@ -743,11 +743,11 @@ function AppointmentTicketModal({
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
-                        " " +
-                        assignedStaff.lastname +
-                        " (" +
-                        assignedStaff.staffRoleEnum +
-                        ")"}
+                      " " +
+                      assignedStaff.lastname +
+                      " (" +
+                      assignedStaff.staffRoleEnum +
+                      ")"}
                   </MDTypography>
                   <MDButton
                     disabled={loading}
@@ -998,10 +998,7 @@ function AppointmentTicketModal({
                                       backgroundColor: "#f44336",
                                       color: "white",
                                     }}
-                                    onClick={() =>
-                                      handleDeleteCartItem(
-                                        item.transactionItemId
-                                      )
+                                    onClick={() => handleOpenDeleteDialog(item.transactionItemId)
                                     }
                                   >
                                     Delete
@@ -1040,6 +1037,22 @@ function AppointmentTicketModal({
           )}
         </Box>
       </Modal>
+      <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this item?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog} color="primary">
+            Cancel
+          </Button>
+          <MDButton onClick={handleConfirmDelete} color="primary" variant="contained">
+            Delete
+          </MDButton>
+        </DialogActions>
+      </Dialog>
       <AssignAppointmentDialog
         open={isDialogOpen}
         onConfirm={handleConfirmAssignDialog}
@@ -1049,7 +1062,9 @@ function AppointmentTicketModal({
         assigningToSwimlane={columnName}
       />
     </>
+    
   );
+  
 }
 
 export default AppointmentTicketModal;

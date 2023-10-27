@@ -553,7 +553,7 @@ function EHR() {
               name="isDetailsCorrect"
               color="primary"
             />
-            Are details correct?
+            Details Verified?
           </label>
           <label>
             <Checkbox
@@ -562,7 +562,7 @@ function EHR() {
               name="isPictureCorrect"
               color="primary"
             />
-            Is picture correct?
+            Picture Verified?
           </label>
         </DialogContent>
         <DialogActions>
