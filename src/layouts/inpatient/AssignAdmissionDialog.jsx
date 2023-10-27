@@ -19,18 +19,26 @@ function AssignAdmissionDialog({
   onConfirm,
   listOfWorkingStaff,
   selectedAppointmentToAssign,
+  roleToAssign,
 }) {
-  const [selectedStaff, setSelectedStaff] = useState(
-    selectedAppointmentToAssign !== null &&
-      selectedAppointmentToAssign.assignedNurseId !== null
+  const [selectedNurse, setSelectedNurse] = useState(
+    selectedAppointmentToAssign.assignedNurseId
       ? selectedAppointmentToAssign.assignedNurseId
       : 0
   );
-  const [listOfApplicableWorkingStaff, setListOfApplicableWorkingStaff] =
-    useState([]);
+
+  const [selectedAdmin, setSelectedAdmin] = useState(
+    selectedAppointmentToAssign.assignedAdminId
+      ? selectedAppointmentToAssign.assignedAdminId
+      : 0
+  );
 
   const handleChange = (event) => {
-    setSelectedStaff(event.target.value);
+    if (roleToAssign === "NURSE") {
+      setSelectedNurse(event.target.value);
+    } else {
+      setSelectedAdmin(event.target.value);
+    }
   };
 
   const findStaffInListByStaffId = (staffId) => {
@@ -52,36 +60,6 @@ function AssignAdmissionDialog({
     }
   };
 
-  const handleFilterListOfApplicableWorkingStaff = (swimlaneName) => {
-    if (swimlaneName === "Registration") {
-      setListOfApplicableWorkingStaff(
-        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
-      );
-    } else if (swimlaneName === "Triage") {
-      setListOfApplicableWorkingStaff(
-        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "NURSE")
-      );
-    } else if (swimlaneName === "Consultation") {
-      setListOfApplicableWorkingStaff(
-        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "DOCTOR")
-      );
-    } else if (swimlaneName === "Admission") {
-      setListOfApplicableWorkingStaff(
-        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
-      );
-    } else if (swimlaneName === "Discharge") {
-      setListOfApplicableWorkingStaff(
-        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
-      );
-    } else {
-      // console.log("No Filter result of applicable working staff");
-    }
-  };
-
-  //   useEffect(() => {
-  //     handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
-  //   }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
-
   return (
     <>
       <Dialog open={open} onClose={onClose}>
@@ -96,20 +74,16 @@ function AssignAdmissionDialog({
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
-              value={selectedStaff}
+              value={roleToAssign === "NURSE" ? selectedNurse : selectedAdmin}
               label="Select Staff"
               onChange={handleChange}
               sx={{ height: "50px" }}
             >
               <MenuItem value={0}>Not assigned</MenuItem>
-              {/* {listOfApplicableWorkingStaff.length !== 0 &&
-                listOfApplicableWorkingStaff.map((staff) => (
-                  <MenuItem key={staff.staffId} value={staff.staffId}>
-                    {findStaffInListByStaffId(staff.staffId)}
-                  </MenuItem>
-                ))} */}
-              {listOfWorkingStaff.length !== 0 &&
-                listOfWorkingStaff.map((staff) => (
+
+              {listOfWorkingStaff
+                .filter((staff) => staff.staffRoleEnum === roleToAssign)
+                .map((staff) => (
                   <MenuItem key={staff.staffId} value={staff.staffId}>
                     {findStaffInListByStaffId(staff.staffId)}
                   </MenuItem>
@@ -121,7 +95,15 @@ function AssignAdmissionDialog({
           <Button onClick={onClose} color="primary">
             Cancel
           </Button>
-          <Button onClick={() => onConfirm(selectedStaff)} color="primary">
+          <Button
+            onClick={() =>
+              onConfirm(
+                roleToAssign === "NURSE" ? selectedNurse : selectedAdmin,
+                roleToAssign
+              )
+            }
+            color="primary"
+          >
             Confirm
           </Button>
         </DialogActions>

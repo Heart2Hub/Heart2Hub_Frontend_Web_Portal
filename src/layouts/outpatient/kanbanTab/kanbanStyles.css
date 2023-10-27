@@ -169,3 +169,14 @@
   box-shadow: 0px 6px 25px rgba(0, 0, 0, 0.4);
   border: 1px solid #b0b0b0;
 }
+
+/* ADMISSION */
+
+.schedule-admission-calendar .rbc-event-label {
+  display: none;
+}
+
+.schedule-admission-calendar .rbc-allday-cell {
+  height: 0;
+  width: 0;
+}
