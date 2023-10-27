@@ -4,10 +4,20 @@ import Avatar from "@mui/material/Avatar";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import Checkbox from "@mui/material/Checkbox";
-import { IconButton, Icon } from "@mui/material";
+import {
+  IconButton,
+  Icon,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  List,
+  Divider,
+} from "@mui/material";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -25,13 +35,22 @@ import { displayMessage } from "../../store/slices/snackbarSlice";
 import { setEHRRecord } from "../../store/slices/ehrSlice";
 import MDAvatar from "components/MDAvatar";
 import { maskNric } from "utility/Utility";
+import { treatmentPlanRecordApi } from "api/Api";
+import { selectEHRRecord } from "store/slices/ehrSlice";
+import { useSelector } from "react-redux";
+import { selectStaff } from "store/slices/staffSlice";
 
 function EHR() {
   const navigate = useNavigate();
   const reduxDispatch = useDispatch();
+  const ehrRecord = useSelector(selectEHRRecord);
+  const loggedInStaff = useSelector(selectStaff);
 
   const [imageURLs, setImageURLs] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+
+  const [listOfUnreadInvitations, setListOfUnreadInvitations] = useState([]);
+  const [listOfReadInvitations, setListOfReadInvitations] = useState([]);
 
   //for opening the eyeball
   const [data, setData] = useState({
@@ -133,6 +152,7 @@ function EHR() {
   });
   const [isDetailsCorrect, setIsDetailsCorrect] = useState(false);
   const [isPictureCorrect, setIsPictureCorrect] = useState(false);
+  const [invitationOpen, setInvitationOpen] = useState(false);
 
   const handleOpenModal = (electronicHealthRecordId) => {
     const patientWithElectronicHealthRecordSummary =
@@ -193,7 +213,6 @@ function EHR() {
             dateOfBirthFormatted
           )
           .then((response) => {
-            console.log(response);
             reduxDispatch(
               displayMessage({
                 color: "success",
@@ -206,18 +225,12 @@ function EHR() {
             );
             setIsModalOpen(false);
 
-            console.log(formData.profilePicture);
-
             // ROUTE HERE
             response.data = {
               ...response.data,
               username: formData.username,
               profilePicture: formData.profilePicturePath,
             };
-
-            console.log(response.data.profilePicture);
-            console.log(response.data.profilePicturePath);
-            console.log(formData.profilePicture);
             reduxDispatch(setEHRRecord(response.data));
             navigate("/ehr/ehrRecord");
           })
@@ -262,27 +275,6 @@ function EHR() {
 
   const fetchData = async () => {
     setIsLoading(true);
-    // try {
-    //   const response =
-    //     await patientApi.getAllPatientsWithElectronicHealthRecordSummaryByName(
-    //       ""
-    //     );
-    //   const patientsWithElectronicHealthRecordSummary = response.data;
-
-    //   const newImageURLs = {};
-    //   for (const patient of patientsWithElectronicHealthRecordSummary) {
-    //     if (patient.profilePicture) {
-    //       const imageResponse = await imageServerApi.getImageFromImageServer(
-    //         "id",
-    //         patient.profilePicture
-    //       );
-    //       newImageURLs[patient.profilePicture] = URL.createObjectURL(
-    //         imageResponse.data
-    //       );
-    //     }
-    //   }
-
-    //   setImageURLs(newImageURLs);
 
     try {
       const response =
@@ -317,29 +309,13 @@ function EHR() {
       });
 
       setImageURLs(newImageURLs);
-      console.log(newImageURLs);
+      // console.log(newImageURLs);
 
       const mappedRows = patientsWithElectronicHealthRecordSummary.map(
         (patientWithElectronicHealthRecordSummary) => {
-          console.log(
-            newImageURLs[
-              patientWithElectronicHealthRecordSummary.profilePicture
-            ]
-          );
-
-          console.log(patientWithElectronicHealthRecordSummary.profilePicture);
-          console.log(
-            imageURLs[patientWithElectronicHealthRecordSummary.profilePicture]
-          );
           return {
             electronicHealthRecordId:
               patientWithElectronicHealthRecordSummary.electronicHealthRecordId,
-
-            //if you set image here it will apepar everywhere
-            // profilePicture:
-            //   patientWithElectronicHealthRecordSummary.profilePicture,
-            // profilePicture:
-            //    || patientWithElectronicHealthRecordSummary.profilePicture,
             profilePicture:
               newImageURLs[
                 patientWithElectronicHealthRecordSummary.profilePicture
@@ -355,14 +331,10 @@ function EHR() {
         }
       );
 
-      console.log(mappedRows);
-
       dataRef.current = {
         ...dataRef.current,
         rows: [mappedRows],
       };
-
-      console.log(dataRef.current);
 
       setData((prevData) => ({
         ...prevData,
@@ -375,6 +347,89 @@ function EHR() {
     setIsLoading(false);
   };
 
+  const handleOpenInvitationDialog = async () => {
+    setInvitationOpen(true);
+    const response = await treatmentPlanRecordApi.getListOfInvitationsByStaffId(
+      loggedInStaff.staffId
+    );
+    console.log(response.data);
+    const listOfAllInvitations = response.data.filter(
+      (inv) => inv.isPrimary === false
+    );
+    const listOfReadInvites = listOfAllInvitations.filter((inv) => inv.isRead);
+    const listOfUnreadInvites = listOfAllInvitations.filter(
+      (inv) => !inv.isRead
+    );
+
+    setListOfReadInvitations(listOfReadInvites);
+    setListOfUnreadInvitations(listOfUnreadInvites);
+  };
+
+  const handleViewSelectedInvitationEHR = async (invitation) => {
+    try {
+      ehrApi
+        .getElectronicHealthRecordById(invitation.electronicHealthRecordId)
+        .then((response) => {
+          reduxDispatch(
+            displayMessage({
+              color: "success",
+              icon: "notification",
+              title: "Validation Success!",
+              content:
+                "Retrieved Electronic Health Record With ID: " +
+                invitation.electronicHealthRecordId,
+            })
+          );
+          setIsModalOpen(false);
+
+          //set form data
+
+          const patientWithElectronicHealthRecordSummary =
+            dataRef.current.rows[0].find(
+              (patientWithElectronicHealthRecordSummary) =>
+                patientWithElectronicHealthRecordSummary.electronicHealthRecordId ===
+                invitation.electronicHealthRecordId
+            );
+
+          // ROUTE HERE
+          response.data = {
+            ...response.data,
+            username: patientWithElectronicHealthRecordSummary.username,
+            profilePicture:
+              patientWithElectronicHealthRecordSummary.profilePicturePath,
+          };
+          reduxDispatch(setEHRRecord(response.data));
+          navigate("/ehr/ehrRecord");
+        })
+        .catch((err) => {
+          console.log(err);
+          // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with redux.
+          if (err.response.data.detail) {
+            reduxDispatch(
+              displayMessage({
+                color: "error",
+                icon: "notification",
+                title: "Validation Failed!",
+                content: err.response.data.detail,
+              })
+            );
+          } else {
+            reduxDispatch(
+              displayMessage({
+                color: "error",
+                icon: "notification",
+                title: "Validation Failed!",
+                content: err.response.data,
+              })
+            );
+          }
+          console.log(err);
+        });
+    } catch (ex) {
+      console.log(ex);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -383,10 +438,16 @@ function EHR() {
     <DashboardLayout>
       <DashboardNavbar />
       {isLoading ? (
-        <p>Loading...</p> // or a spinner component
+        <p>Loading...</p>
       ) : (
-        // your DataTable component
         <>
+          <MDButton
+            color="primary"
+            sx={{ float: "right" }}
+            onClick={handleOpenInvitationDialog}
+          >
+            My Invitations
+          </MDButton>
           <MDBox pt={6} pb={3}>
             <Grid container spacing={6}>
               <Grid item xs={12}>
@@ -492,7 +553,7 @@ function EHR() {
               name="isDetailsCorrect"
               color="primary"
             />
-            Are details correct?
+            Details Verified?
           </label>
           <label>
             <Checkbox
@@ -501,7 +562,7 @@ function EHR() {
               name="isPictureCorrect"
               color="primary"
             />
-            Is picture correct?
+            Picture Verified?
           </label>
         </DialogContent>
         <DialogActions>
@@ -513,6 +574,124 @@ function EHR() {
             color="primary"
           >
             Submit
+          </MDButton>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={invitationOpen}
+        onClose={() => setInvitationOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>My Invitations</DialogTitle>
+        <DialogContent>
+          <List
+            style={{
+              maxHeight: "300px",
+              overflowY: "auto",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              "&::WebkitScrollbar": {
+                display: "none",
+              },
+            }}
+          >
+            {/* for unread invitations */}
+
+            {listOfUnreadInvitations.length === 0 && (
+              <MDBox
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                height="10vh"
+              >
+                <ErrorOutlineIcon fontSize="large" />
+                &nbsp;
+                <MDTypography>You have no unread invitations</MDTypography>
+              </MDBox>
+            )}
+
+            {listOfUnreadInvitations.map((invitation, index) => (
+              <ListItem key={index} divider>
+                <Grid container alignItems="center" spacing={2}>
+                  <Grid item xs={4}>
+                    <ListItemText
+                      primary={`Invitation ID: ${invitation.invitationId}`}
+                      secondary={`Treatment Plan ID: ${invitation.treatmentPlanRecordId}`}
+                    />
+                  </Grid>
+
+                  <Grid item xs={4}>
+                    <MDTypography variant="body2">
+                      {`Invited By: ${invitation.invitedBy}`}
+                    </MDTypography>
+
+                    <ListItemSecondaryAction>
+                      <MDButton
+                        variant="outlined"
+                        color="primary"
+                        onClick={() =>
+                          handleViewSelectedInvitationEHR(invitation)
+                        }
+                      >
+                        View
+                      </MDButton>
+                    </ListItemSecondaryAction>
+                  </Grid>
+                </Grid>
+              </ListItem>
+            ))}
+
+            <Divider />
+
+            {/* for read invitations */}
+            {listOfReadInvitations.length === 0 && (
+              <MDBox
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                height="10vh"
+              >
+                <ErrorOutlineIcon fontSize="large" />
+                &nbsp;
+                <MDTypography>You have no read invitations</MDTypography>
+              </MDBox>
+            )}
+            {listOfReadInvitations.map((invitation, index) => (
+              <ListItem key={index} divider>
+                <Grid container alignItems="center" spacing={2}>
+                  <Grid item xs={4}>
+                    <ListItemText
+                      primary={`Invitation ID: ${invitation.invitationId}`}
+                      secondary={`Treatment Plan ID: ${invitation.treatmentPlanRecordId}`}
+                    />
+                  </Grid>
+
+                  <Grid item xs={4}>
+                    <MDTypography variant="body2">
+                      {`Invited By: ${invitation.invitedBy}`}
+                    </MDTypography>
+
+                    <ListItemSecondaryAction>
+                      <MDButton
+                        variant="outlined"
+                        color="primary"
+                        onClick={() =>
+                          handleViewSelectedInvitationEHR(invitation)
+                        }
+                      >
+                        View
+                      </MDButton>
+                    </ListItemSecondaryAction>
+                  </Grid>
+                </Grid>
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <MDButton onClick={() => setInvitationOpen(false)} color="primary">
+            Cancel
           </MDButton>
         </DialogActions>
       </Dialog>

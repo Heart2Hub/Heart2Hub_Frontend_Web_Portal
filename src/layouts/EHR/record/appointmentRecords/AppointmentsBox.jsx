@@ -39,9 +39,9 @@ import {
   selectEHRRecord,
   setEHRRecord,
   updateEHRRecord,
-} from "../../../store/slices/ehrSlice";
-import { selectStaff } from "../../../store/slices/staffSlice";
-import { displayMessage } from "../../../store/slices/snackbarSlice";
+} from "../../../../store/slices/ehrSlice";
+import { selectStaff } from "../../../../store/slices/staffSlice";
+import { displayMessage } from "../../../../store/slices/snackbarSlice";
 import {
   parseDateFromLocalDateTime,
   formatDateToYYYYMMDD,
@@ -216,7 +216,13 @@ function AppointmentsBox() {
   }
 
   const convertToDate = (dateString, timeString) => {
-    let startTime = timeString.startTime;
+    let startTime;
+    if (timeString.startTime.slice(-2) === "AM" || timeString.startTime.slice(-2) === "PM") {
+      // Extract start times and convert to 24-hour format for comparison
+      startTime = timeString.startTime.slice(0, -2).trim();
+    } else {
+      startTime = timeString.startTime;
+    }
     const origDateTime = dayjs(dateString, 'DD/MM/YYYY').format("YYYY-MM-DD");
     const newDateStr = `${origDateTime}T${startTime}:00`;
     return newDateStr;
@@ -374,11 +380,7 @@ function AppointmentsBox() {
                     />
                   </MDBox>
                 </Grid>
-                {upcomingAppointment.swimlaneStatusEnum === "CONSULTATION" &&
-                upcomingAppointment.currentAssignedStaffId === loggedInStaff.staffId &&
-                parseDateFromLocalDateTime(upcomingAppointment.bookedDateTime).getDate() === new Date().getDate() &&
-                parseDateFromLocalDateTime(upcomingAppointment.bookedDateTime).getMonth() === new Date().getMonth() &&
-                parseDateFromLocalDateTime(upcomingAppointment.bookedDateTime).getFullYear() === new Date().getFullYear() &&
+                {loggedInStaff.staffRoleEnum === "DOCTOR" &&
                 <MDButton
                   onClick={() => handleOpenReferralModal(upcomingAppointment)}
                   variant="gradient"

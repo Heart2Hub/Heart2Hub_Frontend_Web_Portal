@@ -18,14 +18,15 @@ import VaccinesIcon from "@mui/icons-material/Vaccines";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 
 import ProblemRecordsBox from "./problemRecords/ProblemRecordsBox";
-import AppointmentsBox from "./AppointmentsBox";
-import NextOfKinBox from "./NextOfKinBox";
-import MedicalRecordsBox from "./MedicalRecordsBox";
-import PrescriptionRecordsBox from "./PrescriptionRecordsBox";
+import AppointmentsBox from "./appointmentRecords/AppointmentsBox";
+import NextOfKinBox from "./nextOfKinRecords/NextOfKinBox";
+import MedicalRecordsBox from "./medicalRecords/MedicalRecordsBox";
+import PrescriptionRecordsBox from "./prescriptionRecords/PrescriptionRecordsBox";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { useState } from "react";
 import { Tab } from "@mui/material";
 import MDBox from "components/MDBox";
+import TreatmentPlansBox from "./treatmentPlanRecords/TreatmentPlansBox";
 
 function EHRRecord() {
   const reduxDispatch = useDispatch();
@@ -102,22 +103,31 @@ function EHRRecord() {
         <TabPanel value="View Appointments">
           <AppointmentsBox />
         </TabPanel>
-        {loggedInStaff.staffRoleEnum === "DOCTOR" && (
-          <TabPanel value="View Medical">
-            <MedicalRecordsBox />
-          </TabPanel>
-        )}
-        {loggedInStaff.staffRoleEnum === "DOCTOR" && (
-          <TabPanel value="View NextOfKin">
-            <NextOfKinBox />
-          </TabPanel>
-        )}
-        <TabPanel value="View Prescription">
-          <PrescriptionRecordsBox
-          ehrRecord = {ehrRecord}
-          />
+        {loggedInStaff.staffRoleEnum === "DOCTOR" ? (
+        <TabPanel value="View Medical">
+          <MedicalRecordsBox />
         </TabPanel>
-        <TabPanel value="View TreatmentPlan">treatment</TabPanel>
+      ) : (
+        <TabPanel value="View Medical">
+          <b>Doctor Access Rights Required</b>
+        </TabPanel>
+      )}
+      {/* Display the component only if the staff's role is 'DOCTOR' */}
+      {loggedInStaff.staffRoleEnum === "DOCTOR" ? (
+        <TabPanel value="View NextOfKin">
+          <NextOfKinBox />
+        </TabPanel>
+      ) : (
+        <TabPanel value="View NextOfKin">
+          <b>Doctor Access Rights Required</b>
+        </TabPanel>
+      )}
+        <TabPanel value="View Prescription">
+          <PrescriptionRecordsBox ehrRecord={ehrRecord} />
+        </TabPanel>
+        <TabPanel value="View TreatmentPlan">
+          <TreatmentPlansBox />
+        </TabPanel>
       </TabContext>
     </DashboardLayout>
   );

@@ -18,9 +18,12 @@ import {
         TableHead,
         TableRow,
         Paper,
+        IconButton,
 } from '@mui/material';
+import DeleteIcon from "@mui/icons-material/Delete";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import CreateInsuranceClaimDialog from './CreateInsuranceClaimDialog';
+import CreateMedishieldClaimDialog from './CreateMedishieldClaimDialog';
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import MDBox from "components/MDBox";
@@ -41,9 +44,17 @@ function Invoice() {
         const reduxDispatch = useDispatch();
 
         const [isCreateInsuranceDialogOpen, setIsCreateInsuranceDialogOpen] = useState(false);
+        const [isCreateMedishieldDialogOpen, setIsCreateMedishieldDialogOpen] = useState(false);
+
 
         const handleCreateInsuranceDialogOpen = (invoiceId) => {
                 setIsCreateInsuranceDialogOpen(true);
+                setSelectedInvoice(invoiceId); // Assuming you have a state to hold the selected invoice
+        };
+
+        const handleCreateMedishieldDialogOpen = (invoiceId) => {
+                // Open the dialog for creating Medishield claims
+                setIsCreateMedishieldDialogOpen(true);
                 setSelectedInvoice(invoiceId); // Assuming you have a state to hold the selected invoice
         };
 
@@ -305,10 +316,10 @@ function Invoice() {
                                                 {selectedInvoiceDetails.insuranceClaim ? (
                                                         <Card>
                                                                 <CardContent>
-                                                                        <MDTypography variant="h5" component="div">
+                                                                        {/* <MDTypography variant="h5" component="div">
                                                                                 Insurance Claim Details
-                                                                        </MDTypography>
-                                                                        <MDTypography variant="body2" color="text.secondary">
+                                                                        </MDTypography> */}
+                                                                        <MDTypography variant="h5" >
                                                                                 Insurance Claim ID: {selectedInvoiceDetails.insuranceClaim.insuranceClaimId}
                                                                         </MDTypography>
                                                                         <MDTypography variant="body2" color="text.secondary">
@@ -333,6 +344,14 @@ function Invoice() {
                                                                         <MDTypography variant="body2" color="text.secondary">
                                                                                 Is Private Insurer: {selectedInvoiceDetails.insuranceClaim.isPrivateInsurer ? 'Yes' : 'No'}
                                                                         </MDTypography>
+                                                                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                                                <IconButton
+                                                                                        aria-label="delete"
+                                                                                        // onClick={() => handleDeleteInsuranceClaim(selectedInvoiceDetails.insuranceClaim.insuranceClaimId)} // Assuming you have a handleDeleteInsuranceClaim function to handle the deletion
+                                                                                >
+                                                                                        <DeleteIcon />
+                                                                                </IconButton>
+                                                                        </div>
                                                                 </CardContent>
                                                         </Card>
                                                 ) : (
@@ -367,11 +386,11 @@ function Invoice() {
                                                 {selectedInvoiceDetails.medishieldClaim ? (
                                                         <Card>
                                                                 <CardContent>
-                                                                        <MDTypography variant="h5" component="div">
+                                                                        {/* <MDTypography variant="h5" component="div">
                                                                                 Insurance Claim Details
-                                                                        </MDTypography>
-                                                                        <MDTypography variant="body2" color="text.secondary">
-                                                                                Insurance Claim ID: {selectedInvoiceDetails.medishieldClaim.medishieldClaimId}
+                                                                        </MDTypography> */}
+                                                                        <MDTypography variant="h5" >
+                                                                                Medishield Claim ID: {selectedInvoiceDetails.medishieldClaim.medishieldClaimId}
                                                                         </MDTypography>
                                                                         <MDTypography variant="body2" color="text.secondary">
                                                                                 Date Applied:{' '}
@@ -392,7 +411,14 @@ function Invoice() {
                                                                         <MDTypography variant="body2" color="text.secondary">
                                                                                 Status: {selectedInvoiceDetails.medishieldClaim.approvalStatusEnum}
                                                                         </MDTypography>
-
+                                                                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                                                <IconButton
+                                                                                        aria-label="delete"
+                                                                                        // onClick={() => handleDeleteInsuranceClaim(selectedInvoiceDetails.insuranceClaim.insuranceClaimId)} // Assuming you have a handleDeleteInsuranceClaim function to handle the deletion
+                                                                                >
+                                                                                        <DeleteIcon />
+                                                                                </IconButton>
+                                                                        </div>
                                                                 </CardContent>
                                                         </Card>
                                                 ) : (
@@ -406,10 +432,16 @@ function Invoice() {
                                                                         }}
                                                                         variant="contained"
                                                                         color="info"
-                                                                // onClick={() => handleEdit(row.original)}
-                                                                >
+                                                                        onClick={handleCreateMedishieldDialogOpen}                                                                >
                                                                         Create Medishield Claim
                                                                 </MDButton>
+                                                                <CreateMedishieldClaimDialog
+                                                                        isOpen={isCreateMedishieldDialogOpen}
+                                                                        onClose={() => setIsCreateMedishieldDialogOpen(false)}
+                                                                        // onCreate={handleCreateMedishieldDialogOpen} // Pass the handleCreateMedishieldClaim function to the dialog component
+                                                                        invoiceId={selectedInvoiceDetails.invoiceId}
+                                                                        fetchData={fetchData} // Pass the fetchData function to the dialog component
+                                                                />
                                                         </ListItem>
                                                 )}
                                         </List>
