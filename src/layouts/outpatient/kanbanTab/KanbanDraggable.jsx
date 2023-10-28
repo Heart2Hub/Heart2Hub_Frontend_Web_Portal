@@ -15,6 +15,7 @@ import MDAvatar from "components/MDAvatar";
 import { truncateText } from "utility/Utility";
 import { imageServerApi } from "../../../api/Api";
 import ScheduleAdmissionModal from "./ScheduleAdmissionModal";
+import { parseDateFromLocalDateTime } from "utility/Utility";
 
 function KanbanDraggable({
   appointment,
@@ -56,25 +57,21 @@ function KanbanDraggable({
   // //const timeDifference = getTimeDifferenceFromAPI(appointment.appointmentId);
   // console.log(appointment.appointmentId + " :" + timeDifference)
 
-  // const getPriorityColor = (appointment, timeDifference) => {
-  //   if (appointment.priorityEnum === "LOW") {
-  //     if (timeDifference >= 40) {
-  //       return "red";
-  //     } else if (timeDifference >= 20) {
-  //       return "orange";
-  //     } else {
-  //       return "green";
-  //     }
-  //   } else if (appointment.priorityEnum === "MEDIUM") {
-  //     if (timeDifference >= 40) {
-  //       return "red";
-  //     } else {
-  //       return "orange";
-  //     }
-  //   } else if (appointment.priorityEnum === "HIGH") {
-  //     return "red";
-  //   }
-  // };
+  const getPriorityColor = (appointment) => {
+    if (appointment.actualDateTime === null || appointment.arrived) return "green"
+    if (!appointment.arrived) {
+      const apptDate = parseDateFromLocalDateTime(appointment.actualDateTime);
+      let timeDiff = (new Date().getHours()*60 + new Date().getMinutes()) - (apptDate.getHours()*60 + apptDate.getMinutes())
+
+      if (timeDiff >= 40) {
+        return "red"
+      } else if (timeDiff >= 20) {
+        return "orange"
+      } else {
+        return "green"
+      }
+    }
+  };
 
   //let priorityColor = getPriorityColor(appointment, timeDifference);
   // console.log(appointment.appointmentId)
@@ -123,12 +120,18 @@ function KanbanDraggable({
               ref={provided.innerRef}
               elevation={3}
               raised={true}
-              // style={{ borderLeft: `6px solid ${priorityColor}` }}
+              // style={{ borderLeft: `6px solid red` }}
             >
               <CardContent>
                 <div className="draggable-icons">
                   <MDTypography variant="h5" className="draggable-id">
-                    HH-{appointment.appointmentId}
+                    HH-{appointment.appointmentId}&nbsp;
+                    <span 
+                    style={{ height: "12px", 
+                      width: "12px", 
+                      backgroundColor: getPriorityColor(appointment), 
+                      borderRadius: "50%", 
+                      display: "inline-block"}}></span>
                   </MDTypography>
                 </div>
 
