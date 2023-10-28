@@ -140,8 +140,6 @@ function AssignAppointmentDialog({
     handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
   }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
 
-  console.log(listOfApplicableWorkingStaff);
-
   return (
     <>
       {assigningToSwimlane === "Treatment" ? (
@@ -167,19 +165,30 @@ function AssignAppointmentDialog({
                 onChange={handleTreatmentTypeChange}
                 sx={{ height: "50px" }}
               >
-                {listOfApplicableWorkingStaff.length !== 0 &&
-                  listOfApplicableWorkingStaff.map((staff) =>
-                    staff.staffRoleEnum === "doctor" ||
-                    staff.staffRoleEnum === "nurse" ||
-                    staff.staffRoleEnum === "admin" ? null : (
+                {listOfWorkingStaff.length !== 0 &&
+                  listOfWorkingStaff
+                    .reduce((acc, staff) => {
+                      if (
+                        !acc.some(
+                          (item) => item.staffRoleEnum === staff.staffRoleEnum
+                        ) &&
+                        staff.staffRoleEnum !== "DOCTOR" &&
+                        staff.staffRoleEnum !== "NURSE" &&
+                        staff.staffRoleEnum !== "ADMIN"
+                      ) {
+                        acc.push(staff);
+                      }
+                      console.log(acc);
+                      return acc;
+                    }, [])
+                    .map((staff) => (
                       <MenuItem
                         key={staff.staffRoleEnum}
                         value={staff.staffRoleEnum}
                       >
                         {staffRoleEnumMapping[staff.staffRoleEnum]}
                       </MenuItem>
-                    )
-                  )}
+                    ))}
               </Select>
             </FormControl>
             {selectedTreatmentType !== "" ? (
