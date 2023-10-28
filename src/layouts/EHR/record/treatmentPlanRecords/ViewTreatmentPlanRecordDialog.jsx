@@ -11,8 +11,7 @@ import {
   TextField,
 } from "@mui/material";
 import MDButton from "components/MDButton";
-import React, { useEffect } from "react";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import { useDispatch } from "react-redux";
@@ -316,6 +315,9 @@ function ViewTreatmentPlanRecordDialog({
   };
 
   const handleRetrieveListOfInvitations = async () => {
+    setPrimaryInvitation(null);
+    setCurrentStaffInvitation(null);
+
     const response =
       await treatmentPlanRecordApi.getListOfInvitationsInTreatmentPlanRecord(
         selectedTreatmentPlanRecordToView.treatmentPlanRecordId
@@ -323,9 +325,13 @@ function ViewTreatmentPlanRecordDialog({
     const listOfAllInvitations = response.data;
 
     //to get the primary staff of the treatment plan
-    setPrimaryInvitation(
-      listOfAllInvitations.filter((invitation) => invitation.isPrimary)[0]
+    let primaryList = listOfAllInvitations.filter(
+      (invitation) => invitation.isPrimary
     );
+    if (primaryList.length > 0) {
+      setPrimaryInvitation(primaryList[0]);
+    }
+
     const listOfCurrentStaffInvitation = response.data.filter(
       (invitation) => invitation.staffId === loggedInStaff.staffId
     );
@@ -536,25 +542,29 @@ function ViewTreatmentPlanRecordDialog({
                       Update
                     </MDButton>
 
-                    {primaryInvitation.staffId === loggedInStaff.staffId && (
-                      <>
-                        <MDButton
-                          onClick={handleDeleteTreatmentPlanRecord}
-                          color="primary"
-                          style={{ marginRight: "10px" }}
-                        >
-                          Delete
-                        </MDButton>
-                        <MDButton
-                          onClick={handleOpenCompleteTreatmentPlanRecordDialog}
-                          color="warning"
-                        >
-                          Complete
-                        </MDButton>
-                      </>
-                    )}
+                    {primaryInvitation !== null &&
+                      primaryInvitation?.staffId === loggedInStaff.staffId && (
+                        <>
+                          <MDButton
+                            onClick={handleDeleteTreatmentPlanRecord}
+                            color="primary"
+                            style={{ marginRight: "10px" }}
+                          >
+                            Delete
+                          </MDButton>
+                          <MDButton
+                            onClick={
+                              handleOpenCompleteTreatmentPlanRecordDialog
+                            }
+                            color="warning"
+                          >
+                            Complete
+                          </MDButton>
+                        </>
+                      )}
                     {currentStaffInvitation !== null &&
-                      primaryInvitation.staffId !== loggedInStaff.staffId && (
+                      primaryInvitation !== null &&
+                      primaryInvitation?.staffId !== loggedInStaff.staffId && (
                         <>
                           <MDButton
                             onClick={

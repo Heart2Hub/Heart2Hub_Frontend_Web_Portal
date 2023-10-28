@@ -12,6 +12,9 @@ import CreateNewTreatmentPlanRecordDialog from "./CreateNewTreatmentPlanRecordDi
 import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
 import ViewTreatmentPlanRecordDialog from "./ViewTreatmentPlanRecordDialog";
 import { useEffect } from "react";
+import { treatmentPlanRecordApi } from "api/Api";
+import { parseDateFromLocalDateTime } from "utility/Utility";
+import { parseDateFromLocalDateTimeWithSecs } from "utility/Utility";
 
 function TreatmentPlansBox() {
   const reduxDispatch = useDispatch();
@@ -34,25 +37,10 @@ function TreatmentPlansBox() {
     setSelectedTreatmentPlanRecordToView,
   ] = useState(null);
 
-  // //updating treatment plan records
-  // const [
-  //   openUpdateTreatmentPlanRecordDialog,
-  //   setOpenUpdateTreatmentPlanRecordDialog,
-  // ] = useState(false);
-  // const [
-  //   selectedTreatmentPlanRecordToUpdate,
-  //   setSelectedTreatmentPlanRecordToUpdate,
-  // ] = useState(null);
+  const [listOfTreatmentPlansToDisplay, setListOfTreatmentPlansToDisplay] =
+    useState([]);
 
-  // //deleting treatment plan records
-  // const [
-  //   openDeleteTreatmentPlanRecordDialog,
-  //   setOpenDeleteTreatmentPlanRecordDialog,
-  // ] = useState(false);
-  // const [
-  //   selectedTreatmentPlanRecordToDelete,
-  //   setSelectedTreatmentPlanRecordToDelete,
-  // ] = useState(null);
+  const [listOfInvitations, setListOfInvitations] = useState([]);
 
   //create treatment plan records
   const handleOpenCreateTreatmentPlanRecordDialog = () => {
@@ -73,6 +61,49 @@ function TreatmentPlansBox() {
     setOpenViewTreatmentPlanRecordDialog(false);
     setSelectedTreatmentPlanRecordToView(null);
   };
+
+  const handleSetListOfTreatmentPlansToDisplay = () => {
+    let listOfTPs = [...ehrRecord.listOfTreatmentPlanRecords];
+    if (listOfTPs.length > 1) {
+      listOfTPs.sort(
+        (tp1, tp2) => tp2.treatmentPlanRecordId - tp1.treatmentPlanRecordId
+      );
+    }
+
+    setListOfTreatmentPlansToDisplay(listOfTPs);
+  };
+
+  const handleFetchInvitations = async () => {
+    const response = await treatmentPlanRecordApi.getListOfInvitationsByStaffId(
+      loggedInStaff.staffId
+    );
+    setListOfInvitations(response.data);
+    console.log(response.data);
+  };
+
+  const checkIfInvited = (treatmentPlanId) => {
+    let list = listOfInvitations.filter(
+      (inv) => inv.treatmentPlanRecordId === treatmentPlanId
+    );
+    if (list.length > 0) {
+      if (list[0].isPrimary) {
+        //primary
+        return 1;
+      } else {
+        //invited
+        return 2;
+      }
+      //not invited
+      return 0;
+    }
+
+    return false;
+  };
+
+  useEffect(() => {
+    handleSetListOfTreatmentPlansToDisplay();
+    handleFetchInvitations();
+  }, [ehrRecord]);
 
   return (
     <>
@@ -120,7 +151,7 @@ function TreatmentPlansBox() {
         </MDBox>
         <Divider variant="middle" />
 
-        {ehrRecord.listOfTreatmentPlanRecords.length === 0 ? (
+        {listOfTreatmentPlansToDisplay.length === 0 ? (
           <MDTypography
             variant="h5"
             sx={{
@@ -135,110 +166,123 @@ function TreatmentPlansBox() {
           </MDTypography>
         ) : (
           <Grid container spacing={3} justify="center" alignItems="center">
-            {ehrRecord.listOfTreatmentPlanRecords.map(
-              (treatmentPlan, index) => (
-                <Grid item xs={12} md={6} key={index}>
-                  <Card
-                    style={{
-                      width: "90%",
-                      margin: "auto",
-                      border: "1px solid #e0e0e0",
-                      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
-                      transition: "all 0.3s ease",
-                      marginBottom: "16px",
-                    }}
-                  >
-                    <CardContent>
-                      <Grid container spacing={2}>
-                        <Grid item xs={9}>
-                          <MDTypography
-                            variant="h3"
-                            style={{ marginBottom: "8px" }}
-                          >
-                            {`Plan ${index + 1}`}
-                          </MDTypography>
-                          <MDTypography
-                            variant="h6"
-                            style={{ marginTop: "8px" }}
-                          >
-                            {`Start Date: ${
-                              treatmentPlan.startDate.split(" ")[0]
-                            }`}
-                          </MDTypography>
-
-                          <MDTypography
-                            variant="h6"
-                            style={{ marginTop: "8px" }}
-                          >
-                            End Date:
-                            {treatmentPlan.endDate !== null
-                              ? treatmentPlan.endDate.split(" ")[0]
-                              : "-"}
-                          </MDTypography>
-                          <MDTypography
-                            variant="h6"
-                            style={{ marginTop: "8px" }}
-                          >
-                            {`Treatment Plan Type: ${treatmentPlan.treatmentPlanTypeEnum}`}
-                          </MDTypography>
-                        </Grid>
-                        <Grid item xs={3}>
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              justifyContent: "space-between",
-                              height: "100%",
-                            }}
-                          >
-                            <MDButton
-                              style={{
-                                width: "120px",
-                                marginRight: "20px",
-                                marginBottom: "8px",
-                                marginTop: "15px",
-                              }}
-                              variant="contained"
-                              color="success"
-                              onClick={() =>
-                                handleOpenViewTreatmentPlanRecordDialog(
-                                  treatmentPlan
-                                )
-                              }
+            {listOfTreatmentPlansToDisplay.map((treatmentPlan, index) => (
+              <Grid item xs={12} md={6} key={index}>
+                <Card
+                  style={{
+                    width: "90%",
+                    margin: "auto",
+                    border: "1px solid #e0e0e0",
+                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+                    transition: "all 0.3s ease",
+                    marginBottom: "16px",
+                  }}
+                >
+                  <CardContent>
+                    <Grid container spacing={2}>
+                      <Grid item xs={9}>
+                        <Grid container alignItems="center" spacing={2}>
+                          <Grid item>
+                            <MDTypography
+                              variant="h3"
+                              style={{ marginBottom: "8px" }}
                             >
-                              View
-                            </MDButton>
-
-                            {/* This will be at the bottom */}
-                            <div style={{ textAlign: "left" }}>
-                              <MDTypography
-                                variant="h5"
-                                style={{ marginTop: "8px", fontWeight: "bold" }}
-                              >
-                                Status:
-                                <Chip
-                                  color={
-                                    treatmentPlan.isCompleted
-                                      ? "success"
-                                      : "warning"
-                                  }
-                                  label={
-                                    treatmentPlan.isCompleted
-                                      ? "Completed"
-                                      : "Ongoing"
-                                  }
-                                />
-                              </MDTypography>
-                            </div>
-                          </div>
+                              {`Plan ${treatmentPlan.treatmentPlanRecordId}`}
+                            </MDTypography>
+                          </Grid>
+                          {checkIfInvited(
+                            treatmentPlan.treatmentPlanRecordId
+                          ) == 1 && (
+                            <Grid item>
+                              <Chip
+                                color={"primary"}
+                                label={"primary"}
+                                variant={"outlined"}
+                              />
+                            </Grid>
+                          )}
+                          {checkIfInvited(
+                            treatmentPlan.treatmentPlanRecordId
+                          ) == 2 && (
+                            <Grid item>
+                              <Chip
+                                color={"secondary"}
+                                label={"invited"}
+                                variant={"outlined"}
+                              />
+                            </Grid>
+                          )}
                         </Grid>
-                        {/* )} */}
+
+                        <MDTypography variant="h6" style={{ marginTop: "8px" }}>
+                          {`Start Date: ${
+                            treatmentPlan.startDate.split(" ")[0]
+                          }`}
+                        </MDTypography>
+
+                        <MDTypography variant="h6" style={{ marginTop: "8px" }}>
+                          {`End Date: ${treatmentPlan.endDate.split(" ")[0]}`}
+                        </MDTypography>
+                        <MDTypography variant="h6" style={{ marginTop: "8px" }}>
+                          {`Treatment Plan Type: ${treatmentPlan.treatmentPlanTypeEnum}`}
+                        </MDTypography>
                       </Grid>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              )
-            )}
+                      <Grid item xs={3}>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            height: "100%",
+                          }}
+                        >
+                          <MDButton
+                            style={{
+                              width: "120px",
+                              marginRight: "20px",
+                              marginBottom: "8px",
+                              marginTop: "15px",
+                            }}
+                            variant="outlined"
+                            color="info"
+                            onClick={() =>
+                              handleOpenViewTreatmentPlanRecordDialog(
+                                treatmentPlan
+                              )
+                            }
+                          >
+                            View
+                          </MDButton>
+
+                          {/* This will be at the bottom */}
+                          <div style={{ textAlign: "left" }}>
+                            <MDTypography
+                              variant="h5"
+                              style={{ marginTop: "8px", fontWeight: "bold" }}
+                            >
+                              Status:
+                              <Chip
+                                color={
+                                  treatmentPlan.isCompleted
+                                    ? "success"
+                                    : "warning"
+                                }
+                                label={
+                                  treatmentPlan.isCompleted
+                                    ? "Completed"
+                                    : "Ongoing"
+                                }
+                              />
+                            </MDTypography>
+                          </div>
+                        </div>
+                      </Grid>
+                      {/* )} */}
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
           </Grid>
         )}
       </Card>
