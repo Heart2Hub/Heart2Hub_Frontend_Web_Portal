@@ -28,7 +28,7 @@ import { inventoryApi } from "api/Api";
 import { displayMessage } from "store/slices/snackbarSlice";
 import SelectWrapper from "components/Select";
 
-function ServiceItemManagement() {
+function ServiceManagement() {
     const [departments, setDepartments] = useState([]);
     const [wards, setWards] = useState([]);
     const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
@@ -61,7 +61,7 @@ function ServiceItemManagement() {
     const [data, setData] = useState({
         columns: [
             // { Header: "No.", accessor: "inventoryItemId", width: "10%" },
-            { Header: "Medication Name", accessor: "inventoryItemName", width: "20%" },
+            { Header: "Service Name", accessor: "inventoryItemName", width: "20%" },
             { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
             { Header: "Retail Price ($)", accessor: "retailPricePerQuantity", width: "15%" },
             { Header: "Unit", accessor: "unitId", width: "10%" },
@@ -95,7 +95,7 @@ function ServiceItemManagement() {
     const dataRef = useRef({
         columns: [
             // { Header: "No.", accessor: "inventoryItemId", width: "10%" },
-            { Header: "Equipment Name", accessor: "inventoryItemName", width: "20%" },
+            { Header: "Service Name", accessor: "inventoryItemName", width: "20%" },
             { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
             { Header: "Retail Price ($)", accessor: "retailPricePerQuantity", width: "20%" },
             { Header: "Unit", accessor: "unitId", width: "10%" },
@@ -253,7 +253,7 @@ function ServiceItemManagement() {
                         displayMessage({
                             color: "success",
                             icon: "notification",
-                            title: "Successfully Created Service Item!",
+                            title: "Successfully Created Service!",
                             content: requestBody.inventoryItemName + " created",
                         })
                     );
@@ -384,7 +384,7 @@ function ServiceItemManagement() {
                         displayMessage({
                             color: "success",
                             icon: "notification",
-                            title: "Successfully Updated Consumable Equipment! ",
+                            title: "Successfully Updated Service! ",
                             content: requestBody.inventoryItemName + " updated",
                         })
                     );
@@ -422,7 +422,7 @@ function ServiceItemManagement() {
                         displayMessage({
                             color: "success",
                             icon: "notification",
-                            title: "Successfully Deleted Service Item!",
+                            title: "Successfully Deleted Service!",
                             content: "Service Item with inventoryItemId: " + inventoryItemId + " deleted",
                         })
                     );
@@ -498,7 +498,7 @@ function ServiceItemManagement() {
                                 coloredShadow="info"
                             >
                                 <MDTypography variant="h6" color="white">
-                                    Service Item Table
+                                    Service Table
                                 </MDTypography>
                             </MDBox>
                             <MDBox mx={2} mt={3} px={2}>
@@ -508,7 +508,7 @@ function ServiceItemManagement() {
                                     color="primary"
                                     onClick={() => setIsModalOpen(true)}
                                 >
-                                    Create New Service Item
+                                    Create New Service
                                     <Icon>add</Icon>
                                 </MDButton>
                             </MDBox>
@@ -656,4 +656,4 @@ function ServiceItemManagement() {
 
 }
 
-export default ServiceItemManagement;
+export default ServiceManagement;
