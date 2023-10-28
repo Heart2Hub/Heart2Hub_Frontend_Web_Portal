@@ -100,7 +100,9 @@ function AssignAppointmentDialog({
       );
     } else if (swimlaneName === "Pharmacy") {
       setListOfApplicableWorkingStaff(
-        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "PHARMACIST")
+        listOfWorkingStaff.filter(
+          (staff) => staff.staffRoleEnum === "PHARMACIST"
+        )
       );
     } else {
       // console.log("No Filter result of applicable working staff");
@@ -138,7 +140,7 @@ function AssignAppointmentDialog({
     handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
   }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
 
-  console.log(listOfApplicableWorkingStaff)
+  console.log(listOfApplicableWorkingStaff);
 
   return (
     <>

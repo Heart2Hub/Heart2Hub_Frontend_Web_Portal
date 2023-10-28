@@ -370,9 +370,11 @@ function KanbanBoard() {
 
         //reset
         setSelectedAppointmentToAssign(null);
+        setStep(1);
 
         dialogResolver.current(true); // Resolve promise if user confirms
         dialogResolver.current = null; // Clear it out after using
+
         // }
       } catch (error) {
         console.log(error);
