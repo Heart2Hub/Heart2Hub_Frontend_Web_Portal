@@ -24,7 +24,8 @@ import {
   Dialog,
   DialogContent,
   DialogActions,
-  DialogContentText
+  DialogContentText,
+  Autocomplete
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
@@ -144,11 +145,10 @@ function AppointmentTicketModal({
 
   //Only for Discharge ticket, will create an Invoice after discharfe
   const handleDischarge = async () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to discharge the patient?"
-    );
+    // const confirmed = window.confirm(
+    //   "Are you sure you want to discharge the patient?"
+    // );
 
-    if (confirmed) {
       try {
         await transactionItemApi.checkout(
           selectedAppointment.patientId,
@@ -178,7 +178,7 @@ function AppointmentTicketModal({
           })
         );
       }
-    }
+    
   };
 
   // Fetch lists of all medications and service items from the API
@@ -345,27 +345,29 @@ function AppointmentTicketModal({
 
   const renderMedicationsDropdown = () => {
     return (
-      <Box style={{ width: "100%" }}>
-        <InputLabel id="medication-label"> Select Medication</InputLabel>
-        <Select
-          onChange={(e) => setSelectedMedication(e.target.value)}
-          style={{ width: "50%" }}
+      <Box style={{ width: "100%", display: "flex", alignItems: "center" }}>
+        <Autocomplete
+          disablePortal
+          id="medication-label"
+          options={medications}
+          getOptionLabel={(option) => option.inventoryItemName}
+          style={{ width: "80%" }}
           sx={{ lineHeight: "3em" }}
-        >
-          {medications.map((medication) => (
-            <MenuItem key={medication.inventoryItemId} value={medication}>
-              {medication.inventoryItemName}
-            </MenuItem>
-          ))}
-        </Select>
+          renderInput={(params) => <TextField {...params} label="Select Medication" />}
+          value={selectedMedication}
+          onChange={(event, newValue) => {
+            setSelectedMedication(newValue);
+          }}
+        />
         <TextField
           label="Quantity"
           type="number"
           value={selectedMedicationQuantity}
           onChange={(e) => setSelectedMedicationQuantity(e.target.value)}
-          style={{ width: "10%", marginLeft: 20 }}
+          style={{ width: "20%", marginLeft: 10 }}
         />
-        <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
+        <ListItem
+          sx={{ display: "flex", justifyContent: "flex-end" }}>
           <MDButton
             onClick={() => handleAddMedicationToPatient(selectedMedication)}
             variant="gradient"
@@ -373,7 +375,9 @@ function AppointmentTicketModal({
           >
             Add Medication
           </MDButton>
-        </Box>
+        </ListItem>
+        {/* <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}> */}
+        {/* </Box> */}
       </Box>
     );
   };
@@ -1066,9 +1070,9 @@ function AppointmentTicketModal({
         assigningToSwimlane={columnName}
       />
     </>
-    
+
   );
-  
+
 }
 
 export default AppointmentTicketModal;
