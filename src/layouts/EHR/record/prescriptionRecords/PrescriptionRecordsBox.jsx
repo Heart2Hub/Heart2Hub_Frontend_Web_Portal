@@ -31,7 +31,10 @@ import { selectEHRRecord } from "store/slices/ehrSlice";
 import { selectStaff } from "store/slices/staffSlice";
 import { displayMessage } from "store/slices/snackbarSlice";
 import { prescriptionRecordApi, inventoryApi } from "api/Api";
-
+import {
+	parseDateFromLocalDateTime,
+	formatDateToYYYYMMDD,
+} from "utility/Utility";
 
 
 function PrescriptionRecordsBox() {
@@ -99,17 +102,31 @@ function PrescriptionRecordsBox() {
 				);
 				return;
 			}
-			const currentDate = new Date().toLocaleString();
+
+			// const options = {
+			// 	day: '2-digit',
+			// 	month: '2-digit',
+			// 	year: 'numeric',
+			// 	hour: '2-digit',
+			// 	minute: '2-digit',
+			// 	second: '2-digit',
+			// 	hour12: false, // Use 24-hour format
+			// };
+			// const currentDate = new Date().toLocaleString('en-GB', options);
+			const currentDate = new Date()
 
 			const date = new Date(newRecord.expirationDate);
+			console.log(currentDate);
+
 			const formattedDate = `${("0" + date.getDate()).slice(-2)}/${("0" + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}, 00:00:00`;
+			const formattedCurrentDate = `${("0" + currentDate.getDate()).slice(-2)}/${("0" + (currentDate.getMonth() + 1)).slice(-2)}/${currentDate.getFullYear()}, 00:00:00`;
 
 			console.log(selectedInventoryItem);
 
 			// Update the newRecord object with the required fields
 			const updatedRecord = {
 				...newRecord,
-				createdDate: currentDate,
+				createdDate: formattedCurrentDate,
 				expirationDate: formattedDate,
 				prescribedBy: `Doctor ${loggedInStaff.firstname} ${loggedInStaff.lastname}`,
 				prescriptionStatusEnum: "ONGOING"
@@ -314,7 +331,7 @@ function PrescriptionRecordsBox() {
 		const [year, month, day] = expirationDateArray;
 		const formattedDate = new Date(year, month - 1, day).toLocaleDateString('en-GB');
 		return formattedDate;
-	    }
+	}
 	useEffect(() => {
 		fetchInventoryItems();
 		fetchPrescriptionRecords();
@@ -342,7 +359,7 @@ function PrescriptionRecordsBox() {
 					)}
 				</Box>
 				{prescriptionRecords.map((pr, index) => {
-					
+
 
 					return (
 						<Card key={index} variant="outlined" style={{ marginBottom: 10, backgroundColor: "#f8f8f8" }}>
@@ -552,7 +569,7 @@ function PrescriptionRecordsBox() {
 						label="Expiration Date"
 						type="date"
 						value={editedRecord ? editedRecord.expirationDate : ''}
-						onChange={(e) => setEditedRecord({ ...editedRecord, expirationDate: e.target.value })}						InputLabelProps={{
+						onChange={(e) => setEditedRecord({ ...editedRecord, expirationDate: e.target.value })} InputLabelProps={{
 							shrink: true,
 						}}
 						fullWidth
