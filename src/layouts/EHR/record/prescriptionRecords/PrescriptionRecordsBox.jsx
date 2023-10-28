@@ -45,6 +45,7 @@ function PrescriptionRecordsBox() {
 	const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 	const [selectedRecord, setSelectedRecord] = useState(null);
 	const [inventoryItems, setInventoryItems] = useState([]);
+	const [inventoryItemsAllergy, setInventoryItemsAllergy] = useState([]);
 	const [editedRecord, setEditedRecord] = useState(null);
 	const [prescriptionRecords, setPrescriptionRecords] = useState([]);
 	const [selectedInventoryItem, setSelectedInventoryItem] = useState("");
@@ -102,6 +103,23 @@ function PrescriptionRecordsBox() {
 				);
 				return;
 			}
+
+
+			const existsInAllergy = inventoryItemsAllergy.some(
+				(item) => item.inventoryItemId === selectedInventoryItem
+			    );
+		    
+			    if (!existsInAllergy) {
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Error",
+						content: "Patient has allergy restrictions from selected Medication.",
+					})
+				);
+				return;	
+			    }
 
 			// const options = {
 			// 	day: '2-digit',
@@ -321,8 +339,13 @@ function PrescriptionRecordsBox() {
 
 	const fetchInventoryItems = async () => {
 		try {
-			const response = await inventoryApi.getAllMedicationsByAllergy(ehrRecord.electronicHealthRecordId);
+			const response = await inventoryApi.getAllMedication();
 			setInventoryItems(response.data);
+			const response2 = await inventoryApi.getAllMedicationsByAllergy(ehrRecord.electronicHealthRecordId);
+			setInventoryItemsAllergy(response2.data);
+
+			console.log(response.data)
+			console.log(response2.data)
 		} catch (error) {
 			console.error("Error fetching inventory items: ", error);
 		}
