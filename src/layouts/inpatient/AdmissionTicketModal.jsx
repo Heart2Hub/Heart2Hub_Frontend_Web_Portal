@@ -222,7 +222,7 @@ function AdmissionTicketModal({
   };
 
   const handleOpenAssignNurseDialog = () => {
-    if (!selectedAppointment.arrived) {
+    if (!arrived) {
       reduxDispatch(
         displayMessage({
           color: "warning",
