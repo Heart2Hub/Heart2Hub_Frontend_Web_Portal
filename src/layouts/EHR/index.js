@@ -16,6 +16,7 @@ import {
   ListItemSecondaryAction,
   List,
   Divider,
+  Badge,
 } from "@mui/material";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
@@ -51,6 +52,8 @@ function EHR() {
 
   const [listOfUnreadInvitations, setListOfUnreadInvitations] = useState([]);
   const [listOfReadInvitations, setListOfReadInvitations] = useState([]);
+
+  const [badgeCount, setBadgeCount] = useState(0);
 
   //for opening the eyeball
   const [data, setData] = useState({
@@ -347,8 +350,7 @@ function EHR() {
     setIsLoading(false);
   };
 
-  const handleOpenInvitationDialog = async () => {
-    setInvitationOpen(true);
+  const fetchInvitations = async () => {
     const response = await treatmentPlanRecordApi.getListOfInvitationsByStaffId(
       loggedInStaff.staffId
     );
@@ -356,13 +358,19 @@ function EHR() {
     const listOfAllInvitations = response.data.filter(
       (inv) => inv.isPrimary === false
     );
-    const listOfReadInvites = listOfAllInvitations.filter((inv) => inv.isRead);
-    const listOfUnreadInvites = listOfAllInvitations.filter(
-      (inv) => !inv.isRead
-    );
+    const listOfReadInvites = listOfAllInvitations
+      .filter((inv) => inv.isRead)
+      .sort((inv1, inv2) => inv2.invitationId - inv1.invitationId);
+    const listOfUnreadInvites = listOfAllInvitations
+      .filter((inv) => !inv.isRead)
+      .sort((inv1, inv2) => inv2.invitationId - inv1.invitationId);
 
     setListOfReadInvitations(listOfReadInvites);
     setListOfUnreadInvitations(listOfUnreadInvites);
+  };
+
+  const handleOpenInvitationDialog = () => {
+    setInvitationOpen(true);
   };
 
   const handleViewSelectedInvitationEHR = async (invitation) => {
@@ -432,6 +440,7 @@ function EHR() {
 
   useEffect(() => {
     fetchData();
+    fetchInvitations();
   }, []);
 
   return (
@@ -442,11 +451,22 @@ function EHR() {
       ) : (
         <>
           <MDButton
-            color="primary"
+            color="info"
             sx={{ float: "right" }}
             onClick={handleOpenInvitationDialog}
           >
-            My Invitations
+            <Badge
+              badgeContent={listOfUnreadInvitations.length}
+              color="secondary"
+              invisible={listOfUnreadInvitations.length === 0}
+              anchorOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+              sx={{ "& .MuiBadge-badge": { top: -15, right: -15 } }}
+            >
+              My Invitations
+            </Badge>
           </MDButton>
           <MDBox pt={6} pb={3}>
             <Grid container spacing={6}>
@@ -585,6 +605,7 @@ function EHR() {
       >
         <DialogTitle>My Invitations</DialogTitle>
         <DialogContent>
+          <MDTypography variant="h6">Unread Invitations:</MDTypography>
           <List
             style={{
               maxHeight: "300px",
@@ -597,7 +618,6 @@ function EHR() {
             }}
           >
             {/* for unread invitations */}
-
             {listOfUnreadInvitations.length === 0 && (
               <MDBox
                 display="flex"
@@ -643,6 +663,7 @@ function EHR() {
             ))}
 
             <Divider />
+            <MDTypography variant="h6">Viewed Invitations:</MDTypography>
 
             {/* for read invitations */}
             {listOfReadInvitations.length === 0 && (
@@ -657,6 +678,7 @@ function EHR() {
                 <MDTypography>You have no read invitations</MDTypography>
               </MDBox>
             )}
+
             {listOfReadInvitations.map((invitation, index) => (
               <ListItem key={index} divider>
                 <Grid container alignItems="center" spacing={2}>
