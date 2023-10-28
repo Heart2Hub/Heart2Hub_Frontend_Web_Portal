@@ -483,7 +483,7 @@ function AdmissionTicketModal({
                     </MDButton>
                   </MDTypography>
                 </ListItem>
-                <ListItem>
+                {/* <ListItem>
                   <MDTypography variant="h5" gutterBottom>
                     Attending Doctor :
                   </MDTypography>
@@ -496,15 +496,15 @@ function AdmissionTicketModal({
                       ? `Dr. ${assignedDoctor.firstname} ${assignedDoctor.lastname}`
                       : "No Attending Doctor"}
                   </MDTypography>
-                  {/* <MDButton
+                  <MDButton
                     disabled={loading}
                     onClick={handleOpenAssignDialog}
                     variant="gradient"
                     color="primary"
                   >
                     Assign Doctor
-                  </MDButton> */}
-                </ListItem>
+                  </MDButton>
+                </ListItem> */}
                 <ListItem>
                   <MDTypography variant="h5" gutterBottom>
                     Attending Nurse :
