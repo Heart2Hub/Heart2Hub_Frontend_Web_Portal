@@ -521,11 +521,11 @@ function PharmacyAdminKanbanBoard() {
             <Icon>add</Icon>
         </MDButton>
       </Box>
-      <CreateAppointmentModal
+      {/* <CreateAppointmentModal
         isOpen={isModalOpen}
         onClose={closeModal}
         onAppointmentCreated={handleAppointmentCreated}
-      />
+      /> */}
       <MDBox sx={{ display: "flex", flexDirection: "row", width: "200%" }}>
         <StaffListSidePanel
           handleSelectStaffToFilter={handleSelectStaffToFilter}
