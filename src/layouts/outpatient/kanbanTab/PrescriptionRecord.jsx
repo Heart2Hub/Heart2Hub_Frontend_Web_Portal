@@ -30,6 +30,7 @@ import { prescriptionRecordApi, inventoryApi } from "api/Api";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import MDButton from "components/MDButton";
+import dayjs from 'dayjs'
 
 
 const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePageRefresh }) => {
@@ -84,7 +85,7 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 			case "INPATIENT_OVERDUE":
 				return "red";
 			default:
-				return "black";
+				return "green";
 		}
 	};
 
@@ -398,15 +399,16 @@ const PrescriptionDialog = ({ open, onClose, electronicHealthRecordId, handlePag
 										<b>Medication Quantity:</b> {prescriptionRecord.medicationQuantity}
 									</div> */}
 											<div>
-												<b>Dosage:</b> {prescriptionRecord.dosage}
+												<b>Quantity:</b> {prescriptionRecord.dosage}
 											</div>
 											<div>
 												<b>Description:</b> {prescriptionRecord.description}
 											</div>
 											<div>
-												<b>Comments:</b> {prescriptionRecord.comments}
+												<b>Dosage Comments:</b> {prescriptionRecord.comments}
 											</div>
 											<div><b>Prescribed By:</b> {prescriptionRecord.prescribedBy}</div>
+											<div><b>Last Collect Date:</b> {prescriptionRecord.lastCollectDate ? dayjs(prescriptionRecord.lastCollectDate, "YYYY-MM-DD HH:mm:ss").format("DD/MM/YYYY") : "-"}</div>
 											<div>
 												<b>Prescription Status:</b>{" "}
 												{renderStatusWithColor(prescriptionRecord.prescriptionStatusEnum)}

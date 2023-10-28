@@ -31,7 +31,10 @@ import { selectEHRRecord } from "store/slices/ehrSlice";
 import { selectStaff } from "store/slices/staffSlice";
 import { displayMessage } from "store/slices/snackbarSlice";
 import { prescriptionRecordApi, inventoryApi } from "api/Api";
-
+import {
+	parseDateFromLocalDateTime,
+	formatDateToYYYYMMDD,
+} from "utility/Utility";
 
 
 function PrescriptionRecordsBox() {
@@ -99,16 +102,34 @@ function PrescriptionRecordsBox() {
 				);
 				return;
 			}
-			const currentDate = new Date().toLocaleString();
+
+			// const options = {
+			// 	day: '2-digit',
+			// 	month: '2-digit',
+			// 	year: 'numeric',
+			// 	hour: '2-digit',
+			// 	minute: '2-digit',
+			// 	second: '2-digit',
+			// 	hour12: false, // Use 24-hour format
+			// };
+			// const currentDate = new Date().toLocaleString('en-GB', options);
+			const currentDate = new Date()
+
+			const date = new Date(newRecord.expirationDate);
+			console.log(currentDate);
+
+			const formattedDate = `${("0" + date.getDate()).slice(-2)}/${("0" + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}, 00:00:00`;
+			const formattedCurrentDate = `${("0" + currentDate.getDate()).slice(-2)}/${("0" + (currentDate.getMonth() + 1)).slice(-2)}/${currentDate.getFullYear()}, 00:00:00`;
 
 			console.log(selectedInventoryItem);
 
 			// Update the newRecord object with the required fields
 			const updatedRecord = {
 				...newRecord,
-				createdDate: currentDate,
+				createdDate: formattedCurrentDate,
+				expirationDate: formattedDate,
 				prescribedBy: `Doctor ${loggedInStaff.firstname} ${loggedInStaff.lastname}`,
-				prescriptionStatusEnum: "PENDING"
+				prescriptionStatusEnum: "ONGOING"
 			};
 			console.log(updatedRecord);
 
@@ -206,18 +227,18 @@ function PrescriptionRecordsBox() {
 
 	const getStatusColor = (status) => {
 		switch (status) {
-			case "COLLECTED":
+			case "ONGOING":
 				return "green";
-			case "UNCOLLECTED":
+			case "EXPIRED":
 				return "red";
-			case "PENDING":
-				return "orange";
-			case "INPATIENT_TAKEN":
-				return "green";
-			case "INPATIENT_OVERDUE":
-				return "red";
+			// case "PENDING":
+			// 	return "orange";
+			// case "INPATIENT_TAKEN":
+			// 	return "green";
+			// case "INPATIENT_OVERDUE":
+			// 	return "red";
 			default:
-				return "black";
+				return "green";
 		}
 	};
 
@@ -251,7 +272,6 @@ function PrescriptionRecordsBox() {
 			dosage: record.dosage,
 			description: record.description,
 			comments: record.comments,
-			prescriptionStatusEnum: record.prescriptionStatusEnum
 		});
 		setOpenEditDialog(true);
 	};
@@ -311,7 +331,7 @@ function PrescriptionRecordsBox() {
 		const [year, month, day] = expirationDateArray;
 		const formattedDate = new Date(year, month - 1, day).toLocaleDateString('en-GB');
 		return formattedDate;
-	    }
+	}
 	useEffect(() => {
 		fetchInventoryItems();
 		fetchPrescriptionRecords();
@@ -339,7 +359,7 @@ function PrescriptionRecordsBox() {
 					)}
 				</Box>
 				{prescriptionRecords.map((pr, index) => {
-					
+
 
 					return (
 						<Card key={index} variant="outlined" style={{ marginBottom: 10, backgroundColor: "#f8f8f8" }}>
@@ -356,13 +376,13 @@ function PrescriptionRecordsBox() {
               <b>Medication Quantity:</b> {pr.medicationQuantity}
             </div> */}
 									<div>
-										<b>Dosage:</b> {pr.dosage}
+										<b>Quantity:</b> {pr.dosage}
 									</div>
 									<div>
 										<b>Description:</b> {pr.description}
 									</div>
 									<div>
-										<b>Comments:</b> {pr.comments}
+										<b>Dosage Comments:</b> {pr.comments}
 									</div>
 									<div><b>Prescribed By:</b> {pr.prescribedBy}</div>
 									<div>
@@ -447,7 +467,7 @@ function PrescriptionRecordsBox() {
 						margin="normal"
 					/> */}
 					<TextField
-						label="Dosage"
+						label="Quantity"
 						type="number"
 						value={newRecord.dosage}
 						onChange={(e) => handleCreateFieldChange("dosage", e.target.value)}
@@ -462,7 +482,7 @@ function PrescriptionRecordsBox() {
 						margin="normal"
 					/>
 					<TextField
-						label="Comments"
+						label="Dosage Comments"
 						value={newRecord.comments}
 						onChange={(e) => handleCreateFieldChange("comments", e.target.value)}
 						fullWidth
@@ -505,7 +525,7 @@ function PrescriptionRecordsBox() {
 					<Button onClick={handleCloseForm}>Cancel</Button>
 					<Button onClick={() => {
 						handleCreatePrescription();
-						clearFormFields();
+						//clearFormFields();
 					}} color="primary">
 						Create
 					</Button>
@@ -523,7 +543,7 @@ function PrescriptionRecordsBox() {
 						margin="normal"
 					/> */}
 					<TextField
-						label="Dosage"
+						label="Quantity"
 						type="number"
 						value={editedRecord ? editedRecord.dosage : ''}
 						onChange={(e) => setEditedRecord({ ...editedRecord, dosage: e.target.value })}
@@ -538,7 +558,7 @@ function PrescriptionRecordsBox() {
 						margin="normal"
 					/>
 					<TextField
-						label="Comments"
+						label="Dosage Comments"
 						value={editedRecord ? editedRecord.comments : ''}
 						onChange={(e) => setEditedRecord({ ...editedRecord, comments: e.target.value })}
 						fullWidth
@@ -549,13 +569,13 @@ function PrescriptionRecordsBox() {
 						label="Expiration Date"
 						type="date"
 						value={editedRecord ? editedRecord.expirationDate : ''}
-						onChange={(e) => setEditedRecord({ ...editedRecord, expirationDate: e.target.value })}						InputLabelProps={{
+						onChange={(e) => setEditedRecord({ ...editedRecord, expirationDate: e.target.value })} InputLabelProps={{
 							shrink: true,
 						}}
 						fullWidth
 						margin="normal"
 					/>
-					<InputLabel>Select Prescription Status</InputLabel>
+					{/* <InputLabel>Select Prescription Status</InputLabel>
 					<Select
 						value={editedRecord ? editedRecord.prescriptionStatusEnum : ''}
 						onChange={(e) => setEditedRecord({ ...editedRecord, prescriptionStatusEnum: e.target.value })}
@@ -569,7 +589,7 @@ function PrescriptionRecordsBox() {
 								{option}
 							</MenuItem>
 						))}
-					</Select>
+					</Select> */}
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={handleEditDialogClose}>Cancel</Button>

@@ -68,7 +68,7 @@ function CreateNewTicket({ isOpen, onClose, onAppointmentCreated }) {
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
-    width: "50%",
+    width: "65%",
     bgcolor: "background.paper",
     boxShadow: 24,
     p: 4,
@@ -180,7 +180,8 @@ function CreateNewTicket({ isOpen, onClose, onAppointmentCreated }) {
             medicationQuantity: record.medicationQuantity,
             dosage: record.dosage,
             prescribedBy: record.prescribedBy,
-            lastCollectDate: record.lastCollectDate
+            lastCollectDate: record.lastCollectDate,
+            prescriptionStatusEnum: record.prescriptionStatusEnum
         }));
 
         // Update the 'data' state with the mapped data
@@ -222,7 +223,7 @@ function CreateNewTicket({ isOpen, onClose, onAppointmentCreated }) {
       {
         Header: "Medication Name",
         accessor: "medicationName",
-        width: "20%",
+        width: "15%",
       },
       { 
         Header: "Medication Quantity", 
@@ -237,12 +238,17 @@ function CreateNewTicket({ isOpen, onClose, onAppointmentCreated }) {
       { 
         Header: "Prescribed By", 
         accessor: "prescribedBy", 
-        width: "20%" 
+        width: "15%" 
       },
       { 
         Header: "Last Collect Date", 
         accessor: "lastCollectDate", 
-        width: "20%" 
+        width: "15%" 
+      },
+      { 
+        Header: "Prescription Status", 
+        accessor: "prescriptionStatusEnum", 
+        width: "15%" 
       }
     ],
     rows: [],
@@ -287,6 +293,7 @@ function CreateNewTicket({ isOpen, onClose, onAppointmentCreated }) {
           {isNricValid && ehr &&
           <div>
             <b>Patient:</b> {ehr.firstName} {ehr.lastName}
+            {data.length === 0 && "Patient does not have any prescription records."}
             <DataTable table={data} />
           </div>}
           {isNricValid && <TextareaAutosize
