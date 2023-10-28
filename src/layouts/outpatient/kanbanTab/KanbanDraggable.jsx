@@ -39,6 +39,46 @@ function KanbanDraggable({
     }
   };
 
+  // async function getTimeDifferenceFromAPI(appointmentId) {
+  //   try {
+  //     const response = await appointmentApi.findAppointmentTimeDiff(
+  //       appointmentId
+  //     );
+
+  //     console.log(response.data);
+  //     return response.data; // Assuming the API returns the time difference in minutes
+  //   } catch (error) {
+  //     console.error("Error fetching time difference from API:", error);
+  //     return 0; // Default to 0 in case of an error
+  //   }
+  // }
+
+  // //const timeDifference = getTimeDifferenceFromAPI(appointment.appointmentId);
+  // console.log(appointment.appointmentId + " :" + timeDifference)
+
+  // const getPriorityColor = (appointment, timeDifference) => {
+  //   if (appointment.priorityEnum === "LOW") {
+  //     if (timeDifference >= 40) {
+  //       return "red";
+  //     } else if (timeDifference >= 20) {
+  //       return "orange";
+  //     } else {
+  //       return "green";
+  //     }
+  //   } else if (appointment.priorityEnum === "MEDIUM") {
+  //     if (timeDifference >= 40) {
+  //       return "red";
+  //     } else {
+  //       return "orange";
+  //     }
+  //   } else if (appointment.priorityEnum === "HIGH") {
+  //     return "red";
+  //   }
+  // };
+
+  //let priorityColor = getPriorityColor(appointment, timeDifference);
+  // console.log(appointment.appointmentId)
+
   const handleCloseModal = () => {
     setOpenModal(false);
   };
@@ -49,6 +89,15 @@ function KanbanDraggable({
   };
 
   useEffect(() => {
+    // async function fetchTimeDifference() {
+    //   const difference = await getTimeDifferenceFromAPI(
+    //     appointment.appointmentId
+    //   );
+    //   setTimeDifference(difference);
+    //   const priorityColor2 = getPriorityColor(appointment, difference);
+    //   priorityColor.current = priorityColor2;
+    // }
+    // fetchTimeDifference();
     handleGetProfileImage();
   }, [appointment]);
 
@@ -74,6 +123,7 @@ function KanbanDraggable({
               ref={provided.innerRef}
               elevation={3}
               raised={true}
+              // style={{ borderLeft: `6px solid ${priorityColor}` }}
             >
               <CardContent>
                 <div className="draggable-icons">
