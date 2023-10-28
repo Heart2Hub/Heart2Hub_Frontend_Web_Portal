@@ -267,13 +267,7 @@ function LiveQueue() {
 
   return (
     <>
-        {/* <MDButton 
-            variant="contained" 
-            color="primary" 
-            onClick={() => setIsDialogOpen(true)}>
-            Create New Ticket
-            <Icon>add</Icon>
-        </MDButton><br/><br/> */}
+        <Typography>Queue</Typography>
         <Box sx={{ 
             width: "100%", 
             height: "275px",
@@ -281,10 +275,9 @@ function LiveQueue() {
             backgroundColor: "#292D32",
             display: "flex",
             alignItems: "center",
-            borderTopLeftRadius: "50px",
-            borderBottomLeftRadius: "50px" 
+            borderRadius: "10px"
         }}>
-            
+            {unassignedTickets.length === 0 && <Typography sx={{margin: "auto"}}color="common.white"><b>There are no tickets in the queue!</b></Typography>}
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 {unassignedTickets.map((ticket, index) => 
                     index === 0 ?
@@ -440,11 +433,11 @@ function LiveQueue() {
                                         </MDButton>
                                     </> : 
                                     <>
-                                        <Button 
+                                        {/* <Button 
                                             size="small"
                                             onClick={() => handleOpenModal(ticket)}>
                                             View
-                                        </Button>
+                                        </Button> */}
                                         {/* {ticket.swimlaneStatusEnum === "PHARMACY" ?
                                         <MDButton 
                                             size="small"

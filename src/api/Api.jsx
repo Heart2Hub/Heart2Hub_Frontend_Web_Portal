@@ -90,6 +90,11 @@ export const staffApi = {
       `${REST_ENDPOINT}/staff/getStaffsWorkingInCurrentShiftAndWard?wardName=${wardName}`
     );
   },
+  getStaffsInUnit(unit) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/staff/getStaffsInUnit?&unit=${unit}`
+    );
+  },
 };
 
 export const departmentApi = {
@@ -610,14 +615,14 @@ export const appointmentApi = {
     );
   },
   createReferral(
-    prevAppointmentId,
     description,
     bookedDate,
+    patientUsername,
     departmentName,
     staffUsername
   ) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/appointment/createReferral?prevAppointmentId=${prevAppointmentId}&description=${description}&bookedDate=${bookedDate}&departmentName=${departmentName}&staffUsername=${staffUsername}`
+      `${REST_ENDPOINT}/appointment/createReferral?description=${description}&bookedDate=${bookedDate}&patientUsername=${patientUsername}&departmentName=${departmentName}&staffUsername=${staffUsername}`
     );
   },
   viewPharmacyTickets() {
