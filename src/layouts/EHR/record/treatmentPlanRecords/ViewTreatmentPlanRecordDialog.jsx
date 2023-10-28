@@ -94,6 +94,7 @@ function ViewTreatmentPlanRecordDialog({
   };
   const handleCloseCompleteTreatmentPlanRecordDialog = () => {
     setOpenCompleteTreatmentPlanRecordDialog(false);
+    handleCloseViewTreatmentPlanRecordDialog();
   };
 
   //view invitations
