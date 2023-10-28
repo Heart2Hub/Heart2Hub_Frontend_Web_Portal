@@ -934,6 +934,8 @@ function AppointmentTicketModal({
                   handlePageRefresh={handlePageRefresh}
                 />
                 <br></br>
+                {loggedInStaff.staffRoleEnum !== "ADMIN" ?
+                <>
                 <List>
                   <ListItem>
                     <MDTypography variant="h5" gutterBottom>
@@ -951,6 +953,7 @@ function AppointmentTicketModal({
                   </ListItem>
                   <ListItem>{renderServicesDropdown()}</ListItem>
                 </List>
+                </> : null}
                 <List>
                   <ListItem>
                     <MDTypography variant="h5" gutterBottom>
@@ -991,6 +994,7 @@ function AppointmentTicketModal({
                                 <TableCell align="right">
                                   Quantity: {item.transactionItemQuantity}
                                 </TableCell>
+                                {loggedInStaff.staffRoleEnum !== "ADMIN" ?
                                 <TableCell align="right">
                                   <Button
                                     variant="contained"
@@ -1003,7 +1007,7 @@ function AppointmentTicketModal({
                                   >
                                     Delete
                                   </Button>
-                                </TableCell>
+                                </TableCell> : null}
                               </TableRow>
                             ))}
                           </TableBody>
