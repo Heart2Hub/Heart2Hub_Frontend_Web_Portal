@@ -29,13 +29,18 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import moment from "moment";
 import AdmissionCard from "./AdmissionCard";
 
-import "@bitnoi.se/react-scheduler/dist/style.css";
-import { Scheduler, SchedulerData } from "@bitnoi.se/react-scheduler";
 import NoAdmissionCard from "./NoAdmissionCard";
 
 function Inpatient() {
   const staff = useSelector(selectStaff);
   const localizer = momentLocalizer(moment);
+
+  const currentHour = new Date().getHours();
+  const customDayView = {
+    start: moment().hour(currentHour),
+    end: moment().add(1, "day").hour(22), // 10 pm the next day
+  };
+
   const reduxDispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
