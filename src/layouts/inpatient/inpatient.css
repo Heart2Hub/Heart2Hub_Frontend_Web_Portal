@@ -202,12 +202,12 @@
   width: 200px;
 }
 
-.rbc-event,
-.rbc-event.rbc-selected {
+.admission-calendar .rbc-event,
+.admission-calendar .rbc-event.rbc-selected {
   background-color: #fff;
 }
 
-.rbc-row-content .rbc-row:nth-child(2) {
+.admission-calendar .rbc-row-content .rbc-row:nth-child(2) {
   display: none;
 }
 

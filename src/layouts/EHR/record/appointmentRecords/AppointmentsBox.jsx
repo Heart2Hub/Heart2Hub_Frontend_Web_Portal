@@ -16,11 +16,11 @@ import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
-import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs from 'dayjs'
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
 
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
@@ -56,13 +56,14 @@ function AppointmentsBox() {
   const ehrRecord = useSelector(selectEHRRecord);
   const loggedInStaff = useSelector(selectStaff);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+  const [pastAppointments, setPastAppointments] = useState([]);
   const [isReferralModalOpen, setIsReferralModalOpen] = useState(false);
   const [referralFormData, setReferralFormData] = useState({
     prevAppointmentId: "",
     description: "",
     bookedDateTime: "",
     departmentName: "",
-    staffUsername: ""
+    staffUsername: "",
   });
   const [staffList, setStaffList] = useState([]);
   const [selectedDate, setSelectedDate] = useState();
@@ -81,14 +82,14 @@ function AppointmentsBox() {
 
   const handleOpenReferralModal = () => {
     setIsReferralModalOpen(true);
-  }
+  };
 
   const handleCloseReferralModal = () => {
     setSelectedDate(null);
-    referralFormData.departmentName = null
-    setSelectedStaffRole(null)
+    referralFormData.departmentName = null;
+    setSelectedStaffRole(null);
     setIsReferralModalOpen(false);
-  }
+  };
 
   const handlefetchAppointmentData = async () => {
     try {
@@ -96,25 +97,31 @@ function AppointmentsBox() {
         ehrRecord.username
       );
       const allAppointments = response.data;
-      let temp = []
+      let temp = [];
+      let tempPast = [];
       // console.log(allAppointments)
       // setUpcomingAppointments([]);
       for (const appointment of allAppointments) {
-        console.log(appointment)
-        if (temp.length === 0) {
-          temp.push(appointment);
-        }
-        else {
-          let canAdd = true;
-          for (const existing in temp) {
-            if (existing.appointmentId === appointment.appointmentId) {
-              canAdd = false;
+        console.log(appointment);
+        if (appointment.swimlaneStatusEnum !== "DONE") {
+          if (temp.length === 0) {
+            temp.push(appointment);
+          } else {
+            let canAdd = true;
+            for (const existing in temp) {
+              if (existing.appointmentId === appointment.appointmentId) {
+                canAdd = false;
+              }
+            }
+            if (canAdd) {
+              temp.push(appointment);
             }
           }
-          if (canAdd) temp.push(appointment);
+          setUpcomingAppointments(temp);
+        } else {
+          // DO THIS FOR SR4
         }
       }
-      setUpcomingAppointments(temp);
     } catch (error) {
       console.error("Error fetching appointment data:", error);
     }
@@ -221,13 +228,16 @@ function AppointmentsBox() {
 
   const convertToDate = (dateString, timeString) => {
     let startTime;
-    if (timeString.startTime.slice(-2) === "AM" || timeString.startTime.slice(-2) === "PM") {
+    if (
+      timeString.startTime.slice(-2) === "AM" ||
+      timeString.startTime.slice(-2) === "PM"
+    ) {
       // Extract start times and convert to 24-hour format for comparison
       startTime = timeString.startTime.slice(0, -2).trim();
     } else {
       startTime = timeString.startTime;
     }
-    const origDateTime = dayjs(dateString, 'DD/MM/YYYY').format("YYYY-MM-DD");
+    const origDateTime = dayjs(dateString, "DD/MM/YYYY").format("YYYY-MM-DD");
     const newDateStr = `${origDateTime}T${startTime}:00`;
     return newDateStr;
   };
@@ -235,14 +245,25 @@ function AppointmentsBox() {
   const handleCreateReferral = async () => {
     const dateString = convertToDate(selectedDate, selectedTimeslot);
     try {
-      const response = await appointmentApi.createReferral(referralFormData.description, dateString, ehrRecord.username, referralFormData.departmentName, selectedStaff.username)
+      const response = await appointmentApi.createReferral(
+        referralFormData.description,
+        dateString,
+        ehrRecord.username,
+        referralFormData.departmentName,
+        selectedStaff.username
+      );
       if (response.status === 200) {
         reduxDispatch(
           displayMessage({
             color: "success",
             icon: "notification",
             title: "Successfully Created Referral!",
-            content: "Referral for " + ehrRecord.firstName + " " + ehrRecord.lastName + " has been created!",
+            content:
+              "Referral for " +
+              ehrRecord.firstName +
+              " " +
+              ehrRecord.lastName +
+              " has been created!",
           })
         );
       }
@@ -252,16 +273,16 @@ function AppointmentsBox() {
         description: "",
         bookedDateTime: "",
         departmentName: "",
-        staffUsername: ""
-      })
+        staffUsername: "",
+      });
       setSelectedDate(null);
       setSelectedTimeslot(null);
       setSelectedStaff(null);
       setCurrAppt(null);
-      setSelectedStaffRole(null)
+      setSelectedStaffRole(null);
       handlefetchAppointmentData();
     } catch (error) {
-      console.log(error)
+      console.log(error);
       reduxDispatch(
         displayMessage({
           color: "error",
@@ -271,12 +292,12 @@ function AppointmentsBox() {
         })
       );
     }
-  }
+  };
 
   const handleSelectTime = (staff, slot) => {
     setSelectedTimeslot(slot);
     setSelectedStaff(staff);
-  }
+  };
 
   useEffect(() => {
     handlefetchAppointmentData();
@@ -295,11 +316,11 @@ function AppointmentsBox() {
           const shiftStartYear = shiftStartTime.getFullYear();
           const shiftStartMonth = shiftStartTime.getMonth();
           const shiftStartDay = shiftStartTime.getDate();
-  
+
           const shiftEndYear = shiftEndTime.getFullYear();
           const shiftEndMonth = shiftEndTime.getMonth();
           const shiftEndDay = shiftEndTime.getDate();
-  
+
           // Compare the extracted date components
           const isShiftOnSelectedDate =
             selectedYear === shiftStartYear &&
@@ -308,10 +329,10 @@ function AppointmentsBox() {
             selectedYear === shiftEndYear &&
             selectedMonth === shiftEndMonth &&
             selectedDay === shiftEndDay;
-  
+
           const isShiftBetween8AMAnd4PM =
             shiftStartTime.getHours() >= 8 && shiftEndTime.getHours() <= 16;
-  
+
           return isShiftOnSelectedDate && isShiftBetween8AMAnd4PM;
         });
         // Check if staff has shifts on the selected date
@@ -340,7 +361,11 @@ function AppointmentsBox() {
         console.log(error);
       }
     };
-    if (referralFormData.departmentName && referralFormData.departmentName.length > 0 && selectedStaffRole) {
+    if (
+      referralFormData.departmentName &&
+      referralFormData.departmentName.length > 0 &&
+      selectedStaffRole
+    ) {
       getStaffListByRole(referralFormData.departmentName);
     }
   }, [referralFormData.departmentName, selectedDate, selectedStaffRole]);
@@ -371,14 +396,22 @@ function AppointmentsBox() {
                         bookedDateTime: formatDateToYYYYMMDDHHMM(
                           parseDateFromLocalDateTimeWithSecs(
                             upcomingAppointment.bookedDateTime
-                          ) 
+                          )
                         ),
                         departmentName: upcomingAppointment.departmentName,
                         estimatedDuration:
                           upcomingAppointment.estimatedDuration,
                         description: upcomingAppointment.description,
-                        comments: upcomingAppointment.comments.length > 0 ? upcomingAppointment.comments.split("------------------------------")[0] + ", " + 
-                        upcomingAppointment.comments.split("------------------------------")[1] : "-"
+                        comments:
+                          upcomingAppointment.comments.length > 0
+                            ? upcomingAppointment.comments.split(
+                                "------------------------------"
+                              )[0] +
+                              ", " +
+                              upcomingAppointment.comments.split(
+                                "------------------------------"
+                              )[1]
+                            : "-",
                       }}
                       shadow={false}
                     />
@@ -387,19 +420,24 @@ function AppointmentsBox() {
               </Grid>
             ))}
           </Typography>
-          {loggedInStaff.staffRoleEnum === "DOCTOR" &&
-          <MDButton
-            onClick={handleOpenReferralModal}
-            variant="gradient"
-            color="primary"
-            sx={{ width: "10%"}}
-          >
-          Make A Referral
-          </MDButton>}
+          {loggedInStaff.staffRoleEnum === "DOCTOR" && (
+            <MDButton
+              onClick={handleOpenReferralModal}
+              variant="gradient"
+              color="primary"
+              sx={{ width: "10%" }}
+            >
+              Make A Referral
+            </MDButton>
+          )}
         </Card>
       </MDBox>
-      <Dialog open={isReferralModalOpen} onClose={handleCloseReferralModal} fullWidth
-  maxWidth="md">
+      <Dialog
+        open={isReferralModalOpen}
+        onClose={handleCloseReferralModal}
+        fullWidth
+        maxWidth="md"
+      >
         <DialogTitle>Make a Referral</DialogTitle>
         <DialogContent>
           <FormControl fullWidth margin="dense">
@@ -422,86 +460,121 @@ function AppointmentsBox() {
               <MenuItem value="Ophthalmology">Ophthalmology</MenuItem>
               <MenuItem value="Radiology">Radiology</MenuItem>
             </Select>
-            </FormControl>
+          </FormControl>
 
-            {referralFormData.departmentName &&
-            referralFormData.departmentName.length > 0 &&
-            <><br/>
-            <br/><hr/><br/>
-            <FormControl fullWidth margin="dense">
-            <InputLabel>Staff Role</InputLabel>
-            <Select
-              labelId="staffRole"
-              id="staffRole"
-              name="staffRole"
-              label="Staff Role"
-              value={selectedStaffRole}
-              onChange={(e) => setSelectedStaffRole(e.target.value)}
-              sx={{ lineHeight: "3em" }}
-            >
-              <MenuItem value="DOCTOR">DOCTOR</MenuItem>
-              <MenuItem value="DIAGNOSTIC_RADIOGRAPHERS">DIAGNOSTIC_RADIOGRAPHERS</MenuItem>
-              <MenuItem value="DIETITIANS">DIETITIANS</MenuItem>
-              <MenuItem value="OCCUPATIONAL_THERAPISTS">OCCUPATIONAL_THERAPISTS</MenuItem>
-              <MenuItem value="PHYSIOTHERAPISTS">PHYSIOTHERAPISTS</MenuItem>
-              <MenuItem value="PODIATRISTS">PODIATRISTS</MenuItem>
-              <MenuItem value="PSYCHOLOGISTS">PSYCHOLOGISTS</MenuItem>
-              <MenuItem value="PROSTHETISTS">PROSTHETISTS</MenuItem>
-              <MenuItem value="RADIATION_THERAPISTS">RADIATION_THERAPISTS</MenuItem>
-              <MenuItem value="RESPIRATORY_THERAPISTS">RESPIRATORY_THERAPISTS</MenuItem>
-              <MenuItem value="SPEECH_THERAPISTS">SPEECH_THERAPISTS</MenuItem>
-              <MenuItem value="AUDIOLOGISTS">AUDIOLOGISTS</MenuItem>
-              <MenuItem value="ORTHOPTISTS">ORTHOPTISTS</MenuItem>
-            </Select>
-            </FormControl>
-            <FormControl fullWidth margin="dense">
-            <TextField
-              fullWidth
-              label="Description"
-              name="description"
-              value={referralFormData.description}
-              onChange={handleReferralChange}
-              margin="dense"
-            />
-            </FormControl>
-            <FormControl fullWidth margin="dense">
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DemoContainer components={['DatePicker']}>
-                <DatePicker 
-                  label="Select Appointment Date"
-                  format="DD/MM/YYYY"
-                  value={selectedDate}
-                  minDate={dayjs().add(1, 'day')}
-                  onChange={(newValue) => setSelectedDate(newValue)} />
-              </DemoContainer>
-            </LocalizationProvider>
-            </FormControl><br/>
-
-            {selectedDate && selectedStaffRole &&
-            staffList.map(staff => 
+          {referralFormData.departmentName &&
+            referralFormData.departmentName.length > 0 && (
               <>
-            <Grid item xs={12} md={6} lg={3}>
-              <Typography sx={{fontSize: "16px"}}>{staff.staffRoleEnum} {staff.firstname + " " + staff.lastname}</Typography>
-              {generateAvailableTimeSlots(staff,selectedDate).map(slot => 
-                <MDButton
-                  circular
-                  color={selectedStaff?.staffId === staff.staffId && 
-                    selectedTimeslot.startTime === slot.startTime && 
-                    selectedTimeslot.endTime === slot.endTime ? "dark" : "light"}
-                  sx={{ margin: '5px'}}
-                  onClick={() => handleSelectTime(staff,slot)}>
-                  {slot.startTime + " - " + slot.endTime}
-                </MDButton>)}
-            </Grid><br/></>)}
-            </>
-            }
-          
+                <br />
+                <br />
+                <hr />
+                <br />
+                <FormControl fullWidth margin="dense">
+                  <InputLabel>Staff Role</InputLabel>
+                  <Select
+                    labelId="staffRole"
+                    id="staffRole"
+                    name="staffRole"
+                    label="Staff Role"
+                    value={selectedStaffRole}
+                    onChange={(e) => setSelectedStaffRole(e.target.value)}
+                    sx={{ lineHeight: "3em" }}
+                  >
+                    <MenuItem value="DOCTOR">DOCTOR</MenuItem>
+                    <MenuItem value="DIAGNOSTIC_RADIOGRAPHERS">
+                      DIAGNOSTIC_RADIOGRAPHERS
+                    </MenuItem>
+                    <MenuItem value="DIETITIANS">DIETITIANS</MenuItem>
+                    <MenuItem value="OCCUPATIONAL_THERAPISTS">
+                      OCCUPATIONAL_THERAPISTS
+                    </MenuItem>
+                    <MenuItem value="PHYSIOTHERAPISTS">
+                      PHYSIOTHERAPISTS
+                    </MenuItem>
+                    <MenuItem value="PODIATRISTS">PODIATRISTS</MenuItem>
+                    <MenuItem value="PSYCHOLOGISTS">PSYCHOLOGISTS</MenuItem>
+                    <MenuItem value="PROSTHETISTS">PROSTHETISTS</MenuItem>
+                    <MenuItem value="RADIATION_THERAPISTS">
+                      RADIATION_THERAPISTS
+                    </MenuItem>
+                    <MenuItem value="RESPIRATORY_THERAPISTS">
+                      RESPIRATORY_THERAPISTS
+                    </MenuItem>
+                    <MenuItem value="SPEECH_THERAPISTS">
+                      SPEECH_THERAPISTS
+                    </MenuItem>
+                    <MenuItem value="AUDIOLOGISTS">AUDIOLOGISTS</MenuItem>
+                    <MenuItem value="ORTHOPTISTS">ORTHOPTISTS</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth margin="dense">
+                  <TextField
+                    fullWidth
+                    label="Description"
+                    name="description"
+                    value={referralFormData.description}
+                    onChange={handleReferralChange}
+                    margin="dense"
+                  />
+                </FormControl>
+                <FormControl fullWidth margin="dense">
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DemoContainer components={["DatePicker"]}>
+                      <DatePicker
+                        label="Select Appointment Date"
+                        format="DD/MM/YYYY"
+                        value={selectedDate}
+                        minDate={dayjs().add(1, "day")}
+                        onChange={(newValue) => setSelectedDate(newValue)}
+                      />
+                    </DemoContainer>
+                  </LocalizationProvider>
+                </FormControl>
+                <br />
+
+                {selectedDate &&
+                  selectedStaffRole &&
+                  staffList.map((staff) => (
+                    <>
+                      <Grid item xs={12} md={6} lg={3}>
+                        <Typography sx={{ fontSize: "16px" }}>
+                          {staff.staffRoleEnum}{" "}
+                          {staff.firstname + " " + staff.lastname}
+                        </Typography>
+                        {generateAvailableTimeSlots(staff, selectedDate).map(
+                          (slot) => (
+                            <MDButton
+                              circular
+                              color={
+                                selectedStaff?.staffId === staff.staffId &&
+                                selectedTimeslot.startTime === slot.startTime &&
+                                selectedTimeslot.endTime === slot.endTime
+                                  ? "dark"
+                                  : "light"
+                              }
+                              sx={{ margin: "5px" }}
+                              onClick={() => handleSelectTime(staff, slot)}
+                            >
+                              {slot.startTime + " - " + slot.endTime}
+                            </MDButton>
+                          )
+                        )}
+                      </Grid>
+                      <br />
+                    </>
+                  ))}
+              </>
+            )}
         </DialogContent>
         <DialogActions>
           <MDButton onClick={handleCloseReferralModal} color="primary">
             Cancel
           </MDButton>
-          <MDButton disabled={!selectedStaff || !selectedDate || !selectedTimeslot} onClick={handleCreateReferral} color="primary">
+          <MDButton
+            disabled={!selectedStaff || !selectedDate || !selectedTimeslot}
+            onClick={handleCreateReferral}
+            color="primary"
+          >
             Create
           </MDButton>
         </DialogActions>
