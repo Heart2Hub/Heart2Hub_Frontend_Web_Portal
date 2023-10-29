@@ -37,6 +37,7 @@ import ConsumableEquipmentManagement from "layouts/administration/inventory-mana
 import InventoryManagement from "layouts/administration/inventory-management";
 import MedicationManagement from "layouts/pharmacy/medication-management";
 import ServiceItemManagement from "layouts/administration/inventory-management/service-item-management";
+import ServiceManagement from "layouts/administration/inventory-management/service-item-management";
 
 const ALL_EXCEPT_PHARMACIST = [
   StaffRoleEnum.ADMIN,
@@ -413,16 +414,16 @@ const routes = [
   //   ),
   // },
   {
-    name: "Service Item Management",
-    key: "serviceItemManagement",
-    route: "/administration/inventory-management/service-item-management",
+    name: "Service Management",
+    key: "serviceManagement",
+    route: "/administration/inventory-management/service-management",
     component: (
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
         authorizedUnits={"ALL"}
       >
-        <ServiceItemManagement />
+        <ServiceManagement />
       </ProtectedRoute>
     ),
   },

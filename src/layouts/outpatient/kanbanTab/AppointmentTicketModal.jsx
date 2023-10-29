@@ -90,6 +90,7 @@ function AppointmentTicketModal({
   const [facility, setFacility] = useState("");
   //For Cart
   const [medications, setMedications] = useState([]);
+  const [medicationsAllergy, setMedicationsAllergy] = useState([]);
   const [services, setServices] = useState([]);
   const [selectedMedication, setSelectedMedication] = useState(null);
   const [selectedMedicationQuantity, setSelectedMedicationQuantity] =
@@ -186,8 +187,10 @@ function AppointmentTicketModal({
       const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(
         selectedAppointment.patientId
       );
-      setMedications(medicationsResponse.data);
-      // console.log(medicationsResponse.data)
+      setMedicationsAllergy(medicationsResponse.data);
+
+      const medicationsResponse2 = await inventoryApi.getAllMedication();
+      setMedications(medicationsResponse2.data);
 
       const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
         loggedInStaff.unit.unitId
@@ -267,6 +270,21 @@ function AppointmentTicketModal({
         inventoryItem: medication.inventoryItemId,
       };
 
+      const existsInAllergy = medicationsAllergy.some(
+				(item) => item.inventoryItemId === requestBody.inventoryItem
+			    );
+		    
+			    if (!existsInAllergy) {
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Error",
+						content: "Patient has allergy restrictions from selected Medication.",
+					})
+				);
+				return;	
+			    }
       console.log(requestBody);
 
       transactionItemApi
