@@ -90,6 +90,7 @@ function AppointmentTicketModal({
   const [facility, setFacility] = useState("");
   //For Cart
   const [medications, setMedications] = useState([]);
+  const [medicationsAllergy, setMedicationsAllergy] = useState([]);
   const [services, setServices] = useState([]);
   const [selectedMedication, setSelectedMedication] = useState(null);
   const [selectedMedicationQuantity, setSelectedMedicationQuantity] =
@@ -97,6 +98,7 @@ function AppointmentTicketModal({
   const [selectedService, setSelectedService] = useState(null);
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState(null);
+  const [isConfirmDischargeOpen, setConfirmDischargeOpen] = useState(false);
 
   //For Managing the Cart
   const [cartItems, setCartItems] = useState([]);
@@ -167,6 +169,7 @@ function AppointmentTicketModal({
       );
 
       handleCloseModal();
+      handleCloseConfirmDischarge();
       forceRefresh();
     } catch (error) {
       reduxDispatch(
@@ -186,8 +189,10 @@ function AppointmentTicketModal({
       const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(
         selectedAppointment.patientId
       );
-      setMedications(medicationsResponse.data);
-      // console.log(medicationsResponse.data)
+      setMedicationsAllergy(medicationsResponse.data);
+
+      const medicationsResponse2 = await inventoryApi.getAllMedication();
+      setMedications(medicationsResponse2.data);
 
       const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
         loggedInStaff.unit.unitId
@@ -267,6 +272,21 @@ function AppointmentTicketModal({
         inventoryItem: medication.inventoryItemId,
       };
 
+      const existsInAllergy = medicationsAllergy.some(
+				(item) => item.inventoryItemId === requestBody.inventoryItem
+			    );
+		    
+			    if (!existsInAllergy) {
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Error",
+						content: "Patient has allergy restrictions from selected Medication.",
+					})
+				);
+				return;	
+			    }
       console.log(requestBody);
 
       transactionItemApi
@@ -578,6 +598,10 @@ function AppointmentTicketModal({
 
     setIsDialogOpen(false);
   };
+
+  const handleCloseConfirmDischarge = () => {
+    setConfirmDischargeOpen(false);
+  }
 
   const handleCloseAssignDialog = () => {
     reduxDispatch(
@@ -1046,7 +1070,7 @@ function AppointmentTicketModal({
                 >
                   {selectedAppointment.swimlaneStatusEnum === "DISCHARGE" && (
                     <MDButton
-                      onClick={handleDischarge}
+                      onClick={() => setConfirmDischargeOpen(true)}
                       variant="gradient"
                       color="success"
                       style={{ marginTop: "20px" }}
@@ -1077,6 +1101,26 @@ function AppointmentTicketModal({
             variant="contained"
           >
             Delete
+          </MDButton>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={isConfirmDischargeOpen} onClose={handleCloseConfirmDischarge}>
+        <DialogTitle>Confirm Discharge</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to discharge {selectedAppointment.firstName} {selectedAppointment.lastName}?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseConfirmDischarge} color="primary">
+            Cancel
+          </Button>
+          <MDButton
+            onClick={handleDischarge}
+            color="primary"
+            variant="contained"
+          >
+            Confirm
           </MDButton>
         </DialogActions>
       </Dialog>

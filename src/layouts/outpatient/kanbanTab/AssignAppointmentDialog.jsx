@@ -178,7 +178,6 @@ function AssignAppointmentDialog({
                       ) {
                         acc.push(staff);
                       }
-                      console.log(acc);
                       return acc;
                     }, [])
                     .map((staff) => (

@@ -166,50 +166,61 @@ function CreateNewTicket({ isOpen, onClose, onAppointmentCreated }) {
   };
 
   const handleSearchNric = async (nric) => {
-    try {
-      const response = await prescriptionRecordApi.getPrescriptionRecordByNric(nric);
-      if (response.status === 200) {
-        const ehr = await ehrApi.getElectronicHealthRecordByNric(nric);
-        if (response.data.length > 0) {
-          setPrescriptionRecords(response.data);
-          setIsNricValid(true);
-          setEhr(ehr.data);
-          const mappedRows = response.data.map((record) => ({
-            prescriptionRecordId: record.prescriptionRecordId,
-            medicationName: record.medicationName,
-            medicationQuantity: record.medicationQuantity,
-            dosage: record.dosage,
-            prescribedBy: record.prescribedBy,
-            lastCollectDate: record.lastCollectDate,
-            prescriptionStatusEnum: record.prescriptionStatusEnum
-        }));
-
-        // Update the 'data' state with the mapped data
-        setData((prevData) => ({
-            ...prevData,
-            rows: mappedRows,
-        }));
-        } else {
-          reduxDispatch(
-            displayMessage({
-              color: "warning",
-              icon: "warning",
-              title: "Error Encountered",
-              content: "Patient does not have any prescription records!",
-            })
-          );
-        }
-      }
-    } catch (error) {
-      console.log(error)
+    if (nric.length !== 9 || (nric.charAt(0) !== 'S')) {
       reduxDispatch(
         displayMessage({
           color: "error",
           icon: "notification",
           title: "Error Encountered",
-          content: `Patient is not registered in H2H database!`,
+          content: `Please enter a valid NRIC!`,
         })
       );
+    } else {
+      try {
+        const response = await prescriptionRecordApi.getPrescriptionRecordByNric(nric);
+        if (response.status === 200) {
+          const ehr = await ehrApi.getElectronicHealthRecordByNric(nric);
+          if (response.data.length > 0) {
+            setPrescriptionRecords(response.data);
+            setIsNricValid(true);
+            setEhr(ehr.data);
+            const mappedRows = response.data.map((record) => ({
+              prescriptionRecordId: record.prescriptionRecordId,
+              medicationName: record.medicationName,
+              medicationQuantity: record.medicationQuantity,
+              dosage: record.dosage,
+              prescribedBy: record.prescribedBy,
+              lastCollectDate: record.lastCollectDate,
+              prescriptionStatusEnum: record.prescriptionStatusEnum
+          }));
+  
+          // Update the 'data' state with the mapped data
+          setData((prevData) => ({
+              ...prevData,
+              rows: mappedRows,
+          }));
+          } else {
+            reduxDispatch(
+              displayMessage({
+                color: "warning",
+                icon: "warning",
+                title: "Error Encountered",
+                content: "Patient does not have any prescription records!",
+              })
+            );
+          }
+        }
+      } catch (error) {
+        console.log(error)
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: `Patient is not registered in H2H database!`,
+          })
+        );
+      }
     }
   }
 
