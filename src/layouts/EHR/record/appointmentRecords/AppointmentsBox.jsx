@@ -500,6 +500,7 @@ function AppointmentsBox() {
               <MenuItem value="Emergency Medicine">Emergency Medicine</MenuItem>
               <MenuItem value="Surgery">Surgery</MenuItem>
               <MenuItem value="Ophthalmology">Ophthalmology</MenuItem>
+              <MenuItem value="Psychiatry">Psychiatry</MenuItem>
               <MenuItem value="Radiology">Radiology</MenuItem>
             </Select>
           </FormControl>
