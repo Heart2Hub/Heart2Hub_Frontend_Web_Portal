@@ -25,6 +25,7 @@ import UploadImageDialog from "./UploadImageDialog";
 import CompleteTreatmentPlanRecordDialog from "./CompleteTreatmentPlanRecordDialog";
 import ViewInvitationDialog from "./ViewInvitationDialog";
 import ConfirmApproveTreatmentPlanDialog from "./ConfirmApproveTreatmentPlanDialog";
+import ConfirmDeleteTreatmentPlanDialog from "./ConfirmDeleteTreatmentPlanDialog";
 
 function ViewTreatmentPlanRecordDialog({
   openViewTreatmentPlanRecordDialog,
@@ -64,6 +65,12 @@ function ViewTreatmentPlanRecordDialog({
   const [
     openConfirmApproveTreatmentPlanDialog,
     setOpenConfirmApproveTreatmentPlanDialog,
+  ] = useState(false);
+
+  //approve treatment plan dialog
+  const [
+    openConfirmDeleteTreatmentPlanDialog,
+    setOpenConfirmDeleteTreatmentPlanDialog,
   ] = useState(false);
 
   //only for refreshing approval dialog
@@ -111,6 +118,14 @@ function ViewTreatmentPlanRecordDialog({
 
   const handleCloseConfirmApproveTreatmentPlanRecordDialog = () => {
     setOpenConfirmApproveTreatmentPlanDialog(false);
+  };
+
+  //handle delete treatment plan
+  const handleOpenConfirmDeleteTreatmentPlanRecordDialog = () => {
+    setOpenConfirmDeleteTreatmentPlanDialog(true);
+  };
+  const handleCloseConfirmDeleteTreatmentPlanRecordDialog = () => {
+    setOpenConfirmDeleteTreatmentPlanDialog(false);
   };
 
   const handleFormChange = (event) => {
@@ -164,7 +179,7 @@ function ViewTreatmentPlanRecordDialog({
       formData.startDate = formData.startDate + " 00:00:00";
       formData.endDate = formData.endDate + " 00:00:00";
 
-      console.log(selectedTreatmentPlanRecordToView.treatmentPlanRecordId);
+      // console.log(selectedTreatmentPlanRecordToView.treatmentPlanRecordId);
       treatmentPlanRecordApi
         .updateTreatmentPlanRecord(
           ehrRecord.electronicHealthRecordId,
@@ -229,64 +244,6 @@ function ViewTreatmentPlanRecordDialog({
             treatmentPlanTypeEnum:
               selectedTreatmentPlanRecordToView.treatmentPlanTypeEnum,
           });
-          // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
-          if (err.response.data.detail) {
-            reduxDispatch(
-              displayMessage({
-                color: "error",
-                icon: "notification",
-                title: "Error Encountered",
-                content: err.response.data.detail,
-              })
-            );
-          } else {
-            reduxDispatch(
-              displayMessage({
-                color: "error",
-                icon: "notification",
-                title: "Error Encountered",
-                content: err.response.data,
-              })
-            );
-          }
-          console.log(err.response.data.detail);
-        });
-    } catch (ex) {
-      console.log(ex);
-    }
-  };
-
-  const handleDeleteTreatmentPlanRecord = () => {
-    try {
-      treatmentPlanRecordApi
-        .deleteTreatmentPlanRecord(
-          ehrRecord.electronicHealthRecordId,
-          selectedTreatmentPlanRecordToView.treatmentPlanRecordId,
-          loggedInStaff.staffId
-        )
-        .then((response) => {
-          const updatedEhrRecord = {
-            ...ehrRecord,
-            listOfTreatmentPlanRecords:
-              ehrRecord.listOfTreatmentPlanRecords.filter(
-                (record) =>
-                  record.treatmentPlanRecordId !==
-                  selectedTreatmentPlanRecordToView.treatmentPlanRecordId
-              ),
-          };
-          reduxDispatch(updateEHRRecord(updatedEhrRecord));
-          reduxDispatch(
-            displayMessage({
-              color: "success",
-              icon: "notification",
-              title: "Successfully Deleted",
-              content: "Treatment Plan has been deleted",
-            })
-          );
-          handleCloseViewTreatmentPlanRecordDialog();
-        })
-        .catch((err) => {
-          console.log(err);
           // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
           if (err.response.data.detail) {
             reduxDispatch(
@@ -546,7 +503,9 @@ function ViewTreatmentPlanRecordDialog({
                       primaryInvitation?.staffId === loggedInStaff.staffId && (
                         <>
                           <MDButton
-                            onClick={handleDeleteTreatmentPlanRecord}
+                            onClick={
+                              handleOpenConfirmDeleteTreatmentPlanRecordDialog
+                            }
                             color="primary"
                             style={{ marginRight: "10px" }}
                           >
@@ -616,6 +575,19 @@ function ViewTreatmentPlanRecordDialog({
               handleCloseConfirmApproveTreatmentPlanRecordDialog
             }
             handleRefresh={handleRefresh}
+          />
+          <ConfirmDeleteTreatmentPlanDialog
+            openConfirmDeleteTreatmentPlanRecordDialog={
+              openConfirmDeleteTreatmentPlanDialog
+            }
+            selectedTreatmentPlanRecord={selectedTreatmentPlanRecordToView}
+            handleCloseConfirmDeleteTreatmentPlanRecordDialog={
+              handleCloseConfirmDeleteTreatmentPlanRecordDialog
+            }
+            handleRefresh={handleRefresh}
+            handleCloseViewTreatmentPlanRecordDialog={
+              handleCloseViewTreatmentPlanRecordDialog
+            }
           />
         </>
       )}
