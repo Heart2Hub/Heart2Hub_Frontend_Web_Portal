@@ -4,7 +4,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
-import { IconButton, Icon } from "@mui/material";
+import { IconButton, Icon, CardContent } from "@mui/material";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -370,68 +370,110 @@ function AppointmentsBox() {
     }
   }, [referralFormData.departmentName, selectedDate, selectedStaffRole]);
 
+  const appointmentCardStyles = {
+    width: "92%",
+    margin: "20px",
+    border: "1px solid #e0e0e0",
+    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+    transition: "all 0.3s ease",
+    marginBottom: "20px",
+    padding: "12px",
+    borderRadius: "8px",
+    height: "300px",
+  };
+
+  const invisibleScrollBarStyles = {
+    "&::WebkitScrollbar": {
+      display: "none",
+    },
+    scrollbarWidth: "none",
+    msOverflowStyle: "none",
+  };
+
   return (
     <>
-      <MDBox position="relative" mb={5}>
-        <MDBox position="relative" minHeight="5rem" />
-        <Card
-          sx={{
-            position: "relative",
-            mt: -8,
-            mx: 3,
-            py: 2,
-            px: 2,
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            List of Upcoming Appointments:
-            {upcomingAppointments.map((upcomingAppointment, index) => (
-              <Grid container spacing={2} justify="center" alignItems="center">
-                <Grid item xs={12} md={6} lg={3}>
-                  <MDBox mb={1.5}>
-                    <ProfileInfoCard
-                      key={index}
-                      title={`Appointment ${index + 1}`}
-                      info={{
-                        bookedDateTime: formatDateToYYYYMMDDHHMM(
-                          parseDateFromLocalDateTimeWithSecs(
-                            upcomingAppointment.bookedDateTime
-                          )
-                        ),
-                        departmentName: upcomingAppointment.departmentName,
-                        estimatedDuration:
-                          upcomingAppointment.estimatedDuration,
-                        description: upcomingAppointment.description,
-                        comments:
-                          upcomingAppointment.comments.length > 0
-                            ? upcomingAppointment.comments.split(
-                                "------------------------------"
-                              )[0] +
-                              ", " +
-                              upcomingAppointment.comments.split(
-                                "------------------------------"
-                              )[1]
-                            : "-",
-                      }}
-                      shadow={false}
-                    />
-                  </MDBox>
-                </Grid>
-              </Grid>
-            ))}
-          </Typography>
-          {loggedInStaff.staffRoleEnum === "DOCTOR" && (
-            <MDButton
-              onClick={handleOpenReferralModal}
-              variant="gradient"
-              color="primary"
-              sx={{ width: "10%" }}
-            >
-              Make A Referral
-            </MDButton>
-          )}
-        </Card>
-      </MDBox>
+      <Grid container spacing={3}>
+        <Grid item xs={6}>
+          <Card
+            style={{
+              height: "600px",
+              overflowY: "auto",
+              ...invisibleScrollBarStyles,
+            }}
+          >
+            <CardContent>
+              <MDBox
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: "20px",
+                  marginLeft: "20px",
+                  marginBottom: "20px",
+                }}
+              >
+                <MDTypography variant="h3" style={{ padding: "10px 20px" }}>
+                  List of Upcoming Appointments:
+                </MDTypography>
+                {loggedInStaff.staffRoleEnum === "DOCTOR" && (
+                  <MDButton
+                    onClick={handleOpenReferralModal}
+                    variant="gradient"
+                    color="primary"
+                    sx={{ width: "15%" }}
+                  >
+                    Make A Referral
+                  </MDButton>
+                )}
+              </MDBox>
+
+              <Divider variant="middle" />
+              {upcomingAppointments.map((upcomingAppointment, index) => (
+                <Card key={index} style={appointmentCardStyles}>
+                  <CardContent style={{ position: "relative" }}>
+                    <MDTypography variant="h4" color="info">
+                      Appointment {index + 1}
+                    </MDTypography>
+                    <MDTypography
+                      variant="h6"
+                      style={{ marginTop: "8px", fontWeight: "bold" }}
+                    >
+                      Booked DateTime:{" "}
+                      {formatDateToYYYYMMDDHHMM(
+                        parseDateFromLocalDateTimeWithSecs(
+                          upcomingAppointment.bookedDateTime
+                        )
+                      )}
+                    </MDTypography>
+                    <MDTypography variant="h6" style={{ marginTop: "8px" }}>
+                      Department: {upcomingAppointment.departmentName}
+                    </MDTypography>
+                    <MDTypography variant="h6" style={{ marginTop: "8px" }}>
+                      Estimated Duration:{" "}
+                      {upcomingAppointment.estimatedDuration}
+                    </MDTypography>
+                    <MDTypography variant="h6" style={{ marginTop: "8px" }}>
+                      Description: {upcomingAppointment.description}
+                    </MDTypography>
+                    <MDTypography variant="h6" style={{ marginTop: "8px" }}>
+                      Comments :{" "}
+                      {upcomingAppointment.comments.length > 0
+                        ? upcomingAppointment.comments.split(
+                            "------------------------------"
+                          )[0] +
+                          ", " +
+                          upcomingAppointment.comments.split(
+                            "------------------------------"
+                          )[1]
+                        : "-"}
+                    </MDTypography>
+                  </CardContent>
+                </Card>
+              ))}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
       <Dialog
         open={isReferralModalOpen}
         onClose={handleCloseReferralModal}
