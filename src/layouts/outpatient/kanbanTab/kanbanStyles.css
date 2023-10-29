@@ -38,6 +38,11 @@
   text-align: center;
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
+
+  /* Add these styles to make the title sticky */
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .column-tasklist {
@@ -46,6 +51,8 @@
   background-color: #f4f5f7;
   transition: background-color 0.2s ease;
   min-height: 100px;
+
+  margin-top: 8px;
 }
 
 .column::-webkit-scrollbar {
