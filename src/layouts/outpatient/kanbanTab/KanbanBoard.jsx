@@ -4,7 +4,7 @@ import { DragDropContext } from "@hello-pangea/dnd";
 import KanbanColumn from "./KanbanColumn";
 import { useSelector } from "react-redux";
 import { selectStaff } from "../../../store/slices/staffSlice";
-import { appointmentApi, staffApi } from "../../../api/Api";
+import { appointmentApi, staffApi, admissionApi } from "../../../api/Api";
 import { useEffect } from "react";
 import MDButton from "components/MDButton";
 
@@ -18,6 +18,7 @@ import { useDispatch } from "react-redux";
 import { displayMessage } from "store/slices/snackbarSlice";
 import AssignAppointmentDialog from "./AssignAppointmentDialog";
 import { useRef } from "react";
+import AdmissionDialog from "./AdmissionDialog";
 
 function KanbanBoard() {
   const staff = useSelector(selectStaff);
@@ -40,7 +41,15 @@ function KanbanBoard() {
   const [registration, setRegistration] = useState([]);
   const [triage, setTriage] = useState([]);
   const [consultation, setConsultation] = useState([]);
+  const [discharge, setDischarge] = useState([]);
+  const [treatment, setTreatment] = useState([]);
+  const [admission, setAdmission] = useState([]);
+  const [pharmacy, setPharmacy] = useState([]);
+  const [referral, setReferral] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  //for admission dialog
+  const [step, setStep] = useState(1);
 
   // Function to open the modal
   const openModal = () => {
@@ -59,12 +68,18 @@ function KanbanBoard() {
   //main method to handle drag and drop logic
   const handleDragEnd = async (result) => {
     const { destination, source, draggableId } = result;
+    console.log(source.droppableId);
 
     // GET ITEM
     const appointment = findItemById(draggableId, [
       ...registration,
       ...triage,
       ...consultation,
+      ...discharge,
+      ...treatment,
+      ...admission,
+      ...pharmacy,
+      ...referral,
     ]);
 
     //========================== DRAG DROP LOGIC CHECKS ========================
@@ -105,6 +120,16 @@ function KanbanBoard() {
       destinationSwimlane = "Triage";
     } else if (destination.droppableId === "3") {
       destinationSwimlane = "Consultation";
+    } else if (destination.droppableId === "4") {
+      destinationSwimlane = "Treatment";
+    } else if (destination.droppableId === "5") {
+      destinationSwimlane = "Admission";
+    } else if (destination.droppableId === "6") {
+      destinationSwimlane = "Pharmacy";
+    } else if (destination.droppableId === "7") {
+      destinationSwimlane = "Discharge";
+    } else if (destination.droppableId === "8") {
+      destinationSwimlane = "Referral";
     } else {
       console.log("NO DESTINATION MATCH FOR " + destination.droppableId);
       reduxDispatch(
@@ -167,6 +192,16 @@ function KanbanBoard() {
     } else if (source.droppableId === "3") {
       setConsultation(removeItemById(draggableId, consultation));
       // console.log("remove from consultation");
+    } else if (source.droppableId === "4") {
+      setTreatment(removeItemById(draggableId, treatment));
+    } else if (source.droppableId === "5") {
+      setAdmission(removeItemById(draggableId, admission));
+    } else if (source.droppableId === "6") {
+      setPharmacy(removeItemById(draggableId, pharmacy));
+    } else if (source.droppableId === "7") {
+      setDischarge(removeItemById(draggableId, discharge));
+    } else if (source.droppableId === "8") {
+      setReferral(removeItemById(draggableId, referral));
     } else {
       console.log("NO SOURCE MATCH FOR " + source.droppableId);
       reduxDispatch(
@@ -187,6 +222,16 @@ function KanbanBoard() {
       setTriage([{ ...updatedAppointment }, ...triage]);
     } else if (destination.droppableId === "3") {
       setConsultation([{ ...updatedAppointment }, ...consultation]);
+    } else if (destination.droppableId === "4") {
+      setTreatment([{ ...updatedAppointment }, ...treatment]);
+    } else if (destination.droppableId === "5") {
+      setAdmission([{ ...updatedAppointment }, ...admission]);
+    } else if (destination.droppableId === "6") {
+      setPharmacy([{ ...updatedAppointment }, ...pharmacy]);
+    } else if (destination.droppableId === "7") {
+      setDischarge([{ ...updatedAppointment }, ...discharge]);
+    } else if (destination.droppableId === "8") {
+      setReferral([{ ...updatedAppointment }, ...referral]);
     } else {
       console.log("NO DESTINATION MATCH FOR " + destination.droppableId);
       reduxDispatch(
@@ -219,7 +264,19 @@ function KanbanBoard() {
       dialogResolver.current = resolve;
       setSelectedAppointmentToAssign(appointment);
       setAssigningToSwimlane(swimlaneName);
-      setDialogOpen(true);
+      if (swimlaneName === "Pharmacy") {
+        const r = appointmentApi.assignAppointmentToStaff(
+          appointment.appointmentId,
+          -1,
+          staff.staffId
+        );
+        setSelectedAppointmentToAssign(null);
+
+        dialogResolver.current(true); // Resolve promise if user confirms
+        dialogResolver.current = null; // Clear it out after using
+      } else {
+        setDialogOpen(true);
+      }
     });
   };
 
@@ -276,6 +333,63 @@ function KanbanBoard() {
 
     setSelectedAppointmentToAssign(null);
     setDialogOpen(false);
+    setStep(1);
+  };
+
+  //for admission dialog - go to next step
+  const handleNext = () => {
+    setStep(2);
+  };
+
+  const handleAdmissionConfirm = async (selectedStaffId, duration, reason) => {
+    // console.log(
+    //   "Staff: " + selectedStaff + ", Duration: " + duration,
+    //   ", Reason: " + reason
+    // );
+    //console.log(selectedAppointmentToAssign);
+
+    if (dialogResolver.current) {
+      try {
+        //send to BE to assign staff
+        if (selectedAppointmentToAssign !== null) {
+          const response = await appointmentApi.assignAppointmentToStaff(
+            selectedAppointmentToAssign.appointmentId,
+            selectedStaffId,
+            staff.staffId
+          );
+
+          const updatedAssignment = response.data;
+
+          const admissionResponse = await admissionApi.createAdmission(
+            duration,
+            reason,
+            selectedAppointmentToAssign.patientId,
+            selectedAppointmentToAssign.currentAssignedStaffId
+          );
+        }
+
+        //reset
+        setSelectedAppointmentToAssign(null);
+        setStep(1);
+
+        dialogResolver.current(true); // Resolve promise if user confirms
+        dialogResolver.current = null; // Clear it out after using
+
+        // }
+      } catch (error) {
+        console.log(error);
+        //perform error handling
+        reduxDispatch(
+          displayMessage({
+            color: "warning",
+            icon: "notification",
+            title: "Error",
+            content: error.response.data,
+          })
+        );
+      }
+    }
+    setDialogOpen(false);
   };
 
   //force a refresh for modal assigning
@@ -305,6 +419,16 @@ function KanbanBoard() {
       selectedColumnList = JSON.parse(JSON.stringify(triage));
     } else if (arrayName === "Consultation") {
       selectedColumnList = JSON.parse(JSON.stringify(consultation));
+    } else if (arrayName === "Treatment") {
+      selectedColumnList = JSON.parse(JSON.stringify(treatment));
+    } else if (arrayName === "Admission") {
+      selectedColumnList = JSON.parse(JSON.stringify(admission));
+    } else if (arrayName === "Pharmacy") {
+      selectedColumnList = JSON.parse(JSON.stringify(pharmacy));
+    } else if (arrayName === "Discharge") {
+      selectedColumnList = JSON.parse(JSON.stringify(discharge));
+    } else if (arrayName === "Referral") {
+      selectedColumnList = JSON.parse(JSON.stringify(referral));
     } else {
       console.log("ERROR");
       selectedColumnList = [];
@@ -324,6 +448,16 @@ function KanbanBoard() {
       setTriage(newColumnList);
     } else if (arrayName === "Consultation") {
       setConsultation(newColumnList);
+    } else if (arrayName === "Treatment") {
+      setTreatment(newColumnList);
+    } else if (arrayName === "Admission") {
+      setAdmission(newColumnList);
+    } else if (arrayName === "Pharmacy") {
+      setPharmacy(newColumnList);
+    } else if (arrayName === "Discharge") {
+      setDischarge(newColumnList);
+    } else if (arrayName === "Referral") {
+      setReferral(newColumnList);
     } else {
       console.log("ERROR 2");
     }
@@ -366,6 +500,31 @@ function KanbanBoard() {
     setConsultation(
       response.data
         .filter((appt) => appt.swimlaneStatusEnum === "CONSULTATION")
+        .sort((appt1, appt2) => appt2.appointmentId - appt1.appointmentId)
+    );
+    setTreatment(
+      response.data
+        .filter((appt) => appt.swimlaneStatusEnum === "TREATMENT")
+        .sort((appt1, appt2) => appt2.appointmentId - appt1.appointmentId)
+    );
+    setAdmission(
+      response.data
+        .filter((appt) => appt.swimlaneStatusEnum === "ADMISSION")
+        .sort((appt1, appt2) => appt2.appointmentId - appt1.appointmentId)
+    );
+    setPharmacy(
+      response.data
+        .filter((appt) => appt.swimlaneStatusEnum === "PHARMACY")
+        .sort((appt1, appt2) => appt2.appointmentId - appt1.appointmentId)
+    );
+    setDischarge(
+      response.data
+        .filter((appt) => appt.swimlaneStatusEnum === "DISCHARGE")
+        .sort((appt1, appt2) => appt2.appointmentId - appt1.appointmentId)
+    );
+    setReferral(
+      response.data
+        .filter((appt) => appt.swimlaneStatusEnum === "REFERRAL")
         .sort((appt1, appt2) => appt2.appointmentId - appt1.appointmentId)
     );
   };
@@ -433,17 +592,62 @@ function KanbanBoard() {
               listOfWorkingStaff={listOfWorkingStaff}
               forceRefresh={forceRefresh}
             />
+            <KanbanColumn
+              title="Treatment"
+              appointments={treatment}
+              id={"4"}
+              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+              listOfWorkingStaff={listOfWorkingStaff}
+              forceRefresh={forceRefresh}
+            />
+            <KanbanColumn
+              title="Admission"
+              appointments={admission}
+              id={"5"}
+              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+              listOfWorkingStaff={listOfWorkingStaff}
+              forceRefresh={forceRefresh}
+            />
+            <KanbanColumn
+              title="Pharmacy"
+              appointments={pharmacy}
+              id={"6"}
+              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+              listOfWorkingStaff={listOfWorkingStaff}
+              forceRefresh={forceRefresh}
+            />
+            <KanbanColumn
+              title="Discharge"
+              appointments={discharge}
+              id={"7"}
+              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
+              listOfWorkingStaff={listOfWorkingStaff}
+              forceRefresh={forceRefresh}
+            />
           </div>
         </DragDropContext>
       </MDBox>
-      <AssignAppointmentDialog
-        open={isDialogOpen}
-        onConfirm={handleConfirm}
-        onClose={handleClose}
-        listOfWorkingStaff={listOfWorkingStaff}
-        selectedAppointmentToAssign={selectedAppointmentToAssign}
-        assigningToSwimlane={assigningToSwimlane}
-      />
+      {assigningToSwimlane === "Admission" ? (
+        <AdmissionDialog
+          step={step}
+          open={isDialogOpen}
+          onConfirm={handleAdmissionConfirm}
+          onClose={handleClose}
+          onNext={handleNext}
+          listOfWorkingStaff={listOfWorkingStaff}
+          selectedAppointmentToAssign={selectedAppointmentToAssign}
+          assigningToSwimlane={assigningToSwimlane}
+        />
+      ) : (
+        <AssignAppointmentDialog
+          open={isDialogOpen}
+          onConfirm={handleConfirm}
+          onClose={handleClose}
+          listOfWorkingStaff={listOfWorkingStaff}
+          selectedAppointmentToAssign={selectedAppointmentToAssign}
+          assigningToSwimlane={assigningToSwimlane}
+        />
+      )}
     </>
   );
 }

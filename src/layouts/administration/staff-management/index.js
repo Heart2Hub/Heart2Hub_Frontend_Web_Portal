@@ -24,8 +24,7 @@ const INITIAL_FORM_STATE = {
   mobileNumber: 0,
   staffRoleEnum: "",
   isHead: false,
-  departmentName: "",
-  subDepartmentName: "",
+  unitName: "",
 };
 
 function StaffManagement() {

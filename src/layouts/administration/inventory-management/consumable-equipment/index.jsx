@@ -6,11 +6,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import { IconButton, Icon } from "@mui/material";
+import { IconButton, Icon, Button } from "@mui/material";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -22,8 +18,6 @@ import DataTable from "examples/Tables/DataTable";
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 
-import { facilityApi, departmentApi } from "api/Api";
-// import { displayMessage } from "../../../store/slices/snackbarSlice";
 import { inventoryApi } from "api/Api";
 import { displayMessage } from "store/slices/snackbarSlice";
 
@@ -32,11 +26,13 @@ function ConsumableEquipmentManagement() {
     function priceFormat(num) {
         return `${num.toFixed(2)}`;
     }
+    const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(null);
+    const [inventoryToDeleteId, setInventoryToDeleteId] = useState(false);
 
     const reduxDispatch = useDispatch();
     const [data, setData] = useState({
         columns: [
-            { Header: "No.", accessor: "inventoryItemId", width: "10%" },
+            // { Header: "No.", accessor: "inventoryItemId", width: "10%" },
             { Header: "Equipment Name", accessor: "inventoryItemName", width: "20%" },
             { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
             { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
@@ -48,12 +44,14 @@ function ConsumableEquipmentManagement() {
                         <IconButton
                             color="secondary"
                             onClick={() => handleDeleteInventory(row.original.inventoryItemId)}
+                            title="Delete"
                         >
                             <Icon>delete</Icon>
                         </IconButton>
                         <IconButton
                             color="secondary"
                             onClick={() => handleOpenUpdateModal(row.original.inventoryItemId)}
+                            title="Update"
                         >
                             <Icon>create</Icon>
                         </IconButton>
@@ -67,7 +65,7 @@ function ConsumableEquipmentManagement() {
 
     const dataRef = useRef({
         columns: [
-            { Header: "No.", accessor: "inventoryItemId", width: "10%" },
+            // { Header: "No.", accessor: "inventoryItemId", width: "10%" },
             { Header: "Equipment Name", accessor: "inventoryItemName", width: "20%" },
             { Header: "Description", accessor: "inventoryItemDescription", width: "20%" },
             { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
@@ -79,12 +77,14 @@ function ConsumableEquipmentManagement() {
                         <IconButton
                             color="secondary"
                             onClick={() => handleDeleteInventory(row.original.inventoryItemId)}
+                            title="Delete"
                         >
                             <Icon>delete</Icon>
                         </IconButton>
                         <IconButton
                             color="secondary"
                             onClick={() => handleOpenUpdateModal(row.original.inventoryItemId)}
+                            title="Update"
                         >
                             <Icon>create</Icon>
                         </IconButton>
@@ -401,13 +401,18 @@ function ConsumableEquipmentManagement() {
             console.log(ex);
         }
     };
-
     const handleDeleteInventory = (inventoryItemId) => {
+        setInventoryToDeleteId(inventoryItemId);
+        setDeleteConfirmationOpen(true);
+    };
+
+    const handleConfirmDeleteInventory = (inventoryItemId) => {
         try {
             inventoryApi
                 .deleteConsumableEquipment(inventoryItemId)
                 .then(() => {
                     fetchData();
+                    setDeleteConfirmationOpen(false);
                     reduxDispatch(
                         displayMessage({
                             color: "success",
@@ -608,6 +613,20 @@ function ConsumableEquipmentManagement() {
                     <MDButton onClick={handleUpdateConsumableEquipment} color="primary">
                         Update
                     </MDButton>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={isDeleteConfirmationOpen} onClose={() => setDeleteConfirmationOpen(false)}>
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                    Are you sure you want to delete this item?
+                </DialogContent>
+                <DialogActions sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Button onClick={() => setDeleteConfirmationOpen(false)} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={() => handleConfirmDeleteInventory(inventoryToDeleteId)} color="primary">
+                        Confirm
+                    </Button>
                 </DialogActions>
             </Dialog>
 

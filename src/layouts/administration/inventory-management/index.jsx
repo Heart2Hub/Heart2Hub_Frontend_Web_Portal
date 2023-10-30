@@ -32,25 +32,11 @@ function InventoryManagement() {
                     <Grid item xs={12} md={6} lg={3}>
                         <MDBox mb={1.5}>
                             <SimpleBlogCard
-                                image="https://st.depositphotos.com/1151871/3045/i/450/depositphotos_30459135-stock-photo-medication.jpg"
-                                title="Medication Management"
-                                action={{
-                                    type: "internal",
-                                    route: "/administration/inventory-management/medication-management",
-                                    color: "info",
-                                    label: "Continue",
-                                }}
-                            />{" "}
-                        </MDBox>
-                    </Grid>
-                    <Grid item xs={12} md={6} lg={3}>
-                        <MDBox mb={1.5}>
-                            <SimpleBlogCard
                                 image="https://media.istockphoto.com/id/482858629/photo/doctors-hospital-corridor-nurse-pushing-gurney-stretcher-bed.jpg?b=1&s=612x612&w=0&k=20&c=QA5AU7uv9cnJUXBdMstov5CcpErsIQEke05Hn98SEvs="
-                                title="Service Item Management"
+                                title="Service Management"
                                 action={{
                                     type: "internal",
-                                    route: "/administration/inventory-management/service-item-management",
+                                    route: "/administration/inventory-management/service-management",
                                     color: "info",
                                     label: "Continue",
                                 }}

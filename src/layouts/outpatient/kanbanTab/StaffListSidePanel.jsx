@@ -1,17 +1,35 @@
-import React from "react";
-import { Card, Typography, List, ButtonBase } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Card, List, ButtonBase } from "@mui/material";
 import MDTypography from "components/MDTypography";
 import MDBox from "components/MDBox";
 import MDAvatar from "components/MDAvatar";
 import "./kanbanStyles.css";
-import { IMAGE_SERVER } from "constants/RestEndPoint";
 import { truncateText } from "utility/Utility";
+import { imageServerApi } from "../../../api/Api";
 
 function StaffListSidePanel({
   handleSelectStaffToFilter,
   selectStaffToFilter,
   listOfWorkingStaff,
 }) {
+  const [imageURLs, setImageURLs] = useState({});
+
+  const fetchImageURLs = async () => {
+    const newImageURLs = {};
+
+    for (const staff of listOfWorkingStaff) {
+      if (staff.imageLink) {
+        const response = await imageServerApi.getImageFromImageServer(
+          "id",
+          staff.imageLink
+        );
+        newImageURLs[staff.staffId] = URL.createObjectURL(response.data);
+      }
+    }
+
+    setImageURLs(newImageURLs);
+  };
+
   const handleClick = (staffId) => {
     if (selectStaffToFilter === staffId) {
       handleSelectStaffToFilter(0);
@@ -20,8 +38,12 @@ function StaffListSidePanel({
     }
   };
 
+  useEffect(() => {
+    fetchImageURLs();
+  }, [listOfWorkingStaff]);
+
   return (
-    <MDBox className="panel-container" sx={{ backgroundColor: "#D3E5F9" }}>
+    <MDBox className="panel-container" sx={{ backgroundColor: "#D3E5F9" }} style={{width: '270px'}}>
       <MDTypography variant="h3" style={{ marginBottom: "20px" }}>
         Staff List
       </MDTypography>
@@ -34,26 +56,25 @@ function StaffListSidePanel({
               onClick={() => handleClick(staff.staffId)}
             >
               <Card
-                className={`card-shadow ${
-                  selectStaffToFilter === staff.staffId ? "selected-card" : ""
-                }`}
+                className={`card-shadow ${selectStaffToFilter === staff.staffId ? "selected-card" : ""
+                  }`}
                 style={
                   selectStaffToFilter === staff.staffId
                     ? {
-                        backgroundColor: "#e0e0e0",
-                        boxShadow: "0 0 15px rgba(0, 0, 0, 0.3)",
-                        border: "1px solid #b0b0b0",
-                        display: "flex",
-                        cursor: "pointer",
-                        padding: "8px",
-                        width: "100%",
-                      }
+                      backgroundColor: "#e0e0e0",
+                      boxShadow: "0 0 15px rgba(0, 0, 0, 0.3)",
+                      border: "1px solid #b0b0b0",
+                      display: "flex",
+                      cursor: "pointer",
+                      padding: "8px",
+                      width: "100%",
+                    }
                     : {
-                        display: "flex",
-                        cursor: "pointer",
-                        padding: "8px",
-                        width: "100%",
-                      }
+                      display: "flex",
+                      cursor: "pointer",
+                      padding: "8px",
+                      width: "100%",
+                    }
                 }
               >
                 <MDBox
@@ -65,7 +86,7 @@ function StaffListSidePanel({
                   }}
                 >
                   <MDAvatar
-                    src={IMAGE_SERVER + "/images/id/" + staff.imageLink}
+                    src={imageURLs[staff.staffId] || ""}
                     alt="profile-image"
                     size="xl"
                     shadow="xl"
