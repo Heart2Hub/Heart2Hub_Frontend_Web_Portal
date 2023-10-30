@@ -26,7 +26,7 @@ import {
   DialogActions,
 } from "@mui/material";
 import MDTypography from "components/MDTypography";
-import { calculateAge } from "utility/Utility";
+import { calculateAge, parseDateArrUsingMoment } from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
 import MDButton from "components/MDButton";
 import {
@@ -52,6 +52,7 @@ import AddAttachmentButton from "./AddAttachmentButton";
 import ViewAttachmentsButton from "./ViewAttachmentsButton";
 import AdmissionDialog from "./AdmissionDialog";
 import AssignAdmissionDialog from "./AssignAdmissionDialog";
+import { useRef } from "react";
 
 const style = {
   position: "absolute",
@@ -84,6 +85,7 @@ function AdmissionTicketModal({
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [arrived, setArrived] = useState(selectedAppointment.arrived);
+  const [dischargeDate, setDischargeDate] = useState(null);
 
   //for assigning appointment to staff in the AppointmentTicketModal
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -341,6 +343,8 @@ function AdmissionTicketModal({
       });
   };
 
+  const isInitialLoad = useRef(true);
+
   useEffect(() => {
     if (selectedAppointment.assignedDoctorId) {
       getAssignedDoctorName(selectedAppointment.assignedDoctorId);
@@ -354,6 +358,13 @@ function AdmissionTicketModal({
 
     handleGetProfileImage();
     console.log(selectedAppointment);
+
+    if (isInitialLoad.current) {
+      setDischargeDate(
+        parseDateArrUsingMoment(selectedAppointment.dischargeDateTime)
+      );
+      isInitialLoad.current = false;
+    }
   }, [selectedAppointment, listOfWorkingStaff]);
 
   const handleOpenCancelDialog = () => {
@@ -452,6 +463,16 @@ function AdmissionTicketModal({
                     {assignedAdmin
                       ? `Ward ${assignedAdmin.unit.name}, Room ${selectedAppointment.room}, Bed ${selectedAppointment.bed}`
                       : "No Location Yet"}
+                  </MDTypography>
+                </ListItem>
+                <ListItem>
+                  <MDTypography variant="h5" gutterBottom>
+                    Discharge Date :
+                  </MDTypography>
+                </ListItem>
+                <ListItem>
+                  <MDTypography variant="h6" gutterBottom color="black">
+                    {dischargeDate}
                   </MDTypography>
                 </ListItem>
                 <ListItem
@@ -602,6 +623,7 @@ function AdmissionTicketModal({
                     }}
                   />
                 </ListItem>
+
                 <ListItem sx={{ marginTop: "10px" }}>
                   <MDTypography variant="h5" gutterBottom>
                     Comments:

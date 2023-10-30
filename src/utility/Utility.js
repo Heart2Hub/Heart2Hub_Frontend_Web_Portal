@@ -1,3 +1,5 @@
+import moment from "moment";
+
 export function hasExpired(dateA) {
   return dateA.getUTCSeconds() < new Date().getUTCSeconds();
 }
@@ -130,4 +132,11 @@ export const formatDateToYYYYMMDDHHMM = (date) => {
   const hh = String(date.getHours()).padStart(2, "0");
 
   return `${yyyy}-${mm}-${dd} ${hh}:00`;
+};
+
+export const parseDateArrUsingMoment = (dateArr) => {
+  dateArr[1] = dateArr[1] - 1;
+  console.log(dateArr);
+  const parsedDate = moment(dateArr);
+  return parsedDate.format("YYYY-MM-DD HH:mm");
 };

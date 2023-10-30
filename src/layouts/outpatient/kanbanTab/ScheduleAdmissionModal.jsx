@@ -21,11 +21,7 @@ import {
   Button,
 } from "@mui/material";
 import MDTypography from "components/MDTypography";
-import {
-  calculateAge,
-  parseDateFromLocalDateTime,
-  formatDateToYYYYMMDDHHMM,
-} from "utility/Utility";
+import { calculateAge, parseDateArrUsingMoment } from "utility/Utility";
 import MDAvatar from "components/MDAvatar";
 import MDButton from "components/MDButton";
 import {
@@ -59,6 +55,7 @@ import moment from "moment";
 import "moment-timezone";
 import { DateTime } from "luxon";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { useRef } from "react";
 
 const style = {
   position: "absolute",
@@ -579,6 +576,8 @@ function ScheduleAdmissionModal({
       });
   };
 
+  const isInitialLoad = useRef(true);
+
   useEffect(() => {
     if (openModal) {
       console.log(selectedAppointment);
@@ -591,13 +590,16 @@ function ScheduleAdmissionModal({
       handleGetProfileImage();
 
       // for setting admission textarea fields
-      if (selectedAppointment.admissionDate) {
-        const admissionMoment = moment(selectedAppointment.admissionDate);
-        const dischargeMoment = moment(selectedAppointment.dischargeDate);
-        setAdmissionDateTime(admissionMoment.format("YYYY-MM-DD HH:mm:ss"));
-        setDischargeDateTime(dischargeMoment.format("YYYY-MM-DD HH:mm:ss"));
+      if (selectedAppointment.admissionDate && isInitialLoad.current) {
+        setAdmissionDateTime(
+          parseDateArrUsingMoment(selectedAppointment.admissionDate)
+        );
+        setDischargeDateTime(
+          parseDateArrUsingMoment(selectedAppointment.dischargeDate)
+        );
         setSelectedWard(selectedAppointment.ward);
         setScheduled(true);
+        isInitialLoad.current = false;
       }
     }
 
