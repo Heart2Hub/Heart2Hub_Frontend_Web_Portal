@@ -135,7 +135,8 @@ export const formatDateToYYYYMMDDHHMM = (date) => {
 };
 
 export const parseDateArrUsingMoment = (dateArr) => {
-  dateArr[1] = dateArr[1] - 1;
+  const newMonth = dateArr[1] - 1;
+  dateArr[1] = newMonth;
   console.log(dateArr);
   const parsedDate = moment(dateArr);
   return parsedDate.format("YYYY-MM-DD HH:mm");
