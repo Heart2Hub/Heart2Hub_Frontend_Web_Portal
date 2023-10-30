@@ -30,6 +30,7 @@ import moment from "moment";
 import AdmissionCard from "./AdmissionCard";
 
 import NoAdmissionCard from "./NoAdmissionCard";
+import AdmissionTicketModal from "./AdmissionTicketModal";
 
 function Inpatient() {
   const staff = useSelector(selectStaff);
@@ -56,9 +57,9 @@ function Inpatient() {
   const [admissionsByRoom, setAdmissionsByRoom] = useState([]);
   const [room, setRoom] = useState(1);
 
-  const handleSelectStaffToFilter = (staffId) => {
-    setSelectStaffToFilter(staffId);
-  };
+  //for opening admission ticket modal
+  const [selectedAdmission, setSelectedAdmission] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
 
   //force a refresh for modal assigning
   const forceRefresh = () => {
@@ -80,38 +81,64 @@ function Inpatient() {
     const response = await admissionApi.getAdmissionsForWard(staff.unit.name);
     let admissions = response.data;
     if (selectStaffToFilter) {
-      admissions = admissions.filter(
-        (admission) =>
-          selectStaffToFilter === admission.assignedAdminId ||
-          selectStaffToFilter === admission.assignedNurseId
+      admissions = admissions.filter((admission) =>
+        admission.listOfStaffsId.includes(selectStaffToFilter)
       );
     }
 
     setCurrentDayAdmissions(admissions);
+
+    const filtered = admissions.filter((admission) => admission.room === 1);
+    const admissionsInBedOrder = filtered.sort((a, b) => a.bed - b.bed);
+    setAdmissionsByRoom(admissionsInBedOrder);
   };
 
   useEffect(() => {
     getStaffCurrentlyWorking();
     getAdmissions();
     //console.log(staff);
-    console.log(selectStaffToFilter);
-  }, [loading, selectStaffToFilter]);
+    //console.log(selectStaffToFilter);
+  }, [selectStaffToFilter]);
 
-  const handleChange = (event, selectedRoom) => {
+  const handleChangeRoom = (event, selectedRoom) => {
     setRoom(selectedRoom);
-  };
-
-  useEffect(() => {
     const filtered = currentDayAdmissions.filter(
-      (admission) => admission.room === room
+      (admission) => admission.room === selectedRoom
     );
     const admissionsInBedOrder = filtered.sort((a, b) => a.bed - b.bed);
     setAdmissionsByRoom(admissionsInBedOrder);
-  }, [room, currentDayAdmissions]);
+  };
 
-  // useEffect(() => {
-  //   console.log(admissionsByRoom);
-  // }, [admissionsByRoom]);
+  const handleSelectStaffToFilter = (staffId) => {
+    setSelectStaffToFilter(staffId);
+    const filtered = currentDayAdmissions.filter(
+      (admission) =>
+        admission.listOfStaffsId.includes(staffId) && admission.room === room
+    );
+    const admissionsInBedOrder = filtered.sort((a, b) => a.bed - b.bed);
+    setAdmissionsByRoom(admissionsInBedOrder);
+  };
+
+  const handleSelectAdmission = (admission) => {
+    setSelectedAdmission(admission);
+    setOpenModal(true);
+  };
+
+  const handleUpdateAdmission = (updatedAdmission) => {
+    setSelectedAdmission(updatedAdmission);
+    setOpenModal(true);
+    const updatedAdmissions = admissionsByRoom.map((existingAdmission) => {
+      if (updatedAdmission.admissionId === existingAdmission.admissionId) {
+        return updatedAdmission;
+      }
+      return existingAdmission;
+    });
+    setAdmissionsByRoom(updatedAdmissions);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+  };
 
   const dischargeTomorrow = async () => {
     const tomorrow = moment().add(1, "days");
@@ -163,7 +190,7 @@ function Inpatient() {
           <MDButton onClick={allocateTomorrow}>Allocate</MDButton> */}
           <Tabs
             value={room}
-            onChange={handleChange}
+            onChange={handleChangeRoom}
             style={{ marginTop: "10px", width: "500px" }}
           >
             <Tab label="Room 1" value={1} />
@@ -200,6 +227,7 @@ function Inpatient() {
                           index={index}
                           listOfWorkingStaff={listOfWorkingStaff}
                           forceRefresh={forceRefresh}
+                          handleSelectAdmission={handleSelectAdmission}
                         />
                       ),
                   }}
@@ -211,6 +239,17 @@ function Inpatient() {
           </MDBox>
         </MDBox>
       </MDBox>
+      {selectedAdmission && (
+        <AdmissionTicketModal
+          key={selectedAdmission.admissionId}
+          openModal={openModal}
+          handleCloseModal={handleCloseModal}
+          selectedAppointment={selectedAdmission}
+          listOfWorkingStaff={listOfWorkingStaff}
+          forceRefresh={forceRefresh}
+          handleUpdateAdmission={handleUpdateAdmission}
+        />
+      )}
     </DashboardLayout>
   );
 }

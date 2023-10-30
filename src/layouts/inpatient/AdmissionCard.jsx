@@ -22,6 +22,7 @@ function AdmissionCard({
   index,
   listOfWorkingStaff,
   forceRefresh,
+  handleSelectAdmission,
 }) {
   const [openModal, setOpenModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -56,7 +57,7 @@ function AdmissionCard({
       <ButtonBase
         key={appointment.admissionId}
         style={{ width: "100%", marginBottom: "10px" }}
-        onClick={() => handleOpenModal(appointment)}
+        onClick={() => handleSelectAdmission(appointment)}
       >
         <Card
           // className={`draggable-container ${
@@ -113,7 +114,7 @@ function AdmissionCard({
         </Card>
       </ButtonBase>
 
-      {selectedAppointment && (
+      {/* {selectedAppointment && (
         <AdmissionTicketModal
           openModal={openModal}
           handleCloseModal={handleCloseModal}
@@ -121,7 +122,7 @@ function AdmissionCard({
           listOfWorkingStaff={listOfWorkingStaff}
           forceRefresh={forceRefresh}
         />
-      )}
+      )} */}
     </>
   );
 }

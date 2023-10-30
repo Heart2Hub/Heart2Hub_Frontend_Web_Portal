@@ -12,6 +12,9 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { selectStaff } from "store/slices/staffSlice";
+import { staffApi } from "api/Api";
 
 function AssignAdmissionDialog({
   open,
@@ -19,8 +22,14 @@ function AssignAdmissionDialog({
   onConfirm,
   listOfWorkingStaff,
   selectedAppointmentToAssign,
+  listOfAssignedStaff,
   roleToAssign,
 }) {
+  const loggedInStaff = useSelector(selectStaff);
+
+  //const [selectedRole, setSelectedRole] = useState("")
+  //const [selectRoleOptions, setSelectRoleOptions] = useState([])
+
   const [selectedNurse, setSelectedNurse] = useState(
     selectedAppointmentToAssign.assignedNurseId
       ? selectedAppointmentToAssign.assignedNurseId
@@ -33,12 +42,19 @@ function AssignAdmissionDialog({
       : 0
   );
 
-  const handleChange = (event) => {
-    if (roleToAssign === "NURSE") {
-      setSelectedNurse(event.target.value);
-    } else {
-      setSelectedAdmin(event.target.value);
+  const [selectedStaff, setSelectedStaff] = useState(0);
+
+  useEffect(() => {
+    const assignedStaffByRole = listOfAssignedStaff.filter(
+      (staff) => staff.staffRoleEnum === loggedInStaff.staffRoleEnum
+    )[0];
+    if (assignedStaffByRole) {
+      setSelectedStaff(assignedStaffByRole.staffId);
     }
+  }, [listOfAssignedStaff]);
+
+  const handleChange = (event) => {
+    setSelectedStaff(event.target.value);
   };
 
   const findStaffInListByStaffId = (staffId) => {
@@ -74,7 +90,7 @@ function AssignAdmissionDialog({
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
-              value={roleToAssign === "NURSE" ? selectedNurse : selectedAdmin}
+              value={selectedStaff}
               label="Select Staff"
               onChange={handleChange}
               sx={{ height: "50px" }}
@@ -82,7 +98,9 @@ function AssignAdmissionDialog({
               <MenuItem value={0}>Not assigned</MenuItem>
 
               {listOfWorkingStaff
-                .filter((staff) => staff.staffRoleEnum === roleToAssign)
+                .filter(
+                  (staff) => staff.staffRoleEnum === loggedInStaff.staffRoleEnum
+                )
                 .map((staff) => (
                   <MenuItem key={staff.staffId} value={staff.staffId}>
                     {findStaffInListByStaffId(staff.staffId)}
@@ -95,15 +113,7 @@ function AssignAdmissionDialog({
           <Button onClick={onClose} color="primary">
             Cancel
           </Button>
-          <Button
-            onClick={() =>
-              onConfirm(
-                roleToAssign === "NURSE" ? selectedNurse : selectedAdmin,
-                roleToAssign
-              )
-            }
-            color="primary"
-          >
+          <Button onClick={() => onConfirm(selectedStaff)} color="primary">
             Confirm
           </Button>
         </DialogActions>
