@@ -480,71 +480,6 @@ function AppointmentTicketModal({
     setIsDialogOpen(true);
   };
 
-  //has its own set of logic for assignAppointmentDialog to not clash with the drag and drop version
-  // const handleConfirmAssignDialog = async (selectedStaffId) => {
-  //   if (selectedStaffId === 0) {
-  //     reduxDispatch(
-  //       displayMessage({
-  //         color: "warning",
-  //         icon: "notification",
-  //         title: "Error",
-  //         content: "Please select a staff to assign!",
-  //       })
-  //     );
-  //     return;
-  //   }
-
-  //   try {
-  //     //send to BE to assign staff
-  //     console.log(selectedAppointment);
-  //     const response = await appointmentApi.assignAppointmentToStaff(
-  //       selectedAppointment.appointmentId,
-  //       selectedStaffId,
-  //       loggedInStaff.staffId
-  //     );
-
-  //     const updatedAssignment = response.data;
-
-  //     //force a rerender instead
-  //     forceRefresh();
-
-  //     reduxDispatch(
-  //       displayMessage({
-  //         color: "success",
-  //         icon: "notification",
-  //         title: "Success",
-  //         content: "Appointment has been updated successfully!!",
-  //       })
-  //     );
-
-  //     handleCloseModal();
-  //   } catch (error) {
-  //     reduxDispatch(
-  //       displayMessage({
-  //         color: "warning",
-  //         icon: "notification",
-  //         title: "Error",
-  //         content: error.response.data,
-  //       })
-  //     );
-  //   }
-  //   // }
-
-  //   setIsDialogOpen(false);
-  // };
-
-  const handleCloseAssignDialog = () => {
-    reduxDispatch(
-      displayMessage({
-        color: "info",
-        icon: "notification",
-        title: "Info",
-        content: "No action was taken",
-      })
-    );
-    setIsDialogOpen(false);
-  };
-
   const handleClickToEhr = () => {
     // Can refactor to util
     // console.log(selectedAppointment);
@@ -574,16 +509,27 @@ function AppointmentTicketModal({
   };
 
   const updateCartQuantity = async (lineItem) => {
-    for (let i=0; i<cartItems.length; i++) {
-      if (cartItems[i].transactionItemId === lineItem.transactionItemId) {
-        let temp = cartItems;
-        temp[i].transactionItemQuantity = Number(lineItem.transactionItemQuantity)
-        setCartItems(temp);
-        setCart(temp);
-      }
+    try {
+      const r = await transactionItemApi.updateTransactionItem(lineItem.transactionItemId, lineItem.transactionItemQuantity)
+      handleEditCartClose();
+      // for (let i=0; i<cartItems.length; i++) {
+      //   if (cartItems[i].transactionItemId === lineItem.transactionItemId) {
+      //     let temp = cartItems;
+      //     temp[i].transactionItemQuantity = Number(lineItem.transactionItemQuantity)
+      //     setCartItems(temp);
+      //     setCart(temp);
+      //   }
+      // }
+    } catch (error) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Update Failed!",
+          content: error.response.data,
+        })
+      );
     }
-    const r = await transactionItemApi.updateTransactionItem(lineItem.transactionItemId, lineItem.transactionItemQuantity)
-    handleEditCartClose();
   }
 
   useEffect(() => {
