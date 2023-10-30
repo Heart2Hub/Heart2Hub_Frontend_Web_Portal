@@ -542,6 +542,7 @@ function MedicationManagement() {
                     );
                 })
                 .catch((err) => {
+                    setDeleteConfirmationOpen(false);
                     reduxDispatch(
                         displayMessage({
                             color: "error",
