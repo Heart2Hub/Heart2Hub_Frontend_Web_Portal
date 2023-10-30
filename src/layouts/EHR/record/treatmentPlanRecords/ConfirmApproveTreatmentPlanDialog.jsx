@@ -19,18 +19,16 @@ function ConfirmApproveTreatmentPlanDialog({
   selectedTreatmentPlanRecord,
   handleCloseConfirmApproveTreatmentPlanRecordDialog,
   handleRefresh,
+  invitationIdToApprove,
 }) {
   const reduxDispatch = useDispatch();
   const ehrRecord = useSelector(selectEHRRecord);
   const loggedInStaff = useSelector(selectStaff);
 
-  const handleConfirmApproveTreatmentPlanRecord = (treatmentPlanRecord) => {
+  const handleConfirmApproveTreatmentPlanRecord = () => {
     try {
       treatmentPlanRecordApi
-        .setInvitationToApproved(
-          treatmentPlanRecord.treatmentPlanRecordId,
-          loggedInStaff.staffId
-        )
+        .setInvitationToApproved(invitationIdToApprove, loggedInStaff.staffId)
         .then((response) => {
           console.log(response.data);
           // Create a deep copy of the treatment plan records array
@@ -75,7 +73,7 @@ function ConfirmApproveTreatmentPlanDialog({
   };
 
   const handleConfirm = () => {
-    handleConfirmApproveTreatmentPlanRecord(selectedTreatmentPlanRecord);
+    handleConfirmApproveTreatmentPlanRecord();
     handleCloseConfirmApproveTreatmentPlanRecordDialog();
   };
 
