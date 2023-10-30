@@ -10,6 +10,7 @@ import {
   Select,
   MenuItem,
   TextField,
+  Icon,
   InputLabel,
   Table,
   TableBody,
@@ -19,7 +20,12 @@ import {
   TableRow,
   Paper,
   Button,
-  IconButton
+  IconButton,
+  DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
 } from "@mui/material";
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MDTypography from "components/MDTypography";
@@ -47,6 +53,7 @@ import MDBox from "components/MDBox";
 import AddAttachmentButton from "../outpatient/kanbanTab/AddAttachmentButton";
 import ViewAttachmentsButton from "../outpatient/kanbanTab/ViewAttachmentsButton";
 import PrescriptionDialog from "layouts/outpatient/kanbanTab/PrescriptionRecord";
+import EditCart from "./EditCart";
 
 const style = {
   position: "absolute",
@@ -78,6 +85,9 @@ function AppointmentTicketModal({
   const [editableComments, setEditableComments] = useState("");
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [editIndex, setEditIndex] = useState();
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState(null);
 
   //For Cart
   const [medications, setMedications] = useState([]);
@@ -89,6 +99,16 @@ function AppointmentTicketModal({
 
   //For Managing the Cart
   const [cartItems, setCartItems] = useState([]);
+  const [isEditCartOpen, setIsEditCartOpen] = useState(false);
+
+  const handleOpenDeleteDialog = (itemId) => {
+    setSelectedItemId(itemId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+  };
 
   //for assigning appointment to staff in the AppointmentTicketModal
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -180,7 +200,6 @@ function AppointmentTicketModal({
 
       setCartItems(response.data);
       setCart(response.data)
-      console.log(cartItems);
     } catch (error) {
       console.error("Error fetching cart items:", error);
     }
@@ -190,46 +209,32 @@ function AppointmentTicketModal({
     fetchPatientCart();
   };
 
-  const handleDeleteCartItem = async (cartItemId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this item?"
-    );
-    if (confirmDelete) {
-      try {
-        await transactionItemApi.removeFromCart(
-          selectedAppointment.patientId,
-          cartItemId
-        );
-        reduxDispatch(
-          displayMessage({
-            color: "success",
-            icon: "notification",
-            title: "Success",
-            content: "Item has been deleted from the cart!",
-          })
-        );
-        fetchPatientCart();
-      } catch (error) {
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error",
-            content: error.response.data,
-          })
-        );
-      }
-    } else {
-      // If the user cancels the deletion
+  const handleConfirmDelete = async () => {
+    try {
+      await transactionItemApi.removeFromCart(
+        selectedAppointment.patientId,
+        selectedItemId
+      );
       reduxDispatch(
         displayMessage({
-          color: "info",
+          color: "success",
           icon: "notification",
-          title: "Info",
-          content: "Deletion has been canceled.",
+          title: "Success",
+          content: "Item has been deleted from the cart!",
+        })
+      );
+      fetchPatientCart();
+    } catch (error) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error",
+          content: error.response.data,
         })
       );
     }
+    handleCloseDeleteDialog();
   };
 
   const handleAddMedicationToPatient = async (medication) => {
@@ -254,7 +259,6 @@ function AppointmentTicketModal({
         inventoryItem: medication.inventoryItemId,
       };
 
-      console.log(requestBody);
 
       transactionItemApi
         .addToCart(patientId, requestBody)
@@ -299,13 +303,10 @@ function AppointmentTicketModal({
         inventoryItem: service.inventoryItemId,
       };
 
-      console.log(requestBody);
-
       transactionItemApi
         .addToCart(patientId, requestBody)
         .then((response) => {
           const item = response.data;
-          console.log(item);
           reduxDispatch(
             displayMessage({
               color: "success",
@@ -367,34 +368,10 @@ function AppointmentTicketModal({
     );
   };
 
-  const renderServicesDropdown = () => {
-    return (
-      <Box style={{ width: "100%" }}>
-        <InputLabel id="medication-label"> Select Services</InputLabel>
-
-        <Select
-          onChange={(e) => setSelectedService(e.target.value)}
-          style={{ width: "50%" }}
-          sx={{ lineHeight: "3em" }}
-        >
-          {services.map((service) => (
-            <MenuItem key={service.inventoryItemId} value={service}>
-              {service.inventoryItemName}
-            </MenuItem>
-          ))}
-        </Select>
-        <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
-          <MDButton
-            onClick={() => handleAddServiceToPatient(selectedService)}
-            variant="gradient"
-            color="primary"
-          >
-            Add Service
-          </MDButton>
-        </Box>
-      </Box>
-    );
-  };
+  const handleEditCartClose = () => {
+    setEditIndex(null);
+    setIsEditCartOpen(false);
+  }
 
   const handleCommentsChange = (event) => {
     setEditableComments(event.target.value);
@@ -503,71 +480,6 @@ function AppointmentTicketModal({
     setIsDialogOpen(true);
   };
 
-  //has its own set of logic for assignAppointmentDialog to not clash with the drag and drop version
-  const handleConfirmAssignDialog = async (selectedStaffId) => {
-    if (selectedStaffId === 0) {
-      reduxDispatch(
-        displayMessage({
-          color: "warning",
-          icon: "notification",
-          title: "Error",
-          content: "Please select a staff to assign!",
-        })
-      );
-      return;
-    }
-
-    try {
-      //send to BE to assign staff
-      console.log(selectedAppointment);
-      const response = await appointmentApi.assignAppointmentToStaff(
-        selectedAppointment.appointmentId,
-        selectedStaffId,
-        loggedInStaff.staffId
-      );
-
-      const updatedAssignment = response.data;
-
-      //force a rerender instead
-      forceRefresh();
-
-      reduxDispatch(
-        displayMessage({
-          color: "success",
-          icon: "notification",
-          title: "Success",
-          content: "Appointment has been updated successfully!!",
-        })
-      );
-
-      handleCloseModal();
-    } catch (error) {
-      reduxDispatch(
-        displayMessage({
-          color: "warning",
-          icon: "notification",
-          title: "Error",
-          content: error.response.data,
-        })
-      );
-    }
-    // }
-
-    setIsDialogOpen(false);
-  };
-
-  const handleCloseAssignDialog = () => {
-    reduxDispatch(
-      displayMessage({
-        color: "info",
-        icon: "notification",
-        title: "Info",
-        content: "No action was taken",
-      })
-    );
-    setIsDialogOpen(false);
-  };
-
   const handleClickToEhr = () => {
     // Can refactor to util
     // console.log(selectedAppointment);
@@ -591,12 +503,34 @@ function AppointmentTicketModal({
           username: selectedAppointment.username,
           profilePicture: selectedAppointment.patientProfilePicture,
         };
-        console.log(response);
-        console.log(response.data);
         reduxDispatch(setEHRRecord(response.data));
         navigate("/ehr/ehrRecord");
       });
   };
+
+  const updateCartQuantity = async (lineItem) => {
+    try {
+      const r = await transactionItemApi.updateTransactionItem(lineItem.transactionItemId, lineItem.transactionItemQuantity)
+      handleEditCartClose();
+      // for (let i=0; i<cartItems.length; i++) {
+      //   if (cartItems[i].transactionItemId === lineItem.transactionItemId) {
+      //     let temp = cartItems;
+      //     temp[i].transactionItemQuantity = Number(lineItem.transactionItemQuantity)
+      //     setCartItems(temp);
+      //     setCart(temp);
+      //   }
+      // }
+    } catch (error) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Update Failed!",
+          content: error.response.data,
+        })
+      );
+    }
+  }
 
   useEffect(() => {
     if (selectedAppointment.currentAssignedStaffId !== null) {
@@ -611,7 +545,7 @@ function AppointmentTicketModal({
     fetchMedicationsAndServices();
     fetchPatientCart();
     // setAssigningToSwimlane(columnName);
-  }, [selectedAppointment, listOfWorkingStaff]);
+  }, [selectedAppointment, listOfWorkingStaff, editIndex]);
 
   return (
     <>
@@ -900,6 +834,7 @@ function AppointmentTicketModal({
                   handlePageRefresh={handlePageRefresh}
                 />
                 <br></br>
+                {loggedInStaff.staffRoleEnum === "PHARMACIST" &&
                 <List>
                   <ListItem>
                     <MDTypography variant="h5" gutterBottom>
@@ -907,16 +842,16 @@ function AppointmentTicketModal({
                     </MDTypography>
                   </ListItem>
                   <ListItem>{renderMedicationsDropdown()}</ListItem>
-                </List>
+                </List>}
                 <br></br>
-                <List>
+                {/* <List>
                   <ListItem>
                     <MDTypography variant="h5" gutterBottom>
                       Services:
                     </MDTypography>
                   </ListItem>
                   <ListItem>{renderServicesDropdown()}</ListItem>
-                </List>
+                </List> */}
                 <List>
                   <ListItem>
                     <MDTypography variant="h5" gutterBottom>
@@ -945,7 +880,7 @@ function AppointmentTicketModal({
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {cartItems.map((item) => (
+                            {cartItems.map((item,index) => (
                               <TableRow
                                 key={item.transactionItemId}
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -954,17 +889,32 @@ function AppointmentTicketModal({
                                   {item.transactionItemName}
                                 </TableCell>
                                 <TableCell align="right">
-                                  Quantity: {item.transactionItemQuantity}
-                                </TableCell>
-                                <TableCell align="right">
-                                  <Button
-                                    variant="contained"
-                                    style={{ backgroundColor: "#f44336", color: "white" }}
-                                    onClick={() => handleDeleteCartItem(item.transactionItemId)}
+                                  Quantity: {item.transactionItemQuantity} &nbsp;
+                                  <IconButton
+                                    color="secondary"
+                                    onClick={() => {setEditIndex(index);setIsEditCartOpen(true);}}
                                   >
-                                    Delete
-                                  </Button>
+                                    <Icon>edit</Icon>
+                                  </IconButton>
                                 </TableCell>
+                                {loggedInStaff.staffRoleEnum !== "ADMIN" ? (
+                                  <TableCell align="right">
+                                    <Button
+                                      variant="contained"
+                                      style={{
+                                        backgroundColor: "#f44336",
+                                        color: "white",
+                                      }}
+                                      onClick={() =>
+                                        handleOpenDeleteDialog(
+                                          item.transactionItemId
+                                        )
+                                      }
+                                    >
+                                      Delete
+                                    </Button>
+                                  </TableCell>
+                                ) : null}
                               </TableRow>
                             ))}
                           </TableBody>
@@ -998,14 +948,40 @@ function AppointmentTicketModal({
           )}
         </Box>
       </Modal>
-      <AssignAppointmentDialog
+      <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this item?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog} color="primary">
+            Cancel
+          </Button>
+          <MDButton
+            onClick={handleConfirmDelete}
+            color="primary"
+            variant="contained"
+          >
+            Delete
+          </MDButton>
+        </DialogActions>
+      </Dialog>
+      {/* <AssignAppointmentDialog
         open={isDialogOpen}
         onConfirm={handleConfirmAssignDialog}
         onClose={handleCloseAssignDialog}
         listOfWorkingStaff={listOfWorkingStaff}
         selectedAppointmentToAssign={selectedAppointment}
         assigningToSwimlane={columnName}
-      />
+      /> */}
+      <EditCart 
+        open={isEditCartOpen}
+        onClose={handleEditCartClose}
+        cart={cartItems[editIndex]}
+        updateCartQuantity={updateCartQuantity}/>
+
     </>
   );
 }

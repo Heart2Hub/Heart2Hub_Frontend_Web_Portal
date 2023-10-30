@@ -86,8 +86,11 @@ function AdmissionDialog({
   };
 
   useEffect(() => {
+    setSelectedStaff(null);
+    setDuration("");
+    setReason("");
     handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
-  }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
+  }, [assigningToSwimlane, selectedAppointmentToAssign]);
 
   return (
     <>

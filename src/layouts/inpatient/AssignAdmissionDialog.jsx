@@ -12,6 +12,9 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { selectStaff } from "store/slices/staffSlice";
+import { staffApi } from "api/Api";
 
 function AssignAdmissionDialog({
   open,
@@ -19,15 +22,36 @@ function AssignAdmissionDialog({
   onConfirm,
   listOfWorkingStaff,
   selectedAppointmentToAssign,
+  listOfAssignedStaff,
+  roleToAssign,
 }) {
-  const [selectedStaff, setSelectedStaff] = useState(
-    selectedAppointmentToAssign !== null &&
-      selectedAppointmentToAssign.assignedNurseId !== null
+  const loggedInStaff = useSelector(selectStaff);
+
+  //const [selectedRole, setSelectedRole] = useState("")
+  //const [selectRoleOptions, setSelectRoleOptions] = useState([])
+
+  const [selectedNurse, setSelectedNurse] = useState(
+    selectedAppointmentToAssign.assignedNurseId
       ? selectedAppointmentToAssign.assignedNurseId
       : 0
   );
-  const [listOfApplicableWorkingStaff, setListOfApplicableWorkingStaff] =
-    useState([]);
+
+  const [selectedAdmin, setSelectedAdmin] = useState(
+    selectedAppointmentToAssign.assignedAdminId
+      ? selectedAppointmentToAssign.assignedAdminId
+      : 0
+  );
+
+  const [selectedStaff, setSelectedStaff] = useState(0);
+
+  useEffect(() => {
+    const assignedStaffByRole = listOfAssignedStaff.filter(
+      (staff) => staff.staffRoleEnum === loggedInStaff.staffRoleEnum
+    )[0];
+    if (assignedStaffByRole) {
+      setSelectedStaff(assignedStaffByRole.staffId);
+    }
+  }, [listOfAssignedStaff]);
 
   const handleChange = (event) => {
     setSelectedStaff(event.target.value);
@@ -52,36 +76,6 @@ function AssignAdmissionDialog({
     }
   };
 
-  const handleFilterListOfApplicableWorkingStaff = (swimlaneName) => {
-    if (swimlaneName === "Registration") {
-      setListOfApplicableWorkingStaff(
-        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
-      );
-    } else if (swimlaneName === "Triage") {
-      setListOfApplicableWorkingStaff(
-        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "NURSE")
-      );
-    } else if (swimlaneName === "Consultation") {
-      setListOfApplicableWorkingStaff(
-        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "DOCTOR")
-      );
-    } else if (swimlaneName === "Admission") {
-      setListOfApplicableWorkingStaff(
-        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
-      );
-    } else if (swimlaneName === "Discharge") {
-      setListOfApplicableWorkingStaff(
-        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
-      );
-    } else {
-      // console.log("No Filter result of applicable working staff");
-    }
-  };
-
-  //   useEffect(() => {
-  //     handleFilterListOfApplicableWorkingStaff(assigningToSwimlane);
-  //   }, [assigningToSwimlane, selectedAppointmentToAssign, selectedStaff]);
-
   return (
     <>
       <Dialog open={open} onClose={onClose}>
@@ -102,14 +96,12 @@ function AssignAdmissionDialog({
               sx={{ height: "50px" }}
             >
               <MenuItem value={0}>Not assigned</MenuItem>
-              {/* {listOfApplicableWorkingStaff.length !== 0 &&
-                listOfApplicableWorkingStaff.map((staff) => (
-                  <MenuItem key={staff.staffId} value={staff.staffId}>
-                    {findStaffInListByStaffId(staff.staffId)}
-                  </MenuItem>
-                ))} */}
-              {listOfWorkingStaff.length !== 0 &&
-                listOfWorkingStaff.map((staff) => (
+
+              {listOfWorkingStaff
+                .filter(
+                  (staff) => staff.staffRoleEnum === loggedInStaff.staffRoleEnum
+                )
+                .map((staff) => (
                   <MenuItem key={staff.staffId} value={staff.staffId}>
                     {findStaffInListByStaffId(staff.staffId)}
                   </MenuItem>

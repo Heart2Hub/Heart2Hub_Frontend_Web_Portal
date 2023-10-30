@@ -14,6 +14,7 @@ import UpdateProblemRecordDialog from "./UpdateProblemRecordDialog";
 import DeleteProblemRecordDialog from "./DeleteProblemRecordDialog";
 
 import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
+import { useEffect } from "react";
 
 function ProblemRecordsBox() {
   const reduxDispatch = useDispatch();
@@ -40,6 +41,8 @@ function ProblemRecordsBox() {
     useState(false);
   const [selectedProblemRecordToDelete, setSelectedProblemRecordToDelete] =
     useState(null);
+
+  const [listOfProblemsToDisplay, setListOfProblemsToDisplay] = useState([]);
 
   //create problem records
   const handleCloseCreateProblemRecordDialog = () => {
@@ -82,6 +85,20 @@ function ProblemRecordsBox() {
     setSelectedProblemRecordToDelete(null);
     setOpenDeleteProblemRecordDialog(false);
   };
+
+  const handleGetProblems = () => {
+    let listOfProblems = [...ehrRecord.listOfProblemRecords];
+    if (listOfProblems.length > 1) {
+      listOfProblems.sort(
+        (prob1, prob2) => prob2.problemRecordId - prob1.problemRecordId
+      );
+    }
+    setListOfProblemsToDisplay(listOfProblems);
+  };
+
+  useEffect(() => {
+    handleGetProblems();
+  }, [ehrRecord]);
 
   return (
     <>
@@ -129,7 +146,7 @@ function ProblemRecordsBox() {
         </MDBox>
 
         <Divider variant="middle" />
-        {ehrRecord.listOfProblemRecords.length === 0 ? (
+        {listOfProblemsToDisplay.length === 0 ? (
           <MDTypography
             variant="h5"
             sx={{
@@ -144,7 +161,7 @@ function ProblemRecordsBox() {
           </MDTypography>
         ) : (
           <Grid container spacing={3} justify="center" alignItems="center">
-            {ehrRecord.listOfProblemRecords.map((problemRecord, index) => (
+            {listOfProblemsToDisplay.map((problemRecord, index) => (
               <Grid item xs={12} md={6} key={index}>
                 <Card
                   style={{
@@ -163,7 +180,7 @@ function ProblemRecordsBox() {
                           variant="h3"
                           style={{ marginBottom: "8px" }}
                         >
-                          {`Problem ${index + 1}`}
+                          {`Problem ${problemRecord.problemRecordId}`}
                         </MDTypography>
                         <MDTypography variant="h6" color="secondary">
                           {`Created By: ${problemRecord.createdBy}`}

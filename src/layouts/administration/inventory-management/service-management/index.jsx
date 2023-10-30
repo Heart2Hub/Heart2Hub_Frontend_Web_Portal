@@ -10,18 +10,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import {
-  IconButton,
-  Icon,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
-  MenuProps,
-  Autocomplete,
-  Button,
-} from "@mui/material";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import { IconButton, Icon, Button } from "@mui/material";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -33,54 +22,60 @@ import DataTable from "examples/Tables/DataTable";
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 
+import { facilityApi, departmentApi, wardApi } from "api/Api";
+// import { displayMessage } from "../../../store/slices/snackbarSlice";
 import { inventoryApi } from "api/Api";
-
-import ViewMedicationDetailsDialog from "./viewMedicationDetailsDialog";
 import { displayMessage } from "store/slices/snackbarSlice";
+import SelectWrapper from "components/Select";
 
-function MedicationManagement() {
+function ServiceManagement() {
+  const [departments, setDepartments] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [inventoryToDeleteId, setInventoryToDeleteId] = useState(false);
+
   function priceFormat(num) {
     return `${num.toFixed(2)}`;
   }
 
-  const [allergenEnums, setAllergenEnums] = useState([]);
-  const [drugRestrictions, setDrugRestrictions] = useState([]);
-  const [drugs, setDrugs] = useState([]);
-  const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
-  const [inventoryToDeleteId, setInventoryToDeleteId] = useState(false);
+  const getUnits = async () => {
+    try {
+      const departmentsResponse = await departmentApi.getAllDepartments("");
+      const wardsResponse = await wardApi.getAllWards("");
+      setDepartments(departmentsResponse.data);
+      setWards(wardsResponse.data);
+      console.log(departments);
+      console.log(wards);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getUnits();
+  }, []);
 
   const reduxDispatch = useDispatch();
   const [data, setData] = useState({
     columns: [
       // { Header: "No.", accessor: "inventoryItemId", width: "10%" },
-      {
-        Header: "Medication Name",
-        accessor: "inventoryItemName",
-        width: "20%",
-      },
+      { Header: "Service Name", accessor: "inventoryItemName", width: "20%" },
       {
         Header: "Description",
         accessor: "inventoryItemDescription",
         width: "20%",
       },
-      { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
-      {
-        Header: "Restock Price ($)",
-        accessor: "restockPricePerQuantity",
-        width: "10%",
-      },
       {
         Header: "Retail Price ($)",
         accessor: "retailPricePerQuantity",
-        width: "10%",
+        width: "15%",
       },
+      { Header: "Unit", accessor: "unitId", width: "10%" },
+      { Header: "Item Type", accessor: "itemTypeEnum", width: "10%" },
       {
         Header: "Actions",
         Cell: ({ row }) => (
           <MDBox>
-            <ViewMedicationDetailsDialog
-              inventoryItemId={row.original.inventoryItemId}
-            />
             <IconButton
               color="secondary"
               onClick={() =>
@@ -92,10 +87,10 @@ function MedicationManagement() {
             </IconButton>
             <IconButton
               color="secondary"
+              title="Update"
               onClick={() =>
                 handleOpenUpdateModal(row.original.inventoryItemId)
               }
-              title="Update"
             >
               <Icon>create</Icon>
             </IconButton>
@@ -110,35 +105,23 @@ function MedicationManagement() {
   const dataRef = useRef({
     columns: [
       // { Header: "No.", accessor: "inventoryItemId", width: "10%" },
-      {
-        Header: "Medication Name",
-        accessor: "inventoryItemName",
-        width: "20%",
-      },
+      { Header: "Service Name", accessor: "inventoryItemName", width: "20%" },
       {
         Header: "Description",
         accessor: "inventoryItemDescription",
         width: "20%",
       },
-      { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
-      {
-        Header: "Restock Price ($)",
-        accessor: "restockPricePerQuantity",
-        width: "10%",
-      },
       {
         Header: "Retail Price ($)",
         accessor: "retailPricePerQuantity",
-        width: "10%",
+        width: "20%",
       },
+      { Header: "Unit", accessor: "unitId", width: "10%" },
+      { Header: "Item Type", accessor: "itemTypeEnum", width: "10%" },
       {
         Header: "Actions",
         Cell: ({ row }) => (
           <MDBox>
-            <ViewMedicationDetailsDialog
-              inventoryItemId={row.original.inventoryItemId}
-            />
-
             <IconButton
               color="secondary"
               onClick={() =>
@@ -165,49 +148,13 @@ function MedicationManagement() {
     rows: [],
   });
 
-  const getAllergenEnums = async () => {
-    try {
-      const response = await inventoryApi.getAllergenEnums();
-      setAllergenEnums(response.data);
-      console.log(allergenEnums);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const getDrugRestrictions = async () => {
-    try {
-      const response = await inventoryApi.getAllMedication();
-      const medications = response.data;
-      const restrictions = medications.map((drug) => drug.drugRestrictions);
-      console.log(restrictions);
-      setDrugs(medications.map((drug) => drug.drugRestrictions));
-      console.log("med" + drugs);
-
-      const mapDrugs = medications.map((drug) => drug.inventoryItemName);
-      setDrugRestrictions(mapDrugs);
-      console.log(" drug" + mapDrugs);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    getAllergenEnums();
-    getDrugRestrictions();
-  }, []);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
+    unitId: null,
     inventoryItemName: "",
     inventoryItemDescription: "",
-    itemTypeEnum: "MEDICINE",
-    quantityInStock: "",
-    restockPricePerQuantity: "",
+    itemTypeEnum: "",
     retailPricePerQuantity: "",
-    allergenEnumList: [],
-    comments: "",
-    drugRestrictions: [],
   });
 
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -215,13 +162,9 @@ function MedicationManagement() {
     inventoryItemId: null,
     inventoryItemName: "",
     inventoryItemDescription: "",
-    itemTypeEnum: "MEDICINE",
-    quantityInStock: "",
-    restockPricePerQuantity: "",
+    itemTypeEnum: "",
     retailPricePerQuantity: "",
-    allergenEnumList: [],
-    comments: "",
-    drugRestrictions: [],
+    unitId: null,
   });
 
   const handleOpenModal = () => {
@@ -240,21 +183,35 @@ function MedicationManagement() {
     }));
   };
 
-  const handleCreateMedication = () => {
+  const handleCreateServiceItem = () => {
     try {
-      const { ...requestBody } = formData;
-      console.log("Type:" + requestBody.allergenEnumList);
-      if (requestBody.inventoryItemName == "") {
+      const { unitId, ...requestBody } = formData;
+      console.log("Type:" + unitId);
+      if (unitId == null) {
         setFormData({
+          unitId: null,
           inventoryItemName: "",
           inventoryItemDescription: "",
-          itemTypeEnum: "MEDICINE",
-          quantityInStock: "",
-          restockPricePerQuantity: "",
+          itemTypeEnum: "",
           retailPricePerQuantity: "",
-          allergenEnumList: [],
-          comments: "",
-          drugRestrictions: [],
+        });
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error Encountered",
+            content: "Unit cannot be null",
+          })
+        );
+        return;
+      }
+      if (requestBody.inventoryItemName == "") {
+        setFormData({
+          unitId: null,
+          inventoryItemName: "",
+          inventoryItemDescription: "",
+          itemTypeEnum: "",
+          retailPricePerQuantity: "",
         });
         reduxDispatch(
           displayMessage({
@@ -268,14 +225,11 @@ function MedicationManagement() {
       }
       if (requestBody.inventoryItemDescription == "") {
         setFormData({
+          unitId: null,
           inventoryItemName: "",
           inventoryItemDescription: "",
-          itemTypeEnum: "MEDICINE",
-          quantityInStock: "",
-          restockPricePerQuantity: "",
+          itemTypeEnum: "",
           retailPricePerQuantity: "",
-          comments: "",
-          drugRestrictions: [],
         });
         reduxDispatch(
           displayMessage({
@@ -287,61 +241,13 @@ function MedicationManagement() {
         );
         return;
       }
-      if (requestBody.quantityInStock == "") {
-        setFormData({
-          inventoryItemName: "",
-          inventoryItemDescription: "",
-          itemTypeEnum: "MEDICINE",
-          quantityInStock: "",
-          restockPricePerQuantity: "",
-          retailPricePerQuantity: "",
-          allergenEnumList: [],
-          comments: "",
-          drugRestrictions: [],
-        });
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error Encountered",
-            content: "Item quantity cannot be null",
-          })
-        );
-        return;
-      }
-      if (requestBody.restockPricePerQuantity == "") {
-        setFormData({
-          inventoryItemName: "",
-          inventoryItemDescription: "",
-          itemTypeEnum: "MEDICINE",
-          quantityInStock: "",
-          restockPricePerQuantity: "",
-          retailPricePerQuantity: "",
-          allergenEnumList: [],
-          comments: "",
-          drugRestrictions: [],
-        });
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error Encountered",
-            content: "Item price cannot be null",
-          })
-        );
-        return;
-      }
       if (requestBody.retailPricePerQuantity == "") {
         setFormData({
+          unitId: null,
           inventoryItemName: "",
           inventoryItemDescription: "",
-          itemTypeEnum: "MEDICINE",
-          quantityInStock: "",
-          restockPricePerQuantity: "",
+          itemTypeEnum: "",
           retailPricePerQuantity: "",
-          allergenEnumList: [],
-          comments: "",
-          drugRestrictions: [],
         });
         reduxDispatch(
           displayMessage({
@@ -353,27 +259,23 @@ function MedicationManagement() {
         );
         return;
       }
+      console.log(formData);
       inventoryApi
-        .createMedication(requestBody)
+        .createServiceItem(unitId, requestBody)
         .then(() => {
-          getDrugRestrictions();
           fetchData();
           setFormData({
             inventoryItemName: "",
             inventoryItemDescription: "",
-            itemTypeEnum: "MEDICINE",
-            quantityInStock: "",
-            restockPricePerQuantity: "",
+            itemTypeEnum: "",
             retailPricePerQuantity: "",
-            allergenEnumList: [],
-            comments: "",
-            drugRestrictions: [],
+            unitId: null,
           });
           reduxDispatch(
             displayMessage({
               color: "success",
               icon: "notification",
-              title: "Successfully Created MEDICINE!",
+              title: "Successfully Created Service!",
               content: requestBody.inventoryItemName + " created",
             })
           );
@@ -383,13 +285,9 @@ function MedicationManagement() {
           setFormData({
             inventoryItemName: "",
             inventoryItemDescription: "",
-            itemTypeEnum: "MEDICINE",
-            quantityInStock: "",
-            restockPricePerQuantity: "",
+            itemTypeEnum: "",
             retailPricePerQuantity: "",
-            allergenEnumList: [],
-            comments: "",
-            drugRestrictions: [],
+            unitId: null,
           });
           // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
           if (err.response.data.detail) {
@@ -422,26 +320,18 @@ function MedicationManagement() {
     console.log("Inventory " + inventoryItemId);
     // Populate update form data with the facility's current data
     // const { inventoryItemId, name, description, quantity, price } = rowData;
-    const medicationToUpdate = dataRef.current.rows[0].find(
-      (medication) => medication.inventoryItemId === inventoryItemId
+    const serviceItemToUpdate = dataRef.current.rows[0].find(
+      (serviceItem) => serviceItem.inventoryItemId === inventoryItemId
     );
-    if (medicationToUpdate) {
+    console.log("update " + serviceItemToUpdate.inventoryItemName);
+    if (serviceItemToUpdate) {
       setUpdateFormData({
         inventoryItemId: inventoryItemId,
-        inventoryItemName: medicationToUpdate.inventoryItemName,
-        inventoryItemDescription: medicationToUpdate.inventoryItemDescription,
-        itemTypeEnum: medicationToUpdate.itemTypeEnum,
-        quantityInStock: medicationToUpdate.quantityInStock,
-        restockPricePerQuantity: medicationToUpdate.restockPricePerQuantity,
-        retailPricePerQuantity: medicationToUpdate.retailPricePerQuantity,
-        allergenEnumList: medicationToUpdate.allergenEnumList,
-        comments: medicationToUpdate.comments,
-        drugRestrictions: medicationToUpdate.drugRestrictions.map(
-          (drug) => drug.drugName
-        ),
+        inventoryItemName: serviceItemToUpdate.inventoryItemName,
+        inventoryItemDescription: serviceItemToUpdate.inventoryItemDescription,
+        itemTypeEnum: serviceItemToUpdate.itemTypeEnum,
+        retailPricePerQuantity: serviceItemToUpdate.retailPricePerQuantity,
       });
-      console.log(drugRestrictions);
-      console.log(updateFormData.drugRestrictions);
     }
 
     setIsUpdateModalOpen(true);
@@ -459,7 +349,7 @@ function MedicationManagement() {
     }));
   };
 
-  const handleUpdateMedication = () => {
+  const handleUpdateServiceItem = () => {
     try {
       const { inventoryItemId, ...requestBody } = updateFormData;
       console.log("updateFormData:", updateFormData);
@@ -488,31 +378,6 @@ function MedicationManagement() {
         );
         return;
       }
-      console.log(requestBody.quantityInStock);
-
-      if (requestBody.quantityInStock == "") {
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error Encountered",
-            content: "Item quantity cannot be null",
-          })
-        );
-        return;
-      }
-      console.log(requestBody.restockPricePerQuantity);
-      if (requestBody.restockPricePerQuantity == "") {
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error Encountered",
-            content: "Item price cannot be null",
-          })
-        );
-        return;
-      }
       if (requestBody.retailPricePerQuantity == "") {
         reduxDispatch(
           displayMessage({
@@ -526,27 +391,21 @@ function MedicationManagement() {
       }
       console.log("Request: " + requestBody.inventoryItemName);
       inventoryApi
-        .updateMedication(inventoryItemId, requestBody)
+        .updateServiceItem(inventoryItemId, requestBody)
         .then(() => {
-          getDrugRestrictions();
           fetchData();
           setUpdateFormData({
             inventoryItemId: null,
             inventoryItemName: "",
             inventoryItemDescription: "",
-            itemTypeEnum: "MEDICINE",
-            quantityInStock: "",
-            restockPricePerQuantity: "",
+            itemTypeEnum: "",
             retailPricePerQuantity: "",
-            allergenEnumList: [],
-            comments: "",
-            drugRestrictions: [],
           });
           reduxDispatch(
             displayMessage({
               color: "success",
               icon: "notification",
-              title: "Successfully Updated! ",
+              title: "Successfully Updated Service! ",
               content: requestBody.inventoryItemName + " updated",
             })
           );
@@ -576,18 +435,17 @@ function MedicationManagement() {
   const handleConfirmDeleteInventory = (inventoryItemId) => {
     try {
       inventoryApi
-        .deleteMedication(inventoryItemId)
+        .deleteServiceItem(inventoryItemId)
         .then(() => {
-          getDrugRestrictions();
           fetchData();
           setDeleteConfirmationOpen(false);
           reduxDispatch(
             displayMessage({
               color: "success",
               icon: "notification",
-              title: "Successfully Deleted Medication!",
+              title: "Successfully Deleted Service!",
               content:
-                "Medication with inventoryItemId: " +
+                "Service Item with inventoryItemId: " +
                 inventoryItemId +
                 " deleted",
             })
@@ -612,26 +470,20 @@ function MedicationManagement() {
 
   const fetchData = async () => {
     inventoryApi
-      .getAllMedication("")
+      .getAllServiceItem("")
       .then((response) => {
-        const medications = response.data; // Assuming 'facilities' is an array of facility objects
+        const serviceItems = response.data; // Assuming 'facilities' is an array of facility objects
         console.log(response);
         // Map the fetched data to match your table structure
-        const mappedRows = medications.map((medication) => ({
-          inventoryItemId: medication.inventoryItemId,
-          inventoryItemName: medication.inventoryItemName,
-          inventoryItemDescription: medication.inventoryItemDescription,
-          itemTypeEnum: medication.itemTypeEnum,
-          quantityInStock: medication.quantityInStock,
-          restockPricePerQuantity: priceFormat(
-            medication.restockPricePerQuantity
-          ),
+        const mappedRows = serviceItems.map((serviceItem) => ({
+          inventoryItemId: serviceItem.inventoryItemId,
+          inventoryItemName: serviceItem.inventoryItemName,
+          inventoryItemDescription: serviceItem.inventoryItemDescription,
+          itemTypeEnum: serviceItem.itemTypeEnum,
           retailPricePerQuantity: priceFormat(
-            medication.retailPricePerQuantity
+            serviceItem.retailPricePerQuantity
           ),
-          allergenEnumList: medication.allergenEnumList,
-          comments: medication.comments,
-          drugRestrictions: medication.drugRestrictions,
+          unitId: serviceItem.unit.name,
         }));
 
         dataRef.current = {
@@ -654,13 +506,9 @@ function MedicationManagement() {
     fetchData();
   }, []);
 
-  const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-  const checkedIcon = <CheckBoxIcon fontSize="small" />;
-
   return (
-    // <DashboardLayout>
-    //     <DashboardNavbar />
-    <>
+    <DashboardLayout>
+      <DashboardNavbar />
       <MDBox pt={6} pb={3}>
         <Grid container spacing={6}>
           <Grid item xs={12}>
@@ -676,7 +524,7 @@ function MedicationManagement() {
                 coloredShadow="info"
               >
                 <MDTypography variant="h6" color="white">
-                  Medication Table
+                  Service Table
                 </MDTypography>
               </MDBox>
               <MDBox mx={2} mt={3} px={2}>
@@ -686,7 +534,7 @@ function MedicationManagement() {
                   color="primary"
                   onClick={() => setIsModalOpen(true)}
                 >
-                  Create New Medication
+                  Create New Service
                   <Icon>add</Icon>
                 </MDButton>
               </MDBox>
@@ -698,7 +546,7 @@ function MedicationManagement() {
         </Grid>
       </MDBox>
       <Dialog open={isModalOpen} onClose={handleCloseModal}>
-        <DialogTitle>Create New Medication</DialogTitle>
+        <DialogTitle>Create New Service</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
@@ -718,24 +566,6 @@ function MedicationManagement() {
           />
           <TextField
             fullWidth
-            label="Quantity"
-            name="quantityInStock"
-            type="number"
-            value={formData.quantityInStock}
-            onChange={handleChange}
-            margin="dense"
-          />
-          <TextField
-            fullWidth
-            label="Restock Price per Quantity"
-            name="restockPricePerQuantity"
-            type="float"
-            value={formData.restockPricePerQuantity}
-            onChange={handleChange}
-            margin="dense"
-          />
-          <TextField
-            fullWidth
             label="Retail Price per Quantity"
             name="retailPricePerQuantity"
             type="float"
@@ -744,95 +574,41 @@ function MedicationManagement() {
             margin="dense"
           />
           <FormControl fullWidth margin="dense">
-            <Autocomplete
-              multiple
-              id="allergenEnumsList"
-              options={allergenEnums}
-              disableCloseOnSelect
-              getOptionLabel={(option) =>
-                typeof option === "string" ? option : option.label
-              }
-              renderOption={(props, option, { selected }) => (
-                <li {...props}>
-                  <Checkbox
-                    icon={icon}
-                    checkedIcon={checkedIcon}
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
-                  {option}
-                </li>
-              )}
-              // name="allergenEnumList"
-              // value={formData.allergenEnumList}
-              onChange={(event, newValue) => {
-                const newAllergenEnumList = newValue.map((item) => item);
-                console.log("allerger " + newAllergenEnumList);
-                setFormData((prevData) => ({
-                  ...prevData,
-                  allergenEnumList: newAllergenEnumList,
-                }));
-              }}
-              renderInput={(params) => (
-                <TextField {...params} label="Allergens" />
-              )}
-            />
+            <InputLabel>Unit</InputLabel>
+            <Select
+              name="unitId"
+              value={formData.unitId}
+              onChange={handleChange}
+              sx={{ lineHeight: "3em" }}
+            >
+              <MenuItem disabled>Departments</MenuItem>
+              {departments?.map((department) => (
+                <MenuItem value={department.unitId}>{department.name}</MenuItem>
+              ))}
+              <MenuItem disabled>Wards</MenuItem>
+              {wards?.map((ward) => (
+                <MenuItem value={ward.unitId}>{ward.name}</MenuItem>
+              ))}
+            </Select>
           </FormControl>
           <FormControl fullWidth margin="dense">
-            <Autocomplete
-              multiple
-              id="drugRestrictions"
-              options={drugRestrictions}
-              disableCloseOnSelect
-              getOptionLabel={(option) =>
-                typeof option === "string" ? option : option.label
-              }
-              renderOption={(props, option, { selected }) => (
-                <li {...props}>
-                  <Checkbox
-                    icon={icon}
-                    checkedIcon={checkedIcon}
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
-                  {option}
-                </li>
-              )}
-              // style={{ width: 500 }}
-              onChange={(event, newValue) => {
-                const newDrugRestrictions = newValue.map((item) => item);
-                setFormData((prevData) => ({
-                  ...prevData,
-                  drugRestrictions: newDrugRestrictions,
-                }));
-              }}
-              renderInput={(params) => (
-                <TextField {...params} label="Drug Restrictions" />
-              )}
-            />
+            <InputLabel>Item Type</InputLabel>
+            <Select
+              name="itemTypeEnum"
+              value={formData.itemTypeEnum}
+              onChange={handleChange}
+              sx={{ lineHeight: "3em" }}
+            >
+              <MenuItem value="INPATIENT">Inpatient</MenuItem>
+              <MenuItem value="OUTPATIENT">Outpatient</MenuItem>
+            </Select>
           </FormControl>
-          <TextField
-            fullWidth
-            label="Comments"
-            name="comments"
-            type="textarea"
-            value={formData.comments}
-            onChange={handleChange}
-            margin="dense"
-          />
-          <TextField
-            fullWidth
-            label="Type"
-            name="itemTypeEnum"
-            value={formData.itemTypeEnum}
-            margin="dense"
-          />
         </DialogContent>
         <DialogActions>
           <MDButton onClick={handleCloseModal} color="primary">
             Cancel
           </MDButton>
-          <MDButton onClick={handleCreateMedication} color="primary">
+          <MDButton onClick={handleCreateServiceItem} color="primary">
             Create
           </MDButton>
         </DialogActions>
@@ -858,24 +634,6 @@ function MedicationManagement() {
           />
           <TextField
             fullWidth
-            label="Quantity in Stock"
-            name="quantityInStock"
-            type="number"
-            value={updateFormData.quantityInStock}
-            onChange={handleUpdateChange}
-            margin="dense"
-          />
-          <TextField
-            fullWidth
-            label="Restock Price per Quantity"
-            name="restockPricePerQuantity"
-            type="float"
-            value={updateFormData.restockPricePerQuantity}
-            onChange={handleUpdateChange}
-            margin="dense"
-          />
-          <TextField
-            fullWidth
             label="Retail Price per Quantity"
             name="retailPricePerQuantity"
             type="float"
@@ -884,92 +642,23 @@ function MedicationManagement() {
             margin="dense"
           />
           <FormControl fullWidth margin="dense">
-            <Autocomplete
-              multiple
-              id="allergenEnumsList"
-              options={allergenEnums}
-              disableCloseOnSelect
-              getOptionLabel={(option) =>
-                typeof option === "string" ? option : option.label
-              }
-              renderOption={(props, option, { selected }) => (
-                <li {...props}>
-                  <Checkbox
-                    icon={icon}
-                    checkedIcon={checkedIcon}
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
-                  {option}
-                </li>
-              )}
-              value={updateFormData.allergenEnumList}
-              onChange={(event, newValue) => {
-                const newAllergenEnumList = newValue.map((item) => item);
-                console.log("allerger " + newAllergenEnumList);
-                setUpdateFormData((prevData) => ({
-                  ...prevData,
-                  allergenEnumList: newAllergenEnumList,
-                }));
-              }}
-              renderInput={(params) => (
-                <TextField {...params} label="Allergens" />
-              )}
-            />
+            <InputLabel>Item Type</InputLabel>
+            <Select
+              name="itemTypeEnum"
+              value={updateFormData.itemTypeEnum}
+              onChange={handleUpdateChange}
+              sx={{ lineHeight: "3em" }}
+            >
+              <MenuItem value="INPATIENT">Inpatient</MenuItem>
+              <MenuItem value="OUTPATIENT">Outpatient</MenuItem>
+            </Select>
           </FormControl>
-          <FormControl fullWidth margin="dense">
-            <Autocomplete
-              multiple
-              id="drugRestrictions"
-              options={drugRestrictions}
-              disableCloseOnSelect
-              getOptionDisabled={(option) =>
-                option === updateFormData.inventoryItemName
-              }
-              getOptionLabel={(option) =>
-                typeof option === "string" ? option : option.label
-              }
-              renderOption={(props, option, { selected }) => (
-                <li {...props}>
-                  <Checkbox
-                    icon={icon}
-                    checkedIcon={checkedIcon}
-                    style={{ marginRight: 8 }}
-                    checked={selected}
-                  />
-                  {option}
-                </li>
-              )}
-              value={updateFormData.drugRestrictions}
-              // value={updateFormData.drugRestrictions.map((drug) => drug.drugName)}
-              onChange={(event, newValue) => {
-                const newDrugRestrictions = newValue.map((item) => item);
-                console.log("allerger " + newDrugRestrictions);
-
-                setUpdateFormData((prevData) => ({
-                  ...prevData,
-                  drugRestrictions: newDrugRestrictions,
-                }));
-              }}
-              renderInput={(params) => (
-                <TextField {...params} label="Drug Restrictions" />
-              )}
-            />
-          </FormControl>
-          <TextField
-            fullWidth
-            label="Comments"
-            name="comments"
-            value={updateFormData.comments}
-            onChange={handleUpdateChange}
-            margin="dense"
-          />
         </DialogContent>
         <DialogActions>
           <MDButton onClick={handleCloseUpdateModal} color="primary">
             Cancel
           </MDButton>
-          <MDButton onClick={handleUpdateMedication} color="primary">
+          <MDButton onClick={handleUpdateServiceItem} color="primary">
             Update
           </MDButton>
         </DialogActions>
@@ -999,9 +688,8 @@ function MedicationManagement() {
           </Button>
         </DialogActions>
       </Dialog>
-    </>
-    // </DashboardLayout>
+    </DashboardLayout>
   );
 }
 
-export default MedicationManagement;
+export default ServiceManagement;

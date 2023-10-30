@@ -5,6 +5,7 @@ import React from "react";
 import { useState } from "react";
 
 function ArrivalButton({
+  arrived,
   selectedAppointment,
   handleUpdateAppointmentArrival,
   disableButton,
@@ -32,7 +33,7 @@ function ArrivalButton({
         onMouseLeave={handlePopoverClose}
         disabled={disableButton}
       >
-        {selectedAppointment.arrived ? "Reset" : "Arrived"}
+        {arrived ? "Reset" : "Arrived"}
       </MDButton>
       <Popover
         id="mouse-over-popover"

@@ -49,6 +49,18 @@ function ViewInvitationDialog({
   //THROWING ERROR BUT BE NOT THROWING
   // ERROR RESPONSE IS THE JSON OF THE TREATMENT PLAN
   const handleAddStaff = async (staffToInvite) => {
+    if (selectedStaff === "") {
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Warning",
+          content: "No Staff Selected",
+        })
+      );
+      return;
+    }
+
     if (
       listOfInvitedStaff.filter((staff) => {
         return staff.staffId === staffToInvite.staffId;
@@ -134,6 +146,9 @@ function ViewInvitationDialog({
       listOfStaffs.filter((staff) => {
         return staff.unit.name === department;
       })
+      // .filter((staff) => {
+      //   return staff.staffRoleEnum === "DOCTOR";
+      // })
     );
   };
 
@@ -163,6 +178,8 @@ function ViewInvitationDialog({
   };
 
   useEffect(() => {
+    setSelectedStaff("");
+    setSelectedDepartment("");
     handleFetchDepartments();
     handleFetchInvitedStaff();
     handleFetchAllStaff();
@@ -182,80 +199,88 @@ function ViewInvitationDialog({
           Invitation List
         </DialogTitle>
         <DialogContent style={{ padding: "20px" }}>
-          <FormControl
-            fullWidth
-            margin="normal"
-            style={{ marginBottom: "15px" }}
-          >
-            <InputLabel style={{ marginBottom: "10px" }}>Department</InputLabel>
-            <Select
-              value={selectedDepartment}
-              onChange={(e) => handleSelectedDepartment(e.target.value)}
-              style={{
-                backgroundColor: "#f5f5f5",
-                borderRadius: "5px",
-                padding: "10px 5px",
-              }}
-            >
-              {listOfDepartments.map((dept) => {
-                return (
-                  <MenuItem key={dept.unitId} value={dept.name}>
-                    {dept.name}
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </FormControl>
+          {!selectedTreatmentPlanRecord.isCompleted && (
+            <>
+              <FormControl
+                fullWidth
+                margin="normal"
+                style={{ marginBottom: "15px" }}
+              >
+                <InputLabel style={{ marginBottom: "10px" }}>
+                  Department
+                </InputLabel>
+                <Select
+                  value={selectedDepartment}
+                  onChange={(e) => handleSelectedDepartment(e.target.value)}
+                  style={{
+                    backgroundColor: "#f5f5f5",
+                    borderRadius: "5px",
+                    padding: "10px 5px",
+                  }}
+                >
+                  {listOfDepartments.map((dept) => {
+                    return (
+                      <MenuItem key={dept.unitId} value={dept.name}>
+                        {dept.name}
+                      </MenuItem>
+                    );
+                  })}
+                </Select>
+              </FormControl>
 
-          {selectedDepartment && (
-            <FormControl
-              fullWidth
-              margin="normal"
-              style={{ marginBottom: "15px" }}
-            >
-              <InputLabel style={{ marginBottom: "10px" }}>
-                Staff To Invite
-              </InputLabel>
-              <Select
-                value={selectedStaff}
-                onChange={(e) => handleSelectedStaff(e.target.value)}
+              {selectedDepartment && (
+                <FormControl
+                  fullWidth
+                  margin="normal"
+                  style={{ marginBottom: "15px" }}
+                >
+                  <InputLabel style={{ marginBottom: "10px" }}>
+                    Staff To Invite
+                  </InputLabel>
+                  <Select
+                    value={selectedStaff}
+                    onChange={(e) => handleSelectedStaff(e.target.value)}
+                    style={{
+                      backgroundColor: "#f5f5f5",
+                      borderRadius: "5px",
+                      padding: "10px 5px",
+                    }}
+                  >
+                    {listOfStaffToDisplay.map((staff) => {
+                      return (
+                        <MenuItem key={staff.staffId} value={staff}>
+                          {staff.firstname} {staff.lastname}{" "}
+                          {"(" + staff.staffRoleEnum + ")"}
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+              )}
+
+              <Button
+                onClick={() => handleAddStaff(selectedStaff)}
                 style={{
-                  backgroundColor: "#f5f5f5",
+                  backgroundColor: "#007BFF",
+                  color: "#FFFFFF",
                   borderRadius: "5px",
-                  padding: "10px 5px",
+                  padding: "8px 15px",
+                  marginTop: "10px",
+                  marginLeft: "10px",
+                  float: "right",
                 }}
               >
-                {listOfStaffToDisplay.map((staff) => {
-                  return (
-                    <MenuItem key={staff.staffId} value={staff}>
-                      {staff.firstname}
-                    </MenuItem>
-                  );
-                })}
-              </Select>
-            </FormControl>
+                Add to List
+              </Button>
+
+              {listOfInvitedStaff.length === 0 && (
+                <p style={{ color: "#888888", marginTop: "20px" }}>
+                  No staff invited yet
+                </p>
+              )}
+            </>
           )}
 
-          <Button
-            onClick={() => handleAddStaff(selectedStaff)}
-            style={{
-              backgroundColor: "#007BFF",
-              color: "#FFFFFF",
-              borderRadius: "5px",
-              padding: "8px 15px",
-              marginTop: "10px",
-              marginLeft: "10px",
-              float: "right",
-            }}
-          >
-            Add to List
-          </Button>
-
-          {listOfInvitedStaff.length === 0 && (
-            <p style={{ color: "#888888", marginTop: "20px" }}>
-              No staff invited yet
-            </p>
-          )}
           <MDBox
             style={{
               maxHeight: "300px",
@@ -312,7 +337,8 @@ function ViewInvitationDialog({
                       justifyContent: "center",
                     }}
                   >
-                    {!invitation.isPrimary ? (
+                    {!invitation.isPrimary &&
+                    !selectedTreatmentPlanRecord.isCompleted ? (
                       <IconButton
                         edge="end"
                         onClick={() => handleDeleteStaff(invitation)}

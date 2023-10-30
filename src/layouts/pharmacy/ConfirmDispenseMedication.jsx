@@ -32,6 +32,8 @@ import {
 } from "api/Api";
 import { useDispatch } from "react-redux";
 import { displayMessage } from "store/slices/snackbarSlice";
+import { useSelector } from "react-redux";
+import { selectStaff } from "store/slices/staffSlice";
 
 
 const style = {
@@ -47,7 +49,7 @@ const style = {
   borderRadius: "15px",
 };
 
-function ConfirmReadyCollectionModal({
+function ConfirmDispenseMedicationModal({
   openModal,
   handleCloseModal,
   appointment,
@@ -56,24 +58,43 @@ function ConfirmReadyCollectionModal({
 }) {
 
   const reduxDispatch = useDispatch();
+  const staff = useSelector(selectStaff);
 
   const handleConfirm = async () => {
     try {
-      const response = await appointmentApi.updateAppointmentDispensaryStatus(appointment.appointmentId, "READY_TO_COLLECT");
-      forceRefresh();
-      reduxDispatch(
-        displayMessage({
-          color: "success",
-          icon: "notification",
-          title: "Success",
-          content: `HH-${appointment.appointmentId} is now ready for collection! Patient should be arriving any time now.`,
-        })
-      );
-      handleCloseModal();
-    } catch (error) {
-      console.log(error)
-    }
-  }
+        const response = await appointmentApi.updateAppointmentDispensaryStatus(appointment.appointmentId, "DISPENSED");
+        const responseSwimlane = await appointmentApi.updateAppointmentSwimlaneStatus(
+          appointment.appointmentId,
+          "Discharge"
+      )
+        //send to BE to assign staff
+        const responseAssign = await appointmentApi.assignAppointmentToStaff(
+            appointment.appointmentId,
+            -1,
+            staff.staffId
+        );
+        forceRefresh();
+        reduxDispatch(
+            displayMessage({
+              color: "success",
+              icon: "notification",
+              title: "Success",
+              content: `Medication for HH-${appointment.appointmentId} has been dispensed.`,
+            })
+          );
+          handleCloseModal();
+      } catch (error) {
+        console.log(error)
+        reduxDispatch(
+          displayMessage({
+            color: "warning",
+            icon: "notification",
+            title: "Error",
+            content: error.response,
+          })
+        );
+      }
+}
   
   return (
     <>
@@ -84,12 +105,13 @@ function ConfirmReadyCollectionModal({
         aria-describedby="modal-modal-description"
       >
         <Box sx={{ ...style, maxHeight: "80vh", overflow: "auto" }}>
-          <MDTypography variant="h5">Are you sure these items are ready for collection?</MDTypography><br/>
+          <MDTypography variant="h5">Are you sure you want to dispense these items?</MDTypography><br/>
           <TableContainer component={Paper}>
             <Table aria-label="simple table">
               <TableHead sx={{ display: "table-header-group" }}>
                 <TableRow>
                   <TableCell>Medication</TableCell>
+                  <TableCell align="right">Comments</TableCell>
                   <TableCell align="right">Quantity</TableCell>
                 </TableRow>
               </TableHead>
@@ -102,6 +124,9 @@ function ConfirmReadyCollectionModal({
                   >
                     <TableCell component="th" scope="row">
                       {" * " + item.inventoryItem.inventoryItemName}
+                    </TableCell>
+                    <TableCell align="right">
+                      {item.inventoryItem.comments ? item.inventoryItem.comments : "-"}
                     </TableCell>
                     <TableCell align="right">{item.transactionItemQuantity}</TableCell>
                   </TableRow>
@@ -130,4 +155,4 @@ function ConfirmReadyCollectionModal({
   );
 }
 
-export default ConfirmReadyCollectionModal;
+export default ConfirmDispenseMedicationModal;

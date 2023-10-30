@@ -79,7 +79,7 @@ function CreateNewTreatmentPlanRecordDialog({
         return;
       }
 
-      console.log(formData.startDate);
+      // console.log(formData.startDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 

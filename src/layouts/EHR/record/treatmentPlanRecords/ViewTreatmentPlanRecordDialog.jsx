@@ -11,8 +11,7 @@ import {
   TextField,
 } from "@mui/material";
 import MDButton from "components/MDButton";
-import React, { useEffect } from "react";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import { useDispatch } from "react-redux";
@@ -26,6 +25,7 @@ import UploadImageDialog from "./UploadImageDialog";
 import CompleteTreatmentPlanRecordDialog from "./CompleteTreatmentPlanRecordDialog";
 import ViewInvitationDialog from "./ViewInvitationDialog";
 import ConfirmApproveTreatmentPlanDialog from "./ConfirmApproveTreatmentPlanDialog";
+import ConfirmDeleteTreatmentPlanDialog from "./ConfirmDeleteTreatmentPlanDialog";
 
 function ViewTreatmentPlanRecordDialog({
   openViewTreatmentPlanRecordDialog,
@@ -67,8 +67,20 @@ function ViewTreatmentPlanRecordDialog({
     setOpenConfirmApproveTreatmentPlanDialog,
   ] = useState(false);
 
+  //approve treatment plan dialog
+  const [
+    openConfirmDeleteTreatmentPlanDialog,
+    setOpenConfirmDeleteTreatmentPlanDialog,
+  ] = useState(false);
+
   //only for refreshing approval dialog
   const [loading, setLoading] = useState(false);
+
+  //for rendering the add image button
+  const [showAddImageButton, setShowAddImageButton] = useState(false);
+
+  //for passing invitationId to approve
+  const [invitationIdToApprove, setInvitationIdToApprove] = useState(null);
 
   //view image in treatment plan records
   const handleOpenViewImageDialog = () => {
@@ -94,6 +106,7 @@ function ViewTreatmentPlanRecordDialog({
   };
   const handleCloseCompleteTreatmentPlanRecordDialog = () => {
     setOpenCompleteTreatmentPlanRecordDialog(false);
+    handleCloseViewTreatmentPlanRecordDialog();
   };
 
   //view invitations
@@ -105,12 +118,22 @@ function ViewTreatmentPlanRecordDialog({
   };
 
   //handle approve treatment plan
-  const handleOpenConfirmApproveTreatmentPlanRecordDialog = () => {
+  const handleOpenConfirmApproveTreatmentPlanRecordDialog = (invitationId) => {
+    setInvitationIdToApprove(invitationId);
     setOpenConfirmApproveTreatmentPlanDialog(true);
   };
 
   const handleCloseConfirmApproveTreatmentPlanRecordDialog = () => {
+    setInvitationIdToApprove(null);
     setOpenConfirmApproveTreatmentPlanDialog(false);
+  };
+
+  //handle delete treatment plan
+  const handleOpenConfirmDeleteTreatmentPlanRecordDialog = () => {
+    setOpenConfirmDeleteTreatmentPlanDialog(true);
+  };
+  const handleCloseConfirmDeleteTreatmentPlanRecordDialog = () => {
+    setOpenConfirmDeleteTreatmentPlanDialog(false);
   };
 
   const handleFormChange = (event) => {
@@ -164,7 +187,7 @@ function ViewTreatmentPlanRecordDialog({
       formData.startDate = formData.startDate + " 00:00:00";
       formData.endDate = formData.endDate + " 00:00:00";
 
-      console.log(selectedTreatmentPlanRecordToView.treatmentPlanRecordId);
+      // console.log(selectedTreatmentPlanRecordToView.treatmentPlanRecordId);
       treatmentPlanRecordApi
         .updateTreatmentPlanRecord(
           ehrRecord.electronicHealthRecordId,
@@ -256,78 +279,33 @@ function ViewTreatmentPlanRecordDialog({
     }
   };
 
-  const handleDeleteTreatmentPlanRecord = () => {
-    try {
-      treatmentPlanRecordApi
-        .deleteTreatmentPlanRecord(
-          ehrRecord.electronicHealthRecordId,
-          selectedTreatmentPlanRecordToView.treatmentPlanRecordId,
-          loggedInStaff.staffId
-        )
-        .then((response) => {
-          const updatedEhrRecord = {
-            ...ehrRecord,
-            listOfTreatmentPlanRecords:
-              ehrRecord.listOfTreatmentPlanRecords.filter(
-                (record) =>
-                  record.treatmentPlanRecordId !==
-                  selectedTreatmentPlanRecordToView.treatmentPlanRecordId
-              ),
-          };
-          reduxDispatch(updateEHRRecord(updatedEhrRecord));
-          reduxDispatch(
-            displayMessage({
-              color: "success",
-              icon: "notification",
-              title: "Successfully Deleted",
-              content: "Treatment Plan has been deleted",
-            })
-          );
-          handleCloseViewTreatmentPlanRecordDialog();
-        })
-        .catch((err) => {
-          console.log(err);
-          // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
-          if (err.response.data.detail) {
-            reduxDispatch(
-              displayMessage({
-                color: "error",
-                icon: "notification",
-                title: "Error Encountered",
-                content: err.response.data.detail,
-              })
-            );
-          } else {
-            reduxDispatch(
-              displayMessage({
-                color: "error",
-                icon: "notification",
-                title: "Error Encountered",
-                content: err.response.data,
-              })
-            );
-          }
-          console.log(err.response.data.detail);
-        });
-    } catch (ex) {
-      console.log(ex);
-    }
-  };
-
   const handleRetrieveListOfInvitations = async () => {
+    setPrimaryInvitation(null);
+    setCurrentStaffInvitation(null);
+
     const response =
       await treatmentPlanRecordApi.getListOfInvitationsInTreatmentPlanRecord(
         selectedTreatmentPlanRecordToView.treatmentPlanRecordId
       );
-    const listOfAllInvitations = response.data;
+    const listOfAllInvitations = [...response.data];
+
+    console.log(listOfAllInvitations);
 
     //to get the primary staff of the treatment plan
-    setPrimaryInvitation(
-      listOfAllInvitations.filter((invitation) => invitation.isPrimary)[0]
+    let primaryInv = null;
+    let primaryList = listOfAllInvitations.filter(
+      (invitation) => invitation.isPrimary
     );
-    const listOfCurrentStaffInvitation = response.data.filter(
+    if (primaryList.length > 0) {
+      setPrimaryInvitation(primaryList[0]);
+      primaryInv = primaryList[0];
+    }
+
+    const listOfCurrentStaffInvitation = [...response.data].filter(
       (invitation) => invitation.staffId === loggedInStaff.staffId
     );
+
+    let currStaffInvitation = null;
 
     //if this staff has been invited for this treatment plan
     if (listOfCurrentStaffInvitation.length > 0) {
@@ -341,7 +319,64 @@ function ViewTreatmentPlanRecordDialog({
         currentStaffInvitation = invitationResponse.data;
       }
       setCurrentStaffInvitation(currentStaffInvitation);
+      currStaffInvitation = currentStaffInvitation;
     }
+
+    // console.log(currStaffInvitation);
+    // console.log(primaryInv);
+
+    let result;
+
+    if (currStaffInvitation === null) {
+      result = false;
+    } else {
+      //if invited
+      if (currStaffInvitation !== null) {
+        // console.log("invited");
+        //if primary
+        if (
+          primaryInv !== null &&
+          primaryInv.staffId === loggedInStaff.staffId
+        ) {
+          // console.log("is primary");
+          //if completed
+          if (selectedTreatmentPlanRecordToView.isCompleted) {
+            // console.log("is completed");
+            result = false;
+
+            //not completed
+          } else {
+            // console.log("not completed");
+            result = true;
+          }
+
+          //if invited staff (not primary)
+        } else {
+          // console.log("invited");
+          //if completed already
+          if (selectedTreatmentPlanRecordToView.isCompleted) {
+            // console.log("plan is completed");
+            result = false;
+          } else {
+            //if approved
+            if (currStaffInvitation.isApproved) {
+              // console.log("already approved");
+              result = false;
+            } else {
+              // console.log("havent approved");
+
+              result = true;
+            }
+          }
+        }
+      } else {
+        // console.log("not invited");
+
+        result = false;
+      }
+    }
+
+    setShowAddImageButton(result);
   };
 
   const handleRefresh = () => {
@@ -413,15 +448,21 @@ function ViewTreatmentPlanRecordDialog({
                 >
                   View Images
                 </MDButton>
-                {currentStaffInvitation !== null &&
-                  !selectedTreatmentPlanRecordToView.isCompleted && (
+                {
+                  // currentStaffInvitation !== null &&
+                  //   ((!currentStaffInvitation.isApproved &&
+                  //     primaryInvitation === null) ||
+                  //     primaryInvitation !== null) &&
+                  //   !selectedTreatmentPlanRecordToView.isCompleted
+                  showAddImageButton && (
                     <MDButton
                       onClick={handleOpenUploadImageDialog}
                       color="light"
                     >
                       Add Images
                     </MDButton>
-                  )}
+                  )
+                }
               </div>
             </DialogActions>
             <DialogContent>
@@ -535,29 +576,37 @@ function ViewTreatmentPlanRecordDialog({
                       Update
                     </MDButton>
 
-                    {primaryInvitation.staffId === loggedInStaff.staffId && (
-                      <>
-                        <MDButton
-                          onClick={handleDeleteTreatmentPlanRecord}
-                          color="primary"
-                          style={{ marginRight: "10px" }}
-                        >
-                          Delete
-                        </MDButton>
-                        <MDButton
-                          onClick={handleOpenCompleteTreatmentPlanRecordDialog}
-                          color="warning"
-                        >
-                          Complete
-                        </MDButton>
-                      </>
-                    )}
-                    {currentStaffInvitation !== null &&
-                      primaryInvitation.staffId !== loggedInStaff.staffId && (
+                    {primaryInvitation !== null &&
+                      primaryInvitation?.staffId === loggedInStaff.staffId && (
                         <>
                           <MDButton
                             onClick={
-                              handleOpenConfirmApproveTreatmentPlanRecordDialog
+                              handleOpenConfirmDeleteTreatmentPlanRecordDialog
+                            }
+                            color="primary"
+                            style={{ marginRight: "10px" }}
+                          >
+                            Delete
+                          </MDButton>
+                          <MDButton
+                            onClick={
+                              handleOpenCompleteTreatmentPlanRecordDialog
+                            }
+                            color="warning"
+                          >
+                            Complete
+                          </MDButton>
+                        </>
+                      )}
+                    {currentStaffInvitation !== null &&
+                      primaryInvitation !== null &&
+                      primaryInvitation?.staffId !== loggedInStaff.staffId && (
+                        <>
+                          <MDButton
+                            onClick={() =>
+                              handleOpenConfirmApproveTreatmentPlanRecordDialog(
+                                currentStaffInvitation.invitationId
+                              )
                             }
                             color="warning"
                             disabled={currentStaffInvitation.isApproved}
@@ -605,6 +654,20 @@ function ViewTreatmentPlanRecordDialog({
               handleCloseConfirmApproveTreatmentPlanRecordDialog
             }
             handleRefresh={handleRefresh}
+            invitationIdToApprove={invitationIdToApprove}
+          />
+          <ConfirmDeleteTreatmentPlanDialog
+            openConfirmDeleteTreatmentPlanRecordDialog={
+              openConfirmDeleteTreatmentPlanDialog
+            }
+            selectedTreatmentPlanRecord={selectedTreatmentPlanRecordToView}
+            handleCloseConfirmDeleteTreatmentPlanRecordDialog={
+              handleCloseConfirmDeleteTreatmentPlanRecordDialog
+            }
+            handleRefresh={handleRefresh}
+            handleCloseViewTreatmentPlanRecordDialog={
+              handleCloseViewTreatmentPlanRecordDialog
+            }
           />
         </>
       )}

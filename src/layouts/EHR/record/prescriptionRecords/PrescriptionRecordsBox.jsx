@@ -31,7 +31,10 @@ import { selectEHRRecord } from "store/slices/ehrSlice";
 import { selectStaff } from "store/slices/staffSlice";
 import { displayMessage } from "store/slices/snackbarSlice";
 import { prescriptionRecordApi, inventoryApi } from "api/Api";
-
+import {
+	parseDateFromLocalDateTime,
+	formatDateToYYYYMMDD,
+} from "utility/Utility";
 
 
 function PrescriptionRecordsBox() {
@@ -42,6 +45,7 @@ function PrescriptionRecordsBox() {
 	const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 	const [selectedRecord, setSelectedRecord] = useState(null);
 	const [inventoryItems, setInventoryItems] = useState([]);
+	const [inventoryItemsAllergy, setInventoryItemsAllergy] = useState([]);
 	const [editedRecord, setEditedRecord] = useState(null);
 	const [prescriptionRecords, setPrescriptionRecords] = useState([]);
 	const [selectedInventoryItem, setSelectedInventoryItem] = useState("");
@@ -54,7 +58,8 @@ function PrescriptionRecordsBox() {
 		description: "",
 		comments: "",
 		prescriptionStatusEnum: "", // Set the initial value according to your enum options
-		inventoryItem: "" // Set the initial value according to your medication options
+		inventoryItem: "", // Set the initial value according to your medication options
+		expirationDate: ""
 	});
 	const handleCloseForm = () => {
 		clearFormFields();
@@ -67,6 +72,7 @@ function PrescriptionRecordsBox() {
 		try {
 			const response = await prescriptionRecordApi.getAllPrescriptionRecord(ehrRecord.electronicHealthRecordId);
 			setPrescriptionRecords(response.data);
+			console.log(response.data)
 		} catch (error) {
 			console.error("Error fetching prescription records: ", error);
 		}
@@ -82,11 +88,9 @@ function PrescriptionRecordsBox() {
 	const handleCreatePrescription = async () => {
 		try {
 			if (
-				newRecord.medicationQuantity <= 0 ||
 				newRecord.dosage <= 0 ||
-				newRecord.medicationQuantity === "" ||
 				newRecord.dosage === "" ||
-				newRecord.inventoryItem === "" 
+				newRecord.inventoryItem === ""
 				// newRecord.prescriptionStatusEnum === ""
 			) {
 				reduxDispatch(
@@ -99,16 +103,51 @@ function PrescriptionRecordsBox() {
 				);
 				return;
 			}
-			const currentDate = new Date().toLocaleString();
+
+
+			const existsInAllergy = inventoryItemsAllergy.some(
+				(item) => item.inventoryItemId === selectedInventoryItem
+			    );
+		    
+			    if (!existsInAllergy) {
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Error",
+						content: "Patient has allergy restrictions from selected Medication.",
+					})
+				);
+				return;	
+			    }
+
+			// const options = {
+			// 	day: '2-digit',
+			// 	month: '2-digit',
+			// 	year: 'numeric',
+			// 	hour: '2-digit',
+			// 	minute: '2-digit',
+			// 	second: '2-digit',
+			// 	hour12: false, // Use 24-hour format
+			// };
+			// const currentDate = new Date().toLocaleString('en-GB', options);
+			const currentDate = new Date()
+
+			const date = new Date(newRecord.expirationDate);
+			console.log(currentDate);
+
+			const formattedDate = `${("0" + date.getDate()).slice(-2)}/${("0" + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}, 00:00:00`;
+			const formattedCurrentDate = `${("0" + currentDate.getDate()).slice(-2)}/${("0" + (currentDate.getMonth() + 1)).slice(-2)}/${currentDate.getFullYear()}, 00:00:00`;
 
 			console.log(selectedInventoryItem);
 
 			// Update the newRecord object with the required fields
 			const updatedRecord = {
 				...newRecord,
-				createdDate: currentDate,
+				createdDate: formattedCurrentDate,
+				expirationDate: formattedDate,
 				prescribedBy: `Doctor ${loggedInStaff.firstname} ${loggedInStaff.lastname}`,
-				prescriptionStatusEnum: "PENDING"
+				prescriptionStatusEnum: "ONGOING"
 			};
 			console.log(updatedRecord);
 
@@ -151,9 +190,9 @@ function PrescriptionRecordsBox() {
 		try {
 			console.log(editedRecord)
 			if (
-				editedRecord.medicationQuantity <= 0 ||
+				//editedRecord.medicationQuantity <= 0 ||
 				editedRecord.dosage <= 0 ||
-				editedRecord.medicationQuantity === "" ||
+				//editedRecord.medicationQuantity === "" ||
 				editedRecord.dosage === ""
 			) {
 				reduxDispatch(
@@ -170,7 +209,7 @@ function PrescriptionRecordsBox() {
 				editedRecord.prescriptionRecordId,
 				editedRecord
 			);
-			
+
 			fetchPrescriptionRecords();
 			reduxDispatch(
 				displayMessage({
@@ -206,18 +245,18 @@ function PrescriptionRecordsBox() {
 
 	const getStatusColor = (status) => {
 		switch (status) {
-			case "COLLECTED":
+			case "ONGOING":
 				return "green";
-			case "UNCOLLECTED":
+			case "EXPIRED":
 				return "red";
-			case "PENDING":
-				return "orange";
-			case "INPATIENT_TAKEN":
-				return "green";
-			case "INPATIENT_OVERDUE":
-				return "red";
+			// case "PENDING":
+			// 	return "orange";
+			// case "INPATIENT_TAKEN":
+			// 	return "green";
+			// case "INPATIENT_OVERDUE":
+			// 	return "red";
 			default:
-				return "black";
+				return "green";
 		}
 	};
 
@@ -247,11 +286,10 @@ function PrescriptionRecordsBox() {
 		setSelectedRecord(record);
 		setEditedRecord({
 			prescriptionRecordId: record.prescriptionRecordId,
-			medicationQuantity: record.medicationQuantity,
+			expirationDate: record.expirationDate,
 			dosage: record.dosage,
 			description: record.description,
 			comments: record.comments,
-			prescriptionStatusEnum: record.prescriptionStatusEnum
 		});
 		setOpenEditDialog(true);
 	};
@@ -262,7 +300,7 @@ function PrescriptionRecordsBox() {
 	};
 
 	const handleEditDialogClose = () => {
-		
+
 		setOpenEditDialog(false);
 	};
 
@@ -301,13 +339,22 @@ function PrescriptionRecordsBox() {
 
 	const fetchInventoryItems = async () => {
 		try {
-			const response = await inventoryApi.getAllMedicationsByAllergy(ehrRecord.electronicHealthRecordId);
+			const response = await inventoryApi.getAllMedication();
 			setInventoryItems(response.data);
+			const response2 = await inventoryApi.getAllMedicationsByAllergy(ehrRecord.electronicHealthRecordId);
+			setInventoryItemsAllergy(response2.data);
+
+			console.log(response.data)
+			console.log(response2.data)
 		} catch (error) {
 			console.error("Error fetching inventory items: ", error);
 		}
 	};
-
+	function formatDate(expirationDateArray) {
+		const [year, month, day] = expirationDateArray;
+		const formattedDate = new Date(year, month - 1, day).toLocaleDateString('en-GB');
+		return formattedDate;
+	}
 	useEffect(() => {
 		fetchInventoryItems();
 		fetchPrescriptionRecords();
@@ -334,50 +381,54 @@ function PrescriptionRecordsBox() {
 						</MDButton>
 					)}
 				</Box>
-				{prescriptionRecords.map((pr, index) => (
-					<Card key={index} variant="outlined" style={{ marginBottom: 10, backgroundColor: "#f8f8f8" }}>
-						<CardContent>
-							<Typography variant="h6">
-								Prescription ID: {pr.prescriptionRecordId}
-							</Typography>
-							<div style={{ marginTop: 10 }}>
-								<div><b>Created Date:</b> {pr.createdDate}</div>
-								<div>
-									<b>Medication Name:</b> {pr.medicationName}
+				{prescriptionRecords.map((pr, index) => {
+
+
+					return (
+						<Card key={index} variant="outlined" style={{ marginBottom: 10, backgroundColor: "#f8f8f8" }}>
+							<CardContent>
+								<Typography variant="h6">
+									Prescription ID: {pr.prescriptionRecordId}
+								</Typography>
+								<div style={{ marginTop: 10 }}>
+									<div><b>Expiration Date:</b> {formatDate(pr.expirationDate)}</div>
+									<div>
+										<b>Medication Name:</b> {pr.medicationName}
+									</div>
+									{/* <div>
+              <b>Medication Quantity:</b> {pr.medicationQuantity}
+            </div> */}
+									<div>
+										<b>Quantity:</b> {pr.dosage}
+									</div>
+									<div>
+										<b>Description:</b> {pr.description}
+									</div>
+									<div>
+										<b>Dosage Comments:</b> {pr.comments}
+									</div>
+									<div><b>Prescribed By:</b> {pr.prescribedBy}</div>
+									<div>
+										<b>Prescription Status:</b>{" "}
+										{renderStatusWithColor(pr.prescriptionStatusEnum)}
+									</div>
 								</div>
-								<div>
-									<b>Medication Quantity:</b> {pr.medicationQuantity}
-								</div>
-								<div>
-									<b>Dosage:</b> {pr.dosage}
-								</div>
-								<div>
-									<b>Description:</b> {pr.description}
-								</div>
-								<div>
-									<b>Comments:</b> {pr.comments}
-								</div>
-								<div><b>Prescribed By:</b> {pr.prescribedBy}</div>
-								<div>
-									<b>Prescription Status:</b>{" "}
-									{renderStatusWithColor(pr.prescriptionStatusEnum)}
-								</div>
-							</div>
-						</CardContent>
-						<CardActions style={{ justifyContent: "flex-end" }}>
-							{loggedInStaff.staffRoleEnum === "DOCTOR" && (
-								<IconButton onClick={() => handleEdit(pr)}>
-									<EditIcon />
-								</IconButton>
-							)}
-							{loggedInStaff.staffRoleEnum === "DOCTOR" && (
-								<IconButton onClick={() => handleDelete(pr.prescriptionRecordId)}>
-									<DeleteIcon />
-								</IconButton>
-							)}
-						</CardActions>
-					</Card>
-				))}
+							</CardContent>
+							<CardActions style={{ justifyContent: "flex-end" }}>
+								{loggedInStaff.staffRoleEnum === "DOCTOR" && (
+									<IconButton onClick={() => handleEdit(pr)}>
+										<EditIcon />
+									</IconButton>
+								)}
+								{loggedInStaff.staffRoleEnum === "DOCTOR" && (
+									<IconButton onClick={() => handleDelete(pr.prescriptionRecordId)}>
+										<DeleteIcon />
+									</IconButton>
+								)}
+							</CardActions>
+						</Card>
+					);
+				})}
 			</Card>
 			<Dialog open={openEditDialog} onClose={handleEditDialogClose}>
 				{/* Add your edit form here to update the record's information */}
@@ -430,16 +481,16 @@ function PrescriptionRecordsBox() {
 							</MenuItem>
 						))}
 					</Select>
-					<TextField
+					{/* <TextField
 						label="Medication Quantity"
 						type="number"
 						value={newRecord.medicationQuantity}
 						onChange={(e) => handleCreateFieldChange("medicationQuantity", e.target.value)}
 						fullWidth
 						margin="normal"
-					/>
+					/> */}
 					<TextField
-						label="Dosage"
+						label="Quantity"
 						type="number"
 						value={newRecord.dosage}
 						onChange={(e) => handleCreateFieldChange("dosage", e.target.value)}
@@ -454,9 +505,21 @@ function PrescriptionRecordsBox() {
 						margin="normal"
 					/>
 					<TextField
-						label="Comments"
+						label="Dosage Comments"
 						value={newRecord.comments}
 						onChange={(e) => handleCreateFieldChange("comments", e.target.value)}
+						fullWidth
+						margin="normal"
+					/>
+					<TextField
+						id="expiration-date"
+						label="Expiration Date"
+						type="date"
+						value={newRecord.expirationDate}
+						onChange={(e) => handleCreateFieldChange("expirationDate", e.target.value)}
+						InputLabelProps={{
+							shrink: true,
+						}}
 						fullWidth
 						margin="normal"
 					/>
@@ -472,20 +535,20 @@ function PrescriptionRecordsBox() {
 						{/* <MenuItem value="" disabled>
 							Select Prescription Status
 						</MenuItem> */}
-						{/* {prescriptionStatusOptions.map((option, index) => (
+					{/* {prescriptionStatusOptions.map((option, index) => (
 							<MenuItem key={index} value={option}>
 								{option}
 							</MenuItem>
 						))}
 					</Select> */}
- 
+
 
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={handleCloseForm}>Cancel</Button>
 					<Button onClick={() => {
 						handleCreatePrescription();
-						clearFormFields();
+						//clearFormFields();
 					}} color="primary">
 						Create
 					</Button>
@@ -494,16 +557,16 @@ function PrescriptionRecordsBox() {
 			<Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
 				<DialogTitle>Edit Prescription Record</DialogTitle>
 				<DialogContent dividers>
-					<TextField
+					{/* <TextField
 						label="Medication Quantity"
 						type="number"
 						value={editedRecord ? editedRecord.medicationQuantity : ''}
 						onChange={(e) => setEditedRecord({ ...editedRecord, medicationQuantity: e.target.value })}
 						fullWidth
 						margin="normal"
-					/>
+					/> */}
 					<TextField
-						label="Dosage"
+						label="Quantity"
 						type="number"
 						value={editedRecord ? editedRecord.dosage : ''}
 						onChange={(e) => setEditedRecord({ ...editedRecord, dosage: e.target.value })}
@@ -518,13 +581,24 @@ function PrescriptionRecordsBox() {
 						margin="normal"
 					/>
 					<TextField
-						label="Comments"
+						label="Dosage Comments"
 						value={editedRecord ? editedRecord.comments : ''}
 						onChange={(e) => setEditedRecord({ ...editedRecord, comments: e.target.value })}
 						fullWidth
 						margin="normal"
 					/>
-					<InputLabel>Select Prescription Status</InputLabel>
+					<TextField
+						id="expiration-date"
+						label="Expiration Date"
+						type="date"
+						value={editedRecord ? editedRecord.expirationDate : ''}
+						onChange={(e) => setEditedRecord({ ...editedRecord, expirationDate: e.target.value })} InputLabelProps={{
+							shrink: true,
+						}}
+						fullWidth
+						margin="normal"
+					/>
+					{/* <InputLabel>Select Prescription Status</InputLabel>
 					<Select
 						value={editedRecord ? editedRecord.prescriptionStatusEnum : ''}
 						onChange={(e) => setEditedRecord({ ...editedRecord, prescriptionStatusEnum: e.target.value })}
@@ -538,7 +612,7 @@ function PrescriptionRecordsBox() {
 								{option}
 							</MenuItem>
 						))}
-					</Select>
+					</Select> */}
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={handleEditDialogClose}>Cancel</Button>
