@@ -36,8 +36,7 @@ import { StaffRoleEnum } from "constants/StaffRoleEnum";
 import ConsumableEquipmentManagement from "layouts/administration/inventory-management/consumable-equipment";
 import InventoryManagement from "layouts/administration/inventory-management";
 import MedicationManagement from "layouts/pharmacy/medication-management";
-import ServiceItemManagement from "layouts/administration/inventory-management/service-item-management";
-import ServiceManagement from "layouts/administration/inventory-management/service-item-management";
+import ServiceManagement from "layouts/administration/inventory-management/service-management";
 
 const ALL_EXCEPT_PHARMACIST = [
   StaffRoleEnum.ADMIN,

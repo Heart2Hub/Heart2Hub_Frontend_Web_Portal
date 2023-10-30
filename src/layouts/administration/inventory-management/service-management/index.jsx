@@ -428,6 +428,7 @@ function ServiceManagement() {
                     );
                 })
                 .catch((err) => {
+                    setDeleteConfirmationOpen(false);
                     reduxDispatch(
                         displayMessage({
                             color: "error",
