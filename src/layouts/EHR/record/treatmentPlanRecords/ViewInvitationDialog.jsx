@@ -49,6 +49,18 @@ function ViewInvitationDialog({
   //THROWING ERROR BUT BE NOT THROWING
   // ERROR RESPONSE IS THE JSON OF THE TREATMENT PLAN
   const handleAddStaff = async (staffToInvite) => {
+    if (selectedStaff === "") {
+      reduxDispatch(
+        displayMessage({
+          color: "warning",
+          icon: "notification",
+          title: "Warning",
+          content: "No Staff Selected",
+        })
+      );
+      return;
+    }
+
     if (
       listOfInvitedStaff.filter((staff) => {
         return staff.staffId === staffToInvite.staffId;
@@ -134,6 +146,9 @@ function ViewInvitationDialog({
       listOfStaffs.filter((staff) => {
         return staff.unit.name === department;
       })
+      // .filter((staff) => {
+      //   return staff.staffRoleEnum === "DOCTOR";
+      // })
     );
   };
 
@@ -163,6 +178,8 @@ function ViewInvitationDialog({
   };
 
   useEffect(() => {
+    setSelectedStaff("");
+    setSelectedDepartment("");
     handleFetchDepartments();
     handleFetchInvitedStaff();
     handleFetchAllStaff();
@@ -320,7 +337,8 @@ function ViewInvitationDialog({
                       justifyContent: "center",
                     }}
                   >
-                    {!invitation.isPrimary ? (
+                    {!invitation.isPrimary &&
+                    !selectedTreatmentPlanRecord.isCompleted ? (
                       <IconButton
                         edge="end"
                         onClick={() => handleDeleteStaff(invitation)}
