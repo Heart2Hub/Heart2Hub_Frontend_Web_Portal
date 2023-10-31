@@ -699,6 +699,10 @@ function ScheduleAdmissionModal({
               content: "There are not enough beds for the entire duration",
             })
           );
+          setSelectedEventIds([]);
+          setAdmissionDateTime("");
+          setDischargeDateTime("");
+          setSelectedWard("");
           eventIds = [];
           break;
         } else {

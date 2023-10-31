@@ -53,6 +53,7 @@ import ViewAttachmentsButton from "./ViewAttachmentsButton";
 import AdmissionDialog from "./AdmissionDialog";
 import AssignAdmissionDialog from "./AssignAdmissionDialog";
 import { useRef } from "react";
+import moment from "moment";
 
 const style = {
   position: "absolute",
@@ -91,6 +92,7 @@ function AdmissionTicketModal({
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [arrived, setArrived] = useState(selectedAppointment.arrived);
+  const [dischargeDate, setDischargeDate] = useState(null);
 
   //for assigning appointment to staff in the AppointmentTicketModal
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -156,6 +158,12 @@ function AdmissionTicketModal({
     console.log(listOfStaff);
     setListOfAssignedStaff(listOfStaff);
   };
+
+  useEffect(() => {
+    const dischargeMoment = moment(selectedAppointment.dischargeDateTime);
+    dischargeMoment.subtract(1, "months");
+    setDischargeDate(dischargeMoment.format("YYYY-MM-DD HH:mm:ss"));
+  }, []);
 
   useEffect(() => {
     console.log(selectedAppointment);
@@ -496,7 +504,7 @@ function AdmissionTicketModal({
                     {`Ward ${selectedAppointment.ward}, Room ${selectedAppointment.room}, Bed ${selectedAppointment.bed}`}
                   </MDTypography>
                 </ListItem>
-                {/* <ListItem>
+                <ListItem>
                   <MDTypography variant="h5" gutterBottom>
                     Discharge Date :
                   </MDTypography>
@@ -505,7 +513,7 @@ function AdmissionTicketModal({
                   <MDTypography variant="h6" gutterBottom color="black">
                     {dischargeDate}
                   </MDTypography>
-                </ListItem> */}
+                </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
                 >
