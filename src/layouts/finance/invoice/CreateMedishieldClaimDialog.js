@@ -6,16 +6,19 @@ import {
 	DialogActions,
 	Button,
 	TextField,
+	InputLabel
 } from '@mui/material';
 import { displayMessage } from "store/slices/snackbarSlice";
 import { useDispatch } from "react-redux";
 import { invoiceApi } from "api/Api";
+import { Label } from '@mui/icons-material';
 
-const CreateMedishieldClaimDialog = ({ isOpen, onClose, invoiceId, fetchData }) => {
+
+const CreateMedishieldClaimDialog = ({ isOpen, onClose, invoiceId, fetchData, handleEdit }) => {
 	const [medishieldClaimData, setMedishieldClaimData] = useState({
 		medishieldClaimDateApplied: '',
 		medishieldClaimAmount: 0,
-		approvalStatusEnum: '',
+		// approvalStatusEnum: '',
 	});
 
 	const reduxDispatch = useDispatch();
@@ -32,12 +35,13 @@ const CreateMedishieldClaimDialog = ({ isOpen, onClose, invoiceId, fetchData }) 
 		try {
 			const requestBody = {
 				medishieldClaimAmount: medishieldClaimData.medishieldClaimAmount,
-				approvalStatusEnum: medishieldClaimData.approvalStatusEnum,
+				//approvalStatusEnum: medishieldClaimData.approvalStatusEnum,
 			};
 
 			const response = await invoiceApi.createMedishieldClaim(invoiceId, requestBody);
 			console.log('Create Medishield Claim Response:', response.data);
-			//onCreate(medishieldClaimData);
+			const invoiceResponse = await invoiceApi.findInvoice(invoiceId);
+                        handleEdit(invoiceResponse.data);
 			fetchData();
 			reduxDispatch(
 				displayMessage({
@@ -65,21 +69,22 @@ const CreateMedishieldClaimDialog = ({ isOpen, onClose, invoiceId, fetchData }) 
 		<Dialog open={isOpen} onClose={onClose}>
 			<DialogTitle>Create Medishield Claim</DialogTitle>
 			<DialogContent>
+			<InputLabel sx={{ paddingBottom: "8px" }}>Claim Amount</InputLabel>
 				<TextField
 					fullWidth
-					label="Claim Amount"
+					// label="Claim Amount"
 					type="number"
 					name="medishieldClaimAmount"
 					value={medishieldClaimData.medishieldClaimAmount}
 					onChange={handleInputChange}
 				/>
-				<TextField
+				{/* <TextField
 					fullWidth
 					label="Approval Status"
 					name="approvalStatusEnum"
 					value={medishieldClaimData.approvalStatusEnum}
 					onChange={handleInputChange}
-				/>
+				/> */}
 			</DialogContent>
 			<DialogActions>
 				<Button onClick={handleCreate} color="primary">

@@ -19,6 +19,7 @@ import {
         TableRow,
         Paper,
         IconButton,
+        Chip
 } from '@mui/material';
 import DeleteIcon from "@mui/icons-material/Delete";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -248,33 +249,113 @@ function Invoice() {
                         console.error("Error fetching data:", error);
                 }
         };
-        const handleAdd = () => {
 
+        const handleApproveMedishieldClaim = async (claimId, invoiceId, invoice) => {
+                try {
+                        const response = await invoiceApi.approveMedishieldClaim(claimId, invoiceId);
+                        fetchData();
+                        const invoiceResponse = await invoiceApi.findInvoice(invoiceId);
+                        handleEdit(invoiceResponse.data);
+                        reduxDispatch(
+                                displayMessage({
+                                        color: "success",
+                                        icon: "notification",
+                                        title: "Success",
+                                        content: "Medishield Claim Approved!",
+                                })
+                        );
+                } catch (error) {
+                        console.error("Error Approving Medishield Claim: ", error);
+                        reduxDispatch(
+                                displayMessage({
+                                        color: "error",
+                                        icon: "notification",
+                                        title: "Error",
+                                        content: error.response.data,
+                                })
+                        );
+                }
         };
 
-        const handleDeleteInsuranceClaim = async (claimId, invoiceId) => {
+        const handleRejectMedishieldClaim = async (claimId, invoice) => {
                 try {
-			const response = await invoiceApi.deleteInsuranceClaim(claimId, invoiceId);
+                        const response = await invoiceApi.rejectMedishieldClaim(claimId);
                         fetchData();
-			reduxDispatch(
-				displayMessage({
-					color: "success",
-					icon: "notification",
-					title: "Success",
-					content: "Insurance Claim deleted!",
-				})
-			);
-		} catch (error) {
-			console.error("Error deleting Insurance Claim: ", error);
-			reduxDispatch(
-				displayMessage({
-					color: "error",
-					icon: "notification",
-					title: "Error",
-					content: error.response.data,
-				})
-			);
-		}
+                        const invoiceResponse = await invoiceApi.findInvoice(invoice.invoiceId);
+                        handleEdit(invoiceResponse.data);
+                        reduxDispatch(
+                                displayMessage({
+                                        color: "success",
+                                        icon: "notification",
+                                        title: "Success",
+                                        content: "Medishield Claim Rejected!",
+                                })
+                        );
+                } catch (error) {
+                        console.error("Error Rejecting Medishield Claim: ", error);
+                        reduxDispatch(
+                                displayMessage({
+                                        color: "error",
+                                        icon: "notification",
+                                        title: "Error",
+                                        content: error.response.data,
+                                })
+                        );
+                }
+        };
+
+        const handleDeleteInsuranceClaim = async (claimId, invoiceId, invoice) => {
+                try {
+                        const response = await invoiceApi.deleteInsuranceClaim(claimId, invoiceId);
+                        fetchData();
+                        const invoiceResponse = await invoiceApi.findInvoice(invoiceId);
+                        handleEdit(invoiceResponse.data);
+                        reduxDispatch(
+                                displayMessage({
+                                        color: "success",
+                                        icon: "notification",
+                                        title: "Success",
+                                        content: "Insurance Claim deleted!",
+                                })
+                        );
+                } catch (error) {
+                        console.error("Error deleting Insurance Claim: ", error);
+                        reduxDispatch(
+                                displayMessage({
+                                        color: "error",
+                                        icon: "notification",
+                                        title: "Error",
+                                        content: error.response.data,
+                                })
+                        );
+                }
+        };
+
+        const handleDeleteMedishieldClaim = async (claimId, invoiceId, invoice) => {
+                try {
+                        const response = await invoiceApi.deleteMedishieldClaim(claimId, invoiceId);
+                        fetchData();
+                        const invoiceResponse = await invoiceApi.findInvoice(invoiceId);
+                        handleEdit(invoiceResponse.data);
+                        reduxDispatch(
+                                displayMessage({
+                                        color: "success",
+                                        icon: "notification",
+                                        title: "Success",
+                                        content: "Medishield Claim deleted!",
+                                })
+                        );
+                } catch (error) {
+                        console.error("Error deleting Medishield Claim: ", error);
+                        reduxDispatch(
+                                displayMessage({
+                                        color: "error",
+                                        icon: "notification",
+                                        title: "Error",
+                                        content: error.response.data,
+                                })
+                        );
+                }
         };
 
         return (
@@ -370,8 +451,8 @@ function Invoice() {
                                                                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                                                                 <IconButton
                                                                                         aria-label="delete"
-                                                                                         onClick={() => handleDeleteInsuranceClaim(selectedInvoiceDetails.insuranceClaim.insuranceClaimId, 
-                                                                                                selectedInvoiceDetails.invoiceId)} // Assuming you have a handleDeleteInsuranceClaim function to handle the deletion
+                                                                                        onClick={() => handleDeleteInsuranceClaim(selectedInvoiceDetails.insuranceClaim.insuranceClaimId,
+                                                                                                selectedInvoiceDetails.invoiceId, selectedInvoiceDetails)} // Assuming you have a handleDeleteInsuranceClaim function to handle the deletion
                                                                                 >
                                                                                         <DeleteIcon />
                                                                                 </IconButton>
@@ -395,6 +476,7 @@ function Invoice() {
                                                                         onCreate={handleCreateInsuranceClaim}
                                                                         invoiceId={selectedInvoiceDetails.invoiceId}
                                                                         fetchData={fetchData} // Pass the selectedInvoice to the dialog component
+                                                                        handleEdit={handleEdit}
                                                                 />
                                                         </ListItem>
                                                 )}
@@ -433,12 +515,61 @@ function Invoice() {
                                                                                 Claim Amount: $ {selectedInvoiceDetails.medishieldClaim.medishieldClaimAmount}
                                                                         </MDTypography>
                                                                         <MDTypography variant="body2" color="text.secondary">
-                                                                                Status: {selectedInvoiceDetails.medishieldClaim.approvalStatusEnum}
+                                                                                {/* Status: {selectedInvoiceDetails.medishieldClaim.approvalStatusEnum} */}
+                                                                                <Chip
+                                                                                        style={{
+                                                                                                position: "absolute",
+                                                                                                top: "10px",
+                                                                                                right: "10px",
+                                                                                        }}
+                                                                                        color={
+                                                                                                selectedInvoiceDetails.medishieldClaim.approvalStatusEnum === "APPROVED"
+                                                                                                        ? "success"
+                                                                                                        : selectedInvoiceDetails.medishieldClaim.approvalStatusEnum === "REJECTED"
+                                                                                                                ? "warning"
+                                                                                                                : "error"
+                                                                                        }
+                                                                                        label={selectedInvoiceDetails.medishieldClaim.approvalStatusEnum}
+                                                                                />
                                                                         </MDTypography>
+
                                                                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                                                {selectedInvoiceDetails.medishieldClaim.approvalStatusEnum === "PENDING" && (
+                                                                                        <Button
+                                                                                                variant="contained"
+                                                                                                onClick={() =>
+                                                                                                        handleApproveMedishieldClaim(
+                                                                                                                selectedInvoiceDetails.medishieldClaim.medishieldClaimId,
+                                                                                                                selectedInvoiceDetails.invoiceId,
+                                                                                                                selectedInvoiceDetails
+                                                                                                        )
+                                                                                                }
+                                                                                                color="primary"
+                                                                                                style={{ backgroundColor: 'green', color: 'white', marginRight: 10 }}
+                                                                                        >
+                                                                                                Approve
+                                                                                        </Button>
+                                                                                )}
+
+                                                                                {selectedInvoiceDetails.medishieldClaim.approvalStatusEnum === "PENDING" && (
+                                                                                        <Button
+                                                                                                variant="contained"
+                                                                                                onClick={() =>
+                                                                                                        handleRejectMedishieldClaim(
+                                                                                                                selectedInvoiceDetails.medishieldClaim.medishieldClaimId,
+                                                                                                                selectedInvoiceDetails
+                                                                                                        )
+                                                                                                }
+                                                                                                color="primary"
+                                                                                                style={{ backgroundColor: 'red', color: 'white' }}
+                                                                                        >
+                                                                                                Reject
+                                                                                        </Button>
+                                                                                )}
                                                                                 <IconButton
                                                                                         aria-label="delete"
-                                                                                        // onClick={() => handleDeleteInsuranceClaim(selectedInvoiceDetails.insuranceClaim.insuranceClaimId)} // Assuming you have a handleDeleteInsuranceClaim function to handle the deletion
+                                                                                        onClick={() => handleDeleteMedishieldClaim(selectedInvoiceDetails.medishieldClaim.medishieldClaimId,
+                                                                                                selectedInvoiceDetails.invoiceId, selectedInvoiceDetails)}
                                                                                 >
                                                                                         <DeleteIcon />
                                                                                 </IconButton>
@@ -465,6 +596,7 @@ function Invoice() {
                                                                         // onCreate={handleCreateMedishieldDialogOpen} // Pass the handleCreateMedishieldClaim function to the dialog component
                                                                         invoiceId={selectedInvoiceDetails.invoiceId}
                                                                         fetchData={fetchData} // Pass the fetchData function to the dialog component
+                                                                        handleEdit={handleEdit}
                                                                 />
                                                         </ListItem>
                                                 )}

@@ -807,6 +807,9 @@ export const invoiceApi = {
   getAllInvoices() {
     return axiosFetch.get(`${REST_ENDPOINT}/invoice/getAllInvoices`);
   },
+  findInvoice(id) {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/findInvoice/${id}`);
+  },
   getInvoicesByPatientId(id) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/invoice/getInvoicesByPatientId/${id}`
@@ -838,9 +841,12 @@ export const invoiceApi = {
   deleteMedishieldClaim(claimId, invoiceId) {
     return axiosFetch.delete(`${REST_ENDPOINT}/invoice/deleteMedishieldClaim/${claimId}/${invoiceId}`);
   },
-  // findItemsOfInvoice(id) {
-  //   return axiosFetch.get(`${REST_ENDPOINT}/invoice/findItemsOfInvoice/${id}`);
-  // },
+  approveMedishieldClaim(claimId, invoiceId) {
+    return axiosFetch.put(`${REST_ENDPOINT}/invoice/approveMedishieldClaim/${claimId}/${invoiceId}`);
+  },
+  rejectMedishieldClaim(claimId) {
+    return axiosFetch.put(`${REST_ENDPOINT}/invoice/rejectMedishieldClaim/${claimId}`);
+  },
 };
 
 export const admissionApi = {
