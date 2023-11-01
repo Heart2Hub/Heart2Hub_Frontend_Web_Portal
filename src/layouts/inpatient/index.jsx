@@ -31,6 +31,27 @@ import AdmissionCard from "./AdmissionCard";
 
 import NoAdmissionCard from "./NoAdmissionCard";
 import AdmissionTicketModal from "./AdmissionTicketModal";
+import { parseDateFromLocalDateTime } from "utility/Utility";
+
+const beds = [
+  { id: 1, title: "Bed 1" },
+  { id: 2, title: "Bed 2" },
+  { id: 3, title: "Bed 3" },
+  { id: 4, title: "Bed 4" },
+  { id: 5, title: "Bed 5" },
+  { id: 6, title: "Bed 6" },
+];
+
+const events = [
+  {
+    id: 1,
+    title: "Meeting 1",
+    start: new Date(2023, 10, 1), // Specify the date and time of the event
+    end: new Date(2023, 10, 3),
+    allDay: true,
+    resourceId: 1, // Associate this event with Room A
+  },
+];
 
 function Inpatient() {
   const staff = useSelector(selectStaff);
@@ -54,6 +75,7 @@ function Inpatient() {
 
   //for displaying admissions
   const [currentDayAdmissions, setCurrentDayAdmissions] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
   const [admissionsByRoom, setAdmissionsByRoom] = useState([]);
   const [room, setRoom] = useState(1);
 
@@ -80,16 +102,33 @@ function Inpatient() {
   const getAdmissions = async () => {
     const response = await admissionApi.getAdmissionsForWard(staff.unit.name);
     let admissions = response.data;
-    if (selectStaffToFilter) {
-      admissions = admissions.filter((admission) =>
-        admission.listOfStaffsId.includes(selectStaffToFilter)
-      );
-    }
-
+    console.log(admissions);
+    // if (selectStaffToFilter) {
+    //   admissions = admissions.filter((admission) =>
+    //     admission.listOfStaffsId.includes(selectStaffToFilter)
+    //   );
+    // }
     setCurrentDayAdmissions(admissions);
+
+    const events = admissions
+      .filter((admission) => admission.admissionDateTime)
+      .map((admission) => {
+        return {
+          id: admission.admissionId,
+          title: "Admission",
+          start: parseDateFromLocalDateTime(admission.admissionDateTime),
+          end: parseDateFromLocalDateTime(admission.dischargeDateTime),
+          allDay: true,
+          resourceId: admission.bed,
+        };
+      });
+
+    console.log(events);
+    setCalendarEvents(events);
 
     const filtered = admissions.filter((admission) => admission.room === 1);
     const admissionsInBedOrder = filtered.sort((a, b) => a.bed - b.bed);
+
     setAdmissionsByRoom(admissionsInBedOrder);
   };
 
@@ -199,7 +238,29 @@ function Inpatient() {
           </Tabs>
 
           <MDBox className="admission-calendar">
-            {admissionsByRoom.length > 0 ? (
+            <Calendar
+              localizer={localizer}
+              defaultView={Views.DAY}
+              startAccessor="start"
+              endAccessor="end"
+              resources={beds}
+              events={calendarEvents}
+              components={{
+                event: ({ event }) => (
+                  <AdmissionCard
+                    appointment={
+                      currentDayAdmissions.filter(
+                        (admission) => admission.admissionId === event.id
+                      )[0]
+                    }
+                    listOfWorkingStaff={listOfWorkingStaff}
+                    forceRefresh={forceRefresh}
+                    handleSelectAdmission={handleSelectAdmission}
+                  />
+                ),
+              }}
+            />
+            {/* {admissionsByRoom.length > 0 ? (
               admissionsByRoom.map((admission, index) => (
                 <Calendar
                   className={index === 0 ? "has-time" : "no-time"}
@@ -235,7 +296,7 @@ function Inpatient() {
               ))
             ) : (
               <p>No Admissions assigned to you</p>
-            )}
+            )} */}
           </MDBox>
         </MDBox>
       </MDBox>

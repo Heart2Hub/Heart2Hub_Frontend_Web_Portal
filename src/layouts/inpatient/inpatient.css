@@ -182,9 +182,9 @@
   padding: 5px;
 }
 
-.admission-calendar .rbc-toolbar {
+/* .admission-calendar .rbc-toolbar {
   display: none;
-}
+} */
 
 .no-time .rbc-time-gutter {
   width: 0;
@@ -202,10 +202,10 @@
   width: 200px;
 }
 
-.admission-calendar .rbc-event,
+/* .admission-calendar .rbc-event,
 .admission-calendar .rbc-event.rbc-selected {
   background-color: #fff;
-}
+} */
 
 .admission-calendar .rbc-row-content .rbc-row:nth-child(2) {
   display: none;

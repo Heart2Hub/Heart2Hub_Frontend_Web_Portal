@@ -19,7 +19,6 @@ import AdmissionTicketModal from "./AdmissionTicketModal";
 
 function AdmissionCard({
   appointment,
-  index,
   listOfWorkingStaff,
   forceRefresh,
   handleSelectAdmission,
