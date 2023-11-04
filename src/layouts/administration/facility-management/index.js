@@ -483,7 +483,7 @@ function FacilityManagement() {
   };
 
   const inventoryColumns = [
-    { Header: "Item ID", accessor: "allocatedInventoryId" },
+    // { Header: "Item ID", accessor: "allocatedInventoryId" },
     { Header: "Name", accessor: "consumableEquipment.inventoryItemName" },
     { Header: "Description", accessor: "consumableEquipment.inventoryItemDescription" },
     { Header: "Minimum Quantity", accessor: "minimumQuantityBeforeRestock" },

@@ -43,7 +43,7 @@ function StaffListSidePanel({
   }, [listOfWorkingStaff]);
 
   return (
-    <MDBox className="panel-container" sx={{ backgroundColor: "#D3E5F9" }}>
+    <MDBox className="panel-container" sx={{ backgroundColor: "#D3E5F9" }} style={{width: '270px'}}>
       <MDTypography variant="h3" style={{ marginBottom: "20px" }}>
         Staff List
       </MDTypography>

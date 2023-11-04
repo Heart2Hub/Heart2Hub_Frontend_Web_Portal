@@ -84,26 +84,32 @@ function ConfirmReadyCollectionModal({
         aria-describedby="modal-modal-description"
       >
         <Box sx={{ ...style, maxHeight: "80vh", overflow: "auto" }}>
-          <MDTypography variant="h5">Are you sure these items are ready for collection?</MDTypography>
-             <List
-             sx={{
-               width: '100%',
-               maxWidth: 360,
-               bgcolor: 'background.paper',
-               position: 'relative',
-               overflow: 'auto',
-               maxHeight: 300,
-               '& ul': { padding: 0 },
-             }}
-             subheader={<li />}
-           >
-            {cart.map(item => 
-            item.inventoryItem && item.inventoryItem.itemTypeEnum === "MEDICINE" &&
-             <ListItem sx={{display: "flex", justifyContent: "space-evenly"}}>
-                <ListItemText primary={" * " + item.inventoryItem.inventoryItemName} />
-                <ListItemText primary={"x" + item.transactionItemQuantity} />
-              </ListItem>)}
-           </List><br/>
+          <MDTypography variant="h5">Are you sure these items are ready for collection?</MDTypography><br/>
+          <TableContainer component={Paper}>
+            <Table aria-label="simple table">
+              <TableHead sx={{ display: "table-header-group" }}>
+                <TableRow>
+                  <TableCell>Medication</TableCell>
+                  <TableCell align="right">Quantity</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {cart.map((item) => (
+                  item.inventoryItem && item.inventoryItem.itemTypeEnum === "MEDICINE" &&
+                  <TableRow
+                    key={item.transactionItemId}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  >
+                    <TableCell component="th" scope="row">
+                      {" * " + item.inventoryItem.inventoryItemName}
+                    </TableCell>
+                    <TableCell align="right">{item.transactionItemQuantity}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+             <br/>
            <div style={{display: 'flex', justifyContent:'flex-end'}}>
            <MDButton
               onClick={handleCloseModal}

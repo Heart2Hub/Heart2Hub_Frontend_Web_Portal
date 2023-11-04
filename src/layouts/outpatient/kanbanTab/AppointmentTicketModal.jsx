@@ -19,9 +19,15 @@ import {
   TableRow,
   Paper,
   Button,
-  IconButton
+  IconButton,
+  DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
+  Autocomplete,
 } from "@mui/material";
-import RefreshIcon from '@mui/icons-material/Refresh';
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 import PrescriptionDialog from "./PrescriptionRecord";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
@@ -50,6 +56,7 @@ import MDBox from "components/MDBox";
 import AddAttachmentButton from "./AddAttachmentButton";
 import ViewAttachmentsButton from "./ViewAttachmentsButton";
 import ViewFacilityInventoryButton from "layouts/administration/facility-management/viewFacilityInventoryButton";
+import AdmissionDialog from "./AdmissionDialog";
 
 const style = {
   position: "absolute",
@@ -83,14 +90,27 @@ function AppointmentTicketModal({
   const [facility, setFacility] = useState("");
   //For Cart
   const [medications, setMedications] = useState([]);
+  const [medicationsAllergy, setMedicationsAllergy] = useState([]);
   const [services, setServices] = useState([]);
   const [selectedMedication, setSelectedMedication] = useState(null);
   const [selectedMedicationQuantity, setSelectedMedicationQuantity] =
     useState(1);
   const [selectedService, setSelectedService] = useState(null);
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState(null);
+  const [isConfirmDischargeOpen, setConfirmDischargeOpen] = useState(false);
 
   //For Managing the Cart
   const [cartItems, setCartItems] = useState([]);
+
+  const handleOpenDeleteDialog = (itemId) => {
+    setSelectedItemId(itemId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+  };
 
   //for assigning appointment to staff in the AppointmentTicketModal
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -117,7 +137,8 @@ function AppointmentTicketModal({
     setCommentsTouched(true);
   };
 
-  const [isPrescriptionDialogOpen, setIsPrescriptionDialogOpen] = useState(false);
+  const [isPrescriptionDialogOpen, setIsPrescriptionDialogOpen] =
+    useState(false);
 
   // function to open the prescription dialog
   const handleOpenPrescriptionDialog = () => {
@@ -126,46 +147,56 @@ function AppointmentTicketModal({
 
   //Only for Discharge ticket, will create an Invoice after discharfe
   const handleDischarge = async () => {
-    const confirmed = window.confirm("Are you sure you want to discharge the patient?");
+    // const confirmed = window.confirm(
+    //   "Are you sure you want to discharge the patient?"
+    // );
 
-    if (confirmed) {
-      try {
-        await transactionItemApi.checkout(selectedAppointment.patientId, selectedAppointment.appointmentId);
-        // Perform any necessary actions after discharge
-        console.log("Patient has been discharged.");
+    try {
+      await transactionItemApi.checkout(
+        selectedAppointment.patientId,
+        selectedAppointment.appointmentId
+      );
+      // Perform any necessary actions after discharge
+      console.log("Patient has been discharged.");
 
-        reduxDispatch(
-          displayMessage({
-            color: "success",
-            icon: "notification",
-            title: "Success",
-            content: "Patient has been discharged.",
-          })
-        );
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Success",
+          content: "Patient has been discharged.",
+        })
+      );
 
-        handleCloseModal();
-        forceRefresh();
-      } catch (error) {
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error",
-            content: error.response.data,
-          })
-        );
-      }
+      handleCloseModal();
+      handleCloseConfirmDischarge();
+      forceRefresh();
+    } catch (error) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error",
+          content: error.response.data,
+        })
+      );
     }
   };
 
   // Fetch lists of all medications and service items from the API
   const fetchMedicationsAndServices = async () => {
     try {
-      const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(selectedAppointment.patientId);
-      setMedications(medicationsResponse.data);
-      // console.log(medicationsResponse.data)
+      const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(
+        selectedAppointment.patientId
+      );
+      setMedicationsAllergy(medicationsResponse.data);
 
-      const servicesResponse = await inventoryApi.getAllServiceItemByUnit(loggedInStaff.unit.unitId);
+      const medicationsResponse2 = await inventoryApi.getAllMedication();
+      setMedications(medicationsResponse2.data);
+
+      const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
+        loggedInStaff.unit.unitId
+      );
       setServices(servicesResponse.data);
       // console.log(servicesResponse.data)
       // console.log(selectedAppointment)
@@ -191,46 +222,32 @@ function AppointmentTicketModal({
     fetchPatientCart();
   };
 
-  const handleDeleteCartItem = async (cartItemId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this item?"
-    );
-    if (confirmDelete) {
-      try {
-        await transactionItemApi.removeFromCart(
-          selectedAppointment.patientId,
-          cartItemId
-        );
-        reduxDispatch(
-          displayMessage({
-            color: "success",
-            icon: "notification",
-            title: "Success",
-            content: "Item has been deleted from the cart!",
-          })
-        );
-        fetchPatientCart();
-      } catch (error) {
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error",
-            content: error.response.data,
-          })
-        );
-      }
-    } else {
-      // If the user cancels the deletion
+  const handleConfirmDelete = async () => {
+    try {
+      await transactionItemApi.removeFromCart(
+        selectedAppointment.patientId,
+        selectedItemId
+      );
       reduxDispatch(
         displayMessage({
-          color: "info",
+          color: "success",
           icon: "notification",
-          title: "Info",
-          content: "Deletion has been canceled.",
+          title: "Success",
+          content: "Item has been deleted from the cart!",
+        })
+      );
+      fetchPatientCart();
+    } catch (error) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error",
+          content: error.response.data,
         })
       );
     }
+    handleCloseDeleteDialog();
   };
 
   const handleAddMedicationToPatient = async (medication) => {
@@ -255,6 +272,21 @@ function AppointmentTicketModal({
         inventoryItem: medication.inventoryItemId,
       };
 
+      const existsInAllergy = medicationsAllergy.some(
+				(item) => item.inventoryItemId === requestBody.inventoryItem
+			    );
+		    
+			    if (!existsInAllergy) {
+				reduxDispatch(
+					displayMessage({
+						color: "error",
+						icon: "notification",
+						title: "Error",
+						content: "Patient has allergy restrictions from selected Medication.",
+					})
+				);
+				return;	
+			    }
       console.log(requestBody);
 
       transactionItemApi
@@ -335,27 +367,30 @@ function AppointmentTicketModal({
 
   const renderMedicationsDropdown = () => {
     return (
-      <Box style={{ width: "100%" }}>
-        <InputLabel id="medication-label"> Select Medication</InputLabel>
-        <Select
-          onChange={(e) => setSelectedMedication(e.target.value)}
-          style={{ width: "50%" }}
+      <Box style={{ width: "100%", display: "flex", alignItems: "center" }}>
+        <Autocomplete
+          disablePortal
+          id="medication-label"
+          options={medications}
+          getOptionLabel={(option) => option.inventoryItemName}
+          style={{ width: "80%" }}
           sx={{ lineHeight: "3em" }}
-        >
-          {medications.map((medication) => (
-            <MenuItem key={medication.inventoryItemId} value={medication}>
-              {medication.inventoryItemName}
-            </MenuItem>
-          ))}
-        </Select>
+          renderInput={(params) => (
+            <TextField {...params} label="Select Medication" />
+          )}
+          value={selectedMedication}
+          onChange={(event, newValue) => {
+            setSelectedMedication(newValue);
+          }}
+        />
         <TextField
           label="Quantity"
           type="number"
           value={selectedMedicationQuantity}
           onChange={(e) => setSelectedMedicationQuantity(e.target.value)}
-          style={{ width: "10%", marginLeft: 20 }}
+          style={{ width: "20%", marginLeft: 10 }}
         />
-        <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
+        <ListItem sx={{ display: "flex", justifyContent: "flex-end" }}>
           <MDButton
             onClick={() => handleAddMedicationToPatient(selectedMedication)}
             variant="gradient"
@@ -363,7 +398,9 @@ function AppointmentTicketModal({
           >
             Add Medication
           </MDButton>
-        </Box>
+        </ListItem>
+        {/* <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}> */}
+        {/* </Box> */}
       </Box>
     );
   };
@@ -562,6 +599,10 @@ function AppointmentTicketModal({
     setIsDialogOpen(false);
   };
 
+  const handleCloseConfirmDischarge = () => {
+    setConfirmDischargeOpen(false);
+  }
+
   const handleCloseAssignDialog = () => {
     reduxDispatch(
       displayMessage({
@@ -605,6 +646,7 @@ function AppointmentTicketModal({
   };
 
   useEffect(() => {
+    setAssignedStaff(null);
     if (selectedAppointment.currentAssignedStaffId !== null) {
       getAssignedStaffName(selectedAppointment.currentAssignedStaffId);
       setFacilityLocation(
@@ -617,6 +659,7 @@ function AppointmentTicketModal({
     fetchMedicationsAndServices();
     fetchPatientCart();
     // setAssigningToSwimlane(columnName);
+    console.log(selectedAppointment);
   }, [selectedAppointment, listOfWorkingStaff]);
 
   return (
@@ -671,22 +714,31 @@ function AppointmentTicketModal({
                     Location:
                   </MDTypography>
                 </ListItem>
-                <ListItem>
+                <ListItem
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <MDTypography variant="h6" gutterBottom>
                     {facilityLocation !== null
                       ? facilityLocation
                       : "No Location Yet"}
                   </MDTypography>
                   <MDBox>
-                    <Stack direction="row" spacing={2}>
-                      {facilityLocation !== null && (<ViewFacilityInventoryButton
-                        selectedFacility={facility}
-                      />)}
+                    <Stack direction="row">
+                      {facilityLocation !== null && (
+                        <ViewFacilityInventoryButton
+                          selectedFacility={facility}
+                          selectedAppointment={selectedAppointment}
+                        />
+                      )}
                     </Stack>
                   </MDBox>
                 </ListItem>
                 <ListItem
-                  style={{ display: "flex", justifyContent: "space-between" }}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: "10px",
+                  }}
                 >
                   <MDTypography variant="h5" gutterBottom>
                     Link to Electronic Health Record:
@@ -729,11 +781,11 @@ function AppointmentTicketModal({
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
-                      " " +
-                      assignedStaff.lastname +
-                      " (" +
-                      assignedStaff.staffRoleEnum +
-                      ")"}
+                        " " +
+                        assignedStaff.lastname +
+                        " (" +
+                        assignedStaff.staffRoleEnum +
+                        ")"}
                   </MDTypography>
                   <MDButton
                     disabled={loading}
@@ -884,6 +936,7 @@ function AppointmentTicketModal({
                     Save Comments
                   </MDButton>
                 </Box>
+
                 <List>
                   {/* ... existing list items ... */}
                   <ListItem>
@@ -892,7 +945,13 @@ function AppointmentTicketModal({
                     </MDTypography>
                   </ListItem>
                   <ListItem>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        marginTop: 2,
+                      }}
+                    >
                       <MDButton
                         onClick={handleOpenPrescriptionDialog}
                         variant="gradient"
@@ -907,36 +966,39 @@ function AppointmentTicketModal({
                 <PrescriptionDialog
                   open={isPrescriptionDialogOpen}
                   onClose={() => setIsPrescriptionDialogOpen(false)}
-                  electronicHealthRecordId={selectedAppointment.electronicHealthRecordId}
+                  electronicHealthRecordId={
+                    selectedAppointment.electronicHealthRecordId
+                  }
                   handlePageRefresh={handlePageRefresh}
                 />
                 <br></br>
-                <List>
-                  <ListItem>
-                    <MDTypography variant="h5" gutterBottom>
-                      Medications:
-                    </MDTypography>
-                  </ListItem>
-                  <ListItem>{renderMedicationsDropdown()}</ListItem>
-                </List>
-                <br></br>
-                <List>
-                  <ListItem>
-                    <MDTypography variant="h5" gutterBottom>
-                      Services:
-                    </MDTypography>
-                  </ListItem>
-                  <ListItem>{renderServicesDropdown()}</ListItem>
-                </List>
+                {loggedInStaff.staffRoleEnum !== "ADMIN" ? (
+                  <>
+                    <List>
+                      <ListItem>
+                        <MDTypography variant="h5" gutterBottom>
+                          Medications:
+                        </MDTypography>
+                      </ListItem>
+                      <ListItem>{renderMedicationsDropdown()}</ListItem>
+                    </List>
+                    <br></br>
+                    <List>
+                      <ListItem>
+                        <MDTypography variant="h5" gutterBottom>
+                          Services:
+                        </MDTypography>
+                      </ListItem>
+                      <ListItem>{renderServicesDropdown()}</ListItem>
+                    </List>
+                  </>
+                ) : null}
                 <List>
                   <ListItem>
                     <MDTypography variant="h5" gutterBottom>
                       Patient's Cart:
                     </MDTypography>
-                    <IconButton
-                      onClick={fetchPatientCart} 
-                      aria-label="refresh"
-                    >
+                    <IconButton onClick={fetchPatientCart} aria-label="refresh">
                       <RefreshIcon />
                     </IconButton>
                   </ListItem>
@@ -959,7 +1021,11 @@ function AppointmentTicketModal({
                             {cartItems.map((item) => (
                               <TableRow
                                 key={item.transactionItemId}
-                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                sx={{
+                                  "&:last-child td, &:last-child th": {
+                                    border: 0,
+                                  },
+                                }}
                               >
                                 <TableCell component="th" scope="row">
                                   {item.transactionItemName}
@@ -967,15 +1033,24 @@ function AppointmentTicketModal({
                                 <TableCell align="right">
                                   Quantity: {item.transactionItemQuantity}
                                 </TableCell>
-                                <TableCell align="right">
-                                  <Button
-                                    variant="contained"
-                                    style={{ backgroundColor: "#f44336", color: "white" }}
-                                    onClick={() => handleDeleteCartItem(item.transactionItemId)}
-                                  >
-                                    Delete
-                                  </Button>
-                                </TableCell>
+                                {loggedInStaff.staffRoleEnum !== "ADMIN" ? (
+                                  <TableCell align="right">
+                                    <Button
+                                      variant="contained"
+                                      style={{
+                                        backgroundColor: "#f44336",
+                                        color: "white",
+                                      }}
+                                      onClick={() =>
+                                        handleOpenDeleteDialog(
+                                          item.transactionItemId
+                                        )
+                                      }
+                                    >
+                                      Delete
+                                    </Button>
+                                  </TableCell>
+                                ) : null}
                               </TableRow>
                             ))}
                           </TableBody>
@@ -995,7 +1070,7 @@ function AppointmentTicketModal({
                 >
                   {selectedAppointment.swimlaneStatusEnum === "DISCHARGE" && (
                     <MDButton
-                      onClick={handleDischarge}
+                      onClick={() => setConfirmDischargeOpen(true)}
                       variant="gradient"
                       color="success"
                       style={{ marginTop: "20px" }}
@@ -1009,6 +1084,46 @@ function AppointmentTicketModal({
           )}
         </Box>
       </Modal>
+      <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this item?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog} color="primary">
+            Cancel
+          </Button>
+          <MDButton
+            onClick={handleConfirmDelete}
+            color="primary"
+            variant="contained"
+          >
+            Delete
+          </MDButton>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={isConfirmDischargeOpen} onClose={handleCloseConfirmDischarge}>
+        <DialogTitle>Confirm Discharge</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to discharge {selectedAppointment.firstName} {selectedAppointment.lastName}?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseConfirmDischarge} color="primary">
+            Cancel
+          </Button>
+          <MDButton
+            onClick={handleDischarge}
+            color="primary"
+            variant="contained"
+          >
+            Confirm
+          </MDButton>
+        </DialogActions>
+      </Dialog>
       <AssignAppointmentDialog
         open={isDialogOpen}
         onConfirm={handleConfirmAssignDialog}

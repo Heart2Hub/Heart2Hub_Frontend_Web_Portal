@@ -15,9 +15,11 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import { useDispatch } from "react-redux";
-import { problemRecordApi, ehrApi } from "api/Api";
+import { problemRecordApi } from "api/Api";
 import { displayMessage } from "store/slices/snackbarSlice";
 import { selectEHRRecord, updateEHRRecord } from "store/slices/ehrSlice";
+import { listOfProblemTypeEnum } from "./ProblemTypeEnum";
+import { listOfAllergenEnum } from "./AllergenEnum";
 
 function CreateNewProblemRecordDialog({
   openCreateProblemRecordDialog,
@@ -44,7 +46,7 @@ function CreateNewProblemRecordDialog({
 
   const handleCreateProblemRecord = () => {
     try {
-      if (formData.description.trim() == "") {
+      if (formData.description.trim() === "") {
         reduxDispatch(
           displayMessage({
             color: "error",
@@ -55,7 +57,7 @@ function CreateNewProblemRecordDialog({
         );
         return;
       }
-      if (formData.priorityEnum == "") {
+      if (formData.priorityEnum === "") {
         reduxDispatch(
           displayMessage({
             color: "error",
@@ -66,7 +68,7 @@ function CreateNewProblemRecordDialog({
         );
         return;
       }
-      if (formData.problemTypeEnum == "") {
+      if (formData.problemTypeEnum === "") {
         reduxDispatch(
           displayMessage({
             color: "error",
@@ -102,65 +104,128 @@ function CreateNewProblemRecordDialog({
         .toString()
         .padStart(2, "0")}`;
       formData.createdDate = formattedDate;
-      problemRecordApi
-        .createProblemRecord(ehrRecord.electronicHealthRecordId, formData)
-        .then((response) => {
-          const updatedEhrRecord = {
-            ...ehrRecord,
-            listOfProblemRecords: [
-              ...ehrRecord.listOfProblemRecords,
-              response.data,
-            ],
-          };
-          reduxDispatch(updateEHRRecord(updatedEhrRecord));
-          setFormData({
-            description: "",
-            createdBy: "",
-            createdDate: "",
-            priorityEnum: "",
-            problemTypeEnum: "",
-          });
-          reduxDispatch(
-            displayMessage({
-              color: "success",
-              icon: "notification",
-              title: "Successfully Created Facility!",
-              content: formData.problemTypeEnum + " created",
-            })
-          );
-          handleCloseCreateProblemRecordDialog();
-        })
-        .catch((err) => {
-          console.log(err);
-          setFormData({
-            description: "",
-            createdBy: "",
-            createdDate: "",
-            priorityEnum: "",
-            problemTypeEnum: "",
-          });
-          // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
-          if (err.response.data.detail) {
+
+      if (formData.problemTypeEnum === "ALLERGIES_AND_IMMUNOLOGIC") {
+        problemRecordApi
+          .createAllergyRecord(ehrRecord.electronicHealthRecordId, formData)
+          .then((response) => {
+            const updatedEhrRecord = {
+              ...ehrRecord,
+              listOfMedicalHistoryRecords: [
+                ...ehrRecord.listOfMedicalHistoryRecords,
+                response.data,
+              ],
+            };
+            reduxDispatch(updateEHRRecord(updatedEhrRecord));
+            setFormData({
+              description: "",
+              createdBy: "",
+              createdDate: "",
+              priorityEnum: "",
+              problemTypeEnum: "",
+            });
             reduxDispatch(
               displayMessage({
-                color: "error",
+                color: "success",
                 icon: "notification",
-                title: "Error Encountered",
-                content: err.response.data.detail,
+                title: "Success!",
+                content: "Successfully created Allergy",
               })
             );
-          } else {
+            handleCloseCreateProblemRecordDialog();
+          })
+          .catch((err) => {
+            console.log(err);
+            setFormData({
+              description: "",
+              createdBy: "",
+              createdDate: "",
+              priorityEnum: "",
+              problemTypeEnum: "",
+            });
+            // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
+            if (err.response.data.detail) {
+              reduxDispatch(
+                displayMessage({
+                  color: "error",
+                  icon: "notification",
+                  title: "Error Encountered",
+                  content: err.response.data.detail,
+                })
+              );
+            } else {
+              reduxDispatch(
+                displayMessage({
+                  color: "error",
+                  icon: "notification",
+                  title: "Error Encountered",
+                  content: err.response.data,
+                })
+              );
+            }
+            console.log(err.response.data.detail);
+          });
+      } else {
+        problemRecordApi
+          .createProblemRecord(ehrRecord.electronicHealthRecordId, formData)
+          .then((response) => {
+            const updatedEhrRecord = {
+              ...ehrRecord,
+              listOfProblemRecords: [
+                ...ehrRecord.listOfProblemRecords,
+                response.data,
+              ],
+            };
+            reduxDispatch(updateEHRRecord(updatedEhrRecord));
+            setFormData({
+              description: "",
+              createdBy: "",
+              createdDate: "",
+              priorityEnum: "",
+              problemTypeEnum: "",
+            });
             reduxDispatch(
               displayMessage({
-                color: "error",
+                color: "success",
                 icon: "notification",
-                title: "Error Encountered",
-                content: err.response.data,
+                title: "Success!",
+                content: "Successfully created problem",
               })
             );
-          }
-          console.log(err.response.data.detail);
-        });
+            handleCloseCreateProblemRecordDialog();
+          })
+          .catch((err) => {
+            console.log(err);
+            setFormData({
+              description: "",
+              createdBy: "",
+              createdDate: "",
+              priorityEnum: "",
+              problemTypeEnum: "",
+            });
+            // Weird functionality here. If allow err.response.detail when null whle react application breaks cause error is stored in the state. Must clear cache. Something to do with the state.
+            if (err.response.data.detail) {
+              reduxDispatch(
+                displayMessage({
+                  color: "error",
+                  icon: "notification",
+                  title: "Error Encountered",
+                  content: err.response.data.detail,
+                })
+              );
+            } else {
+              reduxDispatch(
+                displayMessage({
+                  color: "error",
+                  icon: "notification",
+                  title: "Error Encountered",
+                  content: err.response.data,
+                })
+              );
+            }
+            console.log(err.response.data.detail);
+          });
+      }
     } catch (ex) {
       console.log(ex);
     }
@@ -175,27 +240,6 @@ function CreateNewProblemRecordDialog({
       >
         <DialogTitle>Create New Problem Record</DialogTitle>
         <DialogContent>
-          <TextField
-            fullWidth
-            label="Description"
-            name="description"
-            value={formData.description}
-            onChange={handleFormChange}
-            margin="dense"
-          />
-          <FormControl fullWidth margin="dense">
-            <InputLabel>Priority</InputLabel>
-            <Select
-              name="priorityEnum"
-              value={formData.priorityEnum}
-              onChange={handleFormChange}
-              sx={{ lineHeight: "3em" }}
-            >
-              <MenuItem value="LOW">Low</MenuItem>
-              <MenuItem value="MEDIUM">Medium</MenuItem>
-              <MenuItem value="HIGH">High</MenuItem>
-            </Select>
-          </FormControl>
           <FormControl fullWidth margin="dense">
             <InputLabel>Type</InputLabel>
             <Select
@@ -204,62 +248,53 @@ function CreateNewProblemRecordDialog({
               onChange={handleFormChange}
               sx={{ lineHeight: "3em" }}
             >
-              <MenuItem value="ALLERGIES_AND_IMMUNOLOGIC">
-                Allergies and Immunologic
-              </MenuItem>
-              <MenuItem value="CARDIOVASCULAR">Cardiovascular</MenuItem>
-              <MenuItem value="DENTAL_AND_ORAL">Dental and Oral</MenuItem>
-              <MenuItem value="DERMATOLOGIC">Dermatologic</MenuItem>
-              <MenuItem value="GASTROINTESTINAL">Gastrointestinal</MenuItem>
-              <MenuItem value="ENDOCRINE_AND_METABOLIC">
-                Endocrine and Metabolic
-              </MenuItem>
-              <MenuItem value="ENVIRONMENTAL_AND_SOCIAL">
-                Environmental and Social
-              </MenuItem>
-              <MenuItem value="EYE_AND_EAR">Eye and Ear</MenuItem>
-              <MenuItem value="GENITOURINARY_SYSTEM">
-                Genitourinary System
-              </MenuItem>
-              <MenuItem value="GYNECOLOGIC">Gynecologic</MenuItem>
-              <MenuItem value="HEMATOLOGIC">Hematologic</MenuItem>
-              <MenuItem value="HEPATIC_AND_PANCREATIC">
-                Hepatic and Pancreatic
-              </MenuItem>
-              <MenuItem value="INFECTIOUS_DISEASES">
-                Infectious Diseases
-              </MenuItem>
-              <MenuItem value="INJURIES_AND_ACCIDENTS">
-                Injuries and Accidents
-              </MenuItem>
-              <MenuItem value="INTEGUMENTARY_SYSTEM">
-                Integumentary System
-              </MenuItem>
-              <MenuItem value="NEOPLASMS">Neoplasms</MenuItem>
-              <MenuItem value="NERVOUS_SYSTEM">Nervous System</MenuItem>
-              <MenuItem value="NUTRITIONAL">Nutritional</MenuItem>
-              <MenuItem value="OBSTETRIC">Obstetric</MenuItem>
-              <MenuItem value="OPTHALMOLOGIC">Ophthalmologic</MenuItem>
-              <MenuItem value="OTOLOGIC_AND_LARYNGOLOGIC">
-                Otologic and Laryngologic
-              </MenuItem>
-              <MenuItem value="OTHERS">Others</MenuItem>
-              <MenuItem value="PEDIATRIC_AND_DEVELOPMENTAL">
-                Pediatric and Developmental
-              </MenuItem>
-              <MenuItem value="POISONING">Poisoning</MenuItem>
-              <MenuItem value="PSYCHIATRIC_MENTAL_HEALTH">
-                Psychiatric Mental Health
-              </MenuItem>
-              <MenuItem value="REPRODUCTIVE">Reproductive</MenuItem>
-              <MenuItem value="RESPIRATORY">Respiratory</MenuItem>
-              <MenuItem value="SURGICAL_AND_POSTOPERATIVE">
-                Surgical and Postoperative
-              </MenuItem>
-              <MenuItem value="TRAUMA_AND_ORTHOPEDIC">
-                Trauma and Orthopedic
-              </MenuItem>
-              <MenuItem value="UROLOGIC">Urologic</MenuItem>
+              {listOfProblemTypeEnum.map((problemType) => {
+                return (
+                  <MenuItem key={problemType} value={problemType}>
+                    {problemType}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </FormControl>
+          {formData.problemTypeEnum === "ALLERGIES_AND_IMMUNOLOGIC" ? (
+            <FormControl fullWidth margin="dense">
+              <InputLabel>Description</InputLabel>
+              <Select
+                name="description"
+                value={formData.description}
+                onChange={handleFormChange}
+                disabled={!formData.problemTypeEnum}
+                sx={{ lineHeight: "3em" }}
+              >
+                {listOfAllergenEnum.map((allergen) => (
+                  <MenuItem value={allergen}>{allergen}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ) : (
+            <TextField
+              fullWidth
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleFormChange}
+              margin="dense"
+              disabled={!formData.problemTypeEnum}
+            />
+          )}
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Priority</InputLabel>
+            <Select
+              name="priorityEnum"
+              value={formData.priorityEnum}
+              onChange={handleFormChange}
+              sx={{ lineHeight: "3em" }}
+              disabled={!formData.problemTypeEnum}
+            >
+              <MenuItem value="LOW">Low</MenuItem>
+              <MenuItem value="MEDIUM">Medium</MenuItem>
+              <MenuItem value="HIGH">High</MenuItem>
             </Select>
           </FormControl>
         </DialogContent>

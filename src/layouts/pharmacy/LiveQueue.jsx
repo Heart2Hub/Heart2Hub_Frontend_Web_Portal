@@ -1,7 +1,7 @@
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import React, { useEffect } from "react";
-import { Box, Button, Card, CardActions, CardContent, Tab, Typography } from "@mui/material";
+import { Box, Button, Card, CardActions, CardContent, Icon, Tab, Typography } from "@mui/material";
 import MDButton from "components/MDButton";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -10,12 +10,14 @@ import MDTypography from "components/MDTypography";
 import { appointmentApi, staffApi } from "api/Api";
 
 import { useState } from "react";
-import { parseDateFromLocalDateTimeWithSecs } from "utility/Utility";
+import { parseDateFromLocalDateTimeWithSecs, parseDateFromLocalDateTime } from "utility/Utility";
 import AppointmentTicketModal from "./AppointmentTicketModal";
 import AssignAppointmentDialog from "./AssignAppointmentDialog";
 import ConfirmReadyCollectionModal from "./ConfirmReadyCollectionModal";
 import { displayMessage } from "store/slices/snackbarSlice";
 import ViewAllTicketsModal from "./ViewAllTicketsModal";
+import CreateNewTicket from "./CreateNewTicket";
+import ConfirmDispenseMedicationModal from "./ConfirmDispenseMedication";
 
 
 function LiveQueue() {
@@ -27,6 +29,7 @@ function LiveQueue() {
   const [listOfWorkingStaff, setListOfWorkingStaff] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openConfirmReady, setOpenConfirmReady] = useState(false);
+  const [openDispenseModal, setOpenDispenseModal] = useState(false);
   const [hasViewedMedication, setHasViewedMedication] = useState(false);
   const [cart, setCart] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -37,13 +40,13 @@ function LiveQueue() {
   const getPharmacyTickets = async () => {
     try {
         const response = await appointmentApi.viewPharmacyTickets();
-        console.log(response)
         if (response.status === 200) {
             const unassigned = response.data.filter(ticket => ticket.currentAssignedStaffId === null)
             const assigned = response.data.filter(ticket => ticket.currentAssignedStaffId === staff.staffId)
+            assigned.sort((a,b) => a.dispensaryStatusEnum === "PREPARING" ? -1 : 1)
             assigned.sort((a,b) => a.dispensaryStatusEnum === "READY_TO_COLLECT" ? -1 : 1)
-            // const sortedArr = response.data.sort((a,b) => parseDateFromLocalDateTimeWithSecs(a.actualDateTime) - parseDateFromLocalDateTimeWithSecs(b.actualDateTime))
-            setUnassignedTickets(unassigned);
+            const sortedArr = unassigned.sort((a,b) => parseDateFromLocalDateTimeWithSecs(a.actualDateTime) - parseDateFromLocalDateTimeWithSecs(b.actualDateTime))
+            setUnassignedTickets(sortedArr);
             setAssignedTickets(assigned);
         }
     } catch (error) {
@@ -62,15 +65,14 @@ function LiveQueue() {
 
         getPharmacyTickets();
       } catch (error) {
-        console.log(error);
-        // reduxDispatch(
-        //   displayMessage({
-        //     color: "warning",
-        //     icon: "notification",
-        //     title: "Error",
-        //     content: error.response.data,
-        //   })
-        // );
+        reduxDispatch(
+          displayMessage({
+            color: "warning",
+            icon: "notification",
+            title: "Error",
+            content: error.response.data,
+          })
+        );
       }
     }   
 
@@ -92,13 +94,21 @@ function LiveQueue() {
     };
 
     const handleOpenConfirmReadyModal = (appointment) => {
-        console.log("open")
         setAppointment(appointment)
         setOpenConfirmReady(true);
     };
 
     const handleCloseConfirmReadyModal = () => {
         setOpenConfirmReady(false);
+    };
+
+    const handleOpenDispenseModal = (appointment) => {
+        setAppointment(appointment)
+        setOpenDispenseModal(true);
+    };
+
+    const handleCloseDispenseModal = () => {
+        setOpenDispenseModal(false);
     };
 
     const forceRefresh = () => {
@@ -122,7 +132,6 @@ function LiveQueue() {
     function replaceItemByIdWithUpdated(id, newItem) {
         let newColumnList = [];
         let selectedColumnList = JSON.parse(JSON.stringify(assignedTickets));
-        console.log(selectedColumnList)
         selectedColumnList.map((item) => {
             if (item.appointmentId === Number(id)) {
                 newColumnList.push(newItem);
@@ -131,7 +140,6 @@ function LiveQueue() {
                 newColumnList.push(item);
             }
         });
-        console.log(newColumnList)
 
         setAssignedTickets(newColumnList);
     }
@@ -174,104 +182,25 @@ function LiveQueue() {
         setLoading(false);
     }
 
-    const handleDispense = async (ticket) => {
-        try {
-            getAdminStaffCurrentlyWorking(ticket.departmentName);
-            const response = await appointmentApi.updateAppointmentDispensaryStatus(ticket.appointmentId, "DISPENSED");
-            forceRefresh();
-            setIsDialogOpen(true);
-            reduxDispatch(
-              displayMessage({
-                color: "success",
-                icon: "notification",
-                title: "Success",
-                content: `Medication for HH-${ticket.appointmentId} has been dispensed.`,
-              })
-            );
-            handleCloseModal();
-          } catch (error) {
-            console.log(error)
+    const getPriorityColor = (appointment) => {
+        if (appointment.actualDateTime === null || appointment.arrived) return "green"
+        if (!appointment.arrived) {
+          const apptDate = parseDateFromLocalDateTime(appointment.actualDateTime);
+          let timeDiff = (new Date().getHours()*60 + new Date().getMinutes()) - (apptDate.getHours()*60 + apptDate.getMinutes())
+    
+          if (timeDiff >= 40) {
+            return "red"
+          } else if (timeDiff >= 20) {
+            return "orange"
+          } else {
+            return "green"
           }
-    }
-
-    const handleConfirmAssignDialog = async (selectedStaffId, ticket) => {
-        if (selectedStaffId === 0) {
-          reduxDispatch(
-            displayMessage({
-              color: "warning",
-              icon: "notification",
-              title: "Error",
-              content: "Please select a staff to assign!",
-            })
-          );
-          return;
         }
-    
-        try {
-            console.log(ticket)
-            const r = await appointmentApi.updateAppointmentSwimlaneStatus(
-                ticket.appointmentId,
-                "Discharge"
-            )
-            //send to BE to assign staff
-            const response = await appointmentApi.assignAppointmentToStaff(
-                ticket.appointmentId,
-                selectedStaffId,
-                staff.staffId
-            );
-    
-        //   const updatedAssignment = response.data;
-    
-          //force a rerender instead
-          forceRefresh();
-    
-          reduxDispatch(
-            displayMessage({
-              color: "success",
-              icon: "notification",
-              title: "Success",
-              content: "Appointment has been updated successfully!!",
-            })
-          );
-    
-          handleCloseModal();
-        } catch (error) {
-          reduxDispatch(
-            displayMessage({
-              color: "warning",
-              icon: "notification",
-              title: "Error",
-              content: error.response,
-            })
-          );
-        }
-        // }
-    
-        setIsDialogOpen(false);
-    };
-
-    const handleCloseAssignDialog = () => {
-        reduxDispatch(
-            displayMessage({
-            color: "warning",
-            icon: "notification",
-            title: "Warning",
-            content: "You need to assign a staff after dispensing medication!",
-            })
-        );
-    };
+      };
 
     const handleCloseTicketsModal = () => {
         setIsViewTicketsModalOpen(false);
     }
-
-    const getAdminStaffCurrentlyWorking = async (unit) => {
-        const response = await staffApi.getStaffsWorkingInCurrentShiftAndDepartment(
-          unit
-        );
-        const admins = response.data.filter(staff => staff.staffRoleEnum === "ADMIN")
-        setListOfAdminStaff(admins);
-      };
 
     useEffect(() => {
         if (assignedTickets.length === 0 || unassignedTickets.length === 0) getPharmacyTickets();
@@ -280,6 +209,7 @@ function LiveQueue() {
 
   return (
     <>
+        <Typography>Queue</Typography>
         <Box sx={{ 
             width: "100%", 
             height: "275px",
@@ -287,9 +217,9 @@ function LiveQueue() {
             backgroundColor: "#292D32",
             display: "flex",
             alignItems: "center",
-            borderTopLeftRadius: "50px",
-            borderBottomLeftRadius: "50px" 
+            borderRadius: "10px"
         }}>
+            {unassignedTickets.length === 0 && <Typography sx={{margin: "auto"}}color="common.white"><b>There are no tickets in the queue!</b></Typography>}
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 {unassignedTickets.map((ticket, index) => 
                     index === 0 ?
@@ -300,7 +230,13 @@ function LiveQueue() {
                             <Card sx={{ width: "325px" }}>
                                 <CardContent>
                                     <Typography variant="h5" component="div">
-                                        HH-{ticket.appointmentId}
+                                        HH-{ticket.appointmentId}&nbsp;&nbsp;
+                                        <span 
+                                            style={{ height: "12px", 
+                                            width: "12px", 
+                                            backgroundColor: getPriorityColor(ticket), 
+                                            borderRadius: "50%", 
+                                            display: "inline-block"}}></span>
                                     </Typography>
                                     <Typography sx={{ mb: 1.5 }} color="text.secondary">
                                         {ticket.firstName + " " + ticket.lastName}
@@ -333,7 +269,13 @@ function LiveQueue() {
                         }}>
                             <CardContent>
                                 <Typography variant="h5" component="div">
-                                HH-{ticket.appointmentId}
+                                HH-{ticket.appointmentId}&nbsp;&nbsp;
+                                <span 
+                                    style={{ height: "12px", 
+                                    width: "12px", 
+                                    backgroundColor: getPriorityColor(ticket), 
+                                    borderRadius: "50%", 
+                                    display: "inline-block"}}></span>
                                 </Typography>
                                 <Typography sx={{ mb: 1.5 }} color="text.secondary">
                                 {ticket.firstName + " " + ticket.lastName}
@@ -373,6 +315,7 @@ function LiveQueue() {
             borderRadius: "10px",
             marginTop: "10px" 
         }}>
+            {assignedTickets.length === 0 && <Typography sx={{margin: "auto"}}color="common.black"><b>You have no assigned tickets!</b></Typography>}
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 {assignedTickets.map(ticket => 
                     <div style={{ marginLeft: "40px", width: "380px", display: "flex", flexDirection: "column" }}>
@@ -440,23 +383,23 @@ function LiveQueue() {
                                             size="small"
                                             color={"warning"}
                                             disabled={!ticket.arrived}
-                                            onClick={() => {setAppointment(ticket); handleDispense(ticket)}}>
+                                            onClick={() => handleOpenDispenseModal(ticket)}>
                                             Dispense
                                         </MDButton>
                                     </> : 
                                     <>
-                                        <Button 
+                                        {/* <Button 
                                             size="small"
                                             onClick={() => handleOpenModal(ticket)}>
                                             View
-                                        </Button>
-                                        {ticket.swimlaneStatusEnum === "PHARMACY" ?
+                                        </Button> */}
+                                        {/* {ticket.swimlaneStatusEnum === "PHARMACY" ?
                                         <MDButton 
                                             size="small"
                                             color={"error"}
                                             onClick={() => {setAppointment(ticket); getAdminStaffCurrentlyWorking(ticket.departmentName); setIsDialogOpen(true)}}>
                                             Assign to Staff
-                                        </MDButton> : null}
+                                        </MDButton> : null} */}
                                     </>}
                                 </CardActions>
                             </Card>
@@ -480,20 +423,30 @@ function LiveQueue() {
             appointment={appointment}
             forceRefresh={forceRefresh}
             cart={cart} />}
-        <AssignAppointmentDialog
+        {/* <AssignAppointmentDialog
             open={isDialogOpen}
             onConfirm={handleConfirmAssignDialog}
             onClose={handleCloseAssignDialog}
             listOfWorkingStaff={listOfAdminStaff}
             selectedAppointmentToAssign={appointment}
             assigningToSwimlane={"Discharge"}
-        />
+        /> */}
+        {appointment && cart && <ConfirmDispenseMedicationModal
+            openModal={openDispenseModal}
+            handleCloseModal={handleCloseDispenseModal}
+            appointment={appointment}
+            forceRefresh={forceRefresh}
+            cart={cart} />}
         <ViewAllTicketsModal 
             openModal={isViewTicketsModalOpen}
             handleCloseModal={handleCloseTicketsModal}
             handleOpenModal={handleOpenModal}
             appointmentList={unassignedTickets}
         />
+        <CreateNewTicket 
+            isOpen={isDialogOpen}
+            onClose={() => setIsDialogOpen(false)}
+            onAppointmentCreated={forceRefresh}/>
     </>
   );
 }

@@ -1,3 +1,5 @@
+import moment from "moment";
+
 export function hasExpired(dateA) {
   return dateA.getUTCSeconds() < new Date().getUTCSeconds();
 }
@@ -21,6 +23,7 @@ export const parseDateFromYYYYMMDD = (dateString) => {
 };
 
 export const parseDateFromLocalDateTime = (localDateTime) => {
+  // console.log(localDateTime)
   if (localDateTime !== null && localDateTime.length < 6) {
     return new Date(localDateTime[0], localDateTime[1] - 1, localDateTime[2]);
   }
@@ -36,17 +39,32 @@ export const parseDateFromLocalDateTime = (localDateTime) => {
 
 export const parseDateFromLocalDateTimeWithSecs = (localDateTime) => {
   if (localDateTime !== null && localDateTime.length < 6) {
-    return new Date(localDateTime[0], localDateTime[1] - 1, localDateTime[2]);
+    return new Date(
+      localDateTime[0],
+      localDateTime[1] - 1,
+      localDateTime[2],
+      localDateTime[3],
+      localDateTime[4]
+    );
+  } else if (localDateTime !== null && localDateTime.length >= 6) {
+    return new Date(
+      localDateTime[0],
+      localDateTime[1] - 1,
+      localDateTime[2],
+      localDateTime[3],
+      localDateTime[4],
+      localDateTime[5]
+    );
   }
-  return new Date(
-    localDateTime[0],
-    localDateTime[1] - 1,
-    localDateTime[2],
-    localDateTime[3],
-    localDateTime[4],
-    localDateTime[5],
-    localDateTime[6]
-  );
+  // return new Date(
+  //   localDateTime[0],
+  //   localDateTime[1] - 1,
+  //   localDateTime[2],
+  //   localDateTime[3],
+  //   localDateTime[4],
+  //   localDateTime[5],
+  //   localDateTime[6]
+  // );
 };
 
 export const addDurationToDate = (dateObj, durationStr) => {
@@ -105,3 +123,21 @@ export function truncateText(text, maxLength) {
   // Truncate the text and add an ellipsis
   return text.slice(0, maxLength) + "...";
 }
+
+export const formatDateToYYYYMMDDHHMM = (date) => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0"); // January is 0, so we add 1 to get the month number, then pad it to two digits.
+  const dd = String(date.getDate()).padStart(2, "0"); // Pad the date to two digits.
+
+  const hh = String(date.getHours()).padStart(2, "0");
+
+  return `${yyyy}-${mm}-${dd} ${hh}:00`;
+};
+
+export const parseDateArrUsingMoment = (dateArr) => {
+  const newMonth = dateArr[1] - 1;
+  dateArr[1] = newMonth;
+  console.log(dateArr);
+  const parsedDate = moment(dateArr);
+  return parsedDate.format("YYYY-MM-DD HH:mm:ss");
+};

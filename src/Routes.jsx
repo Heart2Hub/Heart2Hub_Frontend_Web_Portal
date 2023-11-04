@@ -30,14 +30,34 @@ import Subsidy from "layouts/finance/subsidy";
 import Invoice from "layouts/finance/invoice";
 import Pharmacy from "layouts/pharmacy";
 
-
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
 import { StaffRoleEnum } from "constants/StaffRoleEnum";
 import ConsumableEquipmentManagement from "layouts/administration/inventory-management/consumable-equipment";
 import InventoryManagement from "layouts/administration/inventory-management";
 import MedicationManagement from "layouts/pharmacy/medication-management";
-import ServiceItemManagement from "layouts/administration/inventory-management/service-item-management";
+import ServiceManagement from "layouts/administration/inventory-management/service-management";
+
+const ALL_EXCEPT_PHARMACIST = [
+  StaffRoleEnum.ADMIN,
+  StaffRoleEnum.DOCTOR,
+  StaffRoleEnum.NURSE,
+  StaffRoleEnum.DIAGNOSTIC_RADIOGRAPHERS,
+  StaffRoleEnum.DIETITIANS,
+  StaffRoleEnum.OCCUPATIONAL_THERAPISTS,
+  StaffRoleEnum.MEDICAL_LABORATORY_TECHNOLOGISTS,
+  StaffRoleEnum.PHYSIOTHERAPISTS,
+  StaffRoleEnum.PODIATRISTS,
+  StaffRoleEnum.PSYCHOLOGISTS,
+  StaffRoleEnum.PROSTHETISTS,
+  StaffRoleEnum.ORTHOTISTS,
+  StaffRoleEnum.RADIATION_THERAPISTS,
+  StaffRoleEnum.RESPIRATORY_THERAPISTS,
+  StaffRoleEnum.SPEECH_THERAPISTS,
+  StaffRoleEnum.AUDIOLOGISTS,
+  StaffRoleEnum.MEDICAL_SOCIAL_WORKERS,
+  StaffRoleEnum.ORTHOPTISTS,
+];
 
 const routes = [
   {
@@ -54,6 +74,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <Home />
       </ProtectedRoute>
@@ -70,6 +91,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <Account />
       </ProtectedRoute>
@@ -86,6 +108,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <Administration />
       </ProtectedRoute>
@@ -102,6 +125,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <EHR />
       </ProtectedRoute>
@@ -118,6 +142,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <Finance />
       </ProtectedRoute>
@@ -129,11 +154,12 @@ const routes = [
     key: "inpatient",
     icon: <Icon fontSize="small">bed</Icon>,
     route: "/inpatient",
-    authorizedRoles: [StaffRoleEnum.ALL],
+    authorizedRoles: ALL_EXCEPT_PHARMACIST,
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={ALL_EXCEPT_PHARMACIST}
         forHeadsOnly={false}
+        authorizedUnits={"WARD"}
       >
         <Inpatient />,
       </ProtectedRoute>
@@ -150,6 +176,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <Manpower />
       </ProtectedRoute>
@@ -161,11 +188,12 @@ const routes = [
     key: "outpatient",
     icon: <Icon fontSize="small">local_hospital</Icon>,
     route: "/outpatient",
-    authorizedRoles: [StaffRoleEnum.ALL],
+    authorizedRoles: ALL_EXCEPT_PHARMACIST,
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={ALL_EXCEPT_PHARMACIST}
         forHeadsOnly={false}
+        authorizedUnits={"DEPARTMENT"}
       >
         <Outpatient />
       </ProtectedRoute>
@@ -177,11 +205,12 @@ const routes = [
     key: "pharmacy",
     icon: <Icon fontSize="small">local_pharmacy</Icon>,
     route: "/pharmacy",
-    authorizedRoles: [StaffRoleEnum.PHARMACIST],
+    authorizedRoles: [StaffRoleEnum.PHARMACIST, StaffRoleEnum.ADMIN],
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.PHARMACIST]}
+        authorizedRoles={[StaffRoleEnum.PHARMACIST, StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
+        authorizedUnits={"DEPARTMENT"}
       >
         <Pharmacy />
       </ProtectedRoute>
@@ -221,6 +250,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <StaffManagement />
       </ProtectedRoute>
@@ -234,6 +264,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <FacilityManagement />
       </ProtectedRoute>
@@ -247,6 +278,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <FacilityBooking />
       </ProtectedRoute>
@@ -261,6 +293,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <CalendarRoster />
       </ProtectedRoute>
@@ -271,7 +304,11 @@ const routes = [
     key: "shift-allocation",
     route: "/manpower/rostering/shifts",
     component: (
-      <ProtectedRoute authorizedRoles={[StaffRoleEnum.ALL]} forHeadsOnly={true}>
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={true}
+        authorizedUnits={"ALL"}
+      >
         <Rostering />
       </ProtectedRoute>
     ),
@@ -284,6 +321,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <ViewAllLeaves />
       </ProtectedRoute>
@@ -297,6 +335,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <CreateLeave />
       </ProtectedRoute>
@@ -307,7 +346,11 @@ const routes = [
     key: "leaveApproval",
     route: "/manpower/leaveApproval",
     component: (
-      <ProtectedRoute authorizedRoles={[StaffRoleEnum.ALL]} forHeadsOnly={true}>
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={true}
+        authorizedUnits={"ALL"}
+      >
         <LeaveApproval />
       </ProtectedRoute>
     ),
@@ -321,6 +364,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <ErrorPage />
       </ProtectedRoute>
@@ -334,6 +378,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <InventoryManagement />
       </ProtectedRoute>
@@ -342,11 +387,13 @@ const routes = [
   {
     name: "Consumable Equipment Management",
     key: "consumableequipmentmanagement",
-    route: "/administration/inventory-management/consumable-equipment-management",
+    route:
+      "/administration/inventory-management/consumable-equipment-management",
     component: (
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <ConsumableEquipmentManagement />
       </ProtectedRoute>
@@ -366,15 +413,16 @@ const routes = [
   //   ),
   // },
   {
-    name: "Service Item Management",
-    key: "serviceItemManagement",
-    route: "/administration/inventory-management/service-item-management",
+    name: "Service Management",
+    key: "serviceManagement",
+    route: "/administration/inventory-management/service-management",
     component: (
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
-        <ServiceItemManagement />
+        <ServiceManagement />
       </ProtectedRoute>
     ),
   },
@@ -386,6 +434,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <Subsidy />
       </ProtectedRoute>
@@ -399,6 +448,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={[StaffRoleEnum.ALL]}
         forHeadsOnly={false}
+        authorizedUnits={"ALL"}
       >
         <Invoice />
       </ProtectedRoute>

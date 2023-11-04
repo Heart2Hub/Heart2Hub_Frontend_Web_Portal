@@ -1,43 +1,20 @@
 import React from "react";
-import {
-  Card,
-  CardContent,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Divider,
-  FormControl,
-  Grid,
-  Icon,
-  InputLabel,
-  MenuItem,
-  Select,
-  TextField,
-} from "@mui/material";
+import { Card, CardContent, Chip, Icon, Grid, Divider } from "@mui/material";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
 import MDTypography from "components/MDTypography";
-import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
-import { displayMessage } from "../../../../store/slices/snackbarSlice";
-import {
-  selectEHRRecord,
-  setEHRRecord,
-  updateEHRRecord,
-} from "../../../../store/slices/ehrSlice";
+import { selectEHRRecord } from "../../../../store/slices/ehrSlice";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { selectStaff } from "store/slices/staffSlice";
 import { useDispatch } from "react-redux";
-import { problemRecordApi, ehrApi } from "api/Api";
 import CreateNewProblemRecordDialog from "./CreateNewProblemRecordDialog";
 import ResolveProblemRecordDialog from "./ResolveProblemRecordDialog";
 import UpdateProblemRecordDialog from "./UpdateProblemRecordDialog";
 import DeleteProblemRecordDialog from "./DeleteProblemRecordDialog";
 
 import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
+import { useEffect } from "react";
 
 function ProblemRecordsBox() {
   const reduxDispatch = useDispatch();
@@ -64,6 +41,8 @@ function ProblemRecordsBox() {
     useState(false);
   const [selectedProblemRecordToDelete, setSelectedProblemRecordToDelete] =
     useState(null);
+
+  const [listOfProblemsToDisplay, setListOfProblemsToDisplay] = useState([]);
 
   //create problem records
   const handleCloseCreateProblemRecordDialog = () => {
@@ -107,6 +86,20 @@ function ProblemRecordsBox() {
     setOpenDeleteProblemRecordDialog(false);
   };
 
+  const handleGetProblems = () => {
+    let listOfProblems = [...ehrRecord.listOfProblemRecords];
+    if (listOfProblems.length > 1) {
+      listOfProblems.sort(
+        (prob1, prob2) => prob2.problemRecordId - prob1.problemRecordId
+      );
+    }
+    setListOfProblemsToDisplay(listOfProblems);
+  };
+
+  useEffect(() => {
+    handleGetProblems();
+  }, [ehrRecord]);
+
   return (
     <>
       <MDBox position="relative" minHeight="5rem" />
@@ -119,7 +112,7 @@ function ProblemRecordsBox() {
           px: 2,
           height: "600px",
           overflowY: "auto",
-          "&::-webkit-scrollbar": {
+          "&::WebkitScrollbar": {
             width: "0px",
             background: "transparent",
           },
@@ -153,7 +146,7 @@ function ProblemRecordsBox() {
         </MDBox>
 
         <Divider variant="middle" />
-        {ehrRecord.listOfProblemRecords.length === 0 ? (
+        {listOfProblemsToDisplay.length === 0 ? (
           <MDTypography
             variant="h5"
             sx={{
@@ -168,7 +161,7 @@ function ProblemRecordsBox() {
           </MDTypography>
         ) : (
           <Grid container spacing={3} justify="center" alignItems="center">
-            {ehrRecord.listOfProblemRecords.map((problemRecord, index) => (
+            {listOfProblemsToDisplay.map((problemRecord, index) => (
               <Grid item xs={12} md={6} key={index}>
                 <Card
                   style={{
@@ -187,7 +180,7 @@ function ProblemRecordsBox() {
                           variant="h3"
                           style={{ marginBottom: "8px" }}
                         >
-                          {`Problem ${index + 1}`}
+                          {`Problem ${problemRecord.problemRecordId}`}
                         </MDTypography>
                         <MDTypography variant="h6" color="secondary">
                           {`Created By: ${problemRecord.createdBy}`}

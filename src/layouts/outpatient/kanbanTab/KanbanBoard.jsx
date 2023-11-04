@@ -4,7 +4,7 @@ import { DragDropContext } from "@hello-pangea/dnd";
 import KanbanColumn from "./KanbanColumn";
 import { useSelector } from "react-redux";
 import { selectStaff } from "../../../store/slices/staffSlice";
-import { appointmentApi, staffApi } from "../../../api/Api";
+import { appointmentApi, staffApi, admissionApi } from "../../../api/Api";
 import { useEffect } from "react";
 import MDButton from "components/MDButton";
 
@@ -18,6 +18,7 @@ import { useDispatch } from "react-redux";
 import { displayMessage } from "store/slices/snackbarSlice";
 import AssignAppointmentDialog from "./AssignAppointmentDialog";
 import { useRef } from "react";
+import AdmissionDialog from "./AdmissionDialog";
 
 function KanbanBoard() {
   const staff = useSelector(selectStaff);
@@ -47,6 +48,9 @@ function KanbanBoard() {
   const [referral, setReferral] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  //for admission dialog
+  const [step, setStep] = useState(1);
+
   // Function to open the modal
   const openModal = () => {
     setIsModalOpen(true);
@@ -64,6 +68,7 @@ function KanbanBoard() {
   //main method to handle drag and drop logic
   const handleDragEnd = async (result) => {
     const { destination, source, draggableId } = result;
+    console.log(source.droppableId);
 
     // GET ITEM
     const appointment = findItemById(draggableId, [
@@ -191,13 +196,13 @@ function KanbanBoard() {
       setTreatment(removeItemById(draggableId, treatment));
     } else if (source.droppableId === "5") {
       setAdmission(removeItemById(draggableId, admission));
-    }else if (source.droppableId === "6") {
+    } else if (source.droppableId === "6") {
       setPharmacy(removeItemById(draggableId, pharmacy));
     } else if (source.droppableId === "7") {
       setDischarge(removeItemById(draggableId, discharge));
     } else if (source.droppableId === "8") {
       setReferral(removeItemById(draggableId, referral));
-    }  else {
+    } else {
       console.log("NO SOURCE MATCH FOR " + source.droppableId);
       reduxDispatch(
         displayMessage({
@@ -264,7 +269,7 @@ function KanbanBoard() {
           appointment.appointmentId,
           -1,
           staff.staffId
-        )
+        );
         setSelectedAppointmentToAssign(null);
 
         dialogResolver.current(true); // Resolve promise if user confirms
@@ -327,6 +332,63 @@ function KanbanBoard() {
     );
 
     setSelectedAppointmentToAssign(null);
+    setDialogOpen(false);
+    setStep(1);
+  };
+
+  //for admission dialog - go to next step
+  const handleNext = () => {
+    setStep(2);
+  };
+
+  const handleAdmissionConfirm = async (selectedStaffId, duration, reason) => {
+    // console.log(
+    //   "Staff: " + selectedStaff + ", Duration: " + duration,
+    //   ", Reason: " + reason
+    // );
+    //console.log(selectedAppointmentToAssign);
+
+    if (dialogResolver.current) {
+      try {
+        //send to BE to assign staff
+        if (selectedAppointmentToAssign !== null) {
+          const response = await appointmentApi.assignAppointmentToStaff(
+            selectedAppointmentToAssign.appointmentId,
+            selectedStaffId,
+            staff.staffId
+          );
+
+          const updatedAssignment = response.data;
+
+          const admissionResponse = await admissionApi.createAdmission(
+            duration,
+            reason,
+            selectedAppointmentToAssign.patientId,
+            selectedAppointmentToAssign.currentAssignedStaffId
+          );
+        }
+
+        //reset
+        setSelectedAppointmentToAssign(null);
+        setStep(1);
+
+        dialogResolver.current(true); // Resolve promise if user confirms
+        dialogResolver.current = null; // Clear it out after using
+
+        // }
+      } catch (error) {
+        console.log(error);
+        //perform error handling
+        reduxDispatch(
+          displayMessage({
+            color: "warning",
+            icon: "notification",
+            title: "Error",
+            content: error.response.data,
+          })
+        );
+      }
+    }
     setDialogOpen(false);
   };
 
@@ -554,14 +616,6 @@ function KanbanBoard() {
               listOfWorkingStaff={listOfWorkingStaff}
               forceRefresh={forceRefresh}
             />
-             {/* <KanbanColumn
-              title="Referral"
-              appointments={referral}
-              id={"8"}
-              replaceItemByIdWithUpdated={replaceItemByIdWithUpdated}
-              listOfWorkingStaff={listOfWorkingStaff}
-              forceRefresh={forceRefresh}
-            /> */}
             <KanbanColumn
               title="Discharge"
               appointments={discharge}
@@ -573,14 +627,27 @@ function KanbanBoard() {
           </div>
         </DragDropContext>
       </MDBox>
-      <AssignAppointmentDialog
-        open={isDialogOpen}
-        onConfirm={handleConfirm}
-        onClose={handleClose}
-        listOfWorkingStaff={listOfWorkingStaff}
-        selectedAppointmentToAssign={selectedAppointmentToAssign}
-        assigningToSwimlane={assigningToSwimlane}
-      />
+      {assigningToSwimlane === "Admission" ? (
+        <AdmissionDialog
+          step={step}
+          open={isDialogOpen}
+          onConfirm={handleAdmissionConfirm}
+          onClose={handleClose}
+          onNext={handleNext}
+          listOfWorkingStaff={listOfWorkingStaff}
+          selectedAppointmentToAssign={selectedAppointmentToAssign}
+          assigningToSwimlane={assigningToSwimlane}
+        />
+      ) : (
+        <AssignAppointmentDialog
+          open={isDialogOpen}
+          onConfirm={handleConfirm}
+          onClose={handleClose}
+          listOfWorkingStaff={listOfWorkingStaff}
+          selectedAppointmentToAssign={selectedAppointmentToAssign}
+          assigningToSwimlane={assigningToSwimlane}
+        />
+      )}
     </>
   );
 }

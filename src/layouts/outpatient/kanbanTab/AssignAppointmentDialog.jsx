@@ -10,7 +10,7 @@ import {
   MenuItem,
   Select,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useEffect } from "react";
 import { staffApi } from "api/Api";
 
@@ -28,11 +28,28 @@ function AssignAppointmentDialog({
       ? selectedAppointmentToAssign.currentAssignedStaffId
       : 0
   );
+  const [selectedTreatmentType, setSelectedTreatmentType] = useState("");
+  const selectedTreatmentTypeRef = useRef("");
   const [listOfApplicableWorkingStaff, setListOfApplicableWorkingStaff] =
     useState([]);
 
   const handleChange = (event) => {
     setSelectedStaff(event.target.value);
+  };
+
+  const handleTreatmentTypeChange = (event) => {
+    setSelectedTreatmentType(event.target.value);
+    selectedTreatmentTypeRef.current = event.target.value;
+    setSelectedStaff(0);
+    console.log(selectedTreatmentType);
+    console.log(selectedTreatmentTypeRef);
+    handleFilterListOfApplicableWorkingStaff("Treatment");
+  };
+
+  const handleResetState = () => {
+    setSelectedStaff(0);
+    setSelectedTreatmentType("");
+    setListOfApplicableWorkingStaff([]);
   };
 
   const findStaffInListByStaffId = (staffId) => {
@@ -67,13 +84,25 @@ function AssignAppointmentDialog({
       setListOfApplicableWorkingStaff(
         listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "DOCTOR")
       );
+    } else if (swimlaneName === "Admission") {
+      setListOfApplicableWorkingStaff(
+        listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
+      );
+    } else if (swimlaneName === "Treatment") {
+      setListOfApplicableWorkingStaff(
+        listOfWorkingStaff.filter(
+          (staff) => staff.staffRoleEnum === selectedTreatmentTypeRef.current
+        )
+      );
     } else if (swimlaneName === "Discharge") {
       setListOfApplicableWorkingStaff(
         listOfWorkingStaff.filter((staff) => staff.staffRoleEnum === "ADMIN")
       );
     } else if (swimlaneName === "Pharmacy") {
       setListOfApplicableWorkingStaff(
-        listOfWorkingStaff
+        listOfWorkingStaff.filter(
+          (staff) => staff.staffRoleEnum === "PHARMACIST"
+        )
       );
     } else {
       // console.log("No Filter result of applicable working staff");
@@ -81,9 +110,28 @@ function AssignAppointmentDialog({
   };
 
   const getPharmacyStaff = async () => {
-    const response = await staffApi.getStaffsWorkingInCurrentShiftAndDepartment("Pharmacy");
-    listOfWorkingStaff = response.data;
-  }
+    const response = await staffApi.getStaffsWorkingInCurrentShiftAndDepartment(
+      "Pharmacy"
+    );
+  };
+
+  const staffRoleEnumMapping = {
+    DIAGNOSTIC_RADIOGRAPHERS: "X-Ray Imaging",
+    DIETITIANS: "Nutritional Counseling",
+    OCCUPATIONAL_THERAPISTS: "Occupational Therapy",
+    MEDICAL_LABORATORY_TECHNOLOGISTS: "Laboratory Testing",
+    PHYSIOTHERAPISTS: "Physical Therapy",
+    PODIATRISTS: "Podiatric Care",
+    PSYCHOLOGISTS: "Psychotherapy",
+    PROSTHETISTS: "Prosthetic Fitting",
+    ORTHOTISTS: "Orthotic Fitting",
+    RADIATION_THERAPISTS: "Radiation Therapy",
+    RESPIRATORY_THERAPISTS: "Respiratory Therapy",
+    SPEECH_THERAPISTS: "Speech Therapy",
+    AUDIOLOGISTS: "Audiology Services",
+    MEDICAL_SOCIAL_WORKERS: "Medical Social Work",
+    ORTHOPTISTS: "Orthoptics",
+  };
 
   useEffect(() => {
     if (assigningToSwimlane === "Pharmacy") {
@@ -94,42 +142,125 @@ function AssignAppointmentDialog({
 
   return (
     <>
-      <Dialog open={open} onClose={onClose}>
-        <DialogTitle>Staff Assignment to Ticket:</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Please choose from the list of available staff members to assign
-            this appointment ticket.
-          </DialogContentText>
-          <FormControl fullWidth variant="outlined" sx={{ mt: 2 }}>
-            <InputLabel id="demo-simple-select-label">Staff</InputLabel>
-            <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              value={selectedStaff}
-              label="Select Staff"
-              onChange={handleChange}
-              sx={{ height: "50px" }}
-            >
-              <MenuItem value={0}>Not assigned</MenuItem>
-              {listOfApplicableWorkingStaff.length !== 0 &&
-                listOfApplicableWorkingStaff.map((staff) => (
-                  <MenuItem key={staff.staffId} value={staff.staffId}>
-                    {findStaffInListByStaffId(staff.staffId)}
-                  </MenuItem>
-                ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={() => onConfirm(selectedStaff)} color="primary">
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {assigningToSwimlane === "Treatment" ? (
+        <Dialog
+          open={open}
+          onClose={() => {
+            onClose();
+            handleResetState();
+          }}
+        >
+          <DialogTitle>Treatment Assignment to Ticket:</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Please choose a treatment type before selecting a staff member.
+            </DialogContentText>
+            <FormControl fullWidth variant="outlined" sx={{ mt: 2 }}>
+              <InputLabel id="demo-simple-select-label">Treatment</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={selectedTreatmentType}
+                label="Select Treatment Type"
+                onChange={handleTreatmentTypeChange}
+                sx={{ height: "50px" }}
+              >
+                {listOfWorkingStaff.length !== 0 &&
+                  listOfWorkingStaff
+                    .reduce((acc, staff) => {
+                      if (
+                        !acc.some(
+                          (item) => item.staffRoleEnum === staff.staffRoleEnum
+                        ) &&
+                        staff.staffRoleEnum !== "DOCTOR" &&
+                        staff.staffRoleEnum !== "NURSE" &&
+                        staff.staffRoleEnum !== "ADMIN"
+                      ) {
+                        acc.push(staff);
+                      }
+                      return acc;
+                    }, [])
+                    .map((staff) => (
+                      <MenuItem
+                        key={staff.staffRoleEnum}
+                        value={staff.staffRoleEnum}
+                      >
+                        {staffRoleEnumMapping[staff.staffRoleEnum]}
+                      </MenuItem>
+                    ))}
+              </Select>
+            </FormControl>
+            {selectedTreatmentType !== "" ? (
+              <FormControl fullWidth variant="outlined" sx={{ mt: 2 }}>
+                <InputLabel id="demo-simple-select-label">Staff</InputLabel>
+                <Select
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  value={selectedStaff}
+                  label="Select Staff"
+                  onChange={handleChange}
+                  sx={{ height: "50px" }}
+                >
+                  <MenuItem value={0}>Not assigned</MenuItem>
+                  {listOfApplicableWorkingStaff.length !== 0 &&
+                    listOfApplicableWorkingStaff.map((staff) => (
+                      <MenuItem key={staff.staffId} value={staff.staffId}>
+                        {findStaffInListByStaffId(staff.staffId)}
+                      </MenuItem>
+                    ))}
+                </Select>
+              </FormControl>
+            ) : null}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={onClose} color="primary">
+              Cancel
+            </Button>
+            {selectedTreatmentType !== "" ? (
+              <Button onClick={() => onConfirm(selectedStaff)} color="primary">
+                Confirm
+              </Button>
+            ) : null}
+          </DialogActions>
+        </Dialog>
+      ) : (
+        <Dialog open={open} onClose={onClose}>
+          <DialogTitle>Staff Assignment to Ticket:</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Please choose from the list of available staff members to assign
+              this appointment ticket.
+            </DialogContentText>
+            <FormControl fullWidth variant="outlined" sx={{ mt: 2 }}>
+              <InputLabel id="demo-simple-select-label">Staff</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={selectedStaff}
+                label="Select Staff"
+                onChange={handleChange}
+                sx={{ height: "50px" }}
+              >
+                <MenuItem value={0}>Not assigned</MenuItem>
+                {listOfApplicableWorkingStaff.length !== 0 &&
+                  listOfApplicableWorkingStaff.map((staff) => (
+                    <MenuItem key={staff.staffId} value={staff.staffId}>
+                      {findStaffInListByStaffId(staff.staffId)}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={onClose} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={() => onConfirm(selectedStaff)} color="primary">
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </>
   );
 }
