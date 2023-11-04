@@ -159,7 +159,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={ALL_EXCEPT_PHARMACIST}
         forHeadsOnly={false}
-        authorizedUnits={"WARD"}
+        authorizedUnits={"ALL"}
       >
         <Inpatient />,
       </ProtectedRoute>

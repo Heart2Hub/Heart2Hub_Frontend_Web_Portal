@@ -9,7 +9,16 @@ import { useEffect } from "react";
 import MDButton from "components/MDButton";
 import MDTypography from "components/MDTypography";
 
-import { Icon, Box, Tab, Tabs } from "@mui/material";
+import {
+  Icon,
+  Box,
+  Tab,
+  Tabs,
+  Popper,
+  Paper,
+  Fade,
+  Modal,
+} from "@mui/material";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import "./inpatient.css";
 import CreateAppointmentModal from "./CreateAppointmentModal";
@@ -32,6 +41,7 @@ import AdmissionCard from "./AdmissionCard";
 import NoAdmissionCard from "./NoAdmissionCard";
 import AdmissionTicketModal from "./AdmissionTicketModal";
 import { parseDateFromLocalDateTime } from "utility/Utility";
+import MedicationOrderModal from "./MedicationOrderModal";
 
 const beds = [
   { id: 1, title: "Bed 1" },
@@ -57,16 +67,6 @@ function Inpatient() {
   const staff = useSelector(selectStaff);
   const localizer = momentLocalizer(moment);
 
-  const currentHour = new Date().getHours();
-  const customDayView = {
-    start: moment().hour(currentHour),
-    end: moment().add(1, "day").hour(22), // 10 pm the next day
-  };
-
-  const reduxDispatch = useDispatch();
-
-  const [loading, setLoading] = useState(false);
-
   //for handling filtering
   const [selectStaffToFilter, setSelectStaffToFilter] = useState(null);
 
@@ -74,41 +74,33 @@ function Inpatient() {
   const [listOfWorkingStaff, setListOfWorkingStaff] = useState([]);
 
   //for displaying admissions
+  const [wards, setWards] = useState([]);
+  const [displayedWard, setDisplayedWard] = useState("");
   const [currentDayAdmissions, setCurrentDayAdmissions] = useState([]);
+  const [calendarResources, setCalendarResources] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
-  const [admissionsByRoom, setAdmissionsByRoom] = useState([]);
   const [room, setRoom] = useState(1);
 
   //for opening admission ticket modal
   const [selectedAdmission, setSelectedAdmission] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
+  const [admissionTicketModal, setAdmissionTicketModal] = useState(false);
 
-  //force a refresh for modal assigning
-  const forceRefresh = () => {
-    setLoading(true);
-    getAdmissions();
-    getStaffCurrentlyWorking();
-    setLoading(false);
-  };
+  //for opening medication order modal
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [medicationOrderModal, setMedicationOrderModal] = useState(false);
 
-  //get List of currently working staffs
-  const getStaffCurrentlyWorking = async () => {
-    const response = await staffApi.getStaffsWorkingInCurrentShiftAndWard(
-      staff.unit.name
-    );
-    setListOfWorkingStaff(response.data);
-  };
+  //helper method to map admissions to resources and events for calendar
+  const mapAdmissionsToResourcesAndEvents = (admissions) => {
+    const resources = admissions
+      .map((admission) => {
+        return {
+          id: admission.bed,
+          title: `Bed ${admission.bed}`,
+        };
+      })
+      .sort((a, b) => a.id - b.id);
 
-  const getAdmissions = async () => {
-    const response = await admissionApi.getAdmissionsForWard(staff.unit.name);
-    let admissions = response.data;
-    console.log(admissions);
-    // if (selectStaffToFilter) {
-    //   admissions = admissions.filter((admission) =>
-    //     admission.listOfStaffsId.includes(selectStaffToFilter)
-    //   );
-    // }
-    setCurrentDayAdmissions(admissions);
+    setCalendarResources(resources);
 
     const events = admissions
       .filter((admission) => admission.admissionDateTime)
@@ -122,86 +114,215 @@ function Inpatient() {
           resourceId: admission.bed,
         };
       });
-
-    console.log(events);
     setCalendarEvents(events);
+  };
 
-    const filtered = admissions.filter((admission) => admission.room === 1);
-    const admissionsInBedOrder = filtered.sort((a, b) => a.bed - b.bed);
+  const getInitialViewForDepartmentStaff = async () => {
+    const staffAdmissionsResponse = await admissionApi.getAdmissionsForStaff(
+      staff.staffId
+    );
+    const staffAdmissions = staffAdmissionsResponse.data;
 
-    setAdmissionsByRoom(admissionsInBedOrder);
+    //get list of wards that doctor is assigned to
+    let wards = [];
+    for (let i = 0; i < staffAdmissions.length; i++) {
+      const ward = staffAdmissions[i].ward;
+      if (!wards.includes(ward)) {
+        wards.push(ward);
+      }
+    }
+    setWards(wards);
+    setDisplayedWard(wards[0]);
+
+    //get list of ward staff for the first ward
+    const wardStaffResponse =
+      await staffApi.getStaffsWorkingInCurrentShiftAndWard(wards[0]);
+    setListOfWorkingStaff(wardStaffResponse.data);
+
+    //get admissions for the first ward
+    const wardAdmissionsResponse = await admissionApi.getAdmissionsForWard(
+      wards[0]
+    );
+    const wardAdmissions = wardAdmissionsResponse.data;
+
+    setCurrentDayAdmissions(wardAdmissions);
+
+    //filter by room 1
+    let roomOneAdmissions = wardAdmissions.filter(
+      (admission) => admission.room === 1
+    );
+
+    mapAdmissionsToResourcesAndEvents(roomOneAdmissions);
+  };
+
+  const getInitialViewForWardStaff = async () => {
+    setDisplayedWard(staff.unit.name);
+
+    //get list of ward staff for the first ward
+    const wardStaffResponse =
+      await staffApi.getStaffsWorkingInCurrentShiftAndWard(staff.unit.name);
+    setListOfWorkingStaff(wardStaffResponse.data);
+
+    const wardAdmissionsResponse = await admissionApi.getAdmissionsForWard(
+      staff.unit.name
+    );
+    const wardAdmissions = wardAdmissionsResponse.data;
+
+    setCurrentDayAdmissions(wardAdmissions);
+
+    //filter by room 1
+    let roomOneAdmissions = wardAdmissions.filter(
+      (admission) => admission.room === 1
+    );
+
+    mapAdmissionsToResourcesAndEvents(roomOneAdmissions);
   };
 
   useEffect(() => {
-    getStaffCurrentlyWorking();
-    getAdmissions();
-    //console.log(staff);
-    //console.log(selectStaffToFilter);
-  }, [selectStaffToFilter]);
+    if (staff.staffRoleEnum === "ADMIN" || staff.staffRoleEnum === "NURSE") {
+      getInitialViewForWardStaff();
+    } else {
+      getInitialViewForDepartmentStaff();
+    }
+  }, []);
 
-  const handleChangeRoom = (event, selectedRoom) => {
-    setRoom(selectedRoom);
-    const filtered = currentDayAdmissions.filter(
-      (admission) => admission.room === selectedRoom
+  const handleChangeWard = async (event, selectedWard) => {
+    setSelectStaffToFilter(null);
+    setRoom(1);
+    setDisplayedWard(selectedWard);
+
+    //get list of ward staff for new ward
+    const wardStaffResponse =
+      await staffApi.getStaffsWorkingInCurrentShiftAndWard(selectedWard);
+    setListOfWorkingStaff(wardStaffResponse.data);
+
+    //get admissions for new ward
+    const wardAdmissionsResponse = await admissionApi.getAdmissionsForWard(
+      selectedWard
     );
-    const admissionsInBedOrder = filtered.sort((a, b) => a.bed - b.bed);
-    setAdmissionsByRoom(admissionsInBedOrder);
+    const wardAdmissions = wardAdmissionsResponse.data;
+
+    setCurrentDayAdmissions(wardAdmissions);
+
+    //filter by room 1
+    let roomOneAdmissions = wardAdmissions.filter(
+      (admission) => admission.room === 1
+    );
+
+    //map admission to calendar event
+    mapAdmissionsToResourcesAndEvents(roomOneAdmissions);
   };
 
-  const handleSelectStaffToFilter = (staffId) => {
-    setSelectStaffToFilter(staffId);
-    const filtered = currentDayAdmissions.filter(
-      (admission) =>
-        admission.listOfStaffsId.includes(staffId) && admission.room === room
+  const handleChangeRoom = (event, selectedRoom) => {
+    setSelectStaffToFilter(null);
+    setRoom(selectedRoom);
+    let selectedRoomAdmissions = currentDayAdmissions.filter(
+      (admission) => admission.room === selectedRoom
     );
-    const admissionsInBedOrder = filtered.sort((a, b) => a.bed - b.bed);
-    setAdmissionsByRoom(admissionsInBedOrder);
+
+    mapAdmissionsToResourcesAndEvents(selectedRoomAdmissions);
   };
 
   const handleSelectAdmission = (admission) => {
     setSelectedAdmission(admission);
-    setOpenModal(true);
+    setAdmissionTicketModal(true);
   };
 
   const handleUpdateAdmission = (updatedAdmission) => {
     setSelectedAdmission(updatedAdmission);
-    setOpenModal(true);
-    const updatedAdmissions = admissionsByRoom.map((existingAdmission) => {
+    setAdmissionTicketModal(true);
+
+    const updatedAdmissions = currentDayAdmissions.map((existingAdmission) => {
       if (updatedAdmission.admissionId === existingAdmission.admissionId) {
         return updatedAdmission;
       }
       return existingAdmission;
     });
-    setAdmissionsByRoom(updatedAdmissions);
+    setCurrentDayAdmissions(updatedAdmissions);
   };
 
-  const handleCloseModal = () => {
-    setOpenModal(false);
+  const handleCancelAdmission = (cancelledAdmissionId) => {
+    const updatedAdmissions = currentDayAdmissions.filter(
+      (existingAdmission) =>
+        existingAdmission.admissionId !== cancelledAdmissionId
+    );
+    setCurrentDayAdmissions(updatedAdmissions);
+    mapAdmissionsToResourcesAndEvents(updatedAdmissions);
+    setAdmissionTicketModal(false);
   };
 
-  const dischargeTomorrow = async () => {
-    const tomorrow = moment().add(1, "days");
-    tomorrow.seconds(0);
-    tomorrow.minutes(0);
-    tomorrow.hours(12);
-    const tomorrowDateString = tomorrow.format("YYYY-MM-DDTHH:mm:ss");
-    await admissionApi.handleDischarge(tomorrowDateString);
-    forceRefresh();
+  const handleCloseAdmissionTicketModal = () => {
+    setSelectedAdmission(null);
+    setAdmissionTicketModal(false);
   };
 
-  const allocateTomorrow = async () => {
-    const tomorrow = moment().add(1, "days");
-    tomorrow.seconds(0);
-    tomorrow.minutes(0);
-    tomorrow.hours(13);
-    const tomorrowDateString = tomorrow.format("YYYY-MM-DDTHH:mm:ss");
-    await admissionApi.handleAllocateIncoming(tomorrowDateString);
-    forceRefresh();
+  const handleSelectStaffToFilter = (staffId) => {
+    setSelectStaffToFilter(staffId);
+    let selectedAdmissions = currentDayAdmissions.filter(
+      (admission) => admission.room === room
+    );
+
+    if (staffId > 0) {
+      selectedAdmissions = selectedAdmissions.filter((admission) =>
+        admission.listOfStaffsId.includes(staffId)
+      );
+    }
+
+    mapAdmissionsToResourcesAndEvents(selectedAdmissions);
   };
+
+  const handleSelectSlot = (slotInfo) => {
+    setSelectedSlot(slotInfo);
+    const orderForAdmission = currentDayAdmissions.filter(
+      (admission) =>
+        admission.room === room && admission.bed === slotInfo.resourceId
+    )[0];
+    setSelectedAdmission(orderForAdmission);
+    setMedicationOrderModal(true);
+  };
+
+  const handleCloseMedicationOrderModal = () => {
+    setSelectedSlot(null);
+    setSelectedAdmission(null);
+    setMedicationOrderModal(false);
+  };
+
+  // const dischargeTomorrow = async () => {
+  //   const tomorrow = moment().add(1, "days");
+  //   tomorrow.seconds(0);
+  //   tomorrow.minutes(0);
+  //   tomorrow.hours(12);
+  //   const tomorrowDateString = tomorrow.format("YYYY-MM-DDTHH:mm:ss");
+  //   await admissionApi.handleDischarge(tomorrowDateString);
+  //   forceRefresh();
+  // };
+
+  // const allocateTomorrow = async () => {
+  //   const tomorrow = moment().add(1, "days");
+  //   tomorrow.seconds(0);
+  //   tomorrow.minutes(0);
+  //   tomorrow.hours(13);
+  //   const tomorrowDateString = tomorrow.format("YYYY-MM-DDTHH:mm:ss");
+  //   await admissionApi.handleAllocateIncoming(tomorrowDateString);
+  //   forceRefresh();
+  // };
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
+      {staff.staffRoleEnum === "ADMIN" ||
+      staff.staffRoleEnum === "NURSE" ? null : (
+        <Tabs
+          value={displayedWard}
+          onChange={handleChangeWard}
+          style={{ marginTop: "10px", width: "500px" }}
+        >
+          {wards.map((ward) => (
+            <Tab label={ward} value={ward} />
+          ))}
+        </Tabs>
+      )}
+
       <MDTypography
         sx={{
           fontSize: "2.5rem", // Adjust the size as per your preference
@@ -211,7 +332,7 @@ function Inpatient() {
           marginBottom: "1rem", // Adds some bottom margin
         }}
       >
-        Ward {staff.unit.name}
+        Ward {displayedWard}
       </MDTypography>
       <MDTypography sx={{ textAlign: "center" }}>{}</MDTypography>
 
@@ -238,28 +359,33 @@ function Inpatient() {
           </Tabs>
 
           <MDBox className="admission-calendar">
-            <Calendar
-              localizer={localizer}
-              defaultView={Views.DAY}
-              startAccessor="start"
-              endAccessor="end"
-              resources={beds}
-              events={calendarEvents}
-              components={{
-                event: ({ event }) => (
-                  <AdmissionCard
-                    appointment={
-                      currentDayAdmissions.filter(
-                        (admission) => admission.admissionId === event.id
-                      )[0]
-                    }
-                    listOfWorkingStaff={listOfWorkingStaff}
-                    forceRefresh={forceRefresh}
-                    handleSelectAdmission={handleSelectAdmission}
-                  />
-                ),
-              }}
-            />
+            {calendarResources.length > 0 ? (
+              <Calendar
+                localizer={localizer}
+                defaultView={Views.DAY}
+                startAccessor="start"
+                endAccessor="end"
+                resources={calendarResources}
+                events={calendarEvents}
+                selectable
+                onSelectSlot={handleSelectSlot}
+                components={{
+                  event: ({ event }) => (
+                    <AdmissionCard
+                      admission={
+                        currentDayAdmissions.filter(
+                          (admission) => admission.admissionId === event.id
+                        )[0]
+                      }
+                      handleSelectAdmission={handleSelectAdmission}
+                    />
+                  ),
+                }}
+              />
+            ) : (
+              <p>No Admissions in this room</p>
+            )}
+
             {/* {admissionsByRoom.length > 0 ? (
               admissionsByRoom.map((admission, index) => (
                 <Calendar
@@ -303,12 +429,20 @@ function Inpatient() {
       {selectedAdmission && (
         <AdmissionTicketModal
           key={selectedAdmission.admissionId}
-          openModal={openModal}
-          handleCloseModal={handleCloseModal}
-          selectedAppointment={selectedAdmission}
+          openModal={admissionTicketModal}
+          handleCloseModal={handleCloseAdmissionTicketModal}
+          selectedAdmission={selectedAdmission}
           listOfWorkingStaff={listOfWorkingStaff}
-          forceRefresh={forceRefresh}
           handleUpdateAdmission={handleUpdateAdmission}
+          handleCancelAdmission={handleCancelAdmission}
+        />
+      )}
+      {selectedSlot && (
+        <MedicationOrderModal
+          openModal={medicationOrderModal}
+          handleCloseModal={handleCloseMedicationOrderModal}
+          selectedAdmission={selectedAdmission}
+          selectedSlot={selectedSlot}
         />
       )}
     </DashboardLayout>

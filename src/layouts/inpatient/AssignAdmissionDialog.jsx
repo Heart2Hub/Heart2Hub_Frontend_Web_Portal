@@ -21,26 +21,9 @@ function AssignAdmissionDialog({
   onClose,
   onConfirm,
   listOfWorkingStaff,
-  selectedAppointmentToAssign,
   listOfAssignedStaff,
-  roleToAssign,
 }) {
   const loggedInStaff = useSelector(selectStaff);
-
-  //const [selectedRole, setSelectedRole] = useState("")
-  //const [selectRoleOptions, setSelectRoleOptions] = useState([])
-
-  const [selectedNurse, setSelectedNurse] = useState(
-    selectedAppointmentToAssign.assignedNurseId
-      ? selectedAppointmentToAssign.assignedNurseId
-      : 0
-  );
-
-  const [selectedAdmin, setSelectedAdmin] = useState(
-    selectedAppointmentToAssign.assignedAdminId
-      ? selectedAppointmentToAssign.assignedAdminId
-      : 0
-  );
 
   const [selectedStaff, setSelectedStaff] = useState(0);
 

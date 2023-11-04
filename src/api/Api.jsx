@@ -863,6 +863,11 @@ export const admissionApi = {
       `${REST_ENDPOINT}/admission/getAdmissionsForWard?wardName=${name}`
     );
   },
+  getAdmissionsForStaff(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/admission/getAdmissionsForStaff?staffId=${id}`
+    );
+  },
   assignAdmissionToStaff(admissionId, toStaffId, fromStaffId) {
     return axiosFetch.put(
       `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`

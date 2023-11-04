@@ -71,27 +71,22 @@ const style = {
 function AdmissionTicketModal({
   openModal,
   handleCloseModal,
-  selectedAppointment,
+  selectedAdmission,
   listOfWorkingStaff,
-  forceRefresh,
   handleUpdateAdmission,
+  handleCancelAdmission,
 }) {
   const navigate = useNavigate();
   const reduxDispatch = useDispatch();
-  const isInitialLoad = useRef(true);
 
   //logged in staff
   const loggedInStaff = useSelector(selectStaff);
 
   const [listOfAssignedStaff, setListOfAssignedStaff] = useState([]);
-  const [assignedDoctor, setAssignedDoctor] = useState(null);
-  const [assignedNurse, setAssignedNurse] = useState("No Attending Nurse");
-  const [assignedAdmin, setAssignedAdmin] = useState("No Attending Admin");
-  const [facilityLocation, setFacilityLocation] = useState(null);
   const [editableComments, setEditableComments] = useState("");
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [arrived, setArrived] = useState(selectedAppointment.arrived);
+  const [arrived, setArrived] = useState(selectedAdmission.arrived);
   const [dischargeDate, setDischargeDate] = useState(null);
 
   //for assigning appointment to staff in the AppointmentTicketModal
@@ -105,77 +100,38 @@ function AdmissionTicketModal({
   const [profileImage, setProfileImage] = useState(null);
 
   const handleGetProfileImage = async () => {
-    if (selectedAppointment.patientProfilePicture !== null) {
+    if (selectedAdmission.patientProfilePicture !== null) {
       const response = await imageServerApi.getImageFromImageServer(
         "id",
-        selectedAppointment.patientProfilePicture
+        selectedAdmission.patientProfilePicture
       );
       const imageURL = URL.createObjectURL(response.data);
       setProfileImage(imageURL);
     }
   };
 
-  // const getAssignedDoctorName = async () => {
-  //   if (selectedAppointment.assignedDoctorId) {
-  //     const response = await staffApi.getStaffByStaffId(
-  //       selectedAppointment.assignedDoctorId
-  //     );
-  //     setAssignedDoctor(response.data);
-  //   } else {
-  //     setAssignedDoctor(null);
-  //   }
-  // };
-
-  // const getAssignedNurseName = async () => {
-  //   if (selectedAppointment.assignedNurseId) {
-  //     const response = await staffApi.getStaffByStaffId(
-  //       selectedAppointment.assignedNurseId
-  //     );
-  //     setAssignedNurse(response.data);
-  //   } else {
-  //     setAssignedNurse(null);
-  //   }
-  // };
-
-  // const getAssignedAdminName = async () => {
-  //   if (selectedAppointment.assignedAdminId) {
-  //     const response = await staffApi.getStaffByStaffId(
-  //       selectedAppointment.assignedAdminId
-  //     );
-  //     setAssignedAdmin(response.data);
-  //   } else {
-  //     setAssignedAdmin(null);
-  //   }
-  // };
-
   const getAssignedStaff = async () => {
-    const staffPromises = selectedAppointment.listOfStaffsId.map((id) =>
+    const staffPromises = selectedAdmission.listOfStaffsId.map((id) =>
       staffApi.getStaffByStaffId(id)
     );
     const staffResponse = await Promise.all(staffPromises);
 
     const listOfStaff = staffResponse.map((response) => response.data);
-    console.log(listOfStaff);
+    //console.log(listOfStaff);
     setListOfAssignedStaff(listOfStaff);
   };
 
   useEffect(() => {
-    const dischargeMoment = moment(selectedAppointment.dischargeDateTime);
-    dischargeMoment.subtract(1, "months");
-    setDischargeDate(dischargeMoment.format("YYYY-MM-DD HH:mm:ss"));
-  }, []);
-
-  useEffect(() => {
-    console.log(selectedAppointment);
+    console.log(selectedAdmission);
     handleGetProfileImage();
     getAssignedStaff();
-  }, [selectedAppointment]);
+    const dischargeMoment = moment(selectedAdmission.dischargeDateTime);
+    dischargeMoment.subtract(1, "months");
+    setDischargeDate(dischargeMoment.format("YYYY-MM-DD HH:mm:ss"));
+  }, [selectedAdmission]);
 
   const handleOpenAssignDialog = () => {
-    if (
-      !selectedAppointment.arrived &&
-      loggedInStaff.staffRoleEnum === "NURSE"
-    ) {
+    if (!selectedAdmission.arrived && loggedInStaff.staffRoleEnum === "NURSE") {
       reduxDispatch(
         displayMessage({
           color: "warning",
@@ -190,49 +146,10 @@ function AdmissionTicketModal({
     setIsDialogOpen(true);
   };
 
-  const handleOpenAssignNurseDialog = () => {
-    if (!arrived) {
-      reduxDispatch(
-        displayMessage({
-          color: "warning",
-          icon: "notification",
-          title: "Error",
-          content: "Cannot assign a nurse to a patient who has not arrived",
-        })
-      );
-      return;
-    }
-    setIsDialogOpen(true);
-    setRoleToAssign("NURSE");
-  };
-
-  const handleOpenAssignAdminDialog = () => {
-    setIsDialogOpen(true);
-    setRoleToAssign("ADMIN");
-  };
-
-  //has its own set of logic for assignAppointmentDialog to not clash with the drag and drop version
   const handleConfirmAssignDialog = async (selectedStaffId) => {
     try {
-      //send to BE to assign staff
-      // let response;
-
-      // if (roleToAssign === "NURSE") {
-      //   response = await admissionApi.assignAdmissionToNurse(
-      //     selectedAppointment.admissionId,
-      //     selectedStaffId,
-      //     loggedInStaff.staffId
-      //   );
-      // } else {
-      //   response = await admissionApi.assignAdmissionToAdmin(
-      //     selectedAppointment.admissionId,
-      //     selectedStaffId,
-      //     loggedInStaff.staffId
-      //   );
-      // }
-
       const response = await admissionApi.assignAdmissionToStaff(
-        selectedAppointment.admissionId,
+        selectedAdmission.admissionId,
         selectedStaffId,
         loggedInStaff.staffId
       );
@@ -278,10 +195,7 @@ function AdmissionTicketModal({
 
   const handleUpdateAppointmentArrival = async () => {
     try {
-      console.log(
-        selectedAppointment.listOfStaffsId.includes(loggedInStaff.staffId)
-      );
-      if (!selectedAppointment.listOfStaffsId.includes(loggedInStaff.staffId)) {
+      if (!selectedAdmission.listOfStaffsId.includes(loggedInStaff.staffId)) {
         reduxDispatch(
           displayMessage({
             color: "error",
@@ -294,8 +208,8 @@ function AdmissionTicketModal({
       }
 
       const response = await admissionApi.updateAdmissionArrival(
-        selectedAppointment.admissionId,
-        !selectedAppointment.arrived,
+        selectedAdmission.admissionId,
+        !selectedAdmission.arrived,
         loggedInStaff.staffId
       );
 
@@ -310,7 +224,7 @@ function AdmissionTicketModal({
           content: "Patient's Arrival Status is updated",
         })
       );
-      setArrived(!arrived);
+      //setArrived(!arrived);
     } catch (error) {
       reduxDispatch(
         displayMessage({
@@ -336,7 +250,7 @@ function AdmissionTicketModal({
 
   const handleUpdateComments = async () => {
     try {
-      if (!selectedAppointment.listOfStaffsId.includes(loggedInStaff.staffId)) {
+      if (!selectedAdmission.listOfStaffsId.includes(loggedInStaff.staffId)) {
         reduxDispatch(
           displayMessage({
             color: "error",
@@ -350,7 +264,7 @@ function AdmissionTicketModal({
         return;
       }
       const response = await admissionApi.updateAdmissionComments(
-        selectedAppointment.admissionId,
+        selectedAdmission.admissionId,
         editableComments,
         loggedInStaff.staffId
       );
@@ -382,8 +296,8 @@ function AdmissionTicketModal({
 
   const handleClickToEhr = () => {
     // Can refactor to util
-    console.log(selectedAppointment);
-    const dateComponents = selectedAppointment.dateOfBirth;
+    console.log(selectedAdmission);
+    const dateComponents = selectedAdmission.dateOfBirth;
     const [year, month, day, hours, minutes] = dateComponents;
     const formattedMonth = String(month).padStart(2, "0");
     const formattedDay = String(day).padStart(2, "0");
@@ -392,7 +306,7 @@ function AdmissionTicketModal({
     ).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`;
     ehrApi
       .getElectronicHealthRecordByIdAndDateOfBirth(
-        selectedAppointment.electronicHealthRecordId,
+        selectedAdmission.electronicHealthRecordId,
         dateOfBirthFormatted
       )
       .then((response) => {
@@ -400,8 +314,8 @@ function AdmissionTicketModal({
         // ROUTE HERE
         response.data = {
           ...response.data,
-          username: selectedAppointment.username,
-          profilePicture: selectedAppointment.patientProfilePicture,
+          username: selectedAdmission.username,
+          profilePicture: selectedAdmission.patientProfilePicture,
         };
         reduxDispatch(setEHRRecord(response));
         navigate("/ehr/ehrRecord");
@@ -416,12 +330,12 @@ function AdmissionTicketModal({
     setCancelDialog(false);
   };
 
-  const handleCancelAdmission = async () => {
+  const cancelAdmission = async () => {
     await admissionApi.cancelAdmission(
-      selectedAppointment.admissionId,
+      selectedAdmission.admissionId,
       loggedInStaff.unit.unitId
     );
-    forceRefresh();
+
     reduxDispatch(
       displayMessage({
         color: "success",
@@ -430,8 +344,8 @@ function AdmissionTicketModal({
         content: "Admission has been cancelled successfully!!",
       })
     );
-    handleCloseModal();
     setCancelDialog(false);
+    handleCancelAdmission(selectedAdmission.admissionId);
   };
 
   return (
@@ -443,7 +357,7 @@ function AdmissionTicketModal({
         aria-describedby="modal-modal-description"
       >
         <Box sx={{ ...style, maxHeight: "80vh", overflow: "auto" }}>
-          {selectedAppointment && (
+          {selectedAdmission && (
             <>
               <Box
                 sx={{
@@ -460,11 +374,10 @@ function AdmissionTicketModal({
                     gutterBottom
                     sx={{ marginRight: "20px" }}
                   >
-                    HH-{selectedAppointment.admissionId}:{" "}
-                    {selectedAppointment.firstName}{" "}
-                    {selectedAppointment.lastName} (
-                    {calculateAge(selectedAppointment?.dateOfBirth)}
-                    {selectedAppointment.sex === "Male" ? "M" : "F"})
+                    HH-{selectedAdmission.admissionId}:{" "}
+                    {selectedAdmission.firstName} {selectedAdmission.lastName} (
+                    {calculateAge(selectedAdmission?.dateOfBirth)}
+                    {selectedAdmission.sex === "Male" ? "M" : "F"})
                   </MDTypography>
                   {arrived ? null : (
                     <MDButton
@@ -476,7 +389,7 @@ function AdmissionTicketModal({
                     </MDButton>
                   )}
                 </Box>
-                {selectedAppointment.patientProfilePicture !== null && (
+                {selectedAdmission.patientProfilePicture !== null && (
                   <MDAvatar
                     src={profileImage}
                     alt="profile-image"
@@ -485,7 +398,7 @@ function AdmissionTicketModal({
                     style={{ height: "150px", width: "150px" }}
                   />
                 )}
-                {selectedAppointment.patientProfilePicture === null && (
+                {selectedAdmission.patientProfilePicture === null && (
                   <Skeleton
                     className="avatar-right"
                     variant="circular"
@@ -501,7 +414,7 @@ function AdmissionTicketModal({
                 </ListItem>
                 <ListItem>
                   <MDTypography variant="h6" gutterBottom color="black">
-                    {`Ward ${selectedAppointment.ward}, Room ${selectedAppointment.room}, Bed ${selectedAppointment.bed}`}
+                    {`Ward ${selectedAdmission.ward}, Room ${selectedAdmission.room}, Bed ${selectedAdmission.bed}`}
                   </MDTypography>
                 </ListItem>
                 <ListItem>
@@ -523,10 +436,10 @@ function AdmissionTicketModal({
                   {/* <MDBox>
                     <Stack direction="row" spacing={2}>
                       <AddAttachmentButton
-                        selectedAppointment={selectedAppointment}
+                        selectedAdmission={selectedAdmission}
                       />
                       <ViewAttachmentsButton
-                        selectedAppointment={selectedAppointment}
+                        selectedAdmission={selectedAdmission}
                       />
                     </Stack>
                   </MDBox> */}
@@ -555,7 +468,7 @@ function AdmissionTicketModal({
                     variant="gradient"
                     color="primary"
                   >
-                    {selectedAppointment.listOfStaffsId.includes(
+                    {selectedAdmission.listOfStaffsId.includes(
                       loggedInStaff.staffId
                     )
                       ? "Reassign"
@@ -622,16 +535,14 @@ function AdmissionTicketModal({
                 >
                   <MDTypography variant="h6" gutterBottom>
                     <Chip
-                      color={
-                        selectedAppointment.arrived ? "success" : "default"
-                      }
-                      label={selectedAppointment.arrived ? "Yes" : "No"}
+                      color={selectedAdmission.arrived ? "success" : "default"}
+                      label={selectedAdmission.arrived ? "Yes" : "No"}
                     />
                   </MDTypography>
                   {loggedInStaff.staffRoleEnum === "ADMIN" && (
                     <ArrivalButton
-                      arrived={selectedAppointment.arrived}
-                      selectedAppointment={selectedAppointment}
+                      arrived={selectedAdmission.arrived}
+                      selectedAdmission={selectedAdmission}
                       handleUpdateAppointmentArrival={
                         handleUpdateAppointmentArrival
                       }
@@ -648,7 +559,7 @@ function AdmissionTicketModal({
                 <ListItem>
                   <textarea
                     readOnly
-                    value={selectedAppointment.reason}
+                    value={selectedAdmission.reason}
                     placeholder="This appointment has no description yet"
                     style={{
                       width: "100%",
@@ -677,7 +588,7 @@ function AdmissionTicketModal({
                 <ListItem>
                   <textarea
                     readOnly
-                    value={selectedAppointment.comments}
+                    value={selectedAdmission.comments}
                     placeholder="This appointment has no comments yet"
                     style={{
                       width: "100%",
@@ -759,7 +670,7 @@ function AdmissionTicketModal({
             </DialogContent>
             <DialogActions>
               <Button onClick={handleCloseCancelDialog}>Disagree</Button>
-              <Button onClick={handleCancelAdmission}>Agree</Button>
+              <Button onClick={cancelAdmission}>Agree</Button>
             </DialogActions>
           </Dialog>
         </Box>
@@ -769,9 +680,7 @@ function AdmissionTicketModal({
         onConfirm={handleConfirmAssignDialog}
         onClose={handleCloseAssignDialog}
         listOfWorkingStaff={listOfWorkingStaff}
-        selectedAppointmentToAssign={selectedAppointment}
         listOfAssignedStaff={listOfAssignedStaff}
-        roleToAssign={roleToAssign}
       />
     </>
   );
