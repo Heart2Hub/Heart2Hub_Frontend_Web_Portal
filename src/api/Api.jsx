@@ -329,13 +329,15 @@ export const shiftApi = {
     return axiosFetch.delete(`${REST_ENDPOINT}/shift/deleteShift/${shiftId}`);
   },
   getAllShiftsFromDate(username, start, end) {
-    console.log(
-      `${REST_ENDPOINT}/shift/getAllShiftsFromDate/${username}?startDate=${start}&endDate=${end}`
-    );
     return axiosFetch.get(
       `${REST_ENDPOINT}/shift/getAllShiftsFromDate/${username}?startDate=${start}&endDate=${end}`
     );
   },
+  automaticallyAllocateShifts(start, end, role, department, shift1, shift2, shift3) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/shift/automaticallyCreateShifts?startDate=${start}&endDate=${end}&role=${role}&department=${department}&shift1=${shift1}&shift2=${shift2}&shift3=${shift3}`
+    );
+  }
 };
 
 export const shiftConstraintsApi = {

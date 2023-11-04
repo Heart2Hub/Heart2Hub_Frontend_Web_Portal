@@ -15,6 +15,7 @@ import Typography from "@mui/material/Typography";
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
+import MDButton from 'components/MDButton';
 
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -35,6 +36,7 @@ import ViewUpdateShiftConstraint from './ViewUpdateShiftConstraint';
 import { staffApi } from 'api/Api';
 import { shiftConstraintsApi } from 'api/Api';
 import { facilityApi } from 'api/Api';
+import AutoAllocateShift from './AutoAllocateShift';
 
 function Rostering() {
 
@@ -52,6 +54,7 @@ function Rostering() {
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [page, setPage] = useState(0);
     const [facilities, setFacilities] = useState([]);
+    const [autoOpen, setAutoOpen] = useState(false);
     const navigate = useNavigate();
 
     moment.updateLocale('en', {
@@ -189,6 +192,10 @@ function Rostering() {
         getWeekDates(firstDateOfWeek);
     }
 
+    const handleAutoClose = () => {
+        setAutoOpen(false);
+    }
+
     const handleScOpen = (sc) => {
         if (sc) {
             setCurrSc(sc);
@@ -227,7 +234,7 @@ function Rostering() {
                 getWeekDates(weekDates[0].date);
             }
         }
-    },[scOpen, updateScOpen, currStaffDetails, updateAddShift])
+    },[scOpen, updateScOpen, currStaffDetails, updateAddShift, autoOpen])
 
     if (currStaffDetails && !currStaffDetails.isHead) {
         navigate("/error")
@@ -246,7 +253,7 @@ function Rostering() {
                 py={3}
                 px={2}
                 variant="gradient"
-                bgColor="primary"
+                bgColor="info"
                 borderRadius="lg"
                 coloredShadow="info"
               >
@@ -255,9 +262,21 @@ function Rostering() {
                 </MDTypography>
               </MDBox>
               <MDBox pt={3}> 
-                <Typography variant="h5" paddingLeft={2}>{currStaffDetails?.staffRoleEnum === "NURSE" && currStaffDetails?.unit.wardClass? "Ward" : "Department"}: {currStaffDetails?.unit.name}</Typography>
-                <Typography variant="h5" paddingLeft={2} paddingBottom={1}>Role: {currStaffDetails?.staffRoleEnum}</Typography>
-                {scList.length > 0 ? <Typography variant="h6" paddingLeft={2}>Shift constraints:</Typography> : <></>}
+                <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                    <div>
+                        <Typography variant="h5" paddingLeft={2}>{currStaffDetails?.staffRoleEnum === "NURSE" && currStaffDetails?.unit.wardClass? "Ward" : "Department"}: {currStaffDetails?.unit.name}</Typography>
+                        <Typography variant="h5" paddingLeft={2} paddingBottom={1}>Role: {currStaffDetails?.staffRoleEnum}</Typography>
+                    </div>
+                    <MDButton
+                        color="primary"
+                        onClick={() => setAutoOpen(true)}
+                        size="medium"
+                        sx={{ marginRight: '20px' }}
+                    >
+                        Automatically allocate shifts
+                    </MDButton>
+                </div>
+                {scList.length > 0 ? <Typography variant="h5" paddingLeft={2}>Shift constraints:</Typography> : <></>}
               <Grid container>
                 {scList.map(sc => {return (
                     <Card 
@@ -321,7 +340,7 @@ function Rostering() {
                             <TableRow>
                                 <TableCell
                                     key={1000}
-                                    style={{ minWidth: 215 }}
+                                    style={{ minWidth: 250 }}
                                 >
                             Staff
                                 </TableCell>
@@ -329,7 +348,7 @@ function Rostering() {
                                     <TableCell
                                         key={column.id}
                                         align="center"
-                                        style={{ minWidth: 170, color: column.date === today ? 'brown' : 'black'}}
+                                        style={{ minWidth: 220, color: column.date === today ? 'brown' : 'black'}}
                                     >
                                     {column.day}<br/>{column.date}<br/>
                                     {column.valid ? 
@@ -382,6 +401,12 @@ function Rostering() {
         unit={currStaffDetails ? currStaffDetails.unit.name : ""}
         staff={currStaffDetails}
         />
+        <AutoAllocateShift 
+            open={autoOpen}
+            handleClose={handleAutoClose}
+            role={currStaffDetails ? currStaffDetails.staffRoleEnum : "temp"}
+            unit={currStaffDetails ? currStaffDetails.unit.name : ""}
+            monthDates={monthDates ? monthDates : []}/>
     </DashboardLayout>
     )
 }

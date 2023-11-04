@@ -20,7 +20,8 @@ const buttonStyles = {
     color: "grey",
     height: 25,
     minWidth: 100,
-    fontSize: "1.3rem"
+    fontSize: "1.3rem",
+    marginLeft: '-35px'
 }
 
 function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, setUpdateAddShift, facilities }) {
@@ -91,7 +92,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
 
     return (
         <TableRow role="checkbox" tabIndex={-1} key={username} sx={{ display: 'flex'}}>
-            <TableCell key={username} sx={{ width: 230, paddingLeft: "30px", marginTop: "10px"  }} align="left">
+            <TableCell key={username} sx={{ width: 290, paddingLeft: "30px", marginTop: "10px"  }} align="left">
                 {username === localStorage.getItem('staffUsername') ? <b>{truncate(staff.firstname + " " + staff.lastname) + " (You)"}</b> : truncate(staff.firstname + " " + staff.lastname)}<br/>
                 <i style={{fontSize: "14px"}}>{staff.unit.name + " " + staff.staffRoleEnum.toString().toLowerCase()}{staff.isHead ? " (Head)" : null}</i> 
             </TableCell>
@@ -99,7 +100,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                 if (i < shifts?.length && moment(shifts[i]?.startTime, "YYYY-MM-DD HH:mm:ss").format("YYYY-MM-DD") === date.date) {
                     const shift = shifts[i++];
                     return (
-                        <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={shift.id}>
+                        <TableCell sx={{ minWidth: 220, minHeight: 100, marginTop: "10px" }} align="center" key={shift.id}>
                             <Card sx={{
                                 backgroundColor: getColor(shift.startTime, shift.endTime),
                                 width: 130,
@@ -127,7 +128,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                 } 
                 else if (leaves && leaves[date.date] != null) {
                     return (
-                        <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
+                        <TableCell sx={{ minWidth: 220, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
                             <Card sx={{
                                 backgroundColor: getColorLeave(leaves[date.date].approvalStatusEnum),
                                 width: 130,
@@ -151,7 +152,7 @@ function StaffShift({ username, staff, dateList, weekStartDate, updateAddShift, 
                 }
                 else {
                     return (
-                        <TableCell sx={{ minWidth: 170, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
+                        <TableCell sx={{ minWidth: 220, minHeight: 100, marginTop: "10px" }} align="center" key={date.id}>
                             <Button 
                                 variant="contained"
                                 style={buttonStyles}
