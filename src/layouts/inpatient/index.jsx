@@ -58,8 +58,8 @@ const events = [
   {
     id: 1,
     title: "Meeting 1",
-    start: moment('2023-11-06T10:00:00').toDate(), // Specify the date and time of the event
-    end: moment('2023-11-06T11:00:00').toDate(),
+    start: moment("2023-11-06T10:00:00").toDate(), // Specify the date and time of the event
+    end: moment("2023-11-06T11:00:00").toDate(),
     // allDay: true,
     // resourceId: 1, // Associate this event with Room A
   },
@@ -68,7 +68,7 @@ const events = [
 function Inpatient() {
   const staff = useSelector(selectStaff);
   const localizer = momentLocalizer(moment);
-  const DnDCalendar = withDragAndDrop(Calendar)
+  const DnDCalendar = withDragAndDrop(Calendar);
 
   //for handling filtering
   const [selectStaffToFilter, setSelectStaffToFilter] = useState(null);
@@ -111,12 +111,18 @@ function Inpatient() {
     const events = admissions
       .filter((admission) => admission.admissionDateTime)
       .map((admission) => {
-        console.log(admission)
+        const startDate = parseDateFromLocalDateTime(
+          admission.admissionDateTime
+        );
+        const endDate = parseDateFromLocalDateTime(admission.dischargeDateTime);
+        //add 1 day to endDate
+        endDate.setDate(endDate.getDate() + 1);
+
         return {
           id: admission.admissionId,
           title: "Admission",
-          start: parseDateFromLocalDateTime(admission.admissionDateTime),
-          end: parseDateFromLocalDateTime(admission.dischargeDateTime),
+          start: startDate,
+          end: endDate,
           allDay: true,
           resourceId: admission.bed,
         };
@@ -151,11 +157,15 @@ function Inpatient() {
       wards[0]
     );
     const wardAdmissions = wardAdmissionsResponse.data;
+    //console.log(wardAdmissions);
+    const wardAdmissionsAssignedToStaff = wardAdmissions.filter((admission) =>
+      admission.listOfStaffsId.includes(staff.staffId)
+    );
 
-    setCurrentDayAdmissions(wardAdmissions);
+    setCurrentDayAdmissions(wardAdmissionsAssignedToStaff);
 
     //filter by room 1
-    let roomOneAdmissions = wardAdmissions.filter(
+    let roomOneAdmissions = wardAdmissionsAssignedToStaff.filter(
       (admission) => admission.room === 1
     );
 
@@ -186,6 +196,7 @@ function Inpatient() {
   };
 
   useEffect(() => {
+    console.log(staff);
     if (staff.staffRoleEnum === "ADMIN" || staff.staffRoleEnum === "NURSE") {
       getInitialViewForWardStaff();
     } else {
@@ -246,6 +257,14 @@ function Inpatient() {
       return existingAdmission;
     });
     setCurrentDayAdmissions(updatedAdmissions);
+
+    //filter by room 1
+    let roomOneAdmissions = updatedAdmissions.filter(
+      (admission) => admission.room === 1
+    );
+
+    //map admission to calendar event
+    mapAdmissionsToResourcesAndEvents(roomOneAdmissions);
   };
 
   const handleCancelAdmission = (cancelledAdmissionId) => {
@@ -254,7 +273,15 @@ function Inpatient() {
         existingAdmission.admissionId !== cancelledAdmissionId
     );
     setCurrentDayAdmissions(updatedAdmissions);
-    mapAdmissionsToResourcesAndEvents(updatedAdmissions);
+
+    //filter by room 1
+    let roomOneAdmissions = updatedAdmissions.filter(
+      (admission) => admission.room === 1
+    );
+
+    //map admission to calendar event
+    mapAdmissionsToResourcesAndEvents(roomOneAdmissions);
+
     setAdmissionTicketModal(false);
   };
 
@@ -297,36 +324,34 @@ function Inpatient() {
   const fetchAllMedicationOrders = async () => {
     try {
       console.log("fetch");
-      medicationOrderApi.getAllMedicationOrders()
-        .then((response) => {
-          const orders = response.data;
+      medicationOrderApi.getAllMedicationOrders().then((response) => {
+        const orders = response.data;
 
-          const mappedEvents = orders.map((order) => {
-            console.log("Orders " + order.startDate);
-            const title = `Medication Order`;
+        const mappedEvents = orders.map((order) => {
+          console.log("Orders " + order.startDate);
+          const title = `Medication Order`;
 
-            return {
-              title,
-              id: order.medicationOrderId,
-              // medicationOrderId: order.medicationOrderId,
-              // comments: order.comments,
-              // medication: order.medication.inventoryItemName,
-              start: new Date(order.startDate),
-              end: new Date(order.endDate),
-              // quantity: order.quantity,
-              // facilityBookingId: booking.facilityBookingId,
-              // owner: booking.staffUsername,
-              // resizable: true,
-              // draggable: true,
-              allDay: false,
-
-            };
-          });
-
-          setAdmissionOrders(mappedEvents);
-          console.log(admissionOrders);
-          // Update the calendarConfig with the new events
+          return {
+            title,
+            id: order.medicationOrderId,
+            // medicationOrderId: order.medicationOrderId,
+            // comments: order.comments,
+            // medication: order.medication.inventoryItemName,
+            start: new Date(order.startDate),
+            end: new Date(order.endDate),
+            // quantity: order.quantity,
+            // facilityBookingId: booking.facilityBookingId,
+            // owner: booking.staffUsername,
+            // resizable: true,
+            // draggable: true,
+            allDay: false,
+          };
         });
+
+        setAdmissionOrders(mappedEvents);
+        console.log(admissionOrders);
+        // Update the calendarConfig with the new events
+      });
     } catch (error) {
       console.error("Error fetching cart items:", error);
     }
@@ -361,12 +386,11 @@ function Inpatient() {
     fetchAllMedicationOrders();
   }, []);
 
-
   return (
     <DashboardLayout>
       <DashboardNavbar />
       {staff.staffRoleEnum === "ADMIN" ||
-        staff.staffRoleEnum === "NURSE" ? null : (
+      staff.staffRoleEnum === "NURSE" ? null : (
         <Tabs
           value={displayedWard}
           onChange={handleChangeWard}
@@ -389,7 +413,7 @@ function Inpatient() {
       >
         Ward {displayedWard}
       </MDTypography>
-      <MDTypography sx={{ textAlign: "center" }}>{ }</MDTypography>
+      <MDTypography sx={{ textAlign: "center" }}>{}</MDTypography>
 
       <MDBox sx={{ display: "flex", width: "100%" }}>
         <MDBox className="staff-list">

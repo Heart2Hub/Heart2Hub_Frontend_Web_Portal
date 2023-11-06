@@ -868,9 +868,14 @@ export const admissionApi = {
       `${REST_ENDPOINT}/admission/getAdmissionsForStaff?staffId=${id}`
     );
   },
-  assignAdmissionToStaff(admissionId, toStaffId, fromStaffId) {
+  // assignAdmissionToStaff(admissionId, toStaffId, fromStaffId) {
+  //   return axiosFetch.put(
+  //     `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+  //   );
+  // },
+  assignAdmissionToStaff(admissionId, toStaffId) {
     return axiosFetch.put(
-      `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+      `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}`
     );
   },
   // assignAdmissionToNurse(admissionId, toStaffId, fromStaffId) {
@@ -906,6 +911,11 @@ export const admissionApi = {
   handleAllocateIncoming(date) {
     return axiosFetch.put(
       `${REST_ENDPOINT}/admission/handleAllocateIncoming?date=${date}`
+    );
+  },
+  extendAdmission(admissionId, dischargeDate) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/extendAdmission?admissionId=${admissionId}&dischargeDate=${dischargeDate}`
     );
   },
 };
