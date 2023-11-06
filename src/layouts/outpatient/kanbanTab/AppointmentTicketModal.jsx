@@ -273,20 +273,20 @@ function AppointmentTicketModal({
       };
 
       const existsInAllergy = medicationsAllergy.some(
-				(item) => item.inventoryItemId === requestBody.inventoryItem
-			    );
-		    
-			    if (!existsInAllergy) {
-				reduxDispatch(
-					displayMessage({
-						color: "error",
-						icon: "notification",
-						title: "Error",
-						content: "Patient has allergy restrictions from selected Medication.",
-					})
-				);
-				return;	
-			    }
+        (item) => item.inventoryItemId === requestBody.inventoryItem
+      );
+
+      if (!existsInAllergy) {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error",
+            content: "Patient has allergy restrictions from selected Medication.",
+          })
+        );
+        return;
+      }
       console.log(requestBody);
 
       transactionItemApi
@@ -447,7 +447,8 @@ function AppointmentTicketModal({
       (staff) => staff.staffId === staffId
     )[0];
 
-    console.log("Facility Id: " + facility.facilityId);
+    //AMELIA REMOVED THIS LINE BELOW BECAUSE THERE WAS A BUG BUT ACTUALLY HAVENT FIX YET
+    // console.log("Facility Id: " + facility.facilityId); 
 
     if (facility) {
       setFacility(facility);
@@ -781,11 +782,11 @@ function AppointmentTicketModal({
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
-                        " " +
-                        assignedStaff.lastname +
-                        " (" +
-                        assignedStaff.staffRoleEnum +
-                        ")"}
+                      " " +
+                      assignedStaff.lastname +
+                      " (" +
+                      assignedStaff.staffRoleEnum +
+                      ")"}
                   </MDTypography>
                   <MDButton
                     disabled={loading}
