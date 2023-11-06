@@ -42,6 +42,8 @@ import NoAdmissionCard from "./NoAdmissionCard";
 import AdmissionTicketModal from "./AdmissionTicketModal";
 import { parseDateFromLocalDateTime } from "utility/Utility";
 import MedicationOrderModal from "./MedicationOrderModal";
+import { medicationOrderApi } from "api/Api";
+import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 
 const beds = [
   { id: 1, title: "Bed 1" },
@@ -56,16 +58,17 @@ const events = [
   {
     id: 1,
     title: "Meeting 1",
-    start: new Date(2023, 10, 1), // Specify the date and time of the event
-    end: new Date(2023, 10, 3),
-    allDay: true,
-    resourceId: 1, // Associate this event with Room A
+    start: moment('2023-11-06T10:00:00').toDate(), // Specify the date and time of the event
+    end: moment('2023-11-06T11:00:00').toDate(),
+    // allDay: true,
+    // resourceId: 1, // Associate this event with Room A
   },
 ];
 
 function Inpatient() {
   const staff = useSelector(selectStaff);
   const localizer = momentLocalizer(moment);
+  const DnDCalendar = withDragAndDrop(Calendar)
 
   //for handling filtering
   const [selectStaffToFilter, setSelectStaffToFilter] = useState(null);
@@ -89,6 +92,9 @@ function Inpatient() {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [medicationOrderModal, setMedicationOrderModal] = useState(false);
 
+  const [admissionOrders, setAdmissionOrders] = useState([]);
+  const [calendarConfig, setCalendarConfig] = useState(null);
+
   //helper method to map admissions to resources and events for calendar
   const mapAdmissionsToResourcesAndEvents = (admissions) => {
     const resources = admissions
@@ -105,6 +111,7 @@ function Inpatient() {
     const events = admissions
       .filter((admission) => admission.admissionDateTime)
       .map((admission) => {
+        console.log(admission)
         return {
           id: admission.admissionId,
           title: "Admission",
@@ -287,6 +294,49 @@ function Inpatient() {
     setMedicationOrderModal(false);
   };
 
+  const fetchAllMedicationOrders = async () => {
+    try {
+      console.log("fetch");
+      medicationOrderApi.getAllMedicationOrders()
+        .then((response) => {
+          const orders = response.data;
+
+          const mappedEvents = orders.map((order) => {
+            console.log("Orders " + order.startDate);
+            const title = `Medication Order`;
+
+            return {
+              title,
+              id: order.medicationOrderId,
+              // medicationOrderId: order.medicationOrderId,
+              // comments: order.comments,
+              // medication: order.medication.inventoryItemName,
+              start: new Date(order.startDate),
+              end: new Date(order.endDate),
+              // quantity: order.quantity,
+              // facilityBookingId: booking.facilityBookingId,
+              // owner: booking.staffUsername,
+              // resizable: true,
+              // draggable: true,
+              allDay: false,
+
+            };
+          });
+
+          setAdmissionOrders(mappedEvents);
+          console.log(admissionOrders);
+          // Update the calendarConfig with the new events
+        });
+    } catch (error) {
+      console.error("Error fetching cart items:", error);
+    }
+  };
+
+  const handleEventClick = (event) => {
+    // setSelectedBooking(event);
+    // setIsBookingDetailsOpen(true);
+  };
+
   // const dischargeTomorrow = async () => {
   //   const tomorrow = moment().add(1, "days");
   //   tomorrow.seconds(0);
@@ -307,11 +357,16 @@ function Inpatient() {
   //   forceRefresh();
   // };
 
+  useEffect(() => {
+    fetchAllMedicationOrders();
+  }, []);
+
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
       {staff.staffRoleEnum === "ADMIN" ||
-      staff.staffRoleEnum === "NURSE" ? null : (
+        staff.staffRoleEnum === "NURSE" ? null : (
         <Tabs
           value={displayedWard}
           onChange={handleChangeWard}
@@ -334,7 +389,7 @@ function Inpatient() {
       >
         Ward {displayedWard}
       </MDTypography>
-      <MDTypography sx={{ textAlign: "center" }}>{}</MDTypography>
+      <MDTypography sx={{ textAlign: "center" }}>{ }</MDTypography>
 
       <MDBox sx={{ display: "flex", width: "100%" }}>
         <MDBox className="staff-list">
@@ -371,6 +426,7 @@ function Inpatient() {
                 onSelectSlot={handleSelectSlot}
                 components={{
                   event: ({ event }) => (
+                    // console.log("event " + event.id),
                     <AdmissionCard
                       admission={
                         currentDayAdmissions.filter(

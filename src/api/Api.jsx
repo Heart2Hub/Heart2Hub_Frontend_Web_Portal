@@ -909,3 +909,27 @@ export const admissionApi = {
     );
   },
 };
+
+export const medicationOrderApi = {
+  createMedicationOrder(medicationId, admissionId, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/medicationOrder/createMedicationOrder?medicationId=${medicationId}&admissionId=${admissionId}`, requestBody
+    );
+  },
+  deleteMedicationOrder(medicationId, admissionId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/medicationOrder/deleteMedicationOrder/${medicationId}/${admissionId}`
+    );
+  },
+  getAllMedicationOrdersOfAdmission(admissionId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medicationOrder/getAllMedicationOrdersOfAdmission?admissionId=${admissionId}`
+    );
+  },
+  getAllMedicationOrders() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medicationOrder/getAllMedicationOrders`
+    );
+  }
+};
+

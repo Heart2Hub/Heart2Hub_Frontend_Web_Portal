@@ -55,6 +55,7 @@ import AddAttachmentButton from "./AddAttachmentButton";
 import ViewAttachmentsButton from "./ViewAttachmentsButton";
 import AdmissionDialog from "./AdmissionDialog";
 import moment from "moment";
+import { medicationOrderApi } from "api/Api";
 
 const style = {
   position: "absolute",
@@ -96,10 +97,11 @@ function MedicationOrderModal({
   const [isConfirmDischargeOpen, setConfirmDischargeOpen] = useState(false);
 
   //For Managing the Cart
-  const [cartItems, setCartItems] = useState([]);
+  const [medicationOrders, setMedicationOrders] = useState([]);
 
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [comments, setComments] = useState(null);
 
   const handleOpenDeleteDialog = (itemId) => {
     setSelectedItemId(itemId);
@@ -147,21 +149,36 @@ function MedicationOrderModal({
     }
   };
 
-  const fetchPatientCart = async () => {
-    try {
-      const response = await transactionItemApi.getCartItems(
-        selectedAdmission.patientId
-      );
+  // const fetchPatientCart = async () => {
+  //   try {
+  //     const response = await transactionItemApi.getCartItems(
+  //       selectedAdmission.patientId
+  //     );
 
-      setCartItems(response.data);
-      console.log(cartItems);
+  //     setCartItems(response.data);
+  //     console.log(cartItems);
+  //   } catch (error) {
+  //     console.error("Error fetching cart items:", error);
+  //   }
+  // };
+
+  const fetchMedicationOrders = async () => {
+    try {
+      console.log("fetchiong");
+      const response = await medicationOrderApi.getAllMedicationOrdersOfAdmission(
+        selectedAdmission.admissionId
+      );
+      console.log(response.data);
+
+      setMedicationOrders(response.data);
+      console.log(medicationOrders);
     } catch (error) {
       console.error("Error fetching cart items:", error);
     }
   };
 
   const handlePageRefresh = () => {
-    fetchPatientCart();
+    fetchMedicationOrders();
   };
 
   const handleConfirmDelete = async () => {
@@ -178,7 +195,7 @@ function MedicationOrderModal({
           content: "Item has been deleted from the cart!",
         })
       );
-      fetchPatientCart();
+      // fetchPatientCart();
     } catch (error) {
       reduxDispatch(
         displayMessage({
@@ -192,7 +209,7 @@ function MedicationOrderModal({
     handleCloseDeleteDialog();
   };
 
-  const handleAddMedicationToPatient = async (medication) => {
+  const handleAddMedicationOrder = async (medication) => {
     try {
       if (selectedMedicationQuantity <= 0) {
         reduxDispatch(
@@ -205,35 +222,37 @@ function MedicationOrderModal({
         );
         return;
       }
-      const patientId = selectedAdmission.patientId; // Replace with the actual patient ID
+      const admissionId = selectedAdmission.admissionId; // Replace with the actual patient ID
       const requestBody = {
-        transactionItemName: medication.inventoryItemName,
-        transactionItemDescription: medication.inventoryItemDescription,
-        transactionItemQuantity: selectedMedicationQuantity,
-        transactionItemPrice: medication.retailPricePerQuantity, // Replace with the actual price
-        inventoryItem: medication.inventoryItemId,
+        title: selectedAdmission.patientId,
+        quantity: selectedMedicationQuantity,
+        comments: comments,
+        startDate: startDate,
+        endDate: endDate,
+        isComplete: false,
       };
 
-      const existsInAllergy = medicationsAllergy.some(
-        (item) => item.inventoryItemId === requestBody.inventoryItem
-      );
+      // const existsInAllergy = medicationsAllergy.some(
+      //   (item) => item.inventoryItemId === requestBody.inventoryItem
+      // );
 
-      if (!existsInAllergy) {
-        reduxDispatch(
-          displayMessage({
-            color: "error",
-            icon: "notification",
-            title: "Error",
-            content:
-              "Patient has allergy restrictions from selected Medication.",
-          })
-        );
-        return;
-      }
+      // if (!existsInAllergy) {
+      //   reduxDispatch(
+      //     displayMessage({
+      //       color: "error",
+      //       icon: "notification",
+      //       title: "Error",
+      //       content:
+      //         "Patient has allergy restrictions from selected Medication.",
+      //     })
+      //   );
+      //   return;
+      // }
       console.log(requestBody);
+      console.log(medication.inventoryItemId);
 
-      transactionItemApi
-        .addToCart(patientId, requestBody)
+      medicationOrderApi
+        .createMedicationOrder(medication.inventoryItemId, admissionId, requestBody)
         .then((response) => {
           const item = response.data;
           console.log(item);
@@ -246,7 +265,7 @@ function MedicationOrderModal({
           );
           //setMedications([]);
           setSelectedMedicationQuantity(1);
-          fetchPatientCart();
+          fetchMedicationOrders();
         })
         .catch((error) => {
           reduxDispatch(
@@ -264,49 +283,6 @@ function MedicationOrderModal({
     }
   };
 
-  const handleAddServiceToPatient = (service) => {
-    try {
-      const patientId = selectedAdmission.patientId; // Replace with the actual patient ID
-      const requestBody = {
-        transactionItemName: service.inventoryItemName,
-        transactionItemDescription: service.inventoryItemDescription,
-        transactionItemQuantity: 1,
-        transactionItemPrice: service.retailPricePerQuantity, // Replace with the actual price
-        inventoryItem: service.inventoryItemId,
-      };
-
-      console.log(requestBody);
-
-      transactionItemApi
-        .addToCart(patientId, requestBody)
-        .then((response) => {
-          const item = response.data;
-          console.log(item);
-          reduxDispatch(
-            displayMessage({
-              color: "success",
-              icon: "notification",
-              title: "Successfully Added Service!",
-            })
-          );
-          //setServices([]);
-          fetchPatientCart();
-        })
-        .catch((error) => {
-          reduxDispatch(
-            displayMessage({
-              color: "error",
-              icon: "notification",
-              title: "Error Encountered",
-              content: error.response.data,
-            })
-          );
-          console.error("Error fetching data:", error);
-        });
-    } catch (error) {
-      console.error("Error fetching medications and services:", error);
-    }
-  };
 
   const renderMedicationsDropdown = () => {
     return (
@@ -335,72 +311,27 @@ function MedicationOrderModal({
         />
         <ListItem sx={{ display: "flex", justifyContent: "flex-end" }}>
           <MDButton
-            onClick={() => handleAddMedicationToPatient(selectedMedication)}
+            onClick={() => handleAddMedicationOrder(selectedMedication)}
             variant="gradient"
             color="primary"
           >
             Add Medication
           </MDButton>
         </ListItem>
-        {/* <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}> */}
-        {/* </Box> */}
       </Box>
     );
   };
 
-  const renderServicesDropdown = () => {
-    return (
-      <Box style={{ width: "100%" }}>
-        <InputLabel id="medication-label"> Select Services</InputLabel>
+  // console.log(selectedAdmission);
 
-        <Select
-          onChange={(e) => setSelectedService(e.target.value)}
-          style={{ width: "50%" }}
-          sx={{ lineHeight: "3em" }}
-        >
-          {services.map((service) => (
-            <MenuItem key={service.inventoryItemId} value={service}>
-              {service.inventoryItemName}
-            </MenuItem>
-          ))}
-        </Select>
-        <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
-          <MDButton
-            onClick={() => handleAddServiceToPatient(selectedService)}
-            variant="gradient"
-            color="primary"
-          >
-            Add Service
-          </MDButton>
-        </Box>
-      </Box>
-    );
-  };
-
-  console.log(selectedAdmission);
-
-  //   useEffect(() => {
-  //     setAssignedStaff(null);
-  //     if (selectedAdmission.currentAssignedStaffId !== null) {
-  //       getAssignedStaffName(selectedAdmission.currentAssignedStaffId);
-  //       setFacilityLocation(
-  //         getFacilityLocationByStaffIdThroughShift(
-  //           selectedAdmission.currentAssignedStaffId
-  //         )
-  //       );
-  //     }
-  //     handleGetProfileImage();
-  //     fetchMedicationsAndServices();
-  //     fetchPatientCart();
-  //     // setAssigningToSwimlane(columnName);
-  //     console.log(selectedAdmission);
-  //   }, [selectedAdmission, listOfWorkingStaff]);
 
   useEffect(() => {
     const startMoment = moment(selectedSlot.start);
     const endMoment = moment(selectedSlot.end);
     setStartDate(startMoment.format("YYYY-MM-DD HH:mm:ss"));
     setEndDate(endMoment.format("YYYY-MM-DD HH:mm:ss"));
+    fetchMedicationsAndServices();
+    fetchMedicationOrders();
   }, [selectedSlot]);
 
   return (
@@ -486,8 +417,37 @@ function MedicationOrderModal({
           {loggedInStaff.staffRoleEnum !== "ADMIN" ? (
             <>
               <List>
-                <ListItem>
+                <ListItem sx={{ marginTop: "10px" }}>
                   <MDTypography variant="h5" gutterBottom>
+                    Comments:
+                  </MDTypography>
+                </ListItem>
+                <ListItem sx={{ marginTop: "10px" }}>
+                  <textarea
+                    value={comments}
+                    onChange={(e) => setComments(e.target.value)}
+                    placeholder="Add new comment here"
+                    style={{
+                      width: "100%",
+                      height: "60px",
+                      borderColor: "gainsboro",
+                      borderRadius: "6px",
+                      fontFamily: "Arial",
+                      padding: "10px",
+                      fontSize: "15px",
+                      overflowY: "auto",
+                      resize: "none",
+                      "::WebkitScrollbar": {
+                        width: "0px",
+                        background: "transparent",
+                      },
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
+                    }}
+                  />
+                </ListItem>
+                <ListItem sx={{ marginTop: "10px" }}>
+                  <MDTypography variant="h5" gutterBottom >
                     Medications:
                   </MDTypography>
                 </ListItem>
@@ -509,11 +469,11 @@ function MedicationOrderModal({
               <MDTypography variant="h5" gutterBottom>
                 List of Medication Orders:
               </MDTypography>
-              <IconButton onClick={fetchPatientCart} aria-label="refresh">
+              <IconButton onClick={fetchMedicationOrders} aria-label="refresh">
                 <RefreshIcon />
               </IconButton>
             </ListItem>
-            {cartItems.length === 0 ? (
+            {medicationOrders.length === 0 ? (
               <ListItem>
                 <MDTypography variant="subtitle1">No Orders Added</MDTypography>
               </ListItem>
@@ -527,9 +487,9 @@ function MedicationOrderModal({
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {cartItems.map((item) => (
+                      {medicationOrders.map((item) => (
                         <TableRow
-                          key={item.transactionItemId}
+                          key={item.medicationOrderId}
                           sx={{
                             "&:last-child td, &:last-child th": {
                               border: 0,
@@ -537,10 +497,10 @@ function MedicationOrderModal({
                           }}
                         >
                           <TableCell component="th" scope="row">
-                            {item.transactionItemName}
+                            {item.medication.inventoryItemName}
                           </TableCell>
                           <TableCell align="right">
-                            Quantity: {item.transactionItemQuantity}
+                            Quantity: {item.quantity}
                           </TableCell>
                           {loggedInStaff.staffRoleEnum !== "ADMIN" ? (
                             <TableCell align="right">
