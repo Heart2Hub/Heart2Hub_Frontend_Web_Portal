@@ -448,6 +448,7 @@ function AppointmentTicketModal({
     )[0];
 
     //AMELIA REMOVED THIS LINE BELOW BECAUSE THERE WAS A BUG BUT ACTUALLY HAVENT FIX YET
+
     // console.log("Facility Id: " + facility.facilityId); 
 
     if (facility) {

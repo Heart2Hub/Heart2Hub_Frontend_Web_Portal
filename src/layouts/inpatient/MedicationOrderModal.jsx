@@ -128,24 +128,20 @@ function MedicationOrderModal({
   };
 
   // Fetch lists of all medications and service items from the API
-  const fetchMedicationsAndServices = async () => {
+  const fetchMedications = async () => {
     try {
-      const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(
+      const medicationsResponse = await inventoryApi.getAllInpatientMedicationsByAllergy(
         selectedAdmission.patientId
       );
       setMedicationsAllergy(medicationsResponse.data);
+      console.log("allergy " + medicationsResponse.data)
 
-      const medicationsResponse2 = await inventoryApi.getAllMedication();
+      const medicationsResponse2 = await inventoryApi.getAllInpatientMedication();
       setMedications(medicationsResponse2.data);
+      console.log("no allergy " + medicationsResponse2.data)
 
-      const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
-        loggedInStaff.unit.unitId
-      );
-      setServices(servicesResponse.data);
-      // console.log(servicesResponse.data)
-      // console.log(selectedAdmission)
     } catch (error) {
-      console.error("Error fetching medications and services:", error);
+      console.error("Error fetching medications:", error);
     }
   };
 
@@ -232,22 +228,24 @@ function MedicationOrderModal({
         isComplete: false,
       };
 
-      // const existsInAllergy = medicationsAllergy.some(
-      //   (item) => item.inventoryItemId === requestBody.inventoryItem
-      // );
+      const existsInAllergy = medicationsAllergy.some(
+        (item) => item.inventoryItemId === medication.inventoryItemId
+      );
 
-      // if (!existsInAllergy) {
-      //   reduxDispatch(
-      //     displayMessage({
-      //       color: "error",
-      //       icon: "notification",
-      //       title: "Error",
-      //       content:
-      //         "Patient has allergy restrictions from selected Medication.",
-      //     })
-      //   );
-      //   return;
-      // }
+
+
+      if (!existsInAllergy) {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error",
+            content:
+              "Patient has allergy restrictions from selected Medication.",
+          })
+        );
+        return;
+      }
       console.log(requestBody);
       console.log(medication.inventoryItemId);
 
@@ -330,7 +328,7 @@ function MedicationOrderModal({
     const endMoment = moment(selectedSlot.end);
     setStartDate(startMoment.format("YYYY-MM-DD HH:mm:ss"));
     setEndDate(endMoment.format("YYYY-MM-DD HH:mm:ss"));
-    fetchMedicationsAndServices();
+    fetchMedications();
     fetchMedicationOrders();
   }, [selectedSlot]);
 
@@ -454,14 +452,6 @@ function MedicationOrderModal({
                 <ListItem>{renderMedicationsDropdown()}</ListItem>
               </List>
               <br></br>
-              {/* <List>
-                <ListItem>
-                  <MDTypography variant="h5" gutterBottom>
-                    Services:
-                  </MDTypography>
-                </ListItem>
-                <ListItem>{renderServicesDropdown()}</ListItem>
-              </List> */}
             </>
           ) : null}
           <List>

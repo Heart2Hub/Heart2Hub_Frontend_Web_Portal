@@ -709,6 +709,16 @@ export const inventoryApi = {
       `${REST_ENDPOINT}/medication/findMedicationByInventoryItemId?inventoryItemId=${inventoryItemId}`
     );
   },
+  getAllInpatientMedication() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medication/getAllInpatientMedication`
+    );
+  },
+  getAllInpatientMedicationsByAllergy(pId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medication/getAllInpatientMedicationsByAllergy/${pId}`
+    );
+  },
   getAllServiceItem(name) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/serviceItem/getAllServiceItem?name=${name}`
@@ -930,6 +940,5 @@ export const medicationOrderApi = {
     return axiosFetch.get(
       `${REST_ENDPOINT}/medicationOrder/getAllMedicationOrders`
     );
-  }
+  },
 };
-
