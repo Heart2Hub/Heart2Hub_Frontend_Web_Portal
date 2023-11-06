@@ -191,13 +191,17 @@
   background-color: #fff;
 }
 
+.admission-calendar .rbc-events-container .rbc-event {
+  background-color: #265985;
+}
+
 .admission-calendar .rbc-row-content .rbc-row:nth-child(2) {
   display: none;
 }
 
-.admission-calendar .rbc-row-content[height~="100px"] {
+/* .admission-calendar .rbc-row-content[height~="100px"] {
   background-color: #000000;
-}
+} */
 
 /* .admission-calendar .rbc-toolbar {
   display: none;

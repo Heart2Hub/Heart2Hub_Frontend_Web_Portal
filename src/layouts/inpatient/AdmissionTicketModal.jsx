@@ -173,7 +173,7 @@ function AdmissionTicketModal({
     const dischargeDateString = dayjs(dischargeDate).format(
       "YYYY-MM-DDT12:00:00"
     );
-    const response = await admissionApi.extendAdmission(
+    const response = await admissionApi.updateDischargeDate(
       selectedAdmission.admissionId,
       dischargeDateString
     );
