@@ -54,6 +54,9 @@ import AdmissionDialog from "./AdmissionDialog";
 import AssignAdmissionDialog from "./AssignAdmissionDialog";
 import { useRef } from "react";
 import moment from "moment";
+import dayjs from "dayjs";
+import DoctorAssignAdmissionDialog from "./DoctorAssignAdmissionDialog";
+import ExtendAdmissionDialog from "./ExtendAdmissionDialog";
 
 const style = {
   position: "absolute",
@@ -89,12 +92,14 @@ function AdmissionTicketModal({
   const [arrived, setArrived] = useState(selectedAdmission.arrived);
   const [dischargeDate, setDischargeDate] = useState(null);
 
-  //for assigning appointment to staff in the AppointmentTicketModal
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [roleToAssign, setRoleToAssign] = useState();
+  //dialog when click assign button
+  const [assignDialog, setAssignDialog] = useState(false);
 
-  //for cancelling admission
+  //dialog when click cancel admission button
   const [cancelDialog, setCancelDialog] = useState(false);
+
+  //dialog when click extend button
+  const [extendDialog, setExtendDialog] = useState(false);
 
   //for fetching image
   const [profileImage, setProfileImage] = useState(null);
@@ -130,6 +135,63 @@ function AdmissionTicketModal({
     setDischargeDate(dischargeMoment.format("YYYY-MM-DD HH:mm:ss"));
   }, [selectedAdmission]);
 
+  const handleOpenCancelDialog = () => {
+    setCancelDialog(true);
+  };
+
+  const handleCloseCancelDialog = () => {
+    setCancelDialog(false);
+  };
+
+  const cancelAdmission = async () => {
+    await admissionApi.cancelAdmission(
+      selectedAdmission.admissionId,
+      loggedInStaff.unit.unitId
+    );
+
+    reduxDispatch(
+      displayMessage({
+        color: "success",
+        icon: "notification",
+        title: "Success",
+        content: "Admission has been cancelled successfully!!",
+      })
+    );
+    setCancelDialog(false);
+    handleCancelAdmission(selectedAdmission.admissionId);
+  };
+
+  const handleOpenExtendDialog = () => {
+    setExtendDialog(true);
+  };
+
+  const handleCloseExtendDialog = () => {
+    setExtendDialog(false);
+  };
+
+  const handleConfirmExtendDialog = async (dischargeDate) => {
+    const dischargeDateString = dayjs(dischargeDate).format(
+      "YYYY-MM-DDT12:00:00"
+    );
+    const response = await admissionApi.extendAdmission(
+      selectedAdmission.admissionId,
+      dischargeDateString
+    );
+    const updatedAdmission = { ...response.data };
+    handleUpdateAdmission(updatedAdmission);
+
+    reduxDispatch(
+      displayMessage({
+        color: "success",
+        icon: "notification",
+        title: "Update Success",
+        content: "Patient's Admission has been extended",
+      })
+    );
+
+    setExtendDialog(false);
+  };
+
   const handleOpenAssignDialog = () => {
     if (!selectedAdmission.arrived && loggedInStaff.staffRoleEnum === "NURSE") {
       reduxDispatch(
@@ -143,20 +205,36 @@ function AdmissionTicketModal({
       return;
     }
 
-    setIsDialogOpen(true);
+    setAssignDialog(true);
   };
 
-  const handleConfirmAssignDialog = async (selectedStaffId) => {
+  const handleCloseAssignDialog = () => {
+    reduxDispatch(
+      displayMessage({
+        color: "info",
+        icon: "notification",
+        title: "Info",
+        content: "No action was taken",
+      })
+    );
+    setAssignDialog(false);
+  };
+
+  const handleConfirmAssignDialog = async (selectedStaffId, step) => {
     try {
       const response = await admissionApi.assignAdmissionToStaff(
         selectedAdmission.admissionId,
-        selectedStaffId,
-        loggedInStaff.staffId
+        selectedStaffId
       );
 
       //console.log(response.data);
       const updatedAdmission = { ...response.data };
-      handleUpdateAdmission(updatedAdmission);
+
+      if (step === "2") {
+        handleCancelAdmission(updatedAdmission.admissionId);
+      } else {
+        handleUpdateAdmission(updatedAdmission);
+      }
 
       reduxDispatch(
         displayMessage({
@@ -178,19 +256,7 @@ function AdmissionTicketModal({
     }
     // }
 
-    setIsDialogOpen(false);
-  };
-
-  const handleCloseAssignDialog = () => {
-    reduxDispatch(
-      displayMessage({
-        color: "info",
-        icon: "notification",
-        title: "Info",
-        content: "No action was taken",
-      })
-    );
-    setIsDialogOpen(false);
+    setAssignDialog(false);
   };
 
   const handleUpdateAppointmentArrival = async () => {
@@ -322,32 +388,6 @@ function AdmissionTicketModal({
       });
   };
 
-  const handleOpenCancelDialog = () => {
-    setCancelDialog(true);
-  };
-
-  const handleCloseCancelDialog = () => {
-    setCancelDialog(false);
-  };
-
-  const cancelAdmission = async () => {
-    await admissionApi.cancelAdmission(
-      selectedAdmission.admissionId,
-      loggedInStaff.unit.unitId
-    );
-
-    reduxDispatch(
-      displayMessage({
-        color: "success",
-        icon: "notification",
-        title: "Success",
-        content: "Admission has been cancelled successfully!!",
-      })
-    );
-    setCancelDialog(false);
-    handleCancelAdmission(selectedAdmission.admissionId);
-  };
-
   return (
     <>
       <Modal
@@ -426,6 +466,11 @@ function AdmissionTicketModal({
                   <MDTypography variant="h6" gutterBottom color="black">
                     {dischargeDate}
                   </MDTypography>
+                </ListItem>
+                <ListItem>
+                  <MDButton onClick={handleOpenExtendDialog} color="primary">
+                    Extend Admission
+                  </MDButton>
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
@@ -675,12 +720,28 @@ function AdmissionTicketModal({
           </Dialog>
         </Box>
       </Modal>
-      <AssignAdmissionDialog
-        open={isDialogOpen}
-        onConfirm={handleConfirmAssignDialog}
-        onClose={handleCloseAssignDialog}
-        listOfWorkingStaff={listOfWorkingStaff}
-        listOfAssignedStaff={listOfAssignedStaff}
+      {loggedInStaff.staffRoleEnum === "DOCTOR" ? (
+        <DoctorAssignAdmissionDialog
+          open={assignDialog}
+          onConfirm={handleConfirmAssignDialog}
+          onClose={handleCloseAssignDialog}
+          listOfWorkingStaff={listOfWorkingStaff}
+          listOfAssignedStaff={listOfAssignedStaff}
+        />
+      ) : (
+        <AssignAdmissionDialog
+          open={assignDialog}
+          onConfirm={handleConfirmAssignDialog}
+          onClose={handleCloseAssignDialog}
+          listOfWorkingStaff={listOfWorkingStaff}
+          listOfAssignedStaff={listOfAssignedStaff}
+        />
+      )}
+      <ExtendAdmissionDialog
+        open={extendDialog}
+        onConfirm={handleConfirmExtendDialog}
+        onClose={handleCloseExtendDialog}
+        originalDischargeDate={selectedAdmission.dischargeDateTime}
       />
     </>
   );

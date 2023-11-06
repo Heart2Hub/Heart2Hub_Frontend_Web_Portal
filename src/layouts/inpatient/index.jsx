@@ -105,11 +105,18 @@ function Inpatient() {
     const events = admissions
       .filter((admission) => admission.admissionDateTime)
       .map((admission) => {
+        const startDate = parseDateFromLocalDateTime(
+          admission.admissionDateTime
+        );
+        const endDate = parseDateFromLocalDateTime(admission.dischargeDateTime);
+        //add 1 day to endDate
+        endDate.setDate(endDate.getDate() + 1);
+
         return {
           id: admission.admissionId,
           title: "Admission",
-          start: parseDateFromLocalDateTime(admission.admissionDateTime),
-          end: parseDateFromLocalDateTime(admission.dischargeDateTime),
+          start: startDate,
+          end: endDate,
           allDay: true,
           resourceId: admission.bed,
         };
@@ -144,11 +151,15 @@ function Inpatient() {
       wards[0]
     );
     const wardAdmissions = wardAdmissionsResponse.data;
+    //console.log(wardAdmissions);
+    const wardAdmissionsAssignedToStaff = wardAdmissions.filter((admission) =>
+      admission.listOfStaffsId.includes(staff.staffId)
+    );
 
-    setCurrentDayAdmissions(wardAdmissions);
+    setCurrentDayAdmissions(wardAdmissionsAssignedToStaff);
 
     //filter by room 1
-    let roomOneAdmissions = wardAdmissions.filter(
+    let roomOneAdmissions = wardAdmissionsAssignedToStaff.filter(
       (admission) => admission.room === 1
     );
 
@@ -179,6 +190,7 @@ function Inpatient() {
   };
 
   useEffect(() => {
+    console.log(staff);
     if (staff.staffRoleEnum === "ADMIN" || staff.staffRoleEnum === "NURSE") {
       getInitialViewForWardStaff();
     } else {
@@ -239,6 +251,14 @@ function Inpatient() {
       return existingAdmission;
     });
     setCurrentDayAdmissions(updatedAdmissions);
+
+    //filter by room 1
+    let roomOneAdmissions = updatedAdmissions.filter(
+      (admission) => admission.room === 1
+    );
+
+    //map admission to calendar event
+    mapAdmissionsToResourcesAndEvents(roomOneAdmissions);
   };
 
   const handleCancelAdmission = (cancelledAdmissionId) => {
@@ -247,7 +267,15 @@ function Inpatient() {
         existingAdmission.admissionId !== cancelledAdmissionId
     );
     setCurrentDayAdmissions(updatedAdmissions);
-    mapAdmissionsToResourcesAndEvents(updatedAdmissions);
+
+    //filter by room 1
+    let roomOneAdmissions = updatedAdmissions.filter(
+      (admission) => admission.room === 1
+    );
+
+    //map admission to calendar event
+    mapAdmissionsToResourcesAndEvents(roomOneAdmissions);
+
     setAdmissionTicketModal(false);
   };
 
