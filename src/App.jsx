@@ -6,7 +6,6 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 // @mui material components
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import Icon from "@mui/material/Icon";
 
 // Material Dashboard 2 React example components
 import Sidenav from "examples/Sidenav";
@@ -14,19 +13,11 @@ import Sidenav from "examples/Sidenav";
 // Material Dashboard 2 React themes
 import theme from "assets/theme";
 
-// RTL plugins
-import rtlPlugin from "stylis-plugin-rtl";
-import createCache from "@emotion/cache";
-
 // Material Dashboard 2 React routes
 import routes from "Routes";
 
 // Material Dashboard 2 React contexts
-import {
-  useMaterialUIController,
-  setMiniSidenav,
-  setOpenConfigurator,
-} from "context";
+import { useMaterialUIController, setMiniSidenav } from "context";
 
 // Images
 import heartLogoWhite from "assets/projectImages/heartLogoWhite.png";
@@ -44,16 +35,7 @@ import LoadingOverlay from "examples/LoadingOverlay";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
-  const {
-    miniSidenav,
-    direction,
-    layout,
-    openConfigurator,
-    sidenavColor,
-    transparentSidenav,
-    whiteSidenav,
-    darkMode,
-  } = controller;
+  const { miniSidenav, direction, sidenavColor } = controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { pathname } = useLocation();
 

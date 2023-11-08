@@ -31,7 +31,6 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 import { facilityApi, staffApi } from "api/Api";
 import { useSelector } from "react-redux";
-import DateTimePicker from 'react-datetime-picker'
 import { displayMessage } from "../../../store/slices/snackbarSlice";
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop'
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css'

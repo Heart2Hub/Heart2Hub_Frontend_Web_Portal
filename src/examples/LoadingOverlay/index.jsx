@@ -1,4 +1,4 @@
-import { Modal, CircularProgress } from "@mui/material";
+import { Modal } from "@mui/material";
 import MDTypography from "components/MDTypography";
 import React from "react";
 
