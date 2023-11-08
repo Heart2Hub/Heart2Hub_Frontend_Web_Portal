@@ -904,3 +904,16 @@ export const admissionApi = {
     );
   },
 };
+
+export const chatApi = {
+  getStaffConversations(staffId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/conversation/getStaffConversations?staffId=${staffId}`
+    );
+  },
+  getStaffChatDTO(staffId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/conversation/getStaffChatDTO?staffId=${staffId}`
+    );
+  },
+};

@@ -29,6 +29,7 @@ import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 import Subsidy from "layouts/finance/subsidy";
 import Invoice from "layouts/finance/invoice";
 import Pharmacy from "layouts/pharmacy";
+import Chat from "layouts/chat";
 
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
@@ -111,6 +112,23 @@ const routes = [
         authorizedUnits={"ALL"}
       >
         <Administration />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    type: "collapse",
+    name: "Chat",
+    key: "Chat",
+    icon: <Icon fontSize="small">chat</Icon>,
+    route: "/chat",
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+        authorizedUnits={"ALL"}
+      >
+        <Chat />
       </ProtectedRoute>
     ),
   },
