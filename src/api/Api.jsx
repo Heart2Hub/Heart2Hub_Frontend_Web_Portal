@@ -803,6 +803,27 @@ export const prescriptionRecordApi = {
   }
 };
 
+export const stripeApi = {
+  createPaymentLink(requestBody) {
+    return axiosFetch.post(`${REST_ENDPOINT}/stripe/create-payment-link`, requestBody);
+  },
+}
+
+export const transactionApi = {
+  getAllTransactions() {
+    return axiosFetch.get(`${REST_ENDPOINT}/transaction/getAllTransactions`);
+  },
+  getAllTransactionsOfPatient(id) {
+    return axiosFetch.get(`${REST_ENDPOINT}/transaction/getAllTransactionsOfPatient/${id}`);
+  },
+  createPaymentLink(id, requestBody) {
+    return axiosFetch.post(`${REST_ENDPOINT}/transaction/createTransaction/${id}`, requestBody);
+  },
+  getTotalSumOfTransactionsForCurrentYearByMonth() {
+    return axiosFetch.get(`${REST_ENDPOINT}/transaction/getTotalSumOfTransactionsForCurrentYearByMonth/`);
+  }
+}
+
 export const invoiceApi = {
   getAllInvoices() {
     return axiosFetch.get(`${REST_ENDPOINT}/invoice/getAllInvoices`);
@@ -847,6 +868,18 @@ export const invoiceApi = {
   rejectMedishieldClaim(claimId) {
     return axiosFetch.put(`${REST_ENDPOINT}/invoice/rejectMedishieldClaim/${claimId}`);
   },
+  findProfitByInventoryItem() {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/findProfitByInventoryItem`);
+  },
+  findProfitByServiceItem() {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/findProfitByServiceItem`);
+  },
+  findProfitByMedication() {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/findProfitByMedication`);
+  },
+  findInvoiceUsingTransaction(id) {
+    return axiosFetch.get(`${REST_ENDPOINT}/invoice/findInvoiceUsingTransaction/${id}`);
+  }
 };
 
 export const admissionApi = {

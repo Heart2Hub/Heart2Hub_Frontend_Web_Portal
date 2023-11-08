@@ -22,7 +22,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import { subsidyApi } from 'api/Api';
+import { subsidyApi, stripeApi} from 'api/Api';
 import { useDispatch } from "react-redux";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
 import MDButton from "components/MDButton";
@@ -377,6 +377,17 @@ function Subsidy() {
 		setSubsidyToDeleteId(null);
 	};
 
+	const testStripe = async () => {
+		const requestBody = {
+			amount: 1000,
+			currency: "usd",
+			successUrl: "https://example.com/success",
+			cancelUrl: "https://example.com/cancel"
+		};
+		const response = await stripeApi.createPaymentLink(requestBody)
+		console.log(response.data)
+	}
+
 
 	return (
 		<DashboardLayout>
@@ -417,6 +428,11 @@ function Subsidy() {
 						</Card>
 					</Grid>
 				</Grid>
+				{/* <Button
+					onClick={() => testStripe()}
+				>
+					Click to try stripe
+				</Button> */}
 			</MDBox>
 			<Dialog
 				open={isDeleteConfirmationOpen}

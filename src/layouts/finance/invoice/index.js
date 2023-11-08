@@ -19,6 +19,7 @@ import {
         TableRow,
         Paper,
         IconButton,
+        DialogContentText,
         Chip
 } from '@mui/material';
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -48,6 +49,33 @@ function Invoice() {
 
         const [isCreateInsuranceDialogOpen, setIsCreateInsuranceDialogOpen] = useState(false);
         const [isCreateMedishieldDialogOpen, setIsCreateMedishieldDialogOpen] = useState(false);
+
+        const [open, setOpen] = useState(false);
+
+        const [transactionData, setTransactionData] = useState(null);
+
+        const handleOpen = (transaction) => {
+                const formattedDate = new Date(
+                        transaction.transactionDate[0], // year
+                        transaction.transactionDate[1] - 1, // month (zero-indexed)
+                        transaction.transactionDate[2], // day
+                        transaction.transactionDate[3], // hour
+                        transaction.transactionDate[4], // minute
+                        transaction.transactionDate[5], // second
+                        transaction.transactionDate[6] // millisecond
+                ).toLocaleString('en-SG', {
+                        timeZone: 'Asia/Singapore',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                });
+                setTransactionData({ ...transaction, transactionDate: formattedDate });
+                setOpen(true);
+        };
+
+        const handleClose = () => {
+                setOpen(false);
+        };
 
 
         const handleCreateInsuranceDialogOpen = (invoiceId) => {
@@ -124,6 +152,7 @@ function Invoice() {
                         { Header: 'Invoice ID', accessor: 'invoiceId', width: '10%' },
                         { Header: 'Total Amount', accessor: 'invoiceAmount', width: '20%' },
                         { Header: 'Due Date', accessor: 'invoiceDueDate', width: '20%' },
+                        { Header: 'Patient Name', accessor: 'patientName', width: '20%' },
                         {
                                 Header: 'Status', accessor: 'invoiceStatusEnum',
                                 Cell: ({ value }) => renderStatusWithColor(value),
@@ -169,6 +198,7 @@ function Invoice() {
                         { Header: 'Total Amount', accessor: 'invoiceAmount', width: '20%' },
                         { Header: 'Due Date', accessor: 'invoiceDueDate', width: '20%' },
                         { Header: 'Status', accessor: 'invoiceStatusEnum', width: '20%' },
+                        { Header: 'Patient Name', accessor: 'patientName', width: '20%' },
 
                         // { Header: 'Breakdown', accessor: 'invoiceBreakdown', width: '10%' },
 
@@ -202,51 +232,53 @@ function Invoice() {
         }, []);
         const fetchData = async () => {
                 try {
-                        invoiceApi
-                                .getAllInvoices()
-                                .then((response) => {
-                                        const invoices = response.data; // Assuming 'facilities' is an array of facility objects
-                                        console.log(response);
-                                        const mappedRows = invoices.map((invoice) => {
-                                                const dueDate = new Date(
-                                                        invoice.invoiceDueDate[0], // year
-                                                        invoice.invoiceDueDate[1] - 1, // month (zero-indexed)
-                                                        invoice.invoiceDueDate[2], // day
-                                                        invoice.invoiceDueDate[3], // hour
-                                                        invoice.invoiceDueDate[4], // minute
-                                                        invoice.invoiceDueDate[5], // second
-                                                        invoice.invoiceDueDate[6] // millisecond
-                                                ).toLocaleString('en-SG', {
-                                                        timeZone: 'Asia/Singapore',
-                                                        day: '2-digit',
-                                                        month: '2-digit',
-                                                        year: 'numeric',
-                                                });
-                                                return {
-                                                        invoiceId: invoice.invoiceId,
-                                                        invoiceAmount: `$${invoice.invoiceAmount}`,
-                                                        invoiceDueDate: dueDate,
-                                                        invoiceStatusEnum: invoice.invoiceStatusEnum,
-                                                        invoiceBreakdown: invoice.invoiceBreakdown,
-                                                        insuranceClaim: invoice.insuranceClaim,
-                                                        medishieldClaim: invoice.medishieldClaim,
-                                                        //patient: invoice.patient.username,
-                                                        //listOfTransactionItem: invoice.listOfTransactionItem
-                                                };
+                        const response = await invoiceApi.getAllInvoices();
+                        const invoices = response.data;
+                        console.log(response.data);
+                        const mappedRows = await Promise.all(
+                                invoices.map(async (invoice) => {
+                                        const dueDate = new Date(
+                                                invoice.invoiceDueDate[0],
+                                                invoice.invoiceDueDate[1] - 1,
+                                                invoice.invoiceDueDate[2],
+                                                invoice.invoiceDueDate[3],
+                                                invoice.invoiceDueDate[4],
+                                                invoice.invoiceDueDate[5],
+                                                invoice.invoiceDueDate[6]
+                                        ).toLocaleString('en-SG', {
+                                                timeZone: 'Asia/Singapore',
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
                                         });
-                                        dataRef.current = {
-                                                ...dataRef.current,
-                                                rows: [mappedRows],
+
+                                        const patientNameResponse = await invoiceApi.findPatientOfInvoice(invoice.invoiceId);
+                                        const patientName = patientNameResponse.data;
+                                        return {
+                                                invoiceId: invoice.invoiceId,
+                                                invoiceAmount: `$${invoice.invoiceAmount.toFixed(2)}`,
+                                                invoiceDueDate: dueDate,
+                                                invoiceStatusEnum: invoice.invoiceStatusEnum,
+                                                invoiceBreakdown: invoice.invoiceBreakdown,
+                                                insuranceClaim: invoice.insuranceClaim,
+                                                medishieldClaim: invoice.medishieldClaim,
+                                                transaction: invoice.transaction,
+                                                patientName: patientName,
                                         };
-                                        // Update the 'data' state with the mapped data
-                                        setData((prevData) => ({
-                                                ...prevData,
-                                                rows: mappedRows,
-                                        }));
-                                });
-                        console.log(data)
+                                })
+                        );
+                        dataRef.current = {
+                                ...dataRef.current,
+                                rows: [mappedRows],
+                        };
+                        // Update the 'data' state with the mapped data
+                        setData((prevData) => ({
+                                ...prevData,
+                                rows: mappedRows,
+                        }));
+                        console.log(data);
                 } catch (error) {
-                        console.error("Error fetching data:", error);
+                        console.error('Error fetching data:', error);
                 }
         };
 
@@ -393,24 +425,16 @@ function Invoice() {
                                         maxWidth: 'none',
                                 },
                         }}>
-                                <DialogTitle>Invoice Details</DialogTitle>
+                                <DialogTitle sx={{ fontSize: '24px', textAlign: 'center' }}>Invoice Details</DialogTitle>
                                 <DialogContent>
                                         <List>
                                                 <ListItem>
-                                                        <MDTypography variant="h5" gutterBottom>
+                                                        <MDTypography variant="h5" gutterBottom style={{ marginTop: '20px', marginBottom: '20px', fontWeight: 'bold' }}>
                                                                 Invoice Owner: {selectedEHR}
                                                         </MDTypography>
                                                 </ListItem>
                                         </List>
-                                        {/* <List>
-                                                <ListItem>
-                                                        <MDTypography variant="h5" gutterBottom>
-                                                                Invoice Breakdown:
-                                                        </MDTypography>
-                                                </ListItem>
-                                                <ListItem>{selectedInvoiceDetails.invoiceBreakdown}</ListItem>
-                                        </List> */}
-                                        <br></br>
+
                                         <List>
                                                 <ListItem>
                                                         <MDTypography variant="h5" gutterBottom>
@@ -440,7 +464,7 @@ function Invoice() {
                                                                                 })}
                                                                         </MDTypography>
                                                                         <MDTypography variant="body2" color="text.secondary">
-                                                                                Claim Amount: $ {selectedInvoiceDetails.insuranceClaim.insuranceClaimAmount}
+                                                                                Claim Amount: $ {selectedInvoiceDetails.insuranceClaim.insuranceClaimAmount.toFixed(2)}
                                                                         </MDTypography>
                                                                         <MDTypography variant="body2" color="text.secondary">
                                                                                 Insurer Name: {selectedInvoiceDetails.insuranceClaim.insurerName}
@@ -460,25 +484,32 @@ function Invoice() {
                                                                 </CardContent>
                                                         </Card>
                                                 ) : (
-                                                        <ListItem>
+                                                        selectedInvoiceDetails.invoiceAmount === 0 || selectedInvoiceDetails.invoiceStatusEnum === "PAID" ? (
+                                                                <ListItem>
+                                                                        <MDTypography variant="h6" color="text.secondary" gutterBottom>
+                                                                                This invoice has already been paid.
+                                                                        </MDTypography>
+                                                                </ListItem>
+                                                        ) :
+                                                                <ListItem>
 
-                                                                <MDButton
-                                                                        style={{ marginRight: '10px', marginBottom: '8px' }}
-                                                                        variant="contained"
-                                                                        color="info"
-                                                                        onClick={handleCreateInsuranceDialogOpen}
-                                                                >
-                                                                        Create Insurance Claim
-                                                                </MDButton>
-                                                                <CreateInsuranceClaimDialog
-                                                                        isOpen={isCreateInsuranceDialogOpen}
-                                                                        onClose={() => setIsCreateInsuranceDialogOpen(false)}
-                                                                        onCreate={handleCreateInsuranceClaim}
-                                                                        invoiceId={selectedInvoiceDetails.invoiceId}
-                                                                        fetchData={fetchData} // Pass the selectedInvoice to the dialog component
-                                                                        handleEdit={handleEdit}
-                                                                />
-                                                        </ListItem>
+                                                                        <MDButton
+                                                                                style={{ marginRight: '10px', marginBottom: '8px' }}
+                                                                                variant="contained"
+                                                                                color="info"
+                                                                                onClick={handleCreateInsuranceDialogOpen}
+                                                                        >
+                                                                                Create Insurance Claim
+                                                                        </MDButton>
+                                                                        <CreateInsuranceClaimDialog
+                                                                                isOpen={isCreateInsuranceDialogOpen}
+                                                                                onClose={() => setIsCreateInsuranceDialogOpen(false)}
+                                                                                onCreate={handleCreateInsuranceClaim}
+                                                                                invoiceId={selectedInvoiceDetails.invoiceId}
+                                                                                fetchData={fetchData} // Pass the selectedInvoice to the dialog component
+                                                                                handleEdit={handleEdit}
+                                                                        />
+                                                                </ListItem>
                                                 )}
                                         </List>
                                         <br></br>
@@ -512,7 +543,7 @@ function Invoice() {
                                                                                 })}
                                                                         </MDTypography>
                                                                         <MDTypography variant="body2" color="text.secondary">
-                                                                                Claim Amount: $ {selectedInvoiceDetails.medishieldClaim.medishieldClaimAmount}
+                                                                                Claim Amount: $ {selectedInvoiceDetails.medishieldClaim.medishieldClaimAmount.toFixed(2)}
                                                                         </MDTypography>
                                                                         <MDTypography variant="body2" color="text.secondary">
                                                                                 {/* Status: {selectedInvoiceDetails.medishieldClaim.approvalStatusEnum} */}
@@ -576,7 +607,13 @@ function Invoice() {
                                                                         </div>
                                                                 </CardContent>
                                                         </Card>
-                                                ) : (
+                                                ) : (selectedInvoiceDetails.invoiceAmount === 0 || selectedInvoiceDetails.invoiceStatusEnum === "PAID" ? (
+                                                        <ListItem>
+                                                                <MDTypography variant="h6" color="text.secondary" gutterBottom>
+                                                                        This invoice has already been paid.
+                                                                </MDTypography>
+                                                        </ListItem>
+                                                ) :
                                                         <ListItem>
 
                                                                 <MDButton
@@ -637,8 +674,9 @@ function Invoice() {
                                                                                                                 Quantity: {item.transactionItemQuantity}
                                                                                                         </TableCell>
                                                                                                         <TableCell align="right">
-                                                                                                                Total Price: ${item.transactionItemPrice}
+                                                                                                                Total Price: ${item.transactionItemPrice.toFixed(2)}
                                                                                                         </TableCell>
+
 
                                                                                                 </TableRow>
                                                                                         ))}
@@ -649,7 +687,9 @@ function Invoice() {
                                                                                         </TableCell>
                                                                                         <TableCell align="right">
                                                                                                 <strong>
-                                                                                                        ${selectedItems.reduce((total, item) => total + item.transactionItemPrice, 0)}
+                                                                                                        ${selectedItems
+                                                                                                                .reduce((total, item) => total + item.transactionItemPrice, 0)
+                                                                                                                .toFixed(2)}
                                                                                                 </strong>
                                                                                         </TableCell>
                                                                                 </TableRow>
@@ -658,6 +698,59 @@ function Invoice() {
                                                         </ListItem>
                                                 )}
                                         </List>
+                                        <ListItem sx={{ display: 'flex', justifyContent: 'flex-end', paddingRight: 2, paddingTop: 2 }}>
+                                                {selectedInvoiceDetails.transaction != null && (
+                                                        <Button
+                                                                style={{
+                                                                        width: "120px",
+                                                                        marginRight: "10px",
+                                                                        marginBottom: "8px",
+                                                                        // backgroundColor: 'green',
+                                                                        color: 'white'
+                                                                }}
+                                                                variant="contained"
+                                                                color="primary" onClick={() => handleOpen(selectedInvoiceDetails.transaction)}
+                                                        >
+                                                                View Transaction
+                                                        </Button>
+                                                )}
+                                        </ListItem>
+                                        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+                                                <DialogTitle>Transaction Details</DialogTitle>
+                                                <DialogContent sx={{ paddingBottom: '20px' }}>
+                                                        {transactionData && (
+                                                                <div>
+                                                                        <p>
+                                                                                <strong>Transaction ID:</strong> {transactionData.transactionId}
+                                                                        </p>
+                                                                        <p>
+                                                                                <strong>Transaction Date:</strong> {transactionData.transactionDate}
+                                                                        </p>
+                                                                        <p>
+                                                                                <strong>Transaction Amount:</strong> ${transactionData.transactionAmount}
+                                                                        </p>
+                                                                        <p>
+                                                                                <strong>Approval Status:</strong>{' '}
+                                                                                <Chip
+                                                                                        label={transactionData.approvalStatusEnum}
+                                                                                        color={
+                                                                                                transactionData.approvalStatusEnum === 'APPROVED'
+                                                                                                        ? 'success'
+                                                                                                        : transactionData.approvalStatusEnum === 'PENDING'
+                                                                                                                ? 'warning'
+                                                                                                                : 'error'
+                                                                                        }
+                                                                                />
+                                                                        </p>
+                                                                </div>
+                                                        )}
+                                                </DialogContent>
+                                                <DialogActions>
+                                                        <Button onClick={handleClose} color="primary">
+                                                                Close
+                                                        </Button>
+                                                </DialogActions>
+                                        </Dialog>
 
                                 </DialogContent>
                                 <DialogActions>

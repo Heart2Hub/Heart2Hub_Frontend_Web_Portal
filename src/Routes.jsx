@@ -28,6 +28,7 @@ import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
 import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 import Subsidy from "layouts/finance/subsidy";
 import Invoice from "layouts/finance/invoice";
+import Transaction from "layouts/finance/transaction";
 import Pharmacy from "layouts/pharmacy";
 
 import LeaveApproval from "layouts/manpower/leaveApproval";
@@ -454,6 +455,21 @@ const routes = [
       </ProtectedRoute>
     ),
   },
+  {
+    name: "Transactions Analysis",
+    key: "transaction",
+    route: "/finance/transaction",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+        authorizedUnits={"ALL"}
+      >
+        <Transaction />
+      </ProtectedRoute>
+    ),
+  },
+  
 ];
 
 export default routes;
