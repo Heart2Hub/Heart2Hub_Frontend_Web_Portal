@@ -38,12 +38,12 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import moment from "moment";
 import AdmissionCard from "./AdmissionCard";
 
-import NoAdmissionCard from "./NoAdmissionCard";
 import AdmissionTicketModal from "./AdmissionTicketModal";
 import { parseDateFromLocalDateTime } from "utility/Utility";
 import MedicationOrderModal from "./MedicationOrderModal";
 import { medicationOrderApi } from "api/Api";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
+import { parseDateFromYYYYMMDDHHMMSS } from "utility/Utility";
 
 const beds = [
   { id: 1, title: "Bed 1" },
@@ -58,17 +58,15 @@ const events = [
   {
     id: 1,
     title: "Meeting 1",
-    start: moment('2023-11-06T10:00:00').toDate(), // Specify the date and time of the event
-    end: moment('2023-11-06T11:00:00').toDate(),
-    // allDay: true,
-    // resourceId: 1, // Associate this event with Room A
+    start: moment("2023-11-06T10:00:00").toDate(), // Specify the date and time of the event
+    end: moment("2023-11-06T11:00:00").toDate(),
   },
 ];
 
 function Inpatient() {
   const staff = useSelector(selectStaff);
   const localizer = momentLocalizer(moment);
-  const DnDCalendar = withDragAndDrop(Calendar)
+  const reduxDispatch = useDispatch();
 
   //for handling filtering
   const [selectStaffToFilter, setSelectStaffToFilter] = useState(null);
@@ -89,14 +87,14 @@ function Inpatient() {
   const [admissionTicketModal, setAdmissionTicketModal] = useState(false);
 
   //for opening medication order modal
-  const [selectedSlot, setSelectedSlot] = useState(null);
   const [medicationOrderModal, setMedicationOrderModal] = useState(false);
-
-  const [admissionOrders, setAdmissionOrders] = useState([]);
-  const [calendarConfig, setCalendarConfig] = useState(null);
+  const [selectedSlotStart, setSelectedSlotStart] = useState(null);
+  const [selectedSlotEnd, setSelectedSlotEnd] = useState(null);
+  const [existingMedicationOrders, setExistingMedicationOrders] = useState([]);
 
   //helper method to map admissions to resources and events for calendar
-  const mapAdmissionsToResourcesAndEvents = (admissions) => {
+  const mapAdmissionsToResourcesAndEvents = async (admissions) => {
+    console.log(admissions);
     const resources = admissions
       .map((admission) => {
         return {
@@ -108,20 +106,76 @@ function Inpatient() {
 
     setCalendarResources(resources);
 
-    const events = admissions
-      .filter((admission) => admission.admissionDateTime)
-      .map((admission) => {
-        console.log(admission)
-        return {
-          id: admission.admissionId,
-          title: "Admission",
-          start: parseDateFromLocalDateTime(admission.admissionDateTime),
-          end: parseDateFromLocalDateTime(admission.dischargeDateTime),
-          allDay: true,
+    const events = [];
+
+    for (const admission of admissions) {
+      const startDate = parseDateFromLocalDateTime(admission.admissionDateTime);
+      const endDate = parseDateFromLocalDateTime(admission.dischargeDateTime);
+      endDate.setDate(endDate.getDate() + 1);
+
+      // Admission Ticket Card
+      const admissionTicketEvent = {
+        id: admission.admissionId,
+        title: "Admission",
+        start: startDate,
+        end: endDate,
+        allDay: true,
+        resourceId: admission.bed,
+      };
+      events.push(admissionTicketEvent);
+
+      const medicationOrders = await getMedicationOrders(
+        admission.listOfMedicationOrderIds
+      );
+
+      const slotCount = {};
+
+      for (const medicationOrder of medicationOrders) {
+        const startDate = medicationOrder.startDate;
+
+        if (!slotCount.hasOwnProperty(startDate)) {
+          slotCount[startDate] = [medicationOrder];
+        } else {
+          slotCount[startDate].push(medicationOrder);
+        }
+      }
+
+      console.log(slotCount);
+
+      // Medication orders
+      const slots = Object.entries(slotCount);
+
+      for (const [startDateString, medicationOrders] of slots) {
+        const startDate = parseDateFromYYYYMMDDHHMMSS(startDateString);
+        const endDate = parseDateFromYYYYMMDDHHMMSS(startDateString);
+        endDate.setHours(endDate.getHours() + 1);
+
+        const medicationOrderEvent = {
+          id: 0,
+          title: `${medicationOrders.length} Medication Order(s)`,
+          start: startDate,
+          end: endDate,
           resourceId: admission.bed,
+          medicationOrders: medicationOrders,
         };
-      });
+        events.push(medicationOrderEvent);
+      }
+    }
+
     setCalendarEvents(events);
+  };
+
+  //helper method to get medication orders from medication order ids
+  const getMedicationOrders = async (medicationOrderIds) => {
+    const medicationOrderPromises = medicationOrderIds.map((id) =>
+      medicationOrderApi.getMedicationOrderById(id)
+    );
+    const medicationOrderResponses = await Promise.all(medicationOrderPromises);
+    const listOfMedicationOrders = medicationOrderResponses.map(
+      (response) => response.data
+    );
+    //console.log(listOfMedicationOrders);
+    return listOfMedicationOrders;
   };
 
   const getInitialViewForDepartmentStaff = async () => {
@@ -151,11 +205,15 @@ function Inpatient() {
       wards[0]
     );
     const wardAdmissions = wardAdmissionsResponse.data;
+    //console.log(wardAdmissions);
+    const wardAdmissionsAssignedToStaff = wardAdmissions.filter((admission) =>
+      admission.listOfStaffsId.includes(staff.staffId)
+    );
 
-    setCurrentDayAdmissions(wardAdmissions);
+    setCurrentDayAdmissions(wardAdmissionsAssignedToStaff);
 
     //filter by room 1
-    let roomOneAdmissions = wardAdmissions.filter(
+    let roomOneAdmissions = wardAdmissionsAssignedToStaff.filter(
       (admission) => admission.room === 1
     );
 
@@ -185,13 +243,24 @@ function Inpatient() {
     mapAdmissionsToResourcesAndEvents(roomOneAdmissions);
   };
 
+  // useEffect(() => {
+  //   console.log(staff);
+  //   if (staff.staffRoleEnum === "ADMIN" || staff.staffRoleEnum === "NURSE") {
+  //     getInitialViewForWardStaff();
+  //   } else {
+  //     getInitialViewForDepartmentStaff();
+  //   }
+  // }, []);
+
   useEffect(() => {
-    if (staff.staffRoleEnum === "ADMIN" || staff.staffRoleEnum === "NURSE") {
-      getInitialViewForWardStaff();
-    } else {
-      getInitialViewForDepartmentStaff();
+    if (!medicationOrderModal) {
+      if (staff.staffRoleEnum === "ADMIN" || staff.staffRoleEnum === "NURSE") {
+        getInitialViewForWardStaff();
+      } else {
+        getInitialViewForDepartmentStaff();
+      }
     }
-  }, []);
+  }, [medicationOrderModal]);
 
   const handleChangeWard = async (event, selectedWard) => {
     setSelectStaffToFilter(null);
@@ -246,6 +315,14 @@ function Inpatient() {
       return existingAdmission;
     });
     setCurrentDayAdmissions(updatedAdmissions);
+
+    //filter by room 1
+    let roomOneAdmissions = updatedAdmissions.filter(
+      (admission) => admission.room === 1
+    );
+
+    //map admission to calendar event
+    mapAdmissionsToResourcesAndEvents(roomOneAdmissions);
   };
 
   const handleCancelAdmission = (cancelledAdmissionId) => {
@@ -254,7 +331,15 @@ function Inpatient() {
         existingAdmission.admissionId !== cancelledAdmissionId
     );
     setCurrentDayAdmissions(updatedAdmissions);
-    mapAdmissionsToResourcesAndEvents(updatedAdmissions);
+
+    //filter by room 1
+    let roomOneAdmissions = updatedAdmissions.filter(
+      (admission) => admission.room === 1
+    );
+
+    //map admission to calendar event
+    mapAdmissionsToResourcesAndEvents(roomOneAdmissions);
+
     setAdmissionTicketModal(false);
   };
 
@@ -279,63 +364,113 @@ function Inpatient() {
   };
 
   const handleSelectSlot = (slotInfo) => {
-    setSelectedSlot(slotInfo);
+    const currentDate = new Date();
+    console.log("slot " + slotInfo);
+    if (slotInfo.start < currentDate) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error Encountered",
+          content: "Order cannot be done for past date",
+        })
+      );
+      return
+    }
+
+    setSelectedSlotStart(slotInfo.start);
+    setSelectedSlotEnd(slotInfo.end);
     const orderForAdmission = currentDayAdmissions.filter(
       (admission) =>
         admission.room === room && admission.bed === slotInfo.resourceId
     )[0];
     setSelectedAdmission(orderForAdmission);
+    console.log(selectedAdmission);
+
+    // console.log("admisssion " + parseDateFromLocalDateTime(selectedAdmission.dischargeDateTime))
+    console.log("date" + selectedAdmission.dischargeDateTime);
+    const checkDate = parseDateFromLocalDateTime(selectedAdmission.dischargeDateTime);
+    if (slotInfo.start > checkDate) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error Encountered",
+          content: "Order cannot be done after discharge date",
+        })
+      );
+      return
+    }
     setMedicationOrderModal(true);
   };
 
   const handleCloseMedicationOrderModal = () => {
-    setSelectedSlot(null);
     setSelectedAdmission(null);
+    setExistingMedicationOrders([]);
     setMedicationOrderModal(false);
   };
 
-  const fetchAllMedicationOrders = async () => {
-    try {
-      console.log("fetch");
-      medicationOrderApi.getAllMedicationOrders()
-        .then((response) => {
-          const orders = response.data;
-
-          const mappedEvents = orders.map((order) => {
-            console.log("Orders " + order.startDate);
-            const title = `Medication Order`;
-
-            return {
-              title,
-              id: order.medicationOrderId,
-              // medicationOrderId: order.medicationOrderId,
-              // comments: order.comments,
-              // medication: order.medication.inventoryItemName,
-              start: new Date(order.startDate),
-              end: new Date(order.endDate),
-              // quantity: order.quantity,
-              // facilityBookingId: booking.facilityBookingId,
-              // owner: booking.staffUsername,
-              // resizable: true,
-              // draggable: true,
-              allDay: false,
-
-            };
-          });
-
-          setAdmissionOrders(mappedEvents);
-          console.log(admissionOrders);
-          // Update the calendarConfig with the new events
-        });
-    } catch (error) {
-      console.error("Error fetching cart items:", error);
-    }
+  const handleSelectEvent = (event) => {
+    console.log(event);
+    const orderForAdmission = currentDayAdmissions.filter(
+      (admission) =>
+        admission.room === room && admission.bed === event.resourceId
+    )[0];
+    setSelectedAdmission(orderForAdmission);
+    setSelectedSlotStart(event.start);
+    setSelectedSlotEnd(event.end);
+    // console.log("date" + selectedAdmission.dischargeDateTime);
+    // const checkDate = parseDateFromLocalDateTime(selectedAdmission.dischargeDateTime);
+    // if (selectedSlotStart > checkDate) {
+    //   reduxDispatch(
+    //     displayMessage({
+    //       color: "error",
+    //       icon: "notification",
+    //       title: "Error Encountered",
+    //       content: "Order cannot be done after discharge date",
+    //     })
+    //   );
+    //   return
+    // }
+    setExistingMedicationOrders(event.medicationOrders);
+    setMedicationOrderModal(true);
   };
 
-  const handleEventClick = (event) => {
-    // setSelectedBooking(event);
-    // setIsBookingDetailsOpen(true);
-  };
+  // const fetchAllMedicationOrders = async () => {
+  //   try {
+  //     console.log("fetch");
+  //     medicationOrderApi.getAllMedicationOrders().then((response) => {
+  //       const orders = response.data;
+
+  //       const mappedEvents = orders.map((order) => {
+  //         console.log("Orders " + order.startDate);
+  //         const title = `Medication Order`;
+
+  //         return {
+  //           title,
+  //           id: order.medicationOrderId,
+  //           // medicationOrderId: order.medicationOrderId,
+  //           // comments: order.comments,
+  //           // medication: order.medication.inventoryItemName,
+  //           start: new Date(order.startDate),
+  //           end: new Date(order.endDate),
+  //           // quantity: order.quantity,
+  //           // facilityBookingId: booking.facilityBookingId,
+  //           // owner: booking.staffUsername,
+  //           // resizable: true,
+  //           // draggable: true,
+  //           allDay: false,
+  //         };
+  //       });
+
+  //       setAdmissionOrders(mappedEvents);
+  //       console.log(admissionOrders);
+  //       // Update the calendarConfig with the new events
+  //     });
+  //   } catch (error) {
+  //     console.error("Error fetching cart items:", error);
+  //   }
+  // };
 
   // const dischargeTomorrow = async () => {
   //   const tomorrow = moment().add(1, "days");
@@ -357,10 +492,9 @@ function Inpatient() {
   //   forceRefresh();
   // };
 
-  useEffect(() => {
-    fetchAllMedicationOrders();
-  }, []);
-
+  // useEffect(() => {
+  //   fetchAllMedicationOrders();
+  // }, []);
 
   return (
     <DashboardLayout>
@@ -420,22 +554,29 @@ function Inpatient() {
                 defaultView={Views.DAY}
                 startAccessor="start"
                 endAccessor="end"
+                titleAccessor="title"
                 resources={calendarResources}
                 events={calendarEvents}
                 selectable
                 onSelectSlot={handleSelectSlot}
+                onSelectEvent={handleSelectEvent}
                 components={{
-                  event: ({ event }) => (
-                    // console.log("event " + event.id),
-                    <AdmissionCard
-                      admission={
-                        currentDayAdmissions.filter(
-                          (admission) => admission.admissionId === event.id
-                        )[0]
-                      }
-                      handleSelectAdmission={handleSelectAdmission}
-                    />
-                  ),
+                  event: ({ event }) => {
+                    if (event.id === 0) {
+                      return <div>{event.title}</div>;
+                    } else {
+                      return (
+                        <AdmissionCard
+                          admission={
+                            currentDayAdmissions.filter(
+                              (admission) => admission.admissionId === event.id
+                            )[0]
+                          }
+                          handleSelectAdmission={handleSelectAdmission}
+                        />
+                      );
+                    }
+                  },
                 }}
               />
             ) : (
@@ -493,12 +634,14 @@ function Inpatient() {
           handleCancelAdmission={handleCancelAdmission}
         />
       )}
-      {selectedSlot && (
+      {selectedAdmission && existingMedicationOrders && (
         <MedicationOrderModal
           openModal={medicationOrderModal}
           handleCloseModal={handleCloseMedicationOrderModal}
           selectedAdmission={selectedAdmission}
-          selectedSlot={selectedSlot}
+          startDate={selectedSlotStart}
+          endDate={selectedSlotEnd}
+          existingMedicationOrders={existingMedicationOrders}
         />
       )}
     </DashboardLayout>

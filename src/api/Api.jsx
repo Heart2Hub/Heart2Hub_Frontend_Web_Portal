@@ -878,9 +878,14 @@ export const admissionApi = {
       `${REST_ENDPOINT}/admission/getAdmissionsForStaff?staffId=${id}`
     );
   },
-  assignAdmissionToStaff(admissionId, toStaffId, fromStaffId) {
+  // assignAdmissionToStaff(admissionId, toStaffId, fromStaffId) {
+  //   return axiosFetch.put(
+  //     `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+  //   );
+  // },
+  assignAdmissionToStaff(admissionId, toStaffId) {
     return axiosFetch.put(
-      `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+      `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}`
     );
   },
   // assignAdmissionToNurse(admissionId, toStaffId, fromStaffId) {
@@ -918,17 +923,28 @@ export const admissionApi = {
       `${REST_ENDPOINT}/admission/handleAllocateIncoming?date=${date}`
     );
   },
+  updateDischargeDate(admissionId, dischargeDate) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/updateDischargeDate?admissionId=${admissionId}&dischargeDate=${dischargeDate}`
+    );
+  },
+  getAdmissionByAdmissionId(admissionId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/admission/getAdmissionByAdmissionId?admissionId=${admissionId}`
+    );
+  }
 };
 
 export const medicationOrderApi = {
   createMedicationOrder(medicationId, admissionId, requestBody) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/medicationOrder/createMedicationOrder?medicationId=${medicationId}&admissionId=${admissionId}`, requestBody
+      `${REST_ENDPOINT}/medicationOrder/createMedicationOrder?medicationId=${medicationId}&admissionId=${admissionId}`,
+      requestBody
     );
   },
-  deleteMedicationOrder(medicationId, admissionId) {
+  deleteMedicationOrder(medicationOrderId, admissionId) {
     return axiosFetch.delete(
-      `${REST_ENDPOINT}/medicationOrder/deleteMedicationOrder/${medicationId}/${admissionId}`
+      `${REST_ENDPOINT}/medicationOrder/deleteMedicationOrder?medicationOrderId=${medicationOrderId}&admissionId=${admissionId}`
     );
   },
   getAllMedicationOrdersOfAdmission(admissionId) {
@@ -941,4 +957,15 @@ export const medicationOrderApi = {
       `${REST_ENDPOINT}/medicationOrder/getAllMedicationOrders`
     );
   },
+  getMedicationOrderById(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medicationOrder/getMedicationOrderById?medicationOrderId=${id}`
+    );
+  },
+  updateComplete(medicationOrderId, admissionId, isCompleted) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/medicationOrder/updateComplete?medicationOrderId=${medicationOrderId}&admissionId=${admissionId}&isCompleted=${isCompleted}`
+    );
+  },
 };
+

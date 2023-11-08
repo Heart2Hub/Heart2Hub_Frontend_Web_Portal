@@ -35,7 +35,7 @@ const PrescriptionDialog = ({
   open,
   onClose,
   electronicHealthRecordId,
-  handlePageRefresh,
+  //handlePageRefresh,
 }) => {
   const [prescriptionRecords, setPrescriptionRecords] = useState([]);
   const [editMode, setEditMode] = useState(false);
@@ -119,7 +119,7 @@ const PrescriptionDialog = ({
         ehrId
       );
       fetchPrescriptionRecords();
-      handlePageRefresh();
+      //handlePageRefresh();
       reduxDispatch(
         displayMessage({
           color: "success",
@@ -446,42 +446,34 @@ const PrescriptionDialog = ({
                     </div>
                   </CardContent>
                   <CardActions style={{ justifyContent: "flex-end" }}>
-                    {editMode &&
-                    editedRecord?.prescriptionRecordId ===
-                      prescriptionRecord.prescriptionRecordId ? (
-                      <div>
-                        <Button onClick={handleSaveEdit}>Save</Button>
-                        <Button onClick={() => setEditMode(false)}>
-                          Cancel
-                        </Button>
-                      </div>
-                    ) : (
-                      <>
-                        {/* {loggedInStaff.staffRoleEnum === "DOCTOR" && (
-											<IconButton onClick={() => handleEdit(prescriptionRecord)}>
-												<EditIcon />
-											</IconButton>
-										)}
-										{loggedInStaff.staffRoleEnum === "DOCTOR" && (
-											<IconButton onClick={() => handleDelete(prescriptionRecord.prescriptionRecordId)}>
-												<DeleteIcon />
-											</IconButton>
-										)} */}
-                        {(loggedInStaff.staffRoleEnum === "DOCTOR" ||
-                          loggedInStaff.staffRoleEnum === "PHARMACIST") && (
-                          <Button
-                            onClick={() =>
-                              handleAddToCart(
-                                prescriptionRecord.prescriptionRecordId,
-                                electronicHealthRecordId
-                              )
-                            }
-                          >
-                            Add to Patient's Cart
+                    {
+                      editMode &&
+                      editedRecord?.prescriptionRecordId ===
+                        prescriptionRecord.prescriptionRecordId ? (
+                        <div>
+                          <Button onClick={handleSaveEdit}>Save</Button>
+                          <Button onClick={() => setEditMode(false)}>
+                            Cancel
                           </Button>
-                        )}
-                      </>
-                    )}
+                        </div>
+                      ) : null
+                      // <>
+
+                      //   {(loggedInStaff.staffRoleEnum === "DOCTOR" ||
+                      //     loggedInStaff.staffRoleEnum === "PHARMACIST") && (
+                      //     <Button
+                      //       onClick={() =>
+                      //         handleAddToCart(
+                      //           prescriptionRecord.prescriptionRecordId,
+                      //           electronicHealthRecordId
+                      //         )
+                      //       }
+                      //     >
+                      //       Add to Patient's Cart
+                      //     </Button>
+                      //   )}
+                      // </>
+                    }
                   </CardActions>
                 </Card>
               ))}

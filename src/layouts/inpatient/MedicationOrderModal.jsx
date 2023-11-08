@@ -56,6 +56,7 @@ import ViewAttachmentsButton from "./ViewAttachmentsButton";
 import AdmissionDialog from "./AdmissionDialog";
 import moment from "moment";
 import { medicationOrderApi } from "api/Api";
+import { admissionApi } from "api/Api";
 
 const style = {
   position: "absolute",
@@ -74,16 +75,18 @@ function MedicationOrderModal({
   openModal,
   handleCloseModal,
   selectedAdmission,
-  selectedSlot,
+  startDate,
+  endDate,
+  existingMedicationOrders,
 }) {
   const navigate = useNavigate();
   const reduxDispatch = useDispatch();
-  const [assignedStaff, setAssignedStaff] = useState(null);
-  const [facilityLocation, setFacilityLocation] = useState(null);
-  const [editableComments, setEditableComments] = useState("");
-  const [commentsTouched, setCommentsTouched] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [facility, setFacility] = useState("");
+
+  const [startDateString, setStartDateString] = useState("");
+  const [endDateString, setEndDateString] = useState("");
+  const [comments, setComments] = useState(null);
+  const [medicationOrders, setMedicationOrders] = useState(existingMedicationOrders);
+
   //For Cart
   const [medications, setMedications] = useState([]);
   const [medicationsAllergy, setMedicationsAllergy] = useState([]);
@@ -95,13 +98,9 @@ function MedicationOrderModal({
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [isConfirmDischargeOpen, setConfirmDischargeOpen] = useState(false);
+  const [isCompleteDialogOpen, setCompleteDialogOpen] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
 
-  //For Managing the Cart
-  const [medicationOrders, setMedicationOrders] = useState([]);
-
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [comments, setComments] = useState(null);
 
   const handleOpenDeleteDialog = (itemId) => {
     setSelectedItemId(itemId);
@@ -110,6 +109,16 @@ function MedicationOrderModal({
 
   const handleCloseDeleteDialog = () => {
     setDeleteDialogOpen(false);
+  };
+
+  const handleOpenCompleteDialog = (itemId) => {
+    setSelectedItemId(itemId);
+    setCompleteDialogOpen(true);
+    setIsCompleted(true)
+  };
+
+  const handleCloseCompleteDialog = () => {
+    setCompleteDialogOpen(false);
   };
 
   //for assigning appointment to staff in the AppointmentTicketModal
@@ -145,65 +154,47 @@ function MedicationOrderModal({
     }
   };
 
-  // const fetchPatientCart = async () => {
+  // const fetchMedicationOrder= async (id) => {
   //   try {
-  //     const response = await transactionItemApi.getCartItems(
-  //       selectedAdmission.patientId
-  //     );
-
-  //     setCartItems(response.data);
-  //     console.log(cartItems);
+  //     const response = await medicationOrderApi.getMedicationOrderById(id);
+  //     const medication = response.data;
+  //     getMedicationOrders(admission.listOfMedicationOrderIds);
   //   } catch (error) {
-  //     console.error("Error fetching cart items:", error);
+  //     console.error("Error fetching medication orders:", error);
   //   }
-  // };
+  // }
 
-  const fetchMedicationOrders = async () => {
+  const fetchAdmission = async (id) => {
     try {
-      console.log("fetchiong");
-      const response = await medicationOrderApi.getAllMedicationOrdersOfAdmission(
-        selectedAdmission.admissionId
-      );
-      console.log(response.data);
-
-      setMedicationOrders(response.data);
-      console.log(medicationOrders);
+      const response = await admissionApi.getAdmissionByAdmissionId(id);
+      const admission = response.data;
+      getMedicationOrders(admission.listOfMedicationOrderIds);
     } catch (error) {
-      console.error("Error fetching cart items:", error);
+      console.error("Error fetching medication orders:", error);
     }
+  }
+
+  const getMedicationOrders = async (medicationOrderIds) => {
+    const medicationOrderPromises = medicationOrderIds.map((id) =>
+      medicationOrderApi.getMedicationOrderById(id)
+    );
+    const medicationOrderResponses = await Promise.all(medicationOrderPromises);
+    const listOfMedicationOrders = medicationOrderResponses.map(
+      (response) => response.data
+    );
+    //console.log(listOfMedicationOrders);
+    setMedicationOrders(listOfMedicationOrders);
   };
 
-  const handlePageRefresh = () => {
-    fetchMedicationOrders();
-  };
-
-  const handleConfirmDelete = async () => {
-    try {
-      await transactionItemApi.removeFromCart(
-        selectedAdmission.patientId,
-        selectedItemId
-      );
-      reduxDispatch(
-        displayMessage({
-          color: "success",
-          icon: "notification",
-          title: "Success",
-          content: "Item has been deleted from the cart!",
-        })
-      );
-      // fetchPatientCart();
-    } catch (error) {
-      reduxDispatch(
-        displayMessage({
-          color: "error",
-          icon: "notification",
-          title: "Error",
-          content: error.response.data,
-        })
-      );
-    }
-    handleCloseDeleteDialog();
-  };
+  useEffect(() => {
+    fetchMedications();
+    const startMoment = moment(startDate);
+    const endMoment = moment(endDate);
+    const startDateString = startMoment.format("YYYY-MM-DD HH:mm:ss");
+    const endDateString = endMoment.format("YYYY-MM-DD HH:mm:ss");
+    setStartDateString(startDateString);
+    setEndDateString(endDateString);
+  }, []);
 
   const handleAddMedicationOrder = async (medication) => {
     try {
@@ -218,21 +209,32 @@ function MedicationOrderModal({
         );
         return;
       }
+
       const admissionId = selectedAdmission.admissionId; // Replace with the actual patient ID
       const requestBody = {
         title: selectedAdmission.patientId,
         quantity: selectedMedicationQuantity,
         comments: comments,
-        startDate: startDate,
-        endDate: endDate,
-        isComplete: false,
+        startDate: startDateString,
+        endDate: endDateString,
+        isCompleted: false,
       };
+
+      // if (requestBody.comments == '') {
+      //   reduxDispatch(
+      //     displayMessage({
+      //       color: "error",
+      //       icon: "notification",
+      //       title: "Error Encountered",
+      //       content: "Comment cannot be empty",
+      //     })
+      //   );
+      //   return
+      // }
 
       const existsInAllergy = medicationsAllergy.some(
         (item) => item.inventoryItemId === medication.inventoryItemId
       );
-
-
 
       if (!existsInAllergy) {
         reduxDispatch(
@@ -249,8 +251,29 @@ function MedicationOrderModal({
       console.log(requestBody);
       console.log(medication.inventoryItemId);
 
+      const containsMedication = medicationOrders.some(
+        (item) => item.medication.inventoryItemId === medication.inventoryItemId
+      );
+
+      if (containsMedication) {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error",
+            content:
+              "Medication already added to order.",
+          })
+        );
+        return;
+      }
+
       medicationOrderApi
-        .createMedicationOrder(medication.inventoryItemId, admissionId, requestBody)
+        .createMedicationOrder(
+          medication.inventoryItemId,
+          admissionId,
+          requestBody
+        )
         .then((response) => {
           const item = response.data;
           console.log(item);
@@ -263,7 +286,8 @@ function MedicationOrderModal({
           );
           //setMedications([]);
           setSelectedMedicationQuantity(1);
-          fetchMedicationOrders();
+          setMedicationOrders([...medicationOrders, item]);
+          //fetchMedicationOrders();
         })
         .catch((error) => {
           reduxDispatch(
@@ -277,10 +301,100 @@ function MedicationOrderModal({
           console.error("Error fetching data:", error);
         });
     } catch (error) {
-      console.error("Error fetching medications and services:", error);
+      console.error("Error fetching medications:", error);
     }
   };
 
+  const handleConfirmDelete = async () => {
+    try {
+      await medicationOrderApi
+        .deleteMedicationOrder(
+          selectedItemId,
+          selectedAdmission.admissionId
+        );
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Success",
+          content: "Item has been deleted from the cart!",
+        })
+      );
+      // fetchPatientCart();
+      console.log("Before: " + medicationOrders);
+      const updatedMedicationOrders = medicationOrders.filter(item => item.medicationOrderId !== selectedItemId);
+      setMedicationOrders(updatedMedicationOrders);
+      // fetchAdmission(selectedAdmission.admissionId);
+      // getMedicationOrders(selectedAdmission.listOfMedicationOrderIds);
+      console.log(selectedAdmission.listOfMedicationOrderIds);
+    } catch (error) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error",
+          content: error.response.data,
+        })
+      );
+    }
+    handleCloseDeleteDialog();
+  };
+
+  const handleConfirmComplete = async () => {
+    try {
+      await medicationOrderApi
+        .updateComplete(
+          selectedItemId,
+          selectedAdmission.admissionId,
+          isCompleted
+        );
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Success",
+          content: "Medication order has been completed!",
+        })
+      );
+      const updatedMedicationOrders = medicationOrders.map((item) =>
+        item.medicationOrderId === selectedItemId ? { ...item, isCompleted: true } : item
+      );
+      setMedicationOrders(updatedMedicationOrders);
+      // fetchPatientCart();
+      // fetchAdmission(selectedAdmission.admissionId);
+    } catch (error) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error",
+          content: error.response.data,
+        })
+      );
+    }
+    handleCloseCompleteDialog();
+  };
+
+  //   const renderIsCompleteButton = (item) => {
+  //     return ( 
+  //       if (!item.isCompleted) {
+  //       return (
+  //         <Button
+  //           variant="contained"
+  //           style={{
+  //             backgroundColor: "#f44336",
+  //             color: "white",
+  //           }}
+  //           onClick={() => handleOpenCompleteDialog(item.medicationOrderId)}
+  //         >
+  //           Complete
+  //         </Button>
+  //       );
+  //     } else {
+  //       return null;
+  //     }
+  //     );
+  // };
 
   const renderMedicationsDropdown = () => {
     return (
@@ -320,18 +434,6 @@ function MedicationOrderModal({
     );
   };
 
-  // console.log(selectedAdmission);
-
-
-  useEffect(() => {
-    const startMoment = moment(selectedSlot.start);
-    const endMoment = moment(selectedSlot.end);
-    setStartDate(startMoment.format("YYYY-MM-DD HH:mm:ss"));
-    setEndDate(endMoment.format("YYYY-MM-DD HH:mm:ss"));
-    fetchMedications();
-    fetchMedicationOrders();
-  }, [selectedSlot]);
-
   return (
     <>
       <Modal
@@ -366,7 +468,7 @@ function MedicationOrderModal({
             </ListItem>
             <ListItem>
               <MDTypography variant="h6" gutterBottom color="black">
-                {startDate}
+                {startDateString}
               </MDTypography>
             </ListItem>
             <ListItem>
@@ -376,7 +478,7 @@ function MedicationOrderModal({
             </ListItem>
             <ListItem>
               <MDTypography variant="h6" gutterBottom color="black">
-                {endDate}
+                {endDateString}
               </MDTypography>
             </ListItem>
             <ListItem>
@@ -409,7 +511,7 @@ function MedicationOrderModal({
             electronicHealthRecordId={
               selectedAdmission.electronicHealthRecordId
             }
-            handlePageRefresh={handlePageRefresh}
+          //handlePageRefresh={handlePageRefresh}
           />
           <br></br>
           {loggedInStaff.staffRoleEnum !== "ADMIN" ? (
@@ -445,7 +547,7 @@ function MedicationOrderModal({
                   />
                 </ListItem>
                 <ListItem sx={{ marginTop: "10px" }}>
-                  <MDTypography variant="h5" gutterBottom >
+                  <MDTypography variant="h5" gutterBottom>
                     Medications:
                   </MDTypography>
                 </ListItem>
@@ -459,9 +561,9 @@ function MedicationOrderModal({
               <MDTypography variant="h5" gutterBottom>
                 List of Medication Orders:
               </MDTypography>
-              <IconButton onClick={fetchMedicationOrders} aria-label="refresh">
+              {/* <IconButton onClick={fetchMedicationOrders} aria-label="refresh">
                 <RefreshIcon />
-              </IconButton>
+              </IconButton> */}
             </ListItem>
             {medicationOrders.length === 0 ? (
               <ListItem>
@@ -478,37 +580,57 @@ function MedicationOrderModal({
                     </TableHead>
                     <TableBody>
                       {medicationOrders.map((item) => (
-                        <TableRow
-                          key={item.medicationOrderId}
-                          sx={{
-                            "&:last-child td, &:last-child th": {
-                              border: 0,
-                            },
-                          }}
-                        >
-                          <TableCell component="th" scope="row">
-                            {item.medication.inventoryItemName}
-                          </TableCell>
-                          <TableCell align="right">
-                            Quantity: {item.quantity}
-                          </TableCell>
-                          {loggedInStaff.staffRoleEnum !== "ADMIN" ? (
-                            <TableCell align="right">
-                              <Button
-                                variant="contained"
-                                style={{
-                                  backgroundColor: "#f44336",
-                                  color: "white",
-                                }}
-                                onClick={() =>
-                                  handleOpenDeleteDialog(item.transactionItemId)
-                                }
-                              >
-                                Delete
-                              </Button>
+                        <>
+                          <TableRow
+                            key={item.medicationOrderId}
+                            sx={{
+                              "&:last-child td, &:last-child th": {
+                                border: 0,
+                              },
+                            }}
+                          >
+                            <TableCell component="th" scope="row">
+                              {item.medication.inventoryItemName}
                             </TableCell>
-                          ) : null}
-                        </TableRow>
+                            <TableCell>
+                              <div>Quantity: {item.quantity}</div>
+                              <div>Comments: {item.comments}</div>
+                            </TableCell>
+                            {loggedInStaff.staffRoleEnum == "DOCTOR" && item.isCompleted == false ? (
+                              <TableCell align="right">
+                                <Button
+                                  variant="contained"
+                                  style={{
+                                    backgroundColor: "#f44336",
+                                    color: "white",
+                                  }}
+                                  onClick={() =>
+                                    handleOpenDeleteDialog(
+                                      item.medicationOrderId
+                                    )
+                                  }
+                                >
+                                  Delete
+                                </Button>
+                              </TableCell>
+                            ) : null}
+                            {loggedInStaff.staffRoleEnum == "NURSE" && item.isCompleted == false ? (
+                              <TableCell align="right">
+                                <Button
+                                  variant="contained"
+                                  style={{
+                                    backgroundColor: "#f44336",
+                                    color: "white",
+                                  }}
+                                  onClick={() => handleOpenCompleteDialog(item.medicationOrderId)}
+                                // disabled={item.isCompleted !== false}
+                                >
+                                  Complete
+                                </Button>
+                              </TableCell>
+                            ) : null}
+                          </TableRow>
+                        </>
                       ))}
                     </TableBody>
                   </Table>
@@ -535,6 +657,26 @@ function MedicationOrderModal({
             variant="contained"
           >
             Delete
+          </MDButton>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={isCompleteDialogOpen} onClose={handleCloseCompleteDialog}>
+        <DialogTitle>Confirm Complete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure this medication order is completed?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCompleteDialog} color="primary">
+            Cancel
+          </Button>
+          <MDButton
+            onClick={handleConfirmComplete}
+            color="primary"
+            variant="contained"
+          >
+            Confirm
           </MDButton>
         </DialogActions>
       </Dialog>
