@@ -102,10 +102,10 @@ function Invoice() {
                                 return "red";
                         case "CLAIMS_IN_PROCESS":
                                 return "orange";
-                        case "UNPAID":
+                        case "PAYMENT DUE":
                                 return "red";
                         default:
-                                return "black";
+                                return "red";
                 }
         };
 
@@ -258,7 +258,7 @@ function Invoice() {
                                                 invoiceId: invoice.invoiceId,
                                                 invoiceAmount: `$${invoice.invoiceAmount.toFixed(2)}`,
                                                 invoiceDueDate: dueDate,
-                                                invoiceStatusEnum: invoice.invoiceStatusEnum,
+                                                invoiceStatusEnum: invoice.invoiceStatusEnum === "UNPAID" ? "PAYMENT DUE" : invoice.invoiceStatusEnum,
                                                 invoiceBreakdown: invoice.invoiceBreakdown,
                                                 insuranceClaim: invoice.insuranceClaim,
                                                 medishieldClaim: invoice.medishieldClaim,

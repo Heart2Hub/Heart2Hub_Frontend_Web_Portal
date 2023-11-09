@@ -505,6 +505,12 @@ export const shiftPreferenceApi = {
 };
 
 export const subsidyApi = {
+  getAllSubsidies(username) {
+    return axiosFetch.get(`${REST_ENDPOINT}/subsidy/findAllSubsidiesOfPatient/${username}`);
+  },
+  findAllSubsidyOfEhr(id) {
+    return axiosFetch.get(`${REST_ENDPOINT}/subsidy/findAllSubsidyOfEhr/${id}`);
+  },
   getAllSubsidies() {
     return axiosFetch.get(`${REST_ENDPOINT}/subsidy/getAllSubsidies`);
   },
