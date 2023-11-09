@@ -44,6 +44,7 @@ import MedicationOrderModal from "./MedicationOrderModal";
 import { medicationOrderApi } from "api/Api";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import { parseDateFromYYYYMMDDHHMMSS } from "utility/Utility";
+import TreatmentModal from "./TreatmentModal";
 
 const beds = [
   { id: 1, title: "Bed 1" },
@@ -54,12 +55,32 @@ const beds = [
   { id: 6, title: "Bed 6" },
 ];
 
-const events = [
+//FOR UI PURPOSES
+const startDate = new Date();
+const defaultEvents = [
+  {
+    id: 0,
+    title: `1 Medication Order(s)`,
+    start: new Date(startDate.setHours(12, 0, 0)),
+    end: new Date(startDate.setHours(13, 0, 0)),
+    resourceId: 1,
+    medicationOrders: [],
+  },
   {
     id: 1,
-    title: "Meeting 1",
-    start: moment("2023-11-06T10:00:00").toDate(), // Specify the date and time of the event
-    end: moment("2023-11-06T11:00:00").toDate(),
+    title: `2 Medication Order(s)`,
+    start: new Date(startDate.setHours(8, 0, 0)),
+    end: new Date(startDate.setHours(9, 0, 0)),
+    resourceId: 2,
+    medicationOrders: [],
+  },
+  {
+    id: 2,
+    title: `2 Medication Order(s)`,
+    start: new Date(startDate.setHours(8, 0, 0)),
+    end: new Date(startDate.setHours(9, 0, 0)),
+    resourceId: 3,
+    medicationOrders: [],
   },
 ];
 
@@ -91,6 +112,10 @@ function Inpatient() {
   const [selectedSlotStart, setSelectedSlotStart] = useState(null);
   const [selectedSlotEnd, setSelectedSlotEnd] = useState(null);
   const [existingMedicationOrders, setExistingMedicationOrders] = useState([]);
+
+  //for opening treatment modal
+  const [treatmentModal, setTreatmentModal] = useState(false);
+  const [existingTreatments, setExistingTreatments] = useState([]);
 
   //helper method to map admissions to resources and events for calendar
   const mapAdmissionsToResourcesAndEvents = async (admissions) => {
@@ -131,6 +156,7 @@ function Inpatient() {
       const slotCount = {};
 
       for (const medicationOrder of medicationOrders) {
+        console.log(medicationOrder);
         const startDate = medicationOrder.startDate;
 
         if (!slotCount.hasOwnProperty(startDate)) {
@@ -162,7 +188,7 @@ function Inpatient() {
       }
     }
 
-    setCalendarEvents(events);
+    setCalendarEvents([...events, ...defaultEvents]);
   };
 
   //helper method to get medication orders from medication order ids
@@ -364,9 +390,26 @@ function Inpatient() {
   };
 
   const handleSelectSlot = (slotInfo) => {
+    const orderForAdmission = currentDayAdmissions.filter(
+      (admission) =>
+        admission.room === room && admission.bed === slotInfo.resourceId
+    )[0];
     const currentDate = new Date();
-    console.log("slot " + slotInfo);
-    if (slotInfo.start < currentDate) {
+    const dischargeDate = parseDateFromLocalDateTime(
+      orderForAdmission.dischargeDateTime
+    );
+
+    if (staff.staffRoleEnum === "ADMIN" || staff.staffRoleEnum === "NURSE") {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error Encountered",
+          content: "You do not have the rights to create an order",
+        })
+      );
+      return;
+    } else if (slotInfo.start < currentDate) {
       reduxDispatch(
         displayMessage({
           color: "error",
@@ -375,22 +418,8 @@ function Inpatient() {
           content: "Order cannot be done for past date",
         })
       );
-      return
-    }
-
-    setSelectedSlotStart(slotInfo.start);
-    setSelectedSlotEnd(slotInfo.end);
-    const orderForAdmission = currentDayAdmissions.filter(
-      (admission) =>
-        admission.room === room && admission.bed === slotInfo.resourceId
-    )[0];
-    setSelectedAdmission(orderForAdmission);
-    console.log(selectedAdmission);
-
-    // console.log("admisssion " + parseDateFromLocalDateTime(selectedAdmission.dischargeDateTime))
-    console.log("date" + selectedAdmission.dischargeDateTime);
-    const checkDate = parseDateFromLocalDateTime(selectedAdmission.dischargeDateTime);
-    if (slotInfo.start > checkDate) {
+      return;
+    } else if (slotInfo.start > dischargeDate) {
       reduxDispatch(
         displayMessage({
           color: "error",
@@ -399,15 +428,29 @@ function Inpatient() {
           content: "Order cannot be done after discharge date",
         })
       );
-      return
+      return;
     }
-    setMedicationOrderModal(true);
+
+    setSelectedSlotStart(slotInfo.start);
+    setSelectedSlotEnd(slotInfo.end);
+    setSelectedAdmission(orderForAdmission);
+
+    if (staff.staffRoleEnum === "DOCTOR") {
+      setMedicationOrderModal(true);
+    } else {
+      setTreatmentModal(true);
+    }
   };
 
   const handleCloseMedicationOrderModal = () => {
     setSelectedAdmission(null);
     setExistingMedicationOrders([]);
     setMedicationOrderModal(false);
+  };
+
+  const handleCloseTreatmentModal = () => {
+    setSelectedAdmission(null);
+    setTreatmentModal(false);
   };
 
   const handleSelectEvent = (event) => {
@@ -500,7 +543,7 @@ function Inpatient() {
     <DashboardLayout>
       <DashboardNavbar />
       {staff.staffRoleEnum === "ADMIN" ||
-        staff.staffRoleEnum === "NURSE" ? null : (
+      staff.staffRoleEnum === "NURSE" ? null : (
         <Tabs
           value={displayedWard}
           onChange={handleChangeWard}
@@ -523,7 +566,7 @@ function Inpatient() {
       >
         Ward {displayedWard}
       </MDTypography>
-      <MDTypography sx={{ textAlign: "center" }}>{ }</MDTypography>
+      <MDTypography sx={{ textAlign: "center" }}>{}</MDTypography>
 
       <MDBox sx={{ display: "flex", width: "100%" }}>
         <MDBox className="staff-list">
@@ -564,6 +607,10 @@ function Inpatient() {
                   event: ({ event }) => {
                     if (event.id === 0) {
                       return <div>{event.title}</div>;
+                    } else if (event.id === 1) {
+                      return <div className="red-event">{event.title}</div>;
+                    } else if (event.id === 2) {
+                      return <div className="green-event">{event.title}</div>;
                     } else {
                       return (
                         <AdmissionCard
@@ -642,6 +689,15 @@ function Inpatient() {
           startDate={selectedSlotStart}
           endDate={selectedSlotEnd}
           existingMedicationOrders={existingMedicationOrders}
+        />
+      )}
+      {selectedAdmission && (
+        <TreatmentModal
+          openModal={treatmentModal}
+          handleCloseModal={handleCloseTreatmentModal}
+          selectedAdmission={selectedAdmission}
+          startDate={selectedSlotStart}
+          endDate={selectedSlotEnd}
         />
       )}
     </DashboardLayout>

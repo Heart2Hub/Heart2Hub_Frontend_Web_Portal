@@ -85,7 +85,9 @@ function MedicationOrderModal({
   const [startDateString, setStartDateString] = useState("");
   const [endDateString, setEndDateString] = useState("");
   const [comments, setComments] = useState(null);
-  const [medicationOrders, setMedicationOrders] = useState(existingMedicationOrders);
+  const [medicationOrders, setMedicationOrders] = useState(
+    existingMedicationOrders
+  );
 
   //For Cart
   const [medications, setMedications] = useState([]);
@@ -101,7 +103,6 @@ function MedicationOrderModal({
   const [isCompleteDialogOpen, setCompleteDialogOpen] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
 
-
   const handleOpenDeleteDialog = (itemId) => {
     setSelectedItemId(itemId);
     setDeleteDialogOpen(true);
@@ -114,7 +115,7 @@ function MedicationOrderModal({
   const handleOpenCompleteDialog = (itemId) => {
     setSelectedItemId(itemId);
     setCompleteDialogOpen(true);
-    setIsCompleted(true)
+    setIsCompleted(true);
   };
 
   const handleCloseCompleteDialog = () => {
@@ -139,16 +140,17 @@ function MedicationOrderModal({
   // Fetch lists of all medications and service items from the API
   const fetchMedications = async () => {
     try {
-      const medicationsResponse = await inventoryApi.getAllInpatientMedicationsByAllergy(
-        selectedAdmission.patientId
-      );
+      const medicationsResponse =
+        await inventoryApi.getAllInpatientMedicationsByAllergy(
+          selectedAdmission.patientId
+        );
       setMedicationsAllergy(medicationsResponse.data);
-      console.log("allergy " + medicationsResponse.data)
+      console.log("allergy " + medicationsResponse.data);
 
-      const medicationsResponse2 = await inventoryApi.getAllInpatientMedication();
+      const medicationsResponse2 =
+        await inventoryApi.getAllInpatientMedication();
       setMedications(medicationsResponse2.data);
-      console.log("no allergy " + medicationsResponse2.data)
-
+      console.log("no allergy " + medicationsResponse2.data);
     } catch (error) {
       console.error("Error fetching medications:", error);
     }
@@ -172,7 +174,7 @@ function MedicationOrderModal({
     } catch (error) {
       console.error("Error fetching medication orders:", error);
     }
-  }
+  };
 
   const getMedicationOrders = async (medicationOrderIds) => {
     const medicationOrderPromises = medicationOrderIds.map((id) =>
@@ -261,8 +263,7 @@ function MedicationOrderModal({
             color: "error",
             icon: "notification",
             title: "Error",
-            content:
-              "Medication already added to order.",
+            content: "Medication already added to order.",
           })
         );
         return;
@@ -307,11 +308,10 @@ function MedicationOrderModal({
 
   const handleConfirmDelete = async () => {
     try {
-      await medicationOrderApi
-        .deleteMedicationOrder(
-          selectedItemId,
-          selectedAdmission.admissionId
-        );
+      await medicationOrderApi.deleteMedicationOrder(
+        selectedItemId,
+        selectedAdmission.admissionId
+      );
       reduxDispatch(
         displayMessage({
           color: "success",
@@ -322,7 +322,9 @@ function MedicationOrderModal({
       );
       // fetchPatientCart();
       console.log("Before: " + medicationOrders);
-      const updatedMedicationOrders = medicationOrders.filter(item => item.medicationOrderId !== selectedItemId);
+      const updatedMedicationOrders = medicationOrders.filter(
+        (item) => item.medicationOrderId !== selectedItemId
+      );
       setMedicationOrders(updatedMedicationOrders);
       // fetchAdmission(selectedAdmission.admissionId);
       // getMedicationOrders(selectedAdmission.listOfMedicationOrderIds);
@@ -342,12 +344,11 @@ function MedicationOrderModal({
 
   const handleConfirmComplete = async () => {
     try {
-      await medicationOrderApi
-        .updateComplete(
-          selectedItemId,
-          selectedAdmission.admissionId,
-          isCompleted
-        );
+      await medicationOrderApi.updateComplete(
+        selectedItemId,
+        selectedAdmission.admissionId,
+        isCompleted
+      );
       reduxDispatch(
         displayMessage({
           color: "success",
@@ -357,7 +358,9 @@ function MedicationOrderModal({
         })
       );
       const updatedMedicationOrders = medicationOrders.map((item) =>
-        item.medicationOrderId === selectedItemId ? { ...item, isCompleted: true } : item
+        item.medicationOrderId === selectedItemId
+          ? { ...item, isCompleted: true }
+          : item
       );
       setMedicationOrders(updatedMedicationOrders);
       // fetchPatientCart();
@@ -376,7 +379,7 @@ function MedicationOrderModal({
   };
 
   //   const renderIsCompleteButton = (item) => {
-  //     return ( 
+  //     return (
   //       if (!item.isCompleted) {
   //       return (
   //         <Button
@@ -511,7 +514,7 @@ function MedicationOrderModal({
             electronicHealthRecordId={
               selectedAdmission.electronicHealthRecordId
             }
-          //handlePageRefresh={handlePageRefresh}
+            //handlePageRefresh={handlePageRefresh}
           />
           <br></br>
           {loggedInStaff.staffRoleEnum !== "ADMIN" ? (
@@ -567,7 +570,45 @@ function MedicationOrderModal({
             </ListItem>
             {medicationOrders.length === 0 ? (
               <ListItem>
-                <MDTypography variant="subtitle1">No Orders Added</MDTypography>
+                {/* <MDTypography variant="subtitle1">No Orders Added</MDTypography> */}
+                <TableContainer component={Paper}>
+                  <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell> Name</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      <TableRow
+                        sx={{
+                          "&:last-child td, &:last-child th": {
+                            border: 0,
+                          },
+                        }}
+                      >
+                        <TableCell component="th" scope="row">
+                          Warfarin 1mg Tablet (1 piece)
+                        </TableCell>
+                        <TableCell>
+                          <div>Quantity: 1</div>
+                          <div>Comments: Take Daily</div>
+                        </TableCell>
+
+                        <TableCell align="right">
+                          <Button
+                            variant="contained"
+                            style={{
+                              backgroundColor: "gray",
+                              color: "white",
+                            }}
+                          >
+                            Not Completed
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
               </ListItem>
             ) : (
               <ListItem>
@@ -596,7 +637,8 @@ function MedicationOrderModal({
                               <div>Quantity: {item.quantity}</div>
                               <div>Comments: {item.comments}</div>
                             </TableCell>
-                            {loggedInStaff.staffRoleEnum == "DOCTOR" && item.isCompleted == false ? (
+                            {loggedInStaff.staffRoleEnum == "DOCTOR" &&
+                            item.isCompleted == false ? (
                               <TableCell align="right">
                                 <Button
                                   variant="contained"
@@ -614,7 +656,8 @@ function MedicationOrderModal({
                                 </Button>
                               </TableCell>
                             ) : null}
-                            {loggedInStaff.staffRoleEnum == "NURSE" && item.isCompleted == false ? (
+                            {loggedInStaff.staffRoleEnum == "NURSE" &&
+                            item.isCompleted == false ? (
                               <TableCell align="right">
                                 <Button
                                   variant="contained"
@@ -622,8 +665,12 @@ function MedicationOrderModal({
                                     backgroundColor: "#f44336",
                                     color: "white",
                                   }}
-                                  onClick={() => handleOpenCompleteDialog(item.medicationOrderId)}
-                                // disabled={item.isCompleted !== false}
+                                  onClick={() =>
+                                    handleOpenCompleteDialog(
+                                      item.medicationOrderId
+                                    )
+                                  }
+                                  // disabled={item.isCompleted !== false}
                                 >
                                   Complete
                                 </Button>

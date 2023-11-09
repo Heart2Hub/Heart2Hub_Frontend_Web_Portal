@@ -419,7 +419,7 @@ function AdmissionTicketModal({
                     {calculateAge(selectedAdmission?.dateOfBirth)}
                     {selectedAdmission.sex === "Male" ? "M" : "F"})
                   </MDTypography>
-                  {arrived ? null : (
+                  {selectedAdmission.arrived ? null : (
                     <MDButton
                       variant="gradient"
                       color="primary"
@@ -468,12 +468,18 @@ function AdmissionTicketModal({
                   </MDTypography>
                 </ListItem>
                 <ListItem>
-                  <MDButton onClick={handleOpenExtendDialog} color="primary">
-                    Extend Admission
-                  </MDButton>
+                  <MDTypography variant="h6" gutterBottom>
+                    <MDButton onClick={handleOpenExtendDialog} color="primary">
+                      Change Discharge Date
+                    </MDButton>
+                  </MDTypography>
                 </ListItem>
                 <ListItem
-                  style={{ display: "flex", justifyContent: "space-between" }}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: "5px",
+                  }}
                 >
                   <MDTypography variant="h5" gutterBottom>
                     Link to Electronic Health Record:
@@ -495,7 +501,7 @@ function AdmissionTicketModal({
                       onClick={handleClickToEhr}
                       color="primary"
                       //TODO
-                      disabled
+                      //disabled
                     >
                       EHR
                     </MDButton>
@@ -513,9 +519,11 @@ function AdmissionTicketModal({
                     variant="gradient"
                     color="primary"
                   >
-                    {selectedAdmission.listOfStaffsId.includes(
-                      loggedInStaff.staffId
-                    )
+                    {loggedInStaff.staffRoleEnum === "DOCTOR"
+                      ? "Assign"
+                      : selectedAdmission.listOfStaffsId.includes(
+                          loggedInStaff.staffId
+                        )
                       ? "Reassign"
                       : "Assign"}
                   </MDButton>

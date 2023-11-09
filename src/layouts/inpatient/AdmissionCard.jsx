@@ -4,6 +4,8 @@ import {
   CardContent,
   ButtonBase,
   Skeleton,
+  Tooltip,
+  Icon,
 } from "@mui/material";
 import React, { useEffect } from "react";
 import "./inpatient.css";
@@ -12,6 +14,34 @@ import { useState } from "react";
 import MDAvatar from "components/MDAvatar";
 import { truncateText } from "utility/Utility";
 import { imageServerApi } from "api/Api";
+
+//FOR UI PURPOSES
+const tooltips = {
+  1: (
+    <Tooltip title="Please register admission" placement="top">
+      <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={"warning"}>
+        warning
+      </Icon>
+    </Tooltip>
+  ),
+  2: (
+    <Tooltip
+      title="2 hours since admission time and Admission not registered"
+      placement="top"
+    >
+      <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={"error"}>
+        warning
+      </Icon>
+    </Tooltip>
+  ),
+  4: (
+    <Tooltip title="Patient is discharging today" placement="top">
+      <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={"warning"}>
+        warning
+      </Icon>
+    </Tooltip>
+  ),
+};
 
 function AdmissionCard({ admission, handleSelectAdmission }) {
   const [profileImage, setProfileImage] = useState(null);
@@ -53,6 +83,7 @@ function AdmissionCard({ admission, handleSelectAdmission }) {
               <MDTypography variant="h5" className="draggable-id">
                 Bed {admission.bed}
               </MDTypography>
+              {tooltips[admission.patientId]}
             </div>
 
             <Typography variant="body2" className="draggable-description">

@@ -98,7 +98,7 @@ function ExtendAdmissionDialog({
   return (
     <>
       <Dialog open={open} onClose={onClose}>
-        <DialogTitle>Extend Admission</DialogTitle>
+        <DialogTitle>Change Discharge Date</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Please select a new discharge date for this admission ticket

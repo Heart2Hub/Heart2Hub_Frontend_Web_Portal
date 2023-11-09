@@ -183,7 +183,7 @@
 }
 
 .admission-calendar .rbc-time-view-resources .rbc-time-header-content {
-  width: 200px;
+  width: 300px;
 }
 
 .admission-calendar .rbc-event,
@@ -195,7 +195,21 @@
   background-color: #265985;
 }
 
+/* UI PURPOSES */
+.admission-calendar .rbc-events-container .rbc-event:has(.red-event) {
+  background-color: red;
+}
+
+.admission-calendar .rbc-events-container .rbc-event:has(.green-event) {
+  background-color: green;
+}
+/* UI PURPOSES */
+
 .admission-calendar .rbc-row-content .rbc-row:nth-child(2) {
+  display: none;
+}
+
+.admission-calendar .rbc-event-label {
   display: none;
 }
 

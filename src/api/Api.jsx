@@ -932,13 +932,19 @@ export const admissionApi = {
     return axiosFetch.get(
       `${REST_ENDPOINT}/admission/getAdmissionByAdmissionId?admissionId=${admissionId}`
     );
-  }
+  },
 };
 
 export const medicationOrderApi = {
   createMedicationOrder(medicationId, admissionId, requestBody) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/medicationOrder/createMedicationOrder?medicationId=${medicationId}&admissionId=${admissionId}`,
+      requestBody
+    );
+  },
+  createInpatientTreatment(admissionId, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/medicationOrder/createInpatientTreatment?admissionId=${admissionId}`,
       requestBody
     );
   },
@@ -968,4 +974,3 @@ export const medicationOrderApi = {
     );
   },
 };
-
