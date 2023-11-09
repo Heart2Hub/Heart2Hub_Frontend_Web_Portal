@@ -674,28 +674,27 @@ function Invoice() {
                                                                                                                 Quantity: {item.transactionItemQuantity}
                                                                                                         </TableCell>
                                                                                                         <TableCell align="right">
-                                                                                                                Total Price: ${item.transactionItemPrice.toFixed(2)}
+                                                                                                                Price per Quantity: ${item.transactionItemPrice.toFixed(2)}
+                                                                                                        </TableCell>
+                                                                                                        <TableCell align="right">
+                                                                                                                Total Price: ${item.transactionItemPrice.toFixed(2) * item.transactionItemQuantity}
                                                                                                         </TableCell>
 
 
                                                                                                 </TableRow>
                                                                                         ))}
                                                                                 </TableBody>
-                                                                                <TableRow>
-                                                                                        <TableCell colSpan={2} align="right">
-                                                                                                <strong>Total:</strong>
-                                                                                        </TableCell>
-                                                                                        <TableCell align="right">
-                                                                                                <strong>
-                                                                                                        ${selectedItems
-                                                                                                                .reduce((total, item) => total + item.transactionItemPrice, 0)
-                                                                                                                .toFixed(2)}
-                                                                                                </strong>
-                                                                                        </TableCell>
-                                                                                </TableRow>
+
                                                                         </Table>
+
                                                                 </TableContainer>
+                                                                <strong align="center">
+                                                                        Total Invoice Amount: ${selectedItems
+                                                                                .reduce((total, item) => total + item.transactionItemPrice * item.transactionItemQuantity, 0)
+                                                                                .toFixed(2)}
+                                                                </strong>
                                                         </ListItem>
+
                                                 )}
                                         </List>
                                         <ListItem sx={{ display: 'flex', justifyContent: 'flex-end', paddingRight: 2, paddingTop: 2 }}>
