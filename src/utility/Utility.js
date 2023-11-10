@@ -22,6 +22,17 @@ export const parseDateFromYYYYMMDD = (dateString) => {
   return new Date(yyyy, mm - 1, dd);
 };
 
+export const parseDateFromYYYYMMDDHHMMSS = (dateString) => {
+  const parts = dateString.split(" "); // Split the date and time parts
+  const datePart = parts[0];
+  const timePart = parts[1];
+
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hours, minutes, seconds] = timePart.split(":").map(Number);
+
+  return new Date(year, month - 1, day, hours, minutes, seconds);
+};
+
 export const parseDateFromLocalDateTime = (localDateTime) => {
   // console.log(localDateTime)
   if (localDateTime !== null && localDateTime.length < 6) {
@@ -135,8 +146,9 @@ export const formatDateToYYYYMMDDHHMM = (date) => {
 };
 
 export const parseDateArrUsingMoment = (dateArr) => {
-  dateArr[1] = dateArr[1] - 1;
+  const newMonth = dateArr[1] - 1;
+  dateArr[1] = newMonth;
   console.log(dateArr);
   const parsedDate = moment(dateArr);
-  return parsedDate.format("YYYY-MM-DD HH:mm");
+  return parsedDate.format("YYYY-MM-DD HH:mm:ss");
 };

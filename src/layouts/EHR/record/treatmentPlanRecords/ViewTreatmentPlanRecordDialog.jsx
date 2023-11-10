@@ -76,6 +76,12 @@ function ViewTreatmentPlanRecordDialog({
   //only for refreshing approval dialog
   const [loading, setLoading] = useState(false);
 
+  //for rendering the add image button
+  const [showAddImageButton, setShowAddImageButton] = useState(false);
+
+  //for passing invitationId to approve
+  const [invitationIdToApprove, setInvitationIdToApprove] = useState(null);
+
   //view image in treatment plan records
   const handleOpenViewImageDialog = () => {
     setOpenViewImageDialog(true);
@@ -112,11 +118,13 @@ function ViewTreatmentPlanRecordDialog({
   };
 
   //handle approve treatment plan
-  const handleOpenConfirmApproveTreatmentPlanRecordDialog = () => {
+  const handleOpenConfirmApproveTreatmentPlanRecordDialog = (invitationId) => {
+    setInvitationIdToApprove(invitationId);
     setOpenConfirmApproveTreatmentPlanDialog(true);
   };
 
   const handleCloseConfirmApproveTreatmentPlanRecordDialog = () => {
+    setInvitationIdToApprove(null);
     setOpenConfirmApproveTreatmentPlanDialog(false);
   };
 
@@ -279,19 +287,25 @@ function ViewTreatmentPlanRecordDialog({
       await treatmentPlanRecordApi.getListOfInvitationsInTreatmentPlanRecord(
         selectedTreatmentPlanRecordToView.treatmentPlanRecordId
       );
-    const listOfAllInvitations = response.data;
+    const listOfAllInvitations = [...response.data];
+
+    console.log(listOfAllInvitations);
 
     //to get the primary staff of the treatment plan
+    let primaryInv = null;
     let primaryList = listOfAllInvitations.filter(
       (invitation) => invitation.isPrimary
     );
     if (primaryList.length > 0) {
       setPrimaryInvitation(primaryList[0]);
+      primaryInv = primaryList[0];
     }
 
-    const listOfCurrentStaffInvitation = response.data.filter(
+    const listOfCurrentStaffInvitation = [...response.data].filter(
       (invitation) => invitation.staffId === loggedInStaff.staffId
     );
+
+    let currStaffInvitation = null;
 
     //if this staff has been invited for this treatment plan
     if (listOfCurrentStaffInvitation.length > 0) {
@@ -305,7 +319,64 @@ function ViewTreatmentPlanRecordDialog({
         currentStaffInvitation = invitationResponse.data;
       }
       setCurrentStaffInvitation(currentStaffInvitation);
+      currStaffInvitation = currentStaffInvitation;
     }
+
+    // console.log(currStaffInvitation);
+    // console.log(primaryInv);
+
+    let result;
+
+    if (currStaffInvitation === null) {
+      result = false;
+    } else {
+      //if invited
+      if (currStaffInvitation !== null) {
+        // console.log("invited");
+        //if primary
+        if (
+          primaryInv !== null &&
+          primaryInv.staffId === loggedInStaff.staffId
+        ) {
+          // console.log("is primary");
+          //if completed
+          if (selectedTreatmentPlanRecordToView.isCompleted) {
+            // console.log("is completed");
+            result = false;
+
+            //not completed
+          } else {
+            // console.log("not completed");
+            result = true;
+          }
+
+          //if invited staff (not primary)
+        } else {
+          // console.log("invited");
+          //if completed already
+          if (selectedTreatmentPlanRecordToView.isCompleted) {
+            // console.log("plan is completed");
+            result = false;
+          } else {
+            //if approved
+            if (currStaffInvitation.isApproved) {
+              // console.log("already approved");
+              result = false;
+            } else {
+              // console.log("havent approved");
+
+              result = true;
+            }
+          }
+        }
+      } else {
+        // console.log("not invited");
+
+        result = false;
+      }
+    }
+
+    setShowAddImageButton(result);
   };
 
   const handleRefresh = () => {
@@ -377,15 +448,21 @@ function ViewTreatmentPlanRecordDialog({
                 >
                   View Images
                 </MDButton>
-                {currentStaffInvitation !== null &&
-                  !selectedTreatmentPlanRecordToView.isCompleted && (
+                {
+                  // currentStaffInvitation !== null &&
+                  //   ((!currentStaffInvitation.isApproved &&
+                  //     primaryInvitation === null) ||
+                  //     primaryInvitation !== null) &&
+                  //   !selectedTreatmentPlanRecordToView.isCompleted
+                  showAddImageButton && (
                     <MDButton
                       onClick={handleOpenUploadImageDialog}
                       color="light"
                     >
                       Add Images
                     </MDButton>
-                  )}
+                  )
+                }
               </div>
             </DialogActions>
             <DialogContent>
@@ -526,8 +603,10 @@ function ViewTreatmentPlanRecordDialog({
                       primaryInvitation?.staffId !== loggedInStaff.staffId && (
                         <>
                           <MDButton
-                            onClick={
-                              handleOpenConfirmApproveTreatmentPlanRecordDialog
+                            onClick={() =>
+                              handleOpenConfirmApproveTreatmentPlanRecordDialog(
+                                currentStaffInvitation.invitationId
+                              )
                             }
                             color="warning"
                             disabled={currentStaffInvitation.isApproved}
@@ -575,6 +654,7 @@ function ViewTreatmentPlanRecordDialog({
               handleCloseConfirmApproveTreatmentPlanRecordDialog
             }
             handleRefresh={handleRefresh}
+            invitationIdToApprove={invitationIdToApprove}
           />
           <ConfirmDeleteTreatmentPlanDialog
             openConfirmDeleteTreatmentPlanRecordDialog={

@@ -111,6 +111,7 @@ function ConfirmDispenseMedicationModal({
               <TableHead sx={{ display: "table-header-group" }}>
                 <TableRow>
                   <TableCell>Medication</TableCell>
+                  <TableCell align="right">Comments</TableCell>
                   <TableCell align="right">Quantity</TableCell>
                 </TableRow>
               </TableHead>
@@ -123,6 +124,9 @@ function ConfirmDispenseMedicationModal({
                   >
                     <TableCell component="th" scope="row">
                       {" * " + item.inventoryItem.inventoryItemName}
+                    </TableCell>
+                    <TableCell align="right">
+                      {item.inventoryItem.comments ? item.inventoryItem.comments : "-"}
                     </TableCell>
                     <TableCell align="right">{item.transactionItemQuantity}</TableCell>
                   </TableRow>

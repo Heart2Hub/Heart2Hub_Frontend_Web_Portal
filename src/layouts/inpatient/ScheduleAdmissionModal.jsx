@@ -1079,13 +1079,6 @@ function ScheduleAdmissionModal({
                 </Box>
 
                 <MDBox pt={3}>
-                  <style>
-                    {`
-                        .rbc-event-label {
-                            display: none; /* Hide the start and end times */
-                        }
-                    `}
-                  </style>
                   <Calendar
                     localizer={localizer}
                     events={calendarEvents}

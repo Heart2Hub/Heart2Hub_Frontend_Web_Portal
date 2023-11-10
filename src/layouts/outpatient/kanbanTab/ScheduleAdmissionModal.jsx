@@ -682,7 +682,7 @@ function ScheduleAdmissionModal({
     const endCol = (startCol + duration - 1) % 7;
 
     if (startCol <= endCol) {
-      const eventIds = [];
+      let eventIds = [];
       let eventId = event.id;
       for (let i = 0; i < duration; i++) {
         const filteredEvent = calendarEvents.filter(
@@ -699,30 +699,38 @@ function ScheduleAdmissionModal({
               content: "There are not enough beds for the entire duration",
             })
           );
+          setSelectedEventIds([]);
+          setAdmissionDateTime("");
+          setDischargeDateTime("");
+          setSelectedWard("");
+          eventIds = [];
           break;
+        } else {
+          eventIds.push(eventId);
+          eventId = eventId + 1;
         }
-
-        eventIds.push(eventId);
-        eventId = eventId + 1;
       }
 
-      setSelectedWard(event.wardName);
-      setSelectedEventIds(eventIds);
+      if (eventIds.length > 0) {
+        setSelectedWard(event.wardName);
+        setSelectedEventIds(eventIds);
 
-      const actualDate = moment(event.actual);
-      //console.log(actualDate);
+        const actualDate = moment(event.actual);
+        //console.log(actualDate);
 
-      if (actualDate.subtract(1, "days").isBefore(moment())) {
-        setAdmissionDateTime(moment().format("YYYY-MM-DD HH:mm:ss"));
-      } else {
-        actualDate.hour(13);
-        setAdmissionDateTime(actualDate.format("YYYY-MM-DD HH:mm:ss"));
+        if (actualDate.subtract(1, "days").isBefore(moment())) {
+          setAdmissionDateTime(moment().format("YYYY-MM-DD HH:mm:ss"));
+        } else {
+          actualDate.hour(13);
+          setAdmissionDateTime(actualDate.format("YYYY-MM-DD HH:mm:ss"));
+        }
       }
     } else {
       console.log("CANNOT");
       setSelectedEventIds([]);
       setAdmissionDateTime("");
       setDischargeDateTime("");
+      setSelectedWard("");
       reduxDispatch(
         displayMessage({
           color: "warning",

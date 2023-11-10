@@ -182,11 +182,46 @@
   padding: 5px;
 }
 
-.admission-calendar .rbc-toolbar {
+.admission-calendar .rbc-time-view-resources .rbc-time-header-content {
+  width: 300px;
+}
+
+.admission-calendar .rbc-event,
+.admission-calendar .rbc-event.rbc-selected {
+  background-color: #fff;
+}
+
+.admission-calendar .rbc-events-container .rbc-event {
+  background-color: #265985;
+}
+
+/* UI PURPOSES */
+.admission-calendar .rbc-events-container .rbc-event:has(.red-event) {
+  background-color: red;
+}
+
+.admission-calendar .rbc-events-container .rbc-event:has(.green-event) {
+  background-color: green;
+}
+/* UI PURPOSES */
+
+.admission-calendar .rbc-row-content .rbc-row:nth-child(2) {
   display: none;
 }
 
-.no-time .rbc-time-gutter {
+.admission-calendar .rbc-event-label {
+  display: none;
+}
+
+/* .admission-calendar .rbc-row-content[height~="100px"] {
+  background-color: #000000;
+} */
+
+/* .admission-calendar .rbc-toolbar {
+  display: none;
+} */
+
+/* .no-time .rbc-time-gutter {
   width: 0;
 }
 
@@ -200,18 +235,9 @@
 
 .no-time .rbc-time-view {
   width: 200px;
-}
+} */
 
-.admission-calendar .rbc-event,
-.admission-calendar .rbc-event.rbc-selected {
-  background-color: #fff;
-}
-
-.admission-calendar .rbc-row-content .rbc-row:nth-child(2) {
-  display: none;
-}
-
-.no-admission {
+/* .no-admission {
   height: 162.48px;
   padding: 10px;
-}
+} */

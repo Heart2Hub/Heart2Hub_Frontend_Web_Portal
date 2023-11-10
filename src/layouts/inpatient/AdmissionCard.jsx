@@ -4,59 +4,82 @@ import {
   CardContent,
   ButtonBase,
   Skeleton,
+  Tooltip,
+  Icon,
 } from "@mui/material";
 import React, { useEffect } from "react";
-import { Draggable } from "@hello-pangea/dnd";
 import "./inpatient.css";
 import MDTypography from "components/MDTypography";
-import AppointmentTicketModal from "./AppointmentTicketModal";
 import { useState } from "react";
 import MDAvatar from "components/MDAvatar";
 import { truncateText } from "utility/Utility";
 import { imageServerApi } from "api/Api";
-import ScheduleAdmissionModal from "./ScheduleAdmissionModal";
-import AdmissionTicketModal from "./AdmissionTicketModal";
+import moment from "moment";
 
-function AdmissionCard({
-  appointment,
-  index,
-  listOfWorkingStaff,
-  forceRefresh,
-}) {
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
+//FOR UI PURPOSES
+const tooltips = {
+  1: (
+    <Tooltip title="Please register admission" placement="top">
+      <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={"warning"}>
+        warning
+      </Icon>
+    </Tooltip>
+  ),
+  2: (
+    <Tooltip
+      title="2 hours since admission time and Admission not registered"
+      placement="top"
+    >
+      <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={"error"}>
+        warning
+      </Icon>
+    </Tooltip>
+  ),
+  4: (
+    <Tooltip title="Patient is discharging today" placement="top">
+      <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={"warning"}>
+        warning
+      </Icon>
+    </Tooltip>
+  ),
+};
+
+function AdmissionCard({ admission, handleSelectAdmission }) {
   const [profileImage, setProfileImage] = useState(null);
+  const [tooltip, setTooltip] = useState(null);
 
   const handleGetProfileImage = async () => {
-    if (appointment.patientProfilePicture !== null) {
+    if (admission.patientProfilePicture !== null) {
       const response = await imageServerApi.getImageFromImageServer(
         "id",
-        appointment.patientProfilePicture
+        admission.patientProfilePicture
       );
       const imageURL = URL.createObjectURL(response.data);
       setProfileImage(imageURL);
     }
   };
 
-  const handleCloseModal = () => {
-    setOpenModal(false);
-  };
+  const handleGetTooltipColorAndMessage = () => {
+    const admissionMoment = moment(admission.admissionDateTime);
+    admissionMoment.subtract(1, "months");
+    const hoursPassed = admissionMoment.diff(moment(), "hours");
 
-  const handleOpenModal = (appointment) => {
-    setSelectedAppointment(appointment);
-    setOpenModal(true);
+    if (hoursPassed < 2 && !admission.arrived) {
+      setTooltip(1);
+    }
   };
 
   useEffect(() => {
     handleGetProfileImage();
-  }, [appointment]);
+    handleGetTooltipColorAndMessage();
+  }, []);
 
   return (
     <>
       <ButtonBase
-        key={appointment.admissionId}
+        key={admission.admissionId}
         style={{ width: "100%", marginBottom: "10px" }}
-        onClick={() => handleOpenModal(appointment)}
+        onClick={() => handleSelectAdmission(admission)}
       >
         <Card
           // className={`draggable-container ${
@@ -71,12 +94,13 @@ function AdmissionCard({
           <CardContent>
             <div className="draggable-icons">
               <MDTypography variant="h5" className="draggable-id">
-                Bed {appointment.bed}
+                Bed {admission.bed}
               </MDTypography>
+              {tooltip && tooltips[tooltip]}
             </div>
 
             <Typography variant="body2" className="draggable-description">
-              {appointment.birthday}
+              {admission.birthday}
             </Typography>
             <div className="draggable-icons">
               <Typography
@@ -84,23 +108,23 @@ function AdmissionCard({
                 className="avatar-left"
                 sx={{ textAlign: "left" }}
               >
-                {appointment.duration
+                {admission.duration
                   ? truncateText(
-                      appointment.firstName + " " + appointment.lastName,
+                      admission.firstName + " " + admission.lastName,
                       14
                     )
                   : "Vacant"}
                 <br />
-                {"(" + appointment.sex + ")"}
+                {"(" + admission.sex + ")"}
               </Typography>
-              {appointment.patientProfilePicture === null && (
+              {admission.patientProfilePicture === null && (
                 <Skeleton
                   className="avatar-right"
                   variant="circular"
                   style={{ height: "50px", width: "50px" }}
                 />
               )}
-              {appointment.patientProfilePicture !== null && (
+              {admission.patientProfilePicture !== null && (
                 <MDAvatar
                   size="xl"
                   className="avatar-right"
@@ -113,15 +137,15 @@ function AdmissionCard({
         </Card>
       </ButtonBase>
 
-      {selectedAppointment && (
+      {/* {selectedadmission && (
         <AdmissionTicketModal
           openModal={openModal}
           handleCloseModal={handleCloseModal}
-          selectedAppointment={appointment}
+          selectedadmission={admission}
           listOfWorkingStaff={listOfWorkingStaff}
           forceRefresh={forceRefresh}
         />
-      )}
+      )} */}
     </>
   );
 }

@@ -715,6 +715,16 @@ export const inventoryApi = {
       `${REST_ENDPOINT}/medication/findMedicationByInventoryItemId?inventoryItemId=${inventoryItemId}`
     );
   },
+  getAllInpatientMedication() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medication/getAllInpatientMedication`
+    );
+  },
+  getAllInpatientMedicationsByAllergy(pId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medication/getAllInpatientMedicationsByAllergy/${pId}`
+    );
+  },
   getAllServiceItem(name) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/serviceItem/getAllServiceItem?name=${name}`
@@ -806,7 +816,7 @@ export const prescriptionRecordApi = {
     return axiosFetch.get(
       `${REST_ENDPOINT}/prescriptionRecord/getPrescriptionRecordsByNric?nric=${nric}`
     );
-  }
+  },
 };
 
 export const stripeApi = {
@@ -863,10 +873,14 @@ export const invoiceApi = {
     );
   },
   deleteInsuranceClaim(claimId, invoiceId) {
-    return axiosFetch.delete(`${REST_ENDPOINT}/invoice/deleteInsuranceClaim/${claimId}/${invoiceId}`);
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/invoice/deleteInsuranceClaim/${claimId}/${invoiceId}`
+    );
   },
   deleteMedishieldClaim(claimId, invoiceId) {
-    return axiosFetch.delete(`${REST_ENDPOINT}/invoice/deleteMedishieldClaim/${claimId}/${invoiceId}`);
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/invoice/deleteMedishieldClaim/${claimId}/${invoiceId}`
+    );
   },
   approveMedishieldClaim(claimId, invoiceId) {
     return axiosFetch.put(`${REST_ENDPOINT}/invoice/approveMedishieldClaim/${claimId}/${invoiceId}`);
@@ -904,19 +918,39 @@ export const admissionApi = {
       `${REST_ENDPOINT}/admission/getAdmissionsForWard?wardName=${name}`
     );
   },
-  assignAdmissionToNurse(admissionId, toStaffId, fromStaffId) {
-    return axiosFetch.put(
-      `${REST_ENDPOINT}/admission/assignAdmissionToNurse?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+  getAdmissionsForStaff(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/admission/getAdmissionsForStaff?staffId=${id}`
     );
   },
-  assignAdmissionToAdmin(admissionId, toStaffId, fromStaffId) {
+  // assignAdmissionToStaff(admissionId, toStaffId, fromStaffId) {
+  //   return axiosFetch.put(
+  //     `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+  //   );
+  // },
+  assignAdmissionToStaff(admissionId, toStaffId) {
     return axiosFetch.put(
-      `${REST_ENDPOINT}/admission/assignAdmissionToAdmin?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+      `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}`
     );
   },
+  // assignAdmissionToNurse(admissionId, toStaffId, fromStaffId) {
+  //   return axiosFetch.put(
+  //     `${REST_ENDPOINT}/admission/assignAdmissionToNurse?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+  //   );
+  // },
+  // assignAdmissionToAdmin(admissionId, toStaffId, fromStaffId) {
+  //   return axiosFetch.put(
+  //     `${REST_ENDPOINT}/admission/assignAdmissionToAdmin?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
+  //   );
+  // },
   updateAdmissionArrival(admissionId, arrivalStatus, staffId) {
     return axiosFetch.put(
       `${REST_ENDPOINT}/admission/updateAdmissionArrival?admissionId=${admissionId}&arrivalStatus=${arrivalStatus}&staffId=${staffId}`
+    );
+  },
+  updateAdmissionComments(admissionId, comments, staffId) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/updateAdmissionComments?admissionId=${admissionId}&comments=${comments}&staffId=${staffId}`
     );
   },
   cancelAdmission(admissionId, wardId) {
@@ -932,6 +966,65 @@ export const admissionApi = {
   handleAllocateIncoming(date) {
     return axiosFetch.put(
       `${REST_ENDPOINT}/admission/handleAllocateIncoming?date=${date}`
+    );
+  },
+  updateDischargeDate(admissionId, dischargeDate) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/updateDischargeDate?admissionId=${admissionId}&dischargeDate=${dischargeDate}`
+    );
+  },
+  getAdmissionByAdmissionId(admissionId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/admission/getAdmissionByAdmissionId?admissionId=${admissionId}`
+    );
+  },
+};
+
+export const medicationOrderApi = {
+  createMedicationOrder(medicationId, admissionId, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/medicationOrder/createMedicationOrder?medicationId=${medicationId}&admissionId=${admissionId}`,
+      requestBody
+    );
+  },
+
+  deleteMedicationOrder(medicationOrderId, admissionId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/medicationOrder/deleteMedicationOrder?medicationOrderId=${medicationOrderId}&admissionId=${admissionId}`
+    );
+  },
+  getAllMedicationOrdersOfAdmission(admissionId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medicationOrder/getAllMedicationOrdersOfAdmission?admissionId=${admissionId}`
+    );
+  },
+  getAllMedicationOrders() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medicationOrder/getAllMedicationOrders`
+    );
+  },
+  getMedicationOrderById(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/medicationOrder/getMedicationOrderById?medicationOrderId=${id}`
+    );
+  },
+  updateComplete(medicationOrderId, admissionId, isCompleted) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/medicationOrder/updateComplete?medicationOrderId=${medicationOrderId}&admissionId=${admissionId}&isCompleted=${isCompleted}`
+    );
+  },
+};
+
+export const inpatientTreatmentApi = {
+  createInpatientTreatment(serviceItemId, admissionId, staffId, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/inpatientTreatment/createInpatientTreatment?serviceItemId=${serviceItemId}&admissionId=${admissionId}&staffId=${staffId}`,
+      requestBody
+    );
+  },
+  getInpatientTreatmentById(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/inpatientTreatment/getInpatientTreatmentById?inpatientTreatmentId=${id}`
     );
   },
 };

@@ -432,7 +432,7 @@ function AppointmentsBox() {
                 <Card key={index} style={appointmentCardStyles}>
                   <CardContent style={{ position: "relative" }}>
                     <MDTypography variant="h4" color="info">
-                      Appointment {index + 1}
+                      Appointment {upcomingAppointment.appointmentId}
                     </MDTypography>
                     <MDTypography
                       variant="h6"
