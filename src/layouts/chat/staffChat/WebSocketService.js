@@ -1,43 +1,43 @@
-import Stomp from "stompjs";
-import SockJS from "sockjs-client";
 
-const WebSocketService = {
-  stompClient: null,
+// import SockJS from "sockjs-client";
 
-  connect: () => {
-    const socket = new SockJS("/ws");
-    WebSocketService.stompClient = Stomp.over(socket);
-    WebSocketService.stompClient.connect({}, () => {
-      console.log("Connected to WebSocket");
-    });
-  },
+// const WebSocketService = {
+//   stompClient: null,
 
-  disconnect: () => {
-    if (WebSocketService.stompClient) {
-      WebSocketService.stompClient.disconnect(() => {
-        console.log("Disconnected from WebSocket");
-      });
-    }
-  },
+//   connect: () => {
+//     const socket = new SockJS("/ws");
+//     WebSocketService.stompClient = Stomp.over(socket);
+//     WebSocketService.stompClient.connect({}, () => {
+//       console.log("Connected to WebSocket");
+//     });
+//   },
 
-  subscribe: (callback) => {
-    if (WebSocketService.stompClient) {
-      WebSocketService.stompClient.subscribe("/topic/messages", (message) => {
-        const messageData = JSON.parse(message.body);
-        callback(messageData);
-      });
-    }
-  },
+//   disconnect: () => {
+//     if (WebSocketService.stompClient) {
+//       WebSocketService.stompClient.disconnect(() => {
+//         console.log("Disconnected from WebSocket");
+//       });
+//     }
+//   },
 
-  sendMessage: (message) => {
-    if (WebSocketService.stompClient) {
-      WebSocketService.stompClient.send(
-        "/app/chat",
-        {},
-        JSON.stringify({ content: message })
-      );
-    }
-  },
-};
+//   subscribe: (callback) => {
+//     if (WebSocketService.stompClient) {
+//       WebSocketService.stompClient.subscribe("/topic/messages", (message) => {
+//         const messageData = JSON.parse(message.body);
+//         callback(messageData);
+//       });
+//     }
+//   },
 
-export default WebSocketService;
+//   sendMessage: (message) => {
+//     if (WebSocketService.stompClient) {
+//       WebSocketService.stompClient.send(
+//         "/app/chat",
+//         {},
+//         JSON.stringify({ content: message })
+//       );
+//     }
+//   },
+// };
+
+// export default WebSocketService;
