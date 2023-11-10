@@ -906,3 +906,21 @@ export const admissionApi = {
     );
   },
 };
+
+export const chatApi = {
+  getStaffConversations(staffId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/conversation/getStaffConversations?staffId=${staffId}`
+    );
+  },
+  getStaffChatDTO(staffId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/conversation/getStaffChatDTO?staffId=${staffId}`
+    );
+  },
+  createStaffConversation(from, to) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/conversation/createStaffConversation?staffId1=${from}&staffId2=${to}`
+    );
+  }
+};
