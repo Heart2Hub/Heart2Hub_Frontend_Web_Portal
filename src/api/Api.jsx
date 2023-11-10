@@ -935,3 +935,46 @@ export const admissionApi = {
     );
   },
 };
+
+export const postApi = {
+  getAllPosts() {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/post/getAllPosts`
+    );
+  },
+  getPostById(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/post/getPostById/${id}`
+    );
+  },
+  findPostAuthor(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/post/findPostAuthor/${id}`
+    );
+  },
+  deletePost(id) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/post/deletePost/${id}`
+    );
+  },
+  createPost(id, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/post/createPost/${id}`, requestBody
+    );
+  },
+  addImageToPost(id, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/post/addImage/${id}`, requestBody
+    );
+  },
+  removeImage(id, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/post/removeImage/${id}`, requestBody
+    );
+  },
+  updatePost(id, requestBody) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/post/updatePost/${id}`, requestBody
+    );
+  },
+}

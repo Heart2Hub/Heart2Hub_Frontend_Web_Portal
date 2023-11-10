@@ -308,7 +308,6 @@ function EHR() {
           newImageURLs[image.profilePictureId] = image.url;
         }
       });
-
       setImageURLs(newImageURLs);
       // console.log(newImageURLs);
 

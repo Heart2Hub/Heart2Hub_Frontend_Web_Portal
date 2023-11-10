@@ -38,6 +38,7 @@ import ConsumableEquipmentManagement from "layouts/administration/inventory-mana
 import InventoryManagement from "layouts/administration/inventory-management";
 import MedicationManagement from "layouts/pharmacy/medication-management";
 import ServiceManagement from "layouts/administration/inventory-management/service-management";
+import KnowledgeManagement from "layouts/administration/knowledge-management";
 
 const ALL_EXCEPT_PHARMACIST = [
   StaffRoleEnum.ADMIN,
@@ -466,6 +467,20 @@ const routes = [
         authorizedUnits={"ALL"}
       >
         <Transaction />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Knowledge Management",
+    key: "knowledge-management",
+    route: "/administration/knowledge-management",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+        authorizedUnits={"ALL"}
+      >
+        <KnowledgeManagement />
       </ProtectedRoute>
     ),
   },

@@ -447,7 +447,7 @@ function AppointmentTicketModal({
       (staff) => staff.staffId === staffId
     )[0];
 
-    console.log("Facility Id: " + facility.facilityId);
+    // console.log("Facility Id: " + facility.facilityId);
 
     if (facility) {
       setFacility(facility);
