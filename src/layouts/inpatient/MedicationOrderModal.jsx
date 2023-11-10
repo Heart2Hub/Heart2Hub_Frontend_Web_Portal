@@ -71,6 +71,34 @@ const style = {
   borderRadius: "15px",
 };
 
+const doctorActionMap = {
+  DELETE: ["FUTURE", false],
+  NOT_COMPLETED: ["CURRENT", false],
+  COMPLETED: ["CURRENT", "PAST", true],
+  OVERDUE: ["PAST", false],
+};
+
+const nurseActionMap = {
+  NOT_COMPLETED: ["FUTURE", false],
+  COMPLETE: ["CURRENT", false],
+  COMPLETED: ["CURRENT", "PAST", true],
+  OVERDUE: ["PAST", false],
+};
+
+const otherStaffActionMap = {
+  NOT_COMPLETED: ["CURRENT", "FUTURE", false],
+  COMPLETED: ["CURRENT", "PAST", true],
+  OVERDUE: ["PAST", false],
+};
+
+const buttonColorMap = {
+  DELETE: "#f44336",
+  NOT_COMPLETED: "#8c8c8c",
+  COMPLETE: "#f44336",
+  COMPLETED: "#00e600",
+  OVERDUE: "#ff0000",
+};
+
 function MedicationOrderModal({
   openModal,
   handleCloseModal,
@@ -92,16 +120,17 @@ function MedicationOrderModal({
   //For Cart
   const [medications, setMedications] = useState([]);
   const [medicationsAllergy, setMedicationsAllergy] = useState([]);
-  const [services, setServices] = useState([]);
   const [selectedMedication, setSelectedMedication] = useState(null);
   const [selectedMedicationQuantity, setSelectedMedicationQuantity] =
     useState(1);
-  const [selectedService, setSelectedService] = useState(null);
-  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   const [selectedItemId, setSelectedItemId] = useState(null);
-  const [isConfirmDischargeOpen, setConfirmDischargeOpen] = useState(false);
   const [isCompleteDialogOpen, setCompleteDialogOpen] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+
+  //Delete medication order
+  const [orderStatus, setOrderStatus] = useState("FUTURE");
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleOpenDeleteDialog = (itemId) => {
     setSelectedItemId(itemId);
@@ -188,14 +217,37 @@ function MedicationOrderModal({
     setMedicationOrders(listOfMedicationOrders);
   };
 
+  const fetchPatientCart = async () => {
+    try {
+      const response = await transactionItemApi.getCartItems(
+        selectedAdmission.patientId
+      );
+
+      console.log(response.data);
+    } catch (error) {
+      console.error("Error fetching cart items:", error);
+    }
+  };
+
   useEffect(() => {
+    fetchPatientCart();
     fetchMedications();
     const startMoment = moment(startDate);
     const endMoment = moment(endDate);
+
+    if (moment().isBefore(startMoment)) {
+      setOrderStatus("FUTURE");
+    } else if (moment().isBefore(endMoment)) {
+      setOrderStatus("CURRENT");
+    } else {
+      setOrderStatus("PAST");
+    }
+
     const startDateString = startMoment.format("YYYY-MM-DD HH:mm:ss");
     const endDateString = endMoment.format("YYYY-MM-DD HH:mm:ss");
     setStartDateString(startDateString);
     setEndDateString(endDateString);
+    //console.log(medicationOrders);
   }, []);
 
   const handleAddMedicationOrder = async (medication) => {
@@ -214,12 +266,13 @@ function MedicationOrderModal({
 
       const admissionId = selectedAdmission.admissionId; // Replace with the actual patient ID
       const requestBody = {
-        title: selectedAdmission.patientId,
+        title: "Medication Order",
         quantity: selectedMedicationQuantity,
         comments: comments,
         startDate: startDateString,
         endDate: endDateString,
         isCompleted: false,
+        createdBy: `Dr. ${loggedInStaff.firstname} ${loggedInStaff.lastname}`,
       };
 
       // if (requestBody.comments == '') {
@@ -250,8 +303,8 @@ function MedicationOrderModal({
         );
         return;
       }
-      console.log(requestBody);
-      console.log(medication.inventoryItemId);
+      // console.log(requestBody);
+      // console.log(medication.inventoryItemId);
 
       const containsMedication = medicationOrders.some(
         (item) => item.medication.inventoryItemId === medication.inventoryItemId
@@ -378,27 +431,6 @@ function MedicationOrderModal({
     handleCloseCompleteDialog();
   };
 
-  //   const renderIsCompleteButton = (item) => {
-  //     return (
-  //       if (!item.isCompleted) {
-  //       return (
-  //         <Button
-  //           variant="contained"
-  //           style={{
-  //             backgroundColor: "#f44336",
-  //             color: "white",
-  //           }}
-  //           onClick={() => handleOpenCompleteDialog(item.medicationOrderId)}
-  //         >
-  //           Complete
-  //         </Button>
-  //       );
-  //     } else {
-  //       return null;
-  //     }
-  //     );
-  // };
-
   const renderMedicationsDropdown = () => {
     return (
       <Box style={{ width: "100%", display: "flex", alignItems: "center" }}>
@@ -435,6 +467,58 @@ function MedicationOrderModal({
         </ListItem>
       </Box>
     );
+  };
+
+  const renderActionButton = (medicationOrder) => {
+    //console.log(medicationOrder);
+    let entries;
+    if (loggedInStaff.staffRoleEnum === "DOCTOR") {
+      entries = Object.entries(doctorActionMap);
+    } else if (loggedInStaff.staffRoleEnum === "NURSE") {
+      entries = Object.entries(nurseActionMap);
+    } else {
+      entries = Object.entries(otherStaffActionMap);
+    }
+
+    for (const [action, conditions] of entries) {
+      // console.log(orderStatus);
+      // console.log(medicationOrder.isCompleted);
+      if (
+        conditions.includes(orderStatus) &&
+        conditions.includes(medicationOrder.isCompleted)
+      ) {
+        return action;
+      }
+    }
+
+    return "Complete";
+  };
+
+  const renderButtonOnClick = (medicationOrder) => {
+    if (renderActionButton(medicationOrder) === "DELETE") {
+      return () => handleOpenDeleteDialog(medicationOrder.medicationOrderId);
+    } else if (renderActionButton(medicationOrder) === "COMPLETE") {
+      console.log(selectedAdmission.listOfStaffsId);
+      if (selectedAdmission.listOfStaffsId.includes(loggedInStaff.staffId)) {
+        return () =>
+          handleOpenCompleteDialog(medicationOrder.medicationOrderId);
+      } else {
+        return () => displayErrorMessageForUnassignedNurse();
+      }
+    }
+  };
+
+  const displayErrorMessageForUnassignedNurse = () => {
+    reduxDispatch(
+      displayMessage({
+        color: "error",
+        icon: "notification",
+        title: "Error Encountered",
+        content:
+          "You are not be able to complete an order you are unassigned to",
+      })
+    );
+    return;
   };
 
   return (
@@ -570,45 +654,7 @@ function MedicationOrderModal({
             </ListItem>
             {medicationOrders.length === 0 ? (
               <ListItem>
-                {/* <MDTypography variant="subtitle1">No Orders Added</MDTypography> */}
-                <TableContainer component={Paper}>
-                  <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell> Name</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      <TableRow
-                        sx={{
-                          "&:last-child td, &:last-child th": {
-                            border: 0,
-                          },
-                        }}
-                      >
-                        <TableCell component="th" scope="row">
-                          Warfarin 1mg Tablet (1 piece)
-                        </TableCell>
-                        <TableCell>
-                          <div>Quantity: 1</div>
-                          <div>Comments: Take Daily</div>
-                        </TableCell>
-
-                        <TableCell align="right">
-                          <Button
-                            variant="contained"
-                            style={{
-                              backgroundColor: "gray",
-                              color: "white",
-                            }}
-                          >
-                            Not Completed
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                <MDTypography variant="subtitle1">No Orders Added</MDTypography>
               </ListItem>
             ) : (
               <ListItem>
@@ -616,7 +662,11 @@ function MedicationOrderModal({
                   <Table sx={{ minWidth: 650 }} aria-label="simple table">
                     <TableHead>
                       <TableRow>
-                        <TableCell> Name</TableCell>
+                        <TableCell>Medication</TableCell>
+                        <TableCell>Quantity</TableCell>
+                        <TableCell>Comments</TableCell>
+                        <TableCell>Prescribed by</TableCell>
+                        <TableCell>Action</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -630,52 +680,26 @@ function MedicationOrderModal({
                               },
                             }}
                           >
-                            <TableCell component="th" scope="row">
+                            <TableCell>
                               {item.medication.inventoryItemName}
                             </TableCell>
+                            <TableCell>{item.quantity}</TableCell>
+                            <TableCell>{item.comments}</TableCell>
+                            <TableCell>{item.createdBy}</TableCell>
+
                             <TableCell>
-                              <div>Quantity: {item.quantity}</div>
-                              <div>Comments: {item.comments}</div>
+                              <Button
+                                variant="contained"
+                                style={{
+                                  backgroundColor:
+                                    buttonColorMap[renderActionButton(item)],
+                                  color: "white",
+                                }}
+                                onClick={renderButtonOnClick(item)}
+                              >
+                                {renderActionButton(item)}
+                              </Button>
                             </TableCell>
-                            {loggedInStaff.staffRoleEnum == "DOCTOR" &&
-                            item.isCompleted == false ? (
-                              <TableCell align="right">
-                                <Button
-                                  variant="contained"
-                                  style={{
-                                    backgroundColor: "#f44336",
-                                    color: "white",
-                                  }}
-                                  onClick={() =>
-                                    handleOpenDeleteDialog(
-                                      item.medicationOrderId
-                                    )
-                                  }
-                                >
-                                  Delete
-                                </Button>
-                              </TableCell>
-                            ) : null}
-                            {loggedInStaff.staffRoleEnum == "NURSE" &&
-                            item.isCompleted == false ? (
-                              <TableCell align="right">
-                                <Button
-                                  variant="contained"
-                                  style={{
-                                    backgroundColor: "#f44336",
-                                    color: "white",
-                                  }}
-                                  onClick={() =>
-                                    handleOpenCompleteDialog(
-                                      item.medicationOrderId
-                                    )
-                                  }
-                                  // disabled={item.isCompleted !== false}
-                                >
-                                  Complete
-                                </Button>
-                              </TableCell>
-                            ) : null}
                           </TableRow>
                         </>
                       ))}

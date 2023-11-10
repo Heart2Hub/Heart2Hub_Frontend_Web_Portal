@@ -57,6 +57,7 @@ import AdmissionDialog from "./AdmissionDialog";
 import moment from "moment";
 import { medicationOrderApi } from "api/Api";
 import { admissionApi } from "api/Api";
+import { inpatientTreatmentApi } from "api/Api";
 
 const style = {
   position: "absolute",
@@ -77,17 +78,56 @@ function TreatmentModal({
   selectedAdmission,
   startDate,
   endDate,
+  existingTreatment,
 }) {
   const navigate = useNavigate();
   const reduxDispatch = useDispatch();
 
+  const [loading, setLoading] = useState(false);
+
   const [startDateString, setStartDateString] = useState("");
   const [endDateString, setEndDateString] = useState("");
   const [comments, setComments] = useState(null);
-  const [location, setLocation] = useState("Ward B20");
+  const [facilityLocation, setFacilityLocation] = useState(null);
+  const [services, setServices] = useState([]);
+  const [selectedService, setSelectedService] = useState(null);
 
   //logged in staff
   const loggedInStaff = useSelector(selectStaff);
+
+  //get the facility location
+  const getFacilityLocationByStaffIdThroughShift = async () => {
+    const response = await staffApi.getStaffsWorkingInCurrentShiftAndDepartment(
+      loggedInStaff.unit.name
+    );
+    const listOfWorkingStaff = response.data;
+
+    let facility = listOfWorkingStaff.filter(
+      (staff) => staff.staffId === loggedInStaff.staffId
+    )[0];
+
+    console.log(facility);
+
+    if (facility) {
+      setFacilityLocation(facility.name + " (" + facility.location + ")");
+    } else {
+      setFacilityLocation(null);
+    }
+  };
+
+  // Fetch lists of all medications and service items from the API
+  const fetchServices = async () => {
+    try {
+      const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
+        loggedInStaff.unit.unitId
+      );
+      setServices(servicesResponse.data);
+      // console.log(servicesResponse.data)
+      // console.log(selectedAppointment)
+    } catch (error) {
+      console.error("Error fetching medications and services:", error);
+    }
+  };
 
   useEffect(() => {
     const startMoment = moment(startDate);
@@ -96,26 +136,49 @@ function TreatmentModal({
     const endDateString = endMoment.format("YYYY-MM-DD HH:mm:ss");
     setStartDateString(startDateString);
     setEndDateString(endDateString);
+    getFacilityLocationByStaffIdThroughShift();
+    fetchServices();
+
+    if (existingTreatment) {
+      setComments(existingTreatment.comments);
+      setSelectedService(existingTreatment.serviceItem.inventoryItemId);
+    }
   }, []);
+
+  useEffect(() => {
+    if (selectedService) {
+      console.log(selectedService);
+    }
+  }, [selectedService]);
 
   const handleCreateInpatientTreatment = async () => {
     try {
       const admissionId = selectedAdmission.admissionId; // Replace with the actual patient ID
       const requestBody = {
-        title: "Inpatient Treatment",
-        quantity: 1,
-        location: location,
+        location: facilityLocation,
         comments: comments,
         startDate: startDateString,
         endDate: endDateString,
+        arrived: false,
         isCompleted: false,
-        createdBy: `${loggedInStaff.firstname} ${loggedInStaff.lastname} (${loggedInStaff.staffRoleEnum})`,
       };
 
-      const response = await medicationOrderApi.createInpatientTreatment(
+      const response = await inpatientTreatmentApi.createInpatientTreatment(
+        selectedService,
         admissionId,
+        loggedInStaff.staffId,
         requestBody
       );
+
+      reduxDispatch(
+        displayMessage({
+          color: "success",
+          icon: "notification",
+          title: "Successfully Added Treatment!",
+        })
+      );
+
+      handleCloseModal();
     } catch (error) {
       reduxDispatch(
         displayMessage({
@@ -128,98 +191,84 @@ function TreatmentModal({
     }
   };
 
-  //   const handleConfirmDelete = async () => {
-  //     try {
-  //       await medicationOrderApi.deleteMedicationOrder(
-  //         selectedItemId,
-  //         selectedAdmission.admissionId
-  //       );
-  //       reduxDispatch(
-  //         displayMessage({
-  //           color: "success",
-  //           icon: "notification",
-  //           title: "Success",
-  //           content: "Item has been deleted from the cart!",
-  //         })
-  //       );
-  //       // fetchPatientCart();
-  //       console.log("Before: " + medicationOrders);
-  //       const updatedMedicationOrders = medicationOrders.filter(
-  //         (item) => item.medicationOrderId !== selectedItemId
-  //       );
-  //       setMedicationOrders(updatedMedicationOrders);
-  //       // fetchAdmission(selectedAdmission.admissionId);
-  //       // getMedicationOrders(selectedAdmission.listOfMedicationOrderIds);
-  //       console.log(selectedAdmission.listOfMedicationOrderIds);
-  //     } catch (error) {
-  //       reduxDispatch(
-  //         displayMessage({
-  //           color: "error",
-  //           icon: "notification",
-  //           title: "Error",
-  //           content: error.response.data,
-  //         })
-  //       );
-  //     }
-  //     handleCloseDeleteDialog();
-  //   };
+  const handleAddServiceToPatient = (service) => {
+    try {
+      const patientId = selectedAdmission.patientId; // Replace with the actual patient ID
+      const requestBody = {
+        transactionItemName: service.inventoryItemName,
+        transactionItemDescription: service.inventoryItemDescription,
+        transactionItemQuantity: 1,
+        transactionItemPrice: service.retailPricePerQuantity, // Replace with the actual price
+        inventoryItem: service.inventoryItemId,
+      };
 
-  //   const handleConfirmComplete = async () => {
-  //     try {
-  //       await medicationOrderApi.updateComplete(
-  //         selectedItemId,
-  //         selectedAdmission.admissionId,
-  //         isCompleted
-  //       );
-  //       reduxDispatch(
-  //         displayMessage({
-  //           color: "success",
-  //           icon: "notification",
-  //           title: "Success",
-  //           content: "Medication order has been completed!",
-  //         })
-  //       );
-  //       const updatedMedicationOrders = medicationOrders.map((item) =>
-  //         item.medicationOrderId === selectedItemId
-  //           ? { ...item, isCompleted: true }
-  //           : item
-  //       );
-  //       setMedicationOrders(updatedMedicationOrders);
-  //       // fetchPatientCart();
-  //       // fetchAdmission(selectedAdmission.admissionId);
-  //     } catch (error) {
-  //       reduxDispatch(
-  //         displayMessage({
-  //           color: "error",
-  //           icon: "notification",
-  //           title: "Error",
-  //           content: error.response.data,
-  //         })
-  //       );
-  //     }
-  //     handleCloseCompleteDialog();
-  //   };
+      console.log(requestBody);
 
-  //   const renderIsCompleteButton = (item) => {
-  //     return (
-  //       if (!item.isCompleted) {
-  //       return (
-  //         <Button
-  //           variant="contained"
-  //           style={{
-  //             backgroundColor: "#f44336",
-  //             color: "white",
-  //           }}
-  //           onClick={() => handleOpenCompleteDialog(item.medicationOrderId)}
-  //         >
-  //           Complete
-  //         </Button>
-  //       );
-  //     } else {
-  //       return null;
-  //     }
-  //     );
-  // };
+      transactionItemApi
+        .addToCart(patientId, requestBody)
+        .then((response) => {
+          const item = response.data;
+          console.log(item);
+          reduxDispatch(
+            displayMessage({
+              color: "success",
+              icon: "notification",
+              title: "Successfully Added Service!",
+            })
+          );
+          //setServices([]);
+          //fetchPatientCart();
+        })
+        .catch((error) => {
+          reduxDispatch(
+            displayMessage({
+              color: "error",
+              icon: "notification",
+              title: "Error Encountered",
+              content: error.response.data,
+            })
+          );
+          console.error("Error fetching data:", error);
+        });
+    } catch (error) {
+      console.error("Error fetching medications and services:", error);
+    }
+  };
+
+  const handleUpdateInpatientTreatment = () => {};
+
+  const renderServicesDropdown = () => {
+    return (
+      <Box style={{ width: "100%" }}>
+        <InputLabel id="medication-label"> Select Services</InputLabel>
+
+        <Select
+          onChange={(e) => setSelectedService(e.target.value)}
+          style={{ width: "50%" }}
+          sx={{ lineHeight: "3em" }}
+          value={selectedService}
+        >
+          {services.map((service) => (
+            <MenuItem
+              key={service.inventoryItemId}
+              value={service.inventoryItemId}
+            >
+              {service.inventoryItemName}
+            </MenuItem>
+          ))}
+        </Select>
+        {/* <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
+          <MDButton
+            onClick={() => handleAddServiceToPatient(selectedService)}
+            variant="gradient"
+            color="primary"
+          >
+            Add Service
+          </MDButton>
+        </Box> */}
+      </Box>
+    );
+  };
 
   return (
     <>
@@ -275,7 +324,7 @@ function TreatmentModal({
             </ListItem>
             <ListItem>
               <MDTypography variant="h6" gutterBottom color="black">
-                Xiao Hu
+                {`${loggedInStaff.firstname} ${loggedInStaff.lastname} (${loggedInStaff.staffRoleEnum})`}
               </MDTypography>
             </ListItem>
             <ListItem>
@@ -284,16 +333,11 @@ function TreatmentModal({
               </MDTypography>
             </ListItem>
             <ListItem>
-              <Select
-                sx={{ width: "500px", height: "40px" }}
-                labelId="select-ward-class"
-                value={0}
-              >
-                <MenuItem value={0}>Not Assigned</MenuItem>
-                <MenuItem value={"B1"}>B1</MenuItem>
-                <MenuItem value={"B2"}>B2</MenuItem>
-                <MenuItem value={"C"}>C</MenuItem>
-              </Select>
+              <MDTypography variant="h6" gutterBottom color="black">
+                {facilityLocation !== null
+                  ? facilityLocation
+                  : "No Location Yet"}
+              </MDTypography>
             </ListItem>
             <ListItem sx={{ marginTop: "10px" }}>
               <MDTypography variant="h5" gutterBottom>
@@ -324,22 +368,64 @@ function TreatmentModal({
                 }}
               />
             </ListItem>
-            <ListItem
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                marginTop: "40px",
-              }}
-            >
-              <MDButton
-                size="large"
-                variant="gradient"
-                color="primary"
-                sx={{ width: "300px" }}
+
+            <List>
+              <ListItem>
+                <MDTypography variant="h5" gutterBottom>
+                  Services:
+                </MDTypography>
+              </ListItem>
+              <ListItem>{renderServicesDropdown()}</ListItem>
+            </List>
+
+            {existingTreatment && (
+              <>
+                <ListItem sx={{ marginTop: "10px" }}>
+                  <MDTypography variant="h5" gutterBottom>
+                    Arrival Status:
+                  </MDTypography>
+                </ListItem>
+                <ListItem
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <MDTypography variant="h6" gutterBottom>
+                    <Chip
+                      color={existingTreatment.arrived ? "success" : "default"}
+                      label={existingTreatment.arrived ? "Yes" : "No"}
+                    />
+                  </MDTypography>
+
+                  {/* <ArrivalButton
+                    arrived={existingTreatment.arrived}
+                    selectedAdmission={existingTreatment}
+                    handleUpdateAppointmentArrival={
+                      handleUpdateInpatientTreatment
+                    }
+                    disableButton={loading}
+                  /> */}
+                </ListItem>
+              </>
+            )}
+
+            {existingTreatment === null && (
+              <ListItem
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginTop: "40px",
+                }}
               >
-                Create Inpatient Treatment
-              </MDButton>
-            </ListItem>
+                <MDButton
+                  size="large"
+                  variant="gradient"
+                  color="primary"
+                  sx={{ width: "300px" }}
+                  onClick={handleCreateInpatientTreatment}
+                >
+                  Create Inpatient Treatment
+                </MDButton>
+              </ListItem>
+            )}
           </List>
         </Box>
       </Modal>

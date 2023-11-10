@@ -942,12 +942,7 @@ export const medicationOrderApi = {
       requestBody
     );
   },
-  createInpatientTreatment(admissionId, requestBody) {
-    return axiosFetch.post(
-      `${REST_ENDPOINT}/medicationOrder/createInpatientTreatment?admissionId=${admissionId}`,
-      requestBody
-    );
-  },
+
   deleteMedicationOrder(medicationOrderId, admissionId) {
     return axiosFetch.delete(
       `${REST_ENDPOINT}/medicationOrder/deleteMedicationOrder?medicationOrderId=${medicationOrderId}&admissionId=${admissionId}`
@@ -971,6 +966,20 @@ export const medicationOrderApi = {
   updateComplete(medicationOrderId, admissionId, isCompleted) {
     return axiosFetch.put(
       `${REST_ENDPOINT}/medicationOrder/updateComplete?medicationOrderId=${medicationOrderId}&admissionId=${admissionId}&isCompleted=${isCompleted}`
+    );
+  },
+};
+
+export const inpatientTreatmentApi = {
+  createInpatientTreatment(serviceItemId, admissionId, staffId, requestBody) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/inpatientTreatment/createInpatientTreatment?serviceItemId=${serviceItemId}&admissionId=${admissionId}&staffId=${staffId}`,
+      requestBody
+    );
+  },
+  getInpatientTreatmentById(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/inpatientTreatment/getInpatientTreatmentById?inpatientTreatmentId=${id}`
     );
   },
 };

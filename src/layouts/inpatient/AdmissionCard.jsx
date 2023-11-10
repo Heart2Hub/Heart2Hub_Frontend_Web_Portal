@@ -14,6 +14,7 @@ import { useState } from "react";
 import MDAvatar from "components/MDAvatar";
 import { truncateText } from "utility/Utility";
 import { imageServerApi } from "api/Api";
+import moment from "moment";
 
 //FOR UI PURPOSES
 const tooltips = {
@@ -45,6 +46,7 @@ const tooltips = {
 
 function AdmissionCard({ admission, handleSelectAdmission }) {
   const [profileImage, setProfileImage] = useState(null);
+  const [tooltip, setTooltip] = useState(null);
 
   const handleGetProfileImage = async () => {
     if (admission.patientProfilePicture !== null) {
@@ -57,9 +59,20 @@ function AdmissionCard({ admission, handleSelectAdmission }) {
     }
   };
 
+  const handleGetTooltipColorAndMessage = () => {
+    const admissionMoment = moment(admission.admissionDateTime);
+    admissionMoment.subtract(1, "months");
+    const hoursPassed = admissionMoment.diff(moment(), "hours");
+
+    if (hoursPassed < 2 && !admission.arrived) {
+      setTooltip(1);
+    }
+  };
+
   useEffect(() => {
     handleGetProfileImage();
-  }, [admission]);
+    handleGetTooltipColorAndMessage();
+  }, []);
 
   return (
     <>
@@ -83,7 +96,7 @@ function AdmissionCard({ admission, handleSelectAdmission }) {
               <MDTypography variant="h5" className="draggable-id">
                 Bed {admission.bed}
               </MDTypography>
-              {tooltips[admission.patientId]}
+              {tooltip && tooltips[tooltip]}
             </div>
 
             <Typography variant="body2" className="draggable-description">

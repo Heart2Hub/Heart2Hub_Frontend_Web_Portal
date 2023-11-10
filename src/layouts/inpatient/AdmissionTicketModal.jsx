@@ -90,6 +90,7 @@ function AdmissionTicketModal({
   const [commentsTouched, setCommentsTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [arrived, setArrived] = useState(selectedAdmission.arrived);
+  const [admissionDate, setAdmissionDate] = useState(null);
   const [dischargeDate, setDischargeDate] = useState(null);
 
   //dialog when click assign button
@@ -103,6 +104,9 @@ function AdmissionTicketModal({
 
   //for fetching image
   const [profileImage, setProfileImage] = useState(null);
+
+  //for inpatient cart
+  const [cartItems, setCartItems] = useState([]);
 
   const handleGetProfileImage = async () => {
     if (selectedAdmission.patientProfilePicture !== null) {
@@ -126,10 +130,26 @@ function AdmissionTicketModal({
     setListOfAssignedStaff(listOfStaff);
   };
 
+  const fetchPatientCart = async () => {
+    try {
+      const response = await transactionItemApi.getCartItems(
+        selectedAdmission.patientId
+      );
+
+      setCartItems(response.data);
+    } catch (error) {
+      console.error("Error fetching cart items:", error);
+    }
+  };
+
   useEffect(() => {
     console.log(selectedAdmission);
     handleGetProfileImage();
     getAssignedStaff();
+    fetchPatientCart();
+    const admissionMoment = moment(selectedAdmission.admissionDateTime);
+    admissionMoment.subtract(1, "months");
+    setAdmissionDate(admissionMoment.format("YYYY-MM-DD HH:mm:ss"));
     const dischargeMoment = moment(selectedAdmission.dischargeDateTime);
     dischargeMoment.subtract(1, "months");
     setDischargeDate(dischargeMoment.format("YYYY-MM-DD HH:mm:ss"));
@@ -459,6 +479,16 @@ function AdmissionTicketModal({
                 </ListItem>
                 <ListItem>
                   <MDTypography variant="h5" gutterBottom>
+                    Admission Date :
+                  </MDTypography>
+                </ListItem>
+                <ListItem>
+                  <MDTypography variant="h6" gutterBottom color="black">
+                    {admissionDate}
+                  </MDTypography>
+                </ListItem>
+                <ListItem>
+                  <MDTypography variant="h5" gutterBottom>
                     Discharge Date :
                   </MDTypography>
                 </ListItem>
@@ -467,13 +497,18 @@ function AdmissionTicketModal({
                     {dischargeDate}
                   </MDTypography>
                 </ListItem>
-                <ListItem>
-                  <MDTypography variant="h6" gutterBottom>
-                    <MDButton onClick={handleOpenExtendDialog} color="primary">
-                      Change Discharge Date
-                    </MDButton>
-                  </MDTypography>
-                </ListItem>
+                {loggedInStaff.staffRoleEnum === "DOCTOR" && (
+                  <ListItem>
+                    <MDTypography variant="h6" gutterBottom>
+                      <MDButton
+                        onClick={handleOpenExtendDialog}
+                        color="primary"
+                      >
+                        Change Discharge Date
+                      </MDButton>
+                    </MDTypography>
+                  </ListItem>
+                )}
                 <ListItem
                   style={{
                     display: "flex",
@@ -536,52 +571,10 @@ function AdmissionTicketModal({
                   </ListItem>
                 ))}
 
-                {/* <ListItem>
-                  <MDTypography variant="h5" gutterBottom>
-                    Attending Nurse :
-                  </MDTypography>
-                </ListItem>
-                <ListItem
-                  style={{ display: "flex", justifyContent: "space-between" }}
-                >
-                  <MDTypography variant="h6" gutterBottom color="black">
-                    {assignedNurse}
-                  </MDTypography>
-                  <MDButton
-                    disabled={loading}
-                    onClick={handleOpenAssignNurseDialog}
-                    variant="gradient"
-                    color="primary"
-                  >
-                    Assign Nurse
-                  </MDButton>
-                </ListItem>
-                <ListItem>
-                  <MDTypography variant="h5" gutterBottom>
-                    Attending Admin :
-                  </MDTypography>
-                </ListItem>
-                <ListItem
-                  style={{ display: "flex", justifyContent: "space-between" }}
-                >
-                  <MDTypography variant="h6" gutterBottom color="black">
-                    {assignedAdmin}
-                  </MDTypography>
-                  <MDButton
-                    disabled={loading}
-                    onClick={handleOpenAssignAdminDialog}
-                    variant="gradient"
-                    color="primary"
-                  >
-                    Assign Admin
-                  </MDButton>
-                </ListItem> */}
-
                 <ListItem>
                   <MDTypography variant="h5" gutterBottom>
                     Arrival Status:
                   </MDTypography>
-                  {/* <ListItemText primary="Arrival Status:" secondary="" /> */}
                 </ListItem>
                 <ListItem
                   style={{ display: "flex", justifyContent: "space-between" }}
@@ -703,6 +696,59 @@ function AdmissionTicketModal({
                     Save Comments
                   </MDButton>
                 </Box>
+              </List>
+              <List>
+                <ListItem>
+                  <MDTypography variant="h5" gutterBottom>
+                    Patient's Items:
+                  </MDTypography>
+                </ListItem>
+                <ListItem>
+                  {" "}
+                  <TableContainer component={Paper}>
+                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell> Name</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {cartItems.map((item) => (
+                          <TableRow
+                            key={item.transactionItemId}
+                            sx={{
+                              "&:last-child td, &:last-child th": {
+                                border: 0,
+                              },
+                            }}
+                          >
+                            <TableCell component="th" scope="row">
+                              {item.transactionItemName}
+                            </TableCell>
+                            <TableCell align="right">
+                              {" "}
+                              Quantity: {item.transactionItemQuantity}
+                            </TableCell>
+                            {/* <TableCell align="right">
+                              <Button
+                                variant="contained"
+                                style={{
+                                  backgroundColor: "#f44336",
+                                  color: "white",
+                                }}
+                                onClick={() =>
+                                  handleDeleteCartItem(item.transactionItemId)
+                                }
+                              >
+                                Delete
+                              </Button>
+                            </TableCell> */}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </ListItem>
               </List>
             </>
           )}

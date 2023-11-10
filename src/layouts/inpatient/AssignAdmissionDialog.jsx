@@ -59,10 +59,16 @@ function AssignAdmissionDialog({
     }
   };
 
+  const capitalizeFirstLetter = (str) => {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
   return (
     <>
       <Dialog open={open} onClose={onClose}>
-        <DialogTitle>Staff Assignment to Ticket:</DialogTitle>
+        <DialogTitle>{`${capitalizeFirstLetter(
+          loggedInStaff.staffRoleEnum
+        )} Assignment to Ticket:`}</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Please choose from the list of available staff members to assign

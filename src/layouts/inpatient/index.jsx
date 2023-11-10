@@ -45,6 +45,8 @@ import { medicationOrderApi } from "api/Api";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import { parseDateFromYYYYMMDDHHMMSS } from "utility/Utility";
 import TreatmentModal from "./TreatmentModal";
+import { parseDateFromLocalDateTimeWithSecs } from "utility/Utility";
+import { inpatientTreatmentApi } from "api/Api";
 
 const beds = [
   { id: 1, title: "Bed 1" },
@@ -115,11 +117,36 @@ function Inpatient() {
 
   //for opening treatment modal
   const [treatmentModal, setTreatmentModal] = useState(false);
-  const [existingTreatments, setExistingTreatments] = useState([]);
+  const [existingTreatment, setExistingTreatment] = useState(null);
+  const [staffDTO, setStaffDTO] = useState(null);
+
+  //get the facility location
+  const getFacilityLocationByStaffIdThroughShift = async () => {
+    const response = await staffApi.getStaffsWorkingInCurrentShiftAndDepartment(
+      staff.unit.name
+    );
+    const listOfWorkingStaff = response.data;
+
+    let staffDTO = listOfWorkingStaff.filter(
+      (workingStaff) => workingStaff.staffId === staff.staffId
+    )[0];
+
+    console.log(staffDTO);
+
+    if (staffDTO) {
+      setStaffDTO(staffDTO);
+    } else {
+      setStaffDTO(null);
+    }
+  };
+
+  useEffect(() => {
+    getFacilityLocationByStaffIdThroughShift();
+  }, []);
 
   //helper method to map admissions to resources and events for calendar
   const mapAdmissionsToResourcesAndEvents = async (admissions) => {
-    console.log(admissions);
+    //console.log(admissions);
     const resources = admissions
       .map((admission) => {
         return {
@@ -153,42 +180,87 @@ function Inpatient() {
         admission.listOfMedicationOrderIds
       );
 
-      const slotCount = {};
+      const dateToMedicationOrdersMap = {};
+
+      //console.log(medicationOrders);
 
       for (const medicationOrder of medicationOrders) {
-        console.log(medicationOrder);
         const startDate = medicationOrder.startDate;
 
-        if (!slotCount.hasOwnProperty(startDate)) {
-          slotCount[startDate] = [medicationOrder];
+        if (!dateToMedicationOrdersMap.hasOwnProperty(startDate)) {
+          dateToMedicationOrdersMap[startDate] = [medicationOrder];
         } else {
-          slotCount[startDate].push(medicationOrder);
+          dateToMedicationOrdersMap[startDate].push(medicationOrder);
         }
       }
 
-      console.log(slotCount);
-
       // Medication orders
-      const slots = Object.entries(slotCount);
+      const medicationOrderDates = Object.entries(dateToMedicationOrdersMap);
 
-      for (const [startDateString, medicationOrders] of slots) {
-        const startDate = parseDateFromYYYYMMDDHHMMSS(startDateString);
-        const endDate = parseDateFromYYYYMMDDHHMMSS(startDateString);
-        endDate.setHours(endDate.getHours() + 1);
+      for (const [startDateString, medicationOrders] of medicationOrderDates) {
+        const firstMedicationOrder = medicationOrders[0];
+        const startDate = parseDateFromYYYYMMDDHHMMSS(
+          firstMedicationOrder.startDate
+        );
+        const endDate = parseDateFromYYYYMMDDHHMMSS(
+          firstMedicationOrder.endDate
+        );
+
+        //change color of event using id
+        let eventId;
+        for (const medicationOrder of medicationOrders) {
+          if (medicationOrder.isCompleted) {
+            eventId = 2;
+          } else {
+            const endMoment = moment(medicationOrder.endDate);
+            if (moment().isAfter(endMoment)) {
+              eventId = 1;
+            } else {
+              eventId = 0;
+            }
+            break;
+          }
+        }
 
         const medicationOrderEvent = {
-          id: 0,
+          id: eventId,
           title: `${medicationOrders.length} Medication Order(s)`,
           start: startDate,
           end: endDate,
           resourceId: admission.bed,
+          allDay: false,
           medicationOrders: medicationOrders,
         };
         events.push(medicationOrderEvent);
       }
+
+      //Treatment
+      const inpatientTreatments = await getInpatientTreatments(
+        admission.listOfInpatientTreatmentIds
+      );
+
+      console.log(inpatientTreatments);
+
+      for (const treatment of inpatientTreatments) {
+        const startDate = parseDateFromYYYYMMDDHHMMSS(treatment.startDate);
+        const endDate = parseDateFromYYYYMMDDHHMMSS(treatment.endDate);
+
+        const treatmentEvent = {
+          id: 0,
+          title: "Inpatient Treatment",
+          start: startDate,
+          end: endDate,
+          resourceId: admission.bed,
+          allDay: false,
+          treatment: treatment,
+        };
+        events.push(treatmentEvent);
+      }
     }
 
-    setCalendarEvents([...events, ...defaultEvents]);
+    setCalendarEvents(events);
+
+    //setCalendarEvents([...events, ...defaultEvents]);
   };
 
   //helper method to get medication orders from medication order ids
@@ -202,6 +274,21 @@ function Inpatient() {
     );
     //console.log(listOfMedicationOrders);
     return listOfMedicationOrders;
+  };
+
+  //helper method to get inpatient treatments from inpatient treatment ids
+  const getInpatientTreatments = async (inpatientTreatmentIds) => {
+    const inpatientTreatmentPromises = inpatientTreatmentIds.map((id) =>
+      inpatientTreatmentApi.getInpatientTreatmentById(id)
+    );
+    const inpatientTreatmentResponses = await Promise.all(
+      inpatientTreatmentPromises
+    );
+    const listOfInpatientTreatments = inpatientTreatmentResponses.map(
+      (response) => response.data
+    );
+    //console.log(listOfMedicationOrders);
+    return listOfInpatientTreatments;
   };
 
   const getInitialViewForDepartmentStaff = async () => {
@@ -269,15 +356,6 @@ function Inpatient() {
     mapAdmissionsToResourcesAndEvents(roomOneAdmissions);
   };
 
-  // useEffect(() => {
-  //   console.log(staff);
-  //   if (staff.staffRoleEnum === "ADMIN" || staff.staffRoleEnum === "NURSE") {
-  //     getInitialViewForWardStaff();
-  //   } else {
-  //     getInitialViewForDepartmentStaff();
-  //   }
-  // }, []);
-
   useEffect(() => {
     if (!medicationOrderModal) {
       if (staff.staffRoleEnum === "ADMIN" || staff.staffRoleEnum === "NURSE") {
@@ -286,7 +364,7 @@ function Inpatient() {
         getInitialViewForDepartmentStaff();
       }
     }
-  }, [medicationOrderModal]);
+  }, [medicationOrderModal, treatmentModal]);
 
   const handleChangeWard = async (event, selectedWard) => {
     setSelectStaffToFilter(null);
@@ -395,9 +473,20 @@ function Inpatient() {
         admission.room === room && admission.bed === slotInfo.resourceId
     )[0];
     const currentDate = new Date();
-    const dischargeDate = parseDateFromLocalDateTime(
-      orderForAdmission.dischargeDateTime
-    );
+
+    //console.log(calendarEvents);
+
+    if (!orderForAdmission.arrived) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Error Encountered",
+          content: "Patient has not arrived",
+        })
+      );
+      return;
+    }
 
     if (staff.staffRoleEnum === "ADMIN" || staff.staffRoleEnum === "NURSE") {
       reduxDispatch(
@@ -405,7 +494,7 @@ function Inpatient() {
           color: "error",
           icon: "notification",
           title: "Error Encountered",
-          content: "You do not have the rights to create an order",
+          content: "You are not allowed to create an order",
         })
       );
       return;
@@ -419,16 +508,123 @@ function Inpatient() {
         })
       );
       return;
-    } else if (slotInfo.start > dischargeDate) {
-      reduxDispatch(
-        displayMessage({
-          color: "error",
-          icon: "notification",
-          title: "Error Encountered",
-          content: "Order cannot be done after discharge date",
-        })
-      );
-      return;
+    } else {
+      if (staff.staffRoleEnum === "DOCTOR") {
+        //1. Discharge date check
+        const dischargeDate = parseDateFromLocalDateTimeWithSecs(
+          orderForAdmission.dischargeDateTime
+        );
+        if (slotInfo.start > dischargeDate) {
+          reduxDispatch(
+            displayMessage({
+              color: "error",
+              icon: "notification",
+              title: "Error Encountered",
+              content: "Order cannot be done after discharge date",
+            })
+          );
+          return;
+        }
+
+        //2. Slot duration = 1 hour check
+        const slotDuration = slotInfo.end.getTime() - slotInfo.start.getTime();
+        const slotDurationInHours = slotDuration / (1000 * 60 * 60);
+
+        if (slotDurationInHours !== 1) {
+          reduxDispatch(
+            displayMessage({
+              color: "error",
+              icon: "notification",
+              title: "Error Encountered",
+              content: "Medication Order should be 1 hour",
+            })
+          );
+          return;
+        }
+
+        //3. Overlapping events check
+        const filteredCalendarEvents = calendarEvents
+          .filter(
+            (event) => event.resourceId === slotInfo.resourceId && !event.allDay
+          )
+          .sort((a, b) => a.start - b.start);
+        //console.log(filteredCalendarEvents);
+
+        if (filteredCalendarEvents.length > 0) {
+          for (const event of filteredCalendarEvents) {
+            if (checkForOverlappingEvents(slotInfo, event)) {
+              reduxDispatch(
+                displayMessage({
+                  color: "error",
+                  icon: "notification",
+                  title: "Error Encountered",
+                  content: "There is an existing order in this time slot",
+                })
+              );
+              return;
+            }
+          }
+        }
+      } else {
+        const dischargeDate = parseDateFromLocalDateTime(
+          orderForAdmission.dischargeDateTime
+        );
+        //1. Discharge date check
+        if (slotInfo.start > dischargeDate) {
+          reduxDispatch(
+            displayMessage({
+              color: "error",
+              icon: "notification",
+              title: "Error Encountered",
+              content: "Order cannot be done on discharge date",
+            })
+          );
+          return;
+        }
+
+        //2. Shift check
+        // const shiftStart = staffDTO.startTime[3];
+        // const shiftEnd = staffDTO.endTime[3];
+
+        // if (
+        //   slotInfo.start.getHours() < shiftStart ||
+        //   slotInfo.end.getHours() > shiftEnd
+        // ) {
+        //   reduxDispatch(
+        //     displayMessage({
+        //       color: "error",
+        //       icon: "notification",
+        //       title: "Error Encountered",
+        //       content: "Order cannot be done outside of shift hours",
+        //     })
+        //   );
+        //   return;
+        // }
+
+        //3. Overlapping events check
+        const filteredCalendarEvents = calendarEvents
+          .filter(
+            (event) => event.resourceId === slotInfo.resourceId && !event.allDay
+          )
+          .sort((a, b) => a.start - b.start);
+        //console.log(filteredCalendarEvents);
+
+        if (filteredCalendarEvents.length > 0) {
+          for (const event of filteredCalendarEvents) {
+            if (checkForOverlappingEvents(slotInfo, event)) {
+              reduxDispatch(
+                displayMessage({
+                  color: "error",
+                  icon: "notification",
+                  title: "Error Encountered",
+                  content: "There is an existing order in this time slot",
+                })
+              );
+              return;
+            }
+          }
+        }
+      }
     }
 
     setSelectedSlotStart(slotInfo.start);
@@ -442,6 +638,18 @@ function Inpatient() {
     }
   };
 
+  //helper method to prevent overlapping events
+  const checkForOverlappingEvents = (newSlot, existingSlot) => {
+    if (
+      newSlot.end <= existingSlot.start ||
+      newSlot.start >= existingSlot.end
+    ) {
+      return false;
+    } else {
+      return true;
+    }
+  };
+
   const handleCloseMedicationOrderModal = () => {
     setSelectedAdmission(null);
     setExistingMedicationOrders([]);
@@ -450,11 +658,12 @@ function Inpatient() {
 
   const handleCloseTreatmentModal = () => {
     setSelectedAdmission(null);
+    setExistingTreatment(null);
     setTreatmentModal(false);
   };
 
   const handleSelectEvent = (event) => {
-    console.log(event);
+    //console.log(event);
     const orderForAdmission = currentDayAdmissions.filter(
       (admission) =>
         admission.room === room && admission.bed === event.resourceId
@@ -462,21 +671,14 @@ function Inpatient() {
     setSelectedAdmission(orderForAdmission);
     setSelectedSlotStart(event.start);
     setSelectedSlotEnd(event.end);
-    // console.log("date" + selectedAdmission.dischargeDateTime);
-    // const checkDate = parseDateFromLocalDateTime(selectedAdmission.dischargeDateTime);
-    // if (selectedSlotStart > checkDate) {
-    //   reduxDispatch(
-    //     displayMessage({
-    //       color: "error",
-    //       icon: "notification",
-    //       title: "Error Encountered",
-    //       content: "Order cannot be done after discharge date",
-    //     })
-    //   );
-    //   return
-    // }
-    setExistingMedicationOrders(event.medicationOrders);
-    setMedicationOrderModal(true);
+
+    if (event.medicationOrders) {
+      setExistingMedicationOrders(event.medicationOrders);
+      setMedicationOrderModal(true);
+    } else if (event.treatment) {
+      setExistingTreatment(event.treatment);
+      setTreatmentModal(true);
+    }
   };
 
   // const fetchAllMedicationOrders = async () => {
@@ -698,6 +900,7 @@ function Inpatient() {
           selectedAdmission={selectedAdmission}
           startDate={selectedSlotStart}
           endDate={selectedSlotEnd}
+          existingTreatment={existingTreatment}
         />
       )}
     </DashboardLayout>
