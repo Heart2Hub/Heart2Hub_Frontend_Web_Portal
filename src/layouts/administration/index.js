@@ -84,7 +84,7 @@ function Administration() {
           <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <SimpleBlogCard
-                image="https://bit.ly/3Hlw1MQ"
+                image="https://i.ibb.co/7VrXd5M/carlos-muza-hpj-Sk-U2-UYSU-unsplash.jpg"
                 title="Knowledge Manegement"
                 action={{
                   type: "internal",
