@@ -27,6 +27,7 @@ import { useState } from "react";
 import { Tab } from "@mui/material";
 import MDBox from "components/MDBox";
 import TreatmentPlansBox from "./treatmentPlanRecords/TreatmentPlansBox";
+import Subsidies from "./subsidyRecord";
 
 function EHRRecord() {
   const reduxDispatch = useDispatch();
@@ -94,6 +95,12 @@ function EHRRecord() {
               label="Treatment Plans"
               iconPosition="top"
             />
+            <Tab
+              icon={<InsertDriveFileIcon fontSize="large" />}
+              value="View Subsidies"
+              label="Subsidies"
+              iconPosition="top"
+            />
           </TabList>
         </MDBox>
 
@@ -138,6 +145,17 @@ function EHRRecord() {
           </TabPanel>
         ) : (
           <TabPanel value="View TreatmentPlan">
+            <b>View Access Rights Required</b>
+          </TabPanel>
+        )}
+
+        {/* Display the component only if the staff's role is not 'ADMIN' */}
+        {loggedInStaff.staffRoleEnum !== "ADMIN" ? (
+          <TabPanel value="View Subsidies">
+            <Subsidies />
+          </TabPanel>
+        ) : (
+          <TabPanel value="View Subsidies">
             <b>View Access Rights Required</b>
           </TabPanel>
         )}

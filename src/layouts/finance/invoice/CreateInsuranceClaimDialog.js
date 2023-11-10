@@ -6,13 +6,14 @@ import {
 	DialogActions,
 	Button,
 	TextField,
+	InputLabel
 } from '@mui/material';
 import { displayMessage } from "store/slices/snackbarSlice";
 import { useDispatch } from "react-redux";
 import { invoiceApi } from "api/Api";
 
 
-const CreateInsuranceClaimDialog = ({ isOpen, onClose, onCreate, invoiceId, fetchData }) => {
+const CreateInsuranceClaimDialog = ({ isOpen, onClose, onCreate, invoiceId, fetchData, handleEdit }) => {
 	const [insuranceClaimData, setInsuranceClaimData] = useState({
 		insuranceClaimDateApplied: '',
 		insuranceClaimAmount: 0,
@@ -38,11 +39,24 @@ const CreateInsuranceClaimDialog = ({ isOpen, onClose, onCreate, invoiceId, fetc
 				insuranceClaimAmount: insuranceClaimData.insuranceClaimAmount,
 				isPrivateInsurer: insuranceClaimData.isPrivateInsurer,
 			};
+			if (!insuranceClaimData.insurerName || !insuranceClaimData.insurerName.trim()) {
+				reduxDispatch(
+				    displayMessage({
+					color: "error",
+					icon: "notification",
+					title: "Error",
+					content: "Insurer Name is required.",
+				    })
+				);
+				return;
+			    }
 			console.log(requestBody)
 			console.log(invoiceId)
 
-			const response = invoiceApi.createInsuranceClaim(invoiceId, requestBody)
+			const response = await invoiceApi.createInsuranceClaim(invoiceId, requestBody)
 			console.log('Create Insurance Claim Response:', response.data);
+			const invoiceResponse = await invoiceApi.findInvoice(invoiceId);
+                        handleEdit(invoiceResponse.data);
 			onCreate(insuranceClaimData);
 			fetchData()
 			reduxDispatch(
@@ -72,14 +86,17 @@ const CreateInsuranceClaimDialog = ({ isOpen, onClose, onCreate, invoiceId, fetc
 			<DialogTitle>Create Insurance Claim</DialogTitle>
 			<DialogContent>
 
+			<InputLabel sx={{ paddingBottom: "8px" }}>Claim Amount</InputLabel>
+
 				<TextField
 					fullWidth
-					label="Claim Amount"
+					// label="Claim Amount"
 					type="number"
 					name="insuranceClaimAmount"
 					value={insuranceClaimData.insuranceClaimAmount}
 					onChange={handleInputChange}
 				/>
+				
 				<TextField
 					fullWidth
 					label="Insurer Name"
@@ -88,7 +105,7 @@ const CreateInsuranceClaimDialog = ({ isOpen, onClose, onCreate, invoiceId, fetc
 					onChange={handleInputChange}
 				/>
 				<div>
-					<label>Is Private Insurer: </label>
+					<label>Private Insurer?</label>
 					<input
 						type="checkbox"
 						checked={insuranceClaimData.isPrivateInsurer}

@@ -21,26 +21,9 @@ function AssignAdmissionDialog({
   onClose,
   onConfirm,
   listOfWorkingStaff,
-  selectedAppointmentToAssign,
   listOfAssignedStaff,
-  roleToAssign,
 }) {
   const loggedInStaff = useSelector(selectStaff);
-
-  //const [selectedRole, setSelectedRole] = useState("")
-  //const [selectRoleOptions, setSelectRoleOptions] = useState([])
-
-  const [selectedNurse, setSelectedNurse] = useState(
-    selectedAppointmentToAssign.assignedNurseId
-      ? selectedAppointmentToAssign.assignedNurseId
-      : 0
-  );
-
-  const [selectedAdmin, setSelectedAdmin] = useState(
-    selectedAppointmentToAssign.assignedAdminId
-      ? selectedAppointmentToAssign.assignedAdminId
-      : 0
-  );
 
   const [selectedStaff, setSelectedStaff] = useState(0);
 
@@ -76,10 +59,16 @@ function AssignAdmissionDialog({
     }
   };
 
+  const capitalizeFirstLetter = (str) => {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
   return (
     <>
       <Dialog open={open} onClose={onClose}>
-        <DialogTitle>Staff Assignment to Ticket:</DialogTitle>
+        <DialogTitle>{`${capitalizeFirstLetter(
+          loggedInStaff.staffRoleEnum
+        )} Assignment to Ticket:`}</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Please choose from the list of available staff members to assign

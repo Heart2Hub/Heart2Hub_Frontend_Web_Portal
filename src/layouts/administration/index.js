@@ -81,6 +81,20 @@ function Administration() {
             </MDBox>
           </Grid>
           }
+          <Grid item xs={12} md={6} lg={3}>
+            <MDBox mb={1.5}>
+              <SimpleBlogCard
+                image="https://i.ibb.co/7VrXd5M/carlos-muza-hpj-Sk-U2-UYSU-unsplash.jpg"
+                title="Knowledge Manegement"
+                action={{
+                  type: "internal",
+                  route: "/administration/knowledge-management",
+                  color: "info",
+                  label: "Continue",
+                }}
+              />{" "}
+            </MDBox>
+          </Grid>
         </Grid>
       </MDBox>
     </DashboardLayout>

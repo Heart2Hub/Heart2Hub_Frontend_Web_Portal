@@ -28,6 +28,7 @@ import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
 import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 import Subsidy from "layouts/finance/subsidy";
 import Invoice from "layouts/finance/invoice";
+import Transaction from "layouts/finance/transaction";
 import Pharmacy from "layouts/pharmacy";
 import Chat from "layouts/chat";
 
@@ -38,6 +39,7 @@ import ConsumableEquipmentManagement from "layouts/administration/inventory-mana
 import InventoryManagement from "layouts/administration/inventory-management";
 import MedicationManagement from "layouts/pharmacy/medication-management";
 import ServiceManagement from "layouts/administration/inventory-management/service-management";
+import KnowledgeManagement from "layouts/administration/knowledge-management";
 
 const ALL_EXCEPT_PHARMACIST = [
   StaffRoleEnum.ADMIN,
@@ -177,7 +179,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={ALL_EXCEPT_PHARMACIST}
         forHeadsOnly={false}
-        authorizedUnits={"WARD"}
+        authorizedUnits={"ALL"}
       >
         <Inpatient />,
       </ProtectedRoute>
@@ -472,6 +474,35 @@ const routes = [
       </ProtectedRoute>
     ),
   },
+  {
+    name: "Transactions Analysis",
+    key: "transaction",
+    route: "/finance/transaction",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+        authorizedUnits={"ALL"}
+      >
+        <Transaction />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Knowledge Management",
+    key: "knowledge-management",
+    route: "/administration/knowledge-management",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+        authorizedUnits={"ALL"}
+      >
+        <KnowledgeManagement />
+      </ProtectedRoute>
+    ),
+  },
+  
 ];
 
 export default routes;
