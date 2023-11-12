@@ -35,16 +35,30 @@ const tooltips = {
       </Icon>
     </Tooltip>
   ),
-  4: (
+  3: (
     <Tooltip title="Patient is discharging today" placement="top">
       <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={"warning"}>
         warning
       </Icon>
     </Tooltip>
   ),
+  4: (
+    <Tooltip title="Patient has an order to be completed now" placement="top">
+      <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={"warning"}>
+        warning
+      </Icon>
+    </Tooltip>
+  ),
+  5: (
+    <Tooltip title="Patient has an order that is overdue" placement="top">
+      <Icon fontSize="medium" sx={{ fontWeight: "bold" }} color={"error"}>
+        warning
+      </Icon>
+    </Tooltip>
+  ),
 };
 
-function AdmissionCard({ admission, handleSelectAdmission }) {
+function AdmissionCard({ admission, handleSelectAdmission, events }) {
   const [profileImage, setProfileImage] = useState(null);
   const [tooltip, setTooltip] = useState(null);
 
@@ -66,6 +80,30 @@ function AdmissionCard({ admission, handleSelectAdmission }) {
 
     if (hoursPassed < 2 && !admission.arrived) {
       setTooltip(1);
+    } else if (hoursPassed >= 2 && !admission.arrived) {
+      setTooltip(2);
+    }
+
+    const dischargeMoment = moment(admission.dischargeDateTime);
+    dischargeMoment.subtract(1, "months");
+    const dischargeToday = dischargeMoment.isSame(moment(), "day");
+
+    if (dischargeToday) {
+      setTooltip(3);
+    }
+
+    //filter events by bed
+    const filteredEvents = events.filter(
+      (event) => event.resourceId === admission.bed
+    );
+    console.log(filteredEvents);
+    for (const event of filteredEvents) {
+      if (event.id === 1) {
+        setTooltip(4);
+      } else if (event.id === 2) {
+        setTooltip(5);
+        break;
+      }
     }
   };
 

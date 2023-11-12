@@ -450,11 +450,19 @@ export const shiftApi = {
       `${REST_ENDPOINT}/shift/getAllShiftsFromDate/${username}?startDate=${start}&endDate=${end}`
     );
   },
-  automaticallyAllocateShifts(start, end, role, department, shift1, shift2, shift3) {
+  automaticallyAllocateShifts(
+    start,
+    end,
+    role,
+    department,
+    shift1,
+    shift2,
+    shift3
+  ) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/shift/automaticallyCreateShifts?startDate=${start}&endDate=${end}&role=${role}&department=${department}&shift1=${shift1}&shift2=${shift2}&shift3=${shift3}`
     );
-  }
+  },
 };
 
 export const shiftConstraintsApi = {
@@ -508,7 +516,9 @@ export const shiftPreferenceApi = {
 
 export const subsidyApi = {
   getAllSubsidies(username) {
-    return axiosFetch.get(`${REST_ENDPOINT}/subsidy/findAllSubsidiesOfPatient/${username}`);
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/subsidy/findAllSubsidiesOfPatient/${username}`
+    );
   },
   findAllSubsidyOfEhr(id) {
     return axiosFetch.get(`${REST_ENDPOINT}/subsidy/findAllSubsidyOfEhr/${id}`);
@@ -823,24 +833,34 @@ export const prescriptionRecordApi = {
 
 export const stripeApi = {
   createPaymentLink(requestBody) {
-    return axiosFetch.post(`${REST_ENDPOINT}/stripe/create-payment-link`, requestBody);
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/stripe/create-payment-link`,
+      requestBody
+    );
   },
-}
+};
 
 export const transactionApi = {
   getAllTransactions() {
     return axiosFetch.get(`${REST_ENDPOINT}/transaction/getAllTransactions`);
   },
   getAllTransactionsOfPatient(id) {
-    return axiosFetch.get(`${REST_ENDPOINT}/transaction/getAllTransactionsOfPatient/${id}`);
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/transaction/getAllTransactionsOfPatient/${id}`
+    );
   },
   createPaymentLink(id, requestBody) {
-    return axiosFetch.post(`${REST_ENDPOINT}/transaction/createTransaction/${id}`, requestBody);
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/transaction/createTransaction/${id}`,
+      requestBody
+    );
   },
   getTotalSumOfTransactionsForCurrentYearByMonth() {
-    return axiosFetch.get(`${REST_ENDPOINT}/transaction/getTotalSumOfTransactionsForCurrentYearByMonth/`);
-  }
-}
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/transaction/getTotalSumOfTransactionsForCurrentYearByMonth/`
+    );
+  },
+};
 
 export const invoiceApi = {
   getAllInvoices() {
@@ -885,10 +905,14 @@ export const invoiceApi = {
     );
   },
   approveMedishieldClaim(claimId, invoiceId) {
-    return axiosFetch.put(`${REST_ENDPOINT}/invoice/approveMedishieldClaim/${claimId}/${invoiceId}`);
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/invoice/approveMedishieldClaim/${claimId}/${invoiceId}`
+    );
   },
   rejectMedishieldClaim(claimId) {
-    return axiosFetch.put(`${REST_ENDPOINT}/invoice/rejectMedishieldClaim/${claimId}`);
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/invoice/rejectMedishieldClaim/${claimId}`
+    );
   },
   findProfitByInventoryItem() {
     return axiosFetch.get(`${REST_ENDPOINT}/invoice/findProfitByInventoryItem`);
@@ -900,8 +924,10 @@ export const invoiceApi = {
     return axiosFetch.get(`${REST_ENDPOINT}/invoice/findProfitByMedication`);
   },
   findInvoiceUsingTransaction(id) {
-    return axiosFetch.get(`${REST_ENDPOINT}/invoice/findInvoiceUsingTransaction/${id}`);
-  }
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/invoice/findInvoiceUsingTransaction/${id}`
+    );
+  },
 };
 
 export const admissionApi = {
@@ -1029,50 +1055,58 @@ export const inpatientTreatmentApi = {
       `${REST_ENDPOINT}/inpatientTreatment/getInpatientTreatmentById?inpatientTreatmentId=${id}`
     );
   },
+  updateArrival(id, arrived) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/inpatientTreatment/updateArrival?inpatientTreatmentId=${id}&arrivalStatus=${arrived}`
+    );
+  },
+  updateComplete(inpatientTreatmentId, admissionId) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/inpatientTreatment/updateComplete?inpatientTreatmentId=${inpatientTreatmentId}&admissionId=${admissionId}`
+    );
+  },
+  deleteInpatientTreatment(inpatientTreatmentId, admissionId) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/inpatientTreatment/deleteInpatientTreatment?inpatientTreatmentId=${inpatientTreatmentId}&admissionId=${admissionId}`
+    );
+  },
 };
 
 export const postApi = {
   getAllPosts() {
-    return axiosFetch.get(
-      `${REST_ENDPOINT}/post/getAllPosts`
-    );
+    return axiosFetch.get(`${REST_ENDPOINT}/post/getAllPosts`);
   },
   getPostById(id) {
-    return axiosFetch.get(
-      `${REST_ENDPOINT}/post/getPostById/${id}`
-    );
+    return axiosFetch.get(`${REST_ENDPOINT}/post/getPostById/${id}`);
   },
   findPostAuthor(id) {
-    return axiosFetch.get(
-      `${REST_ENDPOINT}/post/findPostAuthor/${id}`
-    );
+    return axiosFetch.get(`${REST_ENDPOINT}/post/findPostAuthor/${id}`);
   },
   deletePost(id) {
-    return axiosFetch.delete(
-      `${REST_ENDPOINT}/post/deletePost/${id}`
-    );
+    return axiosFetch.delete(`${REST_ENDPOINT}/post/deletePost/${id}`);
   },
   createPost(id, requestBody) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/post/createPost/${id}`, requestBody
+      `${REST_ENDPOINT}/post/createPost/${id}`,
+      requestBody
     );
   },
   addImageToPost(id, requestBody) {
-    return axiosFetch.post(
-      `${REST_ENDPOINT}/post/addImage/${id}`, requestBody
-    );
+    return axiosFetch.post(`${REST_ENDPOINT}/post/addImage/${id}`, requestBody);
   },
   removeImage(id, requestBody) {
     return axiosFetch.post(
-      `${REST_ENDPOINT}/post/removeImage/${id}`, requestBody
+      `${REST_ENDPOINT}/post/removeImage/${id}`,
+      requestBody
     );
   },
   updatePost(id, requestBody) {
     return axiosFetch.put(
-      `${REST_ENDPOINT}/post/updatePost/${id}`, requestBody
+      `${REST_ENDPOINT}/post/updatePost/${id}`,
+      requestBody
     );
   },
-}
+};
 
 export const chatApi = {
   getStaffConversations(staffId) {
@@ -1089,5 +1123,5 @@ export const chatApi = {
     return axiosFetch.post(
       `${REST_ENDPOINT}/conversation/createStaffConversation?staffId1=${from}&staffId2=${to}`
     );
-  }
+  },
 };
