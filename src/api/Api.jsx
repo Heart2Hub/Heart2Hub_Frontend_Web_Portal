@@ -951,26 +951,11 @@ export const admissionApi = {
       `${REST_ENDPOINT}/admission/getAdmissionsForStaff?staffId=${id}`
     );
   },
-  // assignAdmissionToStaff(admissionId, toStaffId, fromStaffId) {
-  //   return axiosFetch.put(
-  //     `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
-  //   );
-  // },
   assignAdmissionToStaff(admissionId, toStaffId) {
     return axiosFetch.put(
       `${REST_ENDPOINT}/admission/assignAdmissionToStaff?admissionId=${admissionId}&toStaffId=${toStaffId}`
     );
   },
-  // assignAdmissionToNurse(admissionId, toStaffId, fromStaffId) {
-  //   return axiosFetch.put(
-  //     `${REST_ENDPOINT}/admission/assignAdmissionToNurse?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
-  //   );
-  // },
-  // assignAdmissionToAdmin(admissionId, toStaffId, fromStaffId) {
-  //   return axiosFetch.put(
-  //     `${REST_ENDPOINT}/admission/assignAdmissionToAdmin?admissionId=${admissionId}&toStaffId=${toStaffId}&fromStaffId=${fromStaffId}`
-  //   );
-  // },
   updateAdmissionArrival(admissionId, arrivalStatus, staffId) {
     return axiosFetch.put(
       `${REST_ENDPOINT}/admission/updateAdmissionArrival?admissionId=${admissionId}&arrivalStatus=${arrivalStatus}&staffId=${staffId}`
@@ -1004,6 +989,16 @@ export const admissionApi = {
   getAdmissionByAdmissionId(admissionId) {
     return axiosFetch.get(
       `${REST_ENDPOINT}/admission/getAdmissionByAdmissionId?admissionId=${admissionId}`
+    );
+  },
+  addImageAttachment(admissionId, imageLink, createdDate) {
+    return axiosFetch.put(
+      `${REST_ENDPOINT}/admission/addImageAttachment?admissionId=${admissionId}&imageLink=${imageLink}&createdDate=${createdDate}`
+    );
+  },
+  viewImageAttachments(admissionId) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/admission/viewImageAttachments?admissionId=${admissionId}`
     );
   },
 };

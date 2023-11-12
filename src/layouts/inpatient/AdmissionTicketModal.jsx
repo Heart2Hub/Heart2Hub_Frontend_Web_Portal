@@ -403,7 +403,7 @@ function AdmissionTicketModal({
           username: selectedAdmission.username,
           profilePicture: selectedAdmission.patientProfilePicture,
         };
-        reduxDispatch(setEHRRecord(response));
+        reduxDispatch(setEHRRecord(response.data));
         navigate("/ehr/ehrRecord");
       });
   };
@@ -439,15 +439,18 @@ function AdmissionTicketModal({
                     {calculateAge(selectedAdmission?.dateOfBirth)}
                     {selectedAdmission.sex === "Male" ? "M" : "F"})
                   </MDTypography>
-                  {selectedAdmission.arrived ? null : (
-                    <MDButton
-                      variant="gradient"
-                      color="primary"
-                      onClick={handleOpenCancelDialog}
-                    >
-                      Cancel Admission
-                    </MDButton>
-                  )}
+                  {!selectedAdmission.arrived &&
+                    selectedAdmission.listOfStaffsId.includes(
+                      loggedInStaff.staffId
+                    ) && (
+                      <MDButton
+                        variant="gradient"
+                        color="primary"
+                        onClick={handleOpenCancelDialog}
+                      >
+                        Cancel Admission
+                      </MDButton>
+                    )}
                 </Box>
                 {selectedAdmission.patientProfilePicture !== null && (
                   <MDAvatar
@@ -519,7 +522,7 @@ function AdmissionTicketModal({
                   <MDTypography variant="h5" gutterBottom>
                     Link to Electronic Health Record:
                   </MDTypography>
-                  {/* <MDBox>
+                  <MDBox>
                     <Stack direction="row" spacing={2}>
                       <AddAttachmentButton
                         selectedAdmission={selectedAdmission}
@@ -528,15 +531,19 @@ function AdmissionTicketModal({
                         selectedAdmission={selectedAdmission}
                       />
                     </Stack>
-                  </MDBox> */}
+                  </MDBox>
                 </ListItem>
                 <ListItem>
                   <MDTypography variant="h6" gutterBottom>
                     <MDButton
                       onClick={handleClickToEhr}
                       color="primary"
-                      //TODO
-                      //disabled
+                      disabled={
+                        !selectedAdmission.arrived ||
+                        !selectedAdmission.listOfStaffsId.includes(
+                          loggedInStaff.staffId
+                        )
+                      }
                     >
                       EHR
                     </MDButton>
@@ -655,50 +662,62 @@ function AdmissionTicketModal({
                     }}
                   />
                 </ListItem>
-                <ListItem sx={{ marginTop: "10px" }}>
-                  <textarea
-                    value={editableComments}
-                    onChange={handleCommentsChange}
-                    placeholder="Add new comment here"
-                    style={{
+                {selectedAdmission.listOfStaffsId.includes(
+                  loggedInStaff.staffId
+                ) && (
+                  <ListItem sx={{ marginTop: "10px" }}>
+                    <textarea
+                      value={editableComments}
+                      onChange={handleCommentsChange}
+                      placeholder="Add new comment here"
+                      style={{
+                        width: "100%",
+                        height: "40px",
+                        borderColor: "gainsboro",
+                        borderRadius: "6px",
+                        fontFamily: "Arial",
+                        padding: "10px",
+                        fontSize: "15px",
+                        overflowY: "auto",
+                        resize: "none",
+                        "::WebkitScrollbar": {
+                          width: "0px",
+                          background: "transparent",
+                        },
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
+                      }}
+                    />
+                  </ListItem>
+                )}
+                {selectedAdmission.listOfStaffsId.includes(
+                  loggedInStaff.staffId
+                ) && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
                       width: "100%",
-                      height: "40px",
-                      borderColor: "gainsboro",
-                      borderRadius: "6px",
-                      fontFamily: "Arial",
-                      padding: "10px",
-                      fontSize: "15px",
-                      overflowY: "auto",
-                      resize: "none",
-                      "::WebkitScrollbar": {
-                        width: "0px",
-                        background: "transparent",
-                      },
-                      scrollbarWidth: "none",
-                      msOverflowStyle: "none",
+                      marginTop: "10px",
                     }}
-                  />
-                </ListItem>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    width: "100%",
-                    marginTop: "10px",
-                  }}
-                >
-                  <MDButton
-                    disabled={!commentsTouched || loading}
-                    onClick={handleUpdateComments}
-                    variant="gradient"
-                    color="primary"
                   >
-                    Save Comments
-                  </MDButton>
-                </Box>
+                    <MDButton
+                      disabled={
+                        !commentsTouched ||
+                        loading ||
+                        !selectedAdmission.arrived
+                      }
+                      onClick={handleUpdateComments}
+                      variant="gradient"
+                      color="primary"
+                    >
+                      Save Comments
+                    </MDButton>
+                  </Box>
+                )}
               </List>
               <List>
-                <ListItem>
+                <ListItem sx={{ marginTop: "10px" }}>
                   <MDTypography variant="h5" gutterBottom>
                     Patient's Items:
                   </MDTypography>
