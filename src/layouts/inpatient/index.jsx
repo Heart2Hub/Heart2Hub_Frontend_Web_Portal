@@ -48,44 +48,6 @@ import TreatmentModal from "./TreatmentModal";
 import { parseDateFromLocalDateTimeWithSecs } from "utility/Utility";
 import { inpatientTreatmentApi } from "api/Api";
 
-const beds = [
-  { id: 1, title: "Bed 1" },
-  { id: 2, title: "Bed 2" },
-  { id: 3, title: "Bed 3" },
-  { id: 4, title: "Bed 4" },
-  { id: 5, title: "Bed 5" },
-  { id: 6, title: "Bed 6" },
-];
-
-//FOR UI PURPOSES
-const startDate = new Date();
-const defaultEvents = [
-  {
-    id: 0,
-    title: `1 Medication Order(s)`,
-    start: new Date(startDate.setHours(12, 0, 0)),
-    end: new Date(startDate.setHours(13, 0, 0)),
-    resourceId: 1,
-    medicationOrders: [],
-  },
-  {
-    id: 1,
-    title: `2 Medication Order(s)`,
-    start: new Date(startDate.setHours(8, 0, 0)),
-    end: new Date(startDate.setHours(9, 0, 0)),
-    resourceId: 2,
-    medicationOrders: [],
-  },
-  {
-    id: 2,
-    title: `2 Medication Order(s)`,
-    start: new Date(startDate.setHours(8, 0, 0)),
-    end: new Date(startDate.setHours(9, 0, 0)),
-    resourceId: 3,
-    medicationOrders: [],
-  },
-];
-
 function Inpatient() {
   const staff = useSelector(selectStaff);
   const localizer = momentLocalizer(moment);
@@ -120,6 +82,8 @@ function Inpatient() {
   const [existingTreatment, setExistingTreatment] = useState(null);
   const [staffDTO, setStaffDTO] = useState(null);
 
+  const [eventIds, setEventIds] = useState([]);
+
   //get the facility location
   const getFacilityLocationByStaffIdThroughShift = async () => {
     const response = await staffApi.getStaffsWorkingInCurrentShiftAndDepartment(
@@ -131,7 +95,7 @@ function Inpatient() {
       (workingStaff) => workingStaff.staffId === staff.staffId
     )[0];
 
-    console.log(staffDTO);
+    //console.log(staffDTO);
 
     if (staffDTO) {
       setStaffDTO(staffDTO);
@@ -210,13 +174,16 @@ function Inpatient() {
         let eventId;
         for (const medicationOrder of medicationOrders) {
           if (medicationOrder.isCompleted) {
-            eventId = 2;
+            eventId = 3;
           } else {
+            const startMoment = moment(medicationOrder.startDate);
             const endMoment = moment(medicationOrder.endDate);
-            if (moment().isAfter(endMoment)) {
+            if (moment().isBefore(startMoment)) {
+              eventId = 0;
+            } else if (moment().isBetween(startMoment, endMoment)) {
               eventId = 1;
             } else {
-              eventId = 0;
+              eventId = 2;
             }
             break;
           }
@@ -245,8 +212,27 @@ function Inpatient() {
         const startDate = parseDateFromYYYYMMDDHHMMSS(treatment.startDate);
         const endDate = parseDateFromYYYYMMDDHHMMSS(treatment.endDate);
 
+        //change color of event using id
+        let eventId;
+
+        if (treatment.isCompleted) {
+          eventId = 3;
+        } else {
+          const startMoment = moment(treatment.startDate);
+          const endMoment = moment(treatment.endDate);
+          if (moment().isBefore(startMoment)) {
+            eventId = 0;
+          } else if (moment().isBetween(startMoment, endMoment)) {
+            eventId = 1;
+          } else {
+            eventId = 2;
+          }
+        }
+
+        console.log(eventId);
+
         const treatmentEvent = {
-          id: 0,
+          id: eventId,
           title: "Inpatient Treatment",
           start: startDate,
           end: endDate,
@@ -257,6 +243,8 @@ function Inpatient() {
         events.push(treatmentEvent);
       }
     }
+
+    console.log(events);
 
     setCalendarEvents(events);
 
@@ -810,8 +798,10 @@ function Inpatient() {
                     if (event.id === 0) {
                       return <div>{event.title}</div>;
                     } else if (event.id === 1) {
-                      return <div className="red-event">{event.title}</div>;
+                      return <div className="orange-event">{event.title}</div>;
                     } else if (event.id === 2) {
+                      return <div className="red-event">{event.title}</div>;
+                    } else if (event.id === 3) {
                       return <div className="green-event">{event.title}</div>;
                     } else {
                       return (
@@ -822,6 +812,7 @@ function Inpatient() {
                             )[0]
                           }
                           handleSelectAdmission={handleSelectAdmission}
+                          events={calendarEvents}
                         />
                       );
                     }

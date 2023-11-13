@@ -17,8 +17,9 @@ import { selectStaff } from "store/slices/staffSlice";
 import moment from "moment";
 import MDBox from "components/MDBox";
 import { displayMessage } from "store/slices/snackbarSlice";
+import { admissionApi } from "api/Api";
 
-function AddAttachmentButton({ selectedAppointment }) {
+function AddAttachmentButton({ selectedAdmission }) {
   const [addAttachmentDialogOpen, setAddAttachmentDialogOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageToUpload, setImageToUpload] = useState(null);
@@ -76,11 +77,10 @@ function AddAttachmentButton({ selectedAppointment }) {
         let createdDate = moment().format("YYYY-MM-DD HH:mm:ss");
 
         //send to BE to update
-        const response = await appointmentApi.addImageAttachmentToAppointment(
-          selectedAppointment.appointmentId,
+        const response = await admissionApi.addImageAttachment(
+          selectedAdmission.admissionId,
           imageLink,
-          createdDate,
-          loggedInStaff.staffId
+          createdDate
         );
 
         reduxDispatch(
@@ -112,6 +112,10 @@ function AddAttachmentButton({ selectedAppointment }) {
         color="secondary"
         onClick={handleOpenAddAttachmentDialog}
         size="small"
+        disabled={
+          !selectedAdmission.arrived ||
+          !selectedAdmission.listOfStaffsId.includes(loggedInStaff.staffId)
+        }
       >
         Add Attachment
       </MDButton>
