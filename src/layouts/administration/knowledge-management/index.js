@@ -51,6 +51,11 @@ function KnowledgeManagement() {
 	const [selectedPost, setSelectedPost] = useState(null);
 	const [activeStep, setActiveStep] = useState(0);
 
+	
+
+
+
+	
 
 	const handleViewPost = (post) => {
 		setSelectedPost(post);
@@ -74,7 +79,48 @@ function KnowledgeManagement() {
 		setImage(formData);
 	};
 
-	
+	const handleCreateNewPost = async () => {
+
+		let imageLink = null;
+		let createdDate = null;
+
+		if (image) {
+			// Only make the image server request if leavePhoto is provided
+			const imageServerResponse = await imageServerApi.uploadProfilePhoto(
+				"id",
+				image
+			);
+
+			imageLink = imageServerResponse.data.filename; // Set imageLink if photo is uploaded
+			createdDate = moment().format("YYYY-MM-DDTHH:mm:ss");
+		}
+
+		const requestBody = {
+			title: title,
+			body: body,
+			postType: postType,
+			image: imageLink,
+		};
+
+		try {
+			console.log(requestBody)
+			const response = await postApi.createPost(loggedInStaff.staffId, requestBody);
+			const post = response.data;
+
+			fetchData();
+			reduxDispatch(
+				displayMessage({
+					color: 'success',
+					icon: 'notification',
+					title: 'Successfully Created Post!',
+				})
+			);
+
+		} catch (error) {
+			console.error('Error creating post :', error);
+		}
+		handleCloseModal();
+	};
 
 	const handleGetPostCreator = async (postId) => {
 		try {
@@ -86,6 +132,34 @@ function KnowledgeManagement() {
 		} catch (error) {
 			console.error('Error fetching post creator:', error);
 		}
+	};
+	const [openDialog, setOpenDialog] = useState(false);
+	const [selectedPostId, setSelectedPostId] = useState(null);
+
+	const handleOpenDialog = (postId) => {
+		setSelectedPostId(postId);
+		setOpenDialog(true);
+	};
+
+	const handleCloseDialog = () => {
+		setOpenDialog(false);
+	};
+
+	const handleDeletePost = async (postId) => {
+		try {
+			await postApi.deletePost(postId);
+			fetchData(); // Refresh the post list
+			reduxDispatch(
+				displayMessage({
+					color: 'success',
+					icon: 'notification',
+					title: 'Successfully Deleted Post!',
+				})
+			);
+		} catch (error) {
+			console.error('Error deleting post:', error);
+		}
+		setOpenDialog(false);
 	};
 
 	useEffect(() => {
@@ -135,7 +209,18 @@ function KnowledgeManagement() {
 
 	const [imageURLs, setImageURLs] = useState({});
 
-
+	// const handleGetProfileImage = async (profilePicture, postId) => {
+	// 	try {
+	// 		const response = await imageServerApi.getImageFromImageServer(
+	// 			"id",
+	// 			profilePicture
+	// 		);
+	// 		const imageURL = URL.createObjectURL(response.data);
+	// 		setImageURLs((prev) => ({ ...prev, [postId]: imageURL }));
+	// 	} catch (error) {
+	// 		console.error('Error fetching image:', error);
+	// 	}
+	// };
 
 	const handleGetProfileImage = async (listOfImageDocuments, postId) => {
 		try {
@@ -168,7 +253,7 @@ function KnowledgeManagement() {
 		});
 	}, [posts]);
 
-	// 
+
 
 	return (
 		<DashboardLayout>
@@ -189,7 +274,17 @@ function KnowledgeManagement() {
 							Knowledge Management
 						</MDTypography>
 					</MDBox>
-					
+					<MDBox mx={2} mt={3} px={2}>
+						<MDButton
+							Button
+							variant="contained"
+							color="primary"
+							onClick={() => setIsModalOpen(true)}
+						>
+							Create New Post
+							<Icon>add</Icon>
+						</MDButton>
+					</MDBox>
 					<CardContent>
 						<Grid container spacing={2}>
 							{posts.map((post) => (
@@ -229,17 +324,22 @@ function KnowledgeManagement() {
 													/>
 												)}
 											</Box>
-											<Box mt="auto"> {/* Pushes the following content to the bottom */}
-                                                                                        <Box display="flex" justifyContent="flex-end" pt={2} marginBottom={"30px"} marginRight={"20px"}>
-                                                                                                <Button variant="outlined" color="primary" onClick={() => handleViewPost(post)} style={{ backgroundColor: 'blue' }}>
-                                                                                                        View
-                                                                                                </Button>
-                                                                                                
-                                                                                        </Box>
-                                                                                </Box>
 
 										</CardContent>
-										
+										<Box mt="auto"> {/* Pushes the following content to the bottom */}
+											<Box display="flex" justifyContent="flex-end" pt={2} marginBottom={"30px"} marginRight={"20px"}>
+												<Button variant="outlined" color="primary" onClick={() => handleViewPost(post)} style={{ backgroundColor: 'blue' }}>
+													View
+												</Button>
+												{postCreators[post.postId] && loggedInStaff && postCreators[post.postId].staffId === loggedInStaff.staffId && (
+													<>
+														<Button variant="contained" style={{ backgroundColor: 'red', color: 'white', marginLeft: 10 }} onClick={() => handleOpenDialog(post.postId)}>
+															Delete
+														</Button>
+													</>
+												)}
+											</Box>
+										</Box>
 									</Card>
 								</Grid>
 							))}
@@ -247,7 +347,79 @@ function KnowledgeManagement() {
 					</CardContent>
 				</Card>
 			</MDBox>
-			
+			<Dialog open={openDialog} onClose={handleCloseDialog} >
+				<DialogTitle>Delete Post</DialogTitle>
+				<DialogContent>Are you sure you want to delete this post?</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCloseDialog}>Cancel</Button>
+					<Button onClick={() => handleDeletePost(selectedPostId)} color="error">
+						Delete
+					</Button>
+				</DialogActions>
+			</Dialog>
+			<Dialog open={isModalOpen} onClose={handleCloseModal} fullWidth maxWidth="md">
+				<DialogTitle>Create New Post</DialogTitle>
+				<DialogContent>
+					<TextField
+						autoFocus
+						margin="dense"
+						id="title"
+						label="Title"
+						type="text"
+						fullWidth
+						value={title}
+						onChange={(e) => setTitle(e.target.value)}
+					/>
+					<TextField
+						margin="dense"
+						id="body"
+						label="Body"
+						multiline
+						rows={4}
+						fullWidth
+						value={body}
+						onChange={(e) => setBody(e.target.value)}
+					/>
+					<InputLabel id="post-type-label">Post Type</InputLabel>
+					<Select
+						labelId="post-type-label"
+						id="post-type"
+						value={postType}
+						label="Post Type"
+						onChange={(e) => setPostType(e.target.value)}
+						fullWidth
+					>
+						<MenuItem value="ADMINISTRATIVE">ADMINISTRATIVE</MenuItem>
+						<MenuItem value="RESEARCH">RESEARCH</MenuItem>
+						<MenuItem value="ENRICHMENT">ENRICHMENT</MenuItem>
+					</Select>
+					<Grid item xs={6}>
+						<MDBox>
+							<MDTypography
+								variant="button"
+								fontWeight="bold"
+								textTransform="capitalize"
+							>
+								Upload Photo
+							</MDTypography>
+							<br></br>
+							<input
+								type="file"
+								accept="image/*"
+								onChange={handlePhotoUpload}
+							/>
+							<br></br>
+						</MDBox>
+
+					</Grid>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCloseModal}>Cancel</Button>
+					<Button onClick={handleCreateNewPost} color="primary">
+						Create
+					</Button>
+				</DialogActions>
+			</Dialog>
 			{isViewModalOpen && selectedPost && (
 				<Dialog open={isViewModalOpen} onClose={handleCloseViewDialog} fullWidth maxWidth="md">
 					<DialogTitle>{selectedPost.title}</DialogTitle>
@@ -314,8 +486,7 @@ function KnowledgeManagement() {
 					</DialogActions>
 				</Dialog>
 			)}
-			
-
+		
 		</DashboardLayout>
 
 	);
