@@ -191,26 +191,29 @@
   background-color: #fff;
 }
 
-.admission-calendar .rbc-events-container .rbc-event {
-  background-color: #265985;
-}
-
-/* UI PURPOSES */
-.admission-calendar .rbc-events-container .rbc-event:has(.red-event) {
-  background-color: red;
-}
-
-.admission-calendar .rbc-events-container .rbc-event:has(.green-event) {
-  background-color: green;
-}
-/* UI PURPOSES */
-
 .admission-calendar .rbc-row-content .rbc-row:nth-child(2) {
   display: none;
 }
 
 .admission-calendar .rbc-event-label {
   display: none;
+}
+
+/* COLORS FOR CALENDAR EVENTS */
+.admission-calendar .rbc-events-container .rbc-event {
+  background-color: #265985;
+}
+
+.admission-calendar .rbc-events-container .rbc-event:has(.orange-event) {
+  background-color: orange;
+}
+
+.admission-calendar .rbc-events-container .rbc-event:has(.red-event) {
+  background-color: red;
+}
+
+.admission-calendar .rbc-events-container .rbc-event:has(.green-event) {
+  background-color: green;
 }
 
 /* .admission-calendar .rbc-row-content[height~="100px"] {

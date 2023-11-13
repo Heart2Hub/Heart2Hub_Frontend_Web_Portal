@@ -149,8 +149,7 @@ function EHRRecord() {
           </TabPanel>
         )}
 
-        {/* Display the component only if the staff's role is not 'ADMIN' */}
-        {loggedInStaff.staffRoleEnum !== "ADMIN" ? (
+        {/* {loggedInStaff.staffRoleEnum !== "ADMIN" ? (
           <TabPanel value="View Subsidies">
             <Subsidies />
           </TabPanel>
@@ -158,7 +157,7 @@ function EHRRecord() {
           <TabPanel value="View Subsidies">
             <b>View Access Rights Required</b>
           </TabPanel>
-        )}
+        )} */}
       </TabContext>
     </DashboardLayout>
   );
