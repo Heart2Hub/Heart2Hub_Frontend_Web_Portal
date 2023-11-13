@@ -119,7 +119,7 @@ function Invoice() {
                         const items = await invoiceApi.findItemsOfInvoice(invoice.invoiceId);
                         setSelectedEHR(ehr.data);
                         setSelectedItems(items.data);
-
+                        console.log(invoice)
                         fetchData()
                         console.log(ehr.data);
                         console.log(items.data);
@@ -232,15 +232,15 @@ function Invoice() {
 
         function maskNric(nric) {
                 if (nric.length >= 7) {
-                    const firstChar = nric.charAt(0);
-                    const maskedPart = '*'.repeat(nric.length - 4);
-                    const lastThreeChars = nric.slice(-3);
-                    return `${firstChar}${maskedPart}${lastThreeChars}`;
+                        const firstChar = nric.charAt(0);
+                        const maskedPart = '*'.repeat(nric.length - 4);
+                        const lastThreeChars = nric.slice(-3);
+                        return `${firstChar}${maskedPart}${lastThreeChars}`;
                 } else {
-                    // Handle the case where the NRIC is too short
-                    return nric;
+                        // Handle the case where the NRIC is too short
+                        return nric;
                 }
-            }
+        }
         useEffect(() => {
                 // Fetch subsidies data and populate the "subsidies" state
                 fetchData();
@@ -449,6 +449,13 @@ function Invoice() {
                                         <List>
                                                 <ListItem>
                                                         <MDTypography variant="h5" gutterBottom style={{ marginTop: '20px', marginBottom: '20px', fontWeight: 'bold' }}>
+                                                                Invoice ID: {selectedInvoiceDetails.invoiceId}
+                                                        </MDTypography>
+                                                </ListItem>
+                                        </List>
+                                        <List>
+                                                <ListItem>
+                                                        <MDTypography variant="h5" gutterBottom style={{ marginTop: '20px', marginBottom: '20px', fontWeight: 'bold' }}>
                                                                 Invoice Owner: {selectedEHR}
                                                         </MDTypography>
                                                 </ListItem>
@@ -489,7 +496,8 @@ function Invoice() {
                                                                                 Insurer Name: {selectedInvoiceDetails.insuranceClaim.insurerName}
                                                                         </MDTypography>
                                                                         <MDTypography variant="body2" color="text.secondary">
-                                                                                Is Private Insurer: {selectedInvoiceDetails.insuranceClaim.isPrivateInsurer ? 'Yes' : 'No'}
+                                                                                Is Private Insurer: {selectedInvoiceDetails?.insuranceClaim?.privateInsurer ? 'Yes' : 'No'}
+
                                                                         </MDTypography>
                                                                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                                                                 <IconButton
