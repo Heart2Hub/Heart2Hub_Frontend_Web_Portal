@@ -13,8 +13,9 @@ import {
 import { appointmentApi, imageServerApi } from "api/Api";
 import MDButton from "components/MDButton";
 import MDTypography from "components/MDTypography";
+import { admissionApi } from "api/Api";
 
-function ViewAttachmentsButton({ selectedAppointment }) {
+function ViewAttachmentsButton({ selectedAdmission }) {
   const [openViewAttachmentsDialog, setOpenViewAttachmentsDialog] =
     useState(false);
   const [listOfAttachments, setListOfAttachments] = useState([]);
@@ -38,8 +39,8 @@ function ViewAttachmentsButton({ selectedAppointment }) {
     setIsLoading(true);
 
     try {
-      const response = await appointmentApi.viewAppointmentAttachments(
-        selectedAppointment.appointmentId
+      const response = await admissionApi.viewImageAttachments(
+        selectedAdmission.admissionId
       );
 
       const fetchedAttachments = response.data;

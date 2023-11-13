@@ -72,6 +72,27 @@ const style = {
   borderRadius: "15px",
 };
 
+const treatmentStaffActionMap = {
+  DELETE: ["FUTURE", false],
+  COMPLETE: ["CURRENT", false],
+  COMPLETED: ["CURRENT", "PAST", true],
+  OVERDUE: ["PAST", false],
+};
+
+const otherStaffActionMap = {
+  NOT_COMPLETED: ["CURRENT", "FUTURE", false],
+  COMPLETED: ["CURRENT", "PAST", true],
+  OVERDUE: ["PAST", false],
+};
+
+const buttonColorMap = {
+  DELETE: "#f44336",
+  NOT_COMPLETED: "#8c8c8c",
+  COMPLETE: "#f44336",
+  COMPLETED: "#00e600",
+  OVERDUE: "#ff0000",
+};
+
 function TreatmentModal({
   openModal,
   handleCloseModal,
@@ -91,9 +112,34 @@ function TreatmentModal({
   const [facilityLocation, setFacilityLocation] = useState(null);
   const [services, setServices] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
+  const [arrived, setArrived] = useState(false);
+
+  const [selectedItemId, setSelectedItemId] = useState(null);
+  const [isCompleteDialogOpen, setCompleteDialogOpen] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  //Delete medication order
+  const [orderStatus, setOrderStatus] = useState("FUTURE");
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   //logged in staff
   const loggedInStaff = useSelector(selectStaff);
+
+  const handleOpenDeleteDialog = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+  };
+
+  const handleOpenCompleteDialog = () => {
+    setCompleteDialogOpen(true);
+  };
+
+  const handleCloseCompleteDialog = () => {
+    setCompleteDialogOpen(false);
+  };
 
   //get the facility location
   const getFacilityLocationByStaffIdThroughShift = async () => {
@@ -130,26 +176,36 @@ function TreatmentModal({
   };
 
   useEffect(() => {
+    getFacilityLocationByStaffIdThroughShift();
+    fetchServices();
     const startMoment = moment(startDate);
     const endMoment = moment(endDate);
+
+    if (moment().isBefore(startMoment)) {
+      setOrderStatus("FUTURE");
+    } else if (moment().isBefore(endMoment)) {
+      setOrderStatus("CURRENT");
+    } else {
+      setOrderStatus("PAST");
+    }
+
     const startDateString = startMoment.format("YYYY-MM-DD HH:mm:ss");
     const endDateString = endMoment.format("YYYY-MM-DD HH:mm:ss");
     setStartDateString(startDateString);
     setEndDateString(endDateString);
-    getFacilityLocationByStaffIdThroughShift();
-    fetchServices();
 
     if (existingTreatment) {
+      setArrived(existingTreatment.arrived);
       setComments(existingTreatment.comments);
       setSelectedService(existingTreatment.serviceItem.inventoryItemId);
     }
   }, []);
 
-  useEffect(() => {
-    if (selectedService) {
-      console.log(selectedService);
-    }
-  }, [selectedService]);
+  // useEffect(() => {
+  //   if (selectedService) {
+  //     console.log(selectedService);
+  //   }
+  // }, [selectedService]);
 
   const handleCreateInpatientTreatment = async () => {
     try {
@@ -161,6 +217,7 @@ function TreatmentModal({
         endDate: endDateString,
         arrived: false,
         isCompleted: false,
+        createdBy: `${loggedInStaff.firstname} ${loggedInStaff.lastname} (${loggedInStaff.staffRoleEnum})`,
       };
 
       const response = await inpatientTreatmentApi.createInpatientTreatment(
@@ -191,51 +248,58 @@ function TreatmentModal({
     }
   };
 
-  const handleAddServiceToPatient = (service) => {
-    try {
-      const patientId = selectedAdmission.patientId; // Replace with the actual patient ID
-      const requestBody = {
-        transactionItemName: service.inventoryItemName,
-        transactionItemDescription: service.inventoryItemDescription,
-        transactionItemQuantity: 1,
-        transactionItemPrice: service.retailPricePerQuantity, // Replace with the actual price
-        inventoryItem: service.inventoryItemId,
-      };
+  const handleUpdateArrival = async () => {
+    await inpatientTreatmentApi.updateArrival(
+      existingTreatment.inpatientTreatmentId,
+      !arrived
+    );
+    setArrived(!arrived);
 
-      console.log(requestBody);
-
-      transactionItemApi
-        .addToCart(patientId, requestBody)
-        .then((response) => {
-          const item = response.data;
-          console.log(item);
-          reduxDispatch(
-            displayMessage({
-              color: "success",
-              icon: "notification",
-              title: "Successfully Added Service!",
-            })
-          );
-          //setServices([]);
-          //fetchPatientCart();
-        })
-        .catch((error) => {
-          reduxDispatch(
-            displayMessage({
-              color: "error",
-              icon: "notification",
-              title: "Error Encountered",
-              content: error.response.data,
-            })
-          );
-          console.error("Error fetching data:", error);
-        });
-    } catch (error) {
-      console.error("Error fetching medications and services:", error);
-    }
+    reduxDispatch(
+      displayMessage({
+        color: "success",
+        icon: "notification",
+        title: "Update Success",
+        content: "Patient's Arrival Status is updated",
+      })
+    );
   };
 
-  const handleUpdateInpatientTreatment = () => {};
+  const handleConfirmDelete = async () => {
+    await inpatientTreatmentApi.deleteInpatientTreatment(
+      existingTreatment.inpatientTreatmentId,
+      selectedAdmission.admissionId
+    );
+    reduxDispatch(
+      displayMessage({
+        color: "success",
+        icon: "notification",
+        title: "Success",
+        content: "Item has been deleted from the cart!",
+      })
+    );
+
+    handleCloseDeleteDialog();
+    handleCloseModal();
+  };
+
+  const handleConfirmComplete = async () => {
+    await inpatientTreatmentApi.updateComplete(
+      existingTreatment.inpatientTreatmentId,
+      selectedAdmission.admissionId
+    );
+    reduxDispatch(
+      displayMessage({
+        color: "success",
+        icon: "notification",
+        title: "Success",
+        content: "Treatment has been completed",
+      })
+    );
+
+    handleCloseCompleteDialog();
+    handleCloseModal();
+  };
 
   const renderServicesDropdown = () => {
     return (
@@ -247,6 +311,7 @@ function TreatmentModal({
           style={{ width: "50%" }}
           sx={{ lineHeight: "3em" }}
           value={selectedService}
+          readOnly={existingTreatment}
         >
           {services.map((service) => (
             <MenuItem
@@ -268,6 +333,41 @@ function TreatmentModal({
         </Box> */}
       </Box>
     );
+  };
+
+  const renderActionButton = () => {
+    //console.log(medicationOrder);
+    let entries;
+    if (
+      loggedInStaff.staffRoleEnum === "DOCTOR" ||
+      loggedInStaff.staffRoleEnum === "NURSE" ||
+      loggedInStaff.staffRoleEnum === "ADMIN"
+    ) {
+      entries = Object.entries(otherStaffActionMap);
+    } else {
+      entries = Object.entries(treatmentStaffActionMap);
+    }
+
+    for (const [action, conditions] of entries) {
+      // console.log(orderStatus);
+      // console.log(medicationOrder.isCompleted);
+      if (
+        conditions.includes(orderStatus) &&
+        conditions.includes(existingTreatment.isCompleted)
+      ) {
+        return action;
+      }
+    }
+
+    return "Not found";
+  };
+
+  const renderButtonOnClick = () => {
+    if (renderActionButton() === "DELETE") {
+      return () => handleOpenDeleteDialog();
+    } else if (renderActionButton() === "COMPLETE") {
+      return () => handleOpenCompleteDialog();
+    }
   };
 
   return (
@@ -324,7 +424,9 @@ function TreatmentModal({
             </ListItem>
             <ListItem>
               <MDTypography variant="h6" gutterBottom color="black">
-                {`${loggedInStaff.firstname} ${loggedInStaff.lastname} (${loggedInStaff.staffRoleEnum})`}
+                {existingTreatment
+                  ? existingTreatment.createdBy
+                  : `${loggedInStaff.firstname} ${loggedInStaff.lastname} (${loggedInStaff.staffRoleEnum})`}
               </MDTypography>
             </ListItem>
             <ListItem>
@@ -366,6 +468,7 @@ function TreatmentModal({
                   scrollbarWidth: "none",
                   msOverflowStyle: "none",
                 }}
+                disabled={existingTreatment}
               />
             </ListItem>
 
@@ -390,31 +493,50 @@ function TreatmentModal({
                 >
                   <MDTypography variant="h6" gutterBottom>
                     <Chip
-                      color={existingTreatment.arrived ? "success" : "default"}
-                      label={existingTreatment.arrived ? "Yes" : "No"}
+                      color={arrived ? "success" : "default"}
+                      label={arrived ? "Yes" : "No"}
                     />
                   </MDTypography>
 
-                  {/* <ArrivalButton
-                    arrived={existingTreatment.arrived}
-                    selectedAdmission={existingTreatment}
-                    handleUpdateAppointmentArrival={
-                      handleUpdateInpatientTreatment
-                    }
-                    disableButton={loading}
-                  /> */}
+                  {orderStatus === "CURRENT" &&
+                    !(
+                      loggedInStaff.staffRoleEnum === "ADMIN" ||
+                      loggedInStaff.staffRoleEnum === "NURSE" ||
+                      loggedInStaff.staffRoleEnum === "DOCTOR"
+                    ) && (
+                      <ArrivalButton
+                        arrived={arrived}
+                        selectedAdmission={existingTreatment}
+                        handleUpdateAppointmentArrival={handleUpdateArrival}
+                        disableButton={loading}
+                      />
+                    )}
                 </ListItem>
               </>
             )}
 
-            {existingTreatment === null && (
-              <ListItem
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  marginTop: "40px",
-                }}
-              >
+            <ListItem
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: "40px",
+              }}
+            >
+              {existingTreatment ? (
+                <MDButton
+                  size="large"
+                  variant="gradient"
+                  style={{
+                    backgroundColor: buttonColorMap[renderActionButton()],
+                    color: "white",
+                    width: "300px",
+                  }}
+                  onClick={renderButtonOnClick()}
+                  disabled={renderActionButton() === "COMPLETE" && !arrived}
+                >
+                  {renderActionButton()}
+                </MDButton>
+              ) : (
                 <MDButton
                   size="large"
                   variant="gradient"
@@ -424,11 +546,51 @@ function TreatmentModal({
                 >
                   Create Inpatient Treatment
                 </MDButton>
-              </ListItem>
-            )}
+              )}
+            </ListItem>
           </List>
         </Box>
       </Modal>
+      <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this inpatient treatment?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog} color="primary">
+            Cancel
+          </Button>
+          <MDButton
+            onClick={handleConfirmDelete}
+            color="primary"
+            variant="contained"
+          >
+            Delete
+          </MDButton>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={isCompleteDialogOpen} onClose={handleCloseCompleteDialog}>
+        <DialogTitle>Confirm Complete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure this inpatient treatment is completed?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCompleteDialog} color="primary">
+            Cancel
+          </Button>
+          <MDButton
+            onClick={handleConfirmComplete}
+            color="primary"
+            variant="contained"
+          >
+            Confirm
+          </MDButton>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
