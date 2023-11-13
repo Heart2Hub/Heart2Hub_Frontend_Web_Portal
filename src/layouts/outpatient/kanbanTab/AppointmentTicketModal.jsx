@@ -189,10 +189,16 @@ function AppointmentTicketModal({
       const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(
         selectedAppointment.patientId
       );
-      setMedicationsAllergy(medicationsResponse.data);
+      const outpatientMedicationAllergy = medicationsResponse.data.filter(
+        (item) => item.itemTypeEnum !== "MEDICINE_INPATIENT"
+      );
+      setMedicationsAllergy(outpatientMedicationAllergy);
 
       const medicationsResponse2 = await inventoryApi.getAllMedication();
-      setMedications(medicationsResponse2.data);
+      const outpatientMedication = medicationsResponse2.data.filter(
+        (item) => item.itemTypeEnum !== "MEDICINE_INPATIENT"
+      );
+      setMedications(outpatientMedication);
 
       const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
         loggedInStaff.unit.unitId

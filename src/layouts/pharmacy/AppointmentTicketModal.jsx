@@ -91,6 +91,7 @@ function AppointmentTicketModal({
 
   //For Cart
   const [medications, setMedications] = useState([]);
+  const [medicationsAllergy, setMedicationsAllergy] = useState([]);
   const [services, setServices] = useState([]);
   const [selectedMedication, setSelectedMedication] = useState(null);
   const [selectedMedicationQuantity, setSelectedMedicationQuantity] =
@@ -180,8 +181,16 @@ function AppointmentTicketModal({
   const fetchMedicationsAndServices = async () => {
     try {
       const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(selectedAppointment.patientId);
-      setMedications(medicationsResponse.data);
-      // console.log(medicationsResponse.data)
+      const outpatientMedicationAllergy = medicationsResponse.data.filter(
+        (item) => item.itemTypeEnum !== "MEDICINE_INPATIENT"
+      );
+      setMedicationsAllergy(outpatientMedicationAllergy);
+
+      const medicationsResponse2 = await inventoryApi.getAllMedication();
+      const outpatientMedication = medicationsResponse2.data.filter(
+        (item) => item.itemTypeEnum !== "MEDICINE_INPATIENT"
+      );
+      setMedications(outpatientMedication);
 
       const servicesResponse = await inventoryApi.getAllServiceItemByUnit(loggedInStaff.unit.unitId);
       setServices(servicesResponse.data);
@@ -259,6 +268,22 @@ function AppointmentTicketModal({
         inventoryItem: medication.inventoryItemId,
       };
 
+      const existsInAllergy = medicationsAllergy.some(
+        (item) => item.inventoryItemId === requestBody.inventoryItem
+      );
+
+      if (!existsInAllergy) {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error",
+            content: "Patient has allergy restrictions from selected Medication.",
+          })
+        );
+        return;
+      }
+      console.log(requestBody);
 
       transactionItemApi
         .addToCart(patientId, requestBody)
@@ -651,11 +676,11 @@ function AppointmentTicketModal({
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
-                        " " +
-                        assignedStaff.lastname +
-                        " (" +
-                        assignedStaff.staffRoleEnum +
-                        ")"}
+                      " " +
+                      assignedStaff.lastname +
+                      " (" +
+                      assignedStaff.staffRoleEnum +
+                      ")"}
                   </MDTypography>
                   <MDButton
                     disabled={loading}
@@ -701,13 +726,13 @@ function AppointmentTicketModal({
                     />
                   </MDTypography>
                   {selectedAppointment.dispensaryStatusEnum === "READY_TO_COLLECT" ?
-                  <ArrivalButton
-                    selectedAppointment={selectedAppointment}
-                    handleUpdateAppointmentArrival={
-                      handleUpdateAppointmentArrival
-                    }
-                    disableButton={loading}
-                  /> : null}
+                    <ArrivalButton
+                      selectedAppointment={selectedAppointment}
+                      handleUpdateAppointmentArrival={
+                        handleUpdateAppointmentArrival
+                      }
+                      disableButton={loading}
+                    /> : null}
                 </ListItem>
                 <ListItem sx={{ marginTop: "10px" }}>
                   <MDTypography variant="h5" gutterBottom>
@@ -835,14 +860,14 @@ function AppointmentTicketModal({
                 />
                 <br></br>
                 {loggedInStaff.staffRoleEnum === "PHARMACIST" &&
-                <List>
-                  <ListItem>
-                    <MDTypography variant="h5" gutterBottom>
-                      Medications:
-                    </MDTypography>
-                  </ListItem>
-                  <ListItem>{renderMedicationsDropdown()}</ListItem>
-                </List>}
+                  <List>
+                    <ListItem>
+                      <MDTypography variant="h5" gutterBottom>
+                        Medications:
+                      </MDTypography>
+                    </ListItem>
+                    <ListItem>{renderMedicationsDropdown()}</ListItem>
+                  </List>}
                 <br></br>
                 {/* <List>
                   <ListItem>
@@ -858,7 +883,7 @@ function AppointmentTicketModal({
                       Patient's Cart:
                     </MDTypography>
                     <IconButton
-                      onClick={fetchPatientCart} 
+                      onClick={fetchPatientCart}
                       aria-label="refresh"
                     >
                       <RefreshIcon />
@@ -880,7 +905,7 @@ function AppointmentTicketModal({
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {cartItems.map((item,index) => (
+                            {cartItems.map((item, index) => (
                               <TableRow
                                 key={item.transactionItemId}
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -892,7 +917,7 @@ function AppointmentTicketModal({
                                   Quantity: {item.transactionItemQuantity} &nbsp;
                                   <IconButton
                                     color="secondary"
-                                    onClick={() => {setEditIndex(index);setIsEditCartOpen(true);}}
+                                    onClick={() => { setEditIndex(index); setIsEditCartOpen(true); }}
                                   >
                                     <Icon>edit</Icon>
                                   </IconButton>
@@ -976,11 +1001,11 @@ function AppointmentTicketModal({
         selectedAppointmentToAssign={selectedAppointment}
         assigningToSwimlane={columnName}
       /> */}
-      <EditCart 
+      <EditCart
         open={isEditCartOpen}
         onClose={handleEditCartClose}
         cart={cartItems[editIndex]}
-        updateCartQuantity={updateCartQuantity}/>
+        updateCartQuantity={updateCartQuantity} />
 
     </>
   );
