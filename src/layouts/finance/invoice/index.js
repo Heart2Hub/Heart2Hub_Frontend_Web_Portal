@@ -153,6 +153,8 @@ function Invoice() {
                         { Header: 'Total Amount', accessor: 'invoiceAmount', width: '20%' },
                         { Header: 'Due Date', accessor: 'invoiceDueDate', width: '20%' },
                         { Header: 'Patient Name', accessor: 'patientName', width: '20%' },
+                        { Header: 'Patient NRIC', accessor: 'patientNric', width: '20%' },
+
                         {
                                 Header: 'Status', accessor: 'invoiceStatusEnum',
                                 Cell: ({ value }) => renderStatusWithColor(value),
@@ -199,6 +201,7 @@ function Invoice() {
                         { Header: 'Due Date', accessor: 'invoiceDueDate', width: '20%' },
                         { Header: 'Status', accessor: 'invoiceStatusEnum', width: '20%' },
                         { Header: 'Patient Name', accessor: 'patientName', width: '20%' },
+                        { Header: 'Patient NRIC', accessor: 'patientNric', width: '20%' },
 
                         // { Header: 'Breakdown', accessor: 'invoiceBreakdown', width: '10%' },
 
@@ -226,6 +229,18 @@ function Invoice() {
                 ],
                 rows: [],
         });
+
+        function maskNric(nric) {
+                if (nric.length >= 7) {
+                    const firstChar = nric.charAt(0);
+                    const maskedPart = '*'.repeat(nric.length - 4);
+                    const lastThreeChars = nric.slice(-3);
+                    return `${firstChar}${maskedPart}${lastThreeChars}`;
+                } else {
+                    // Handle the case where the NRIC is too short
+                    return nric;
+                }
+            }
         useEffect(() => {
                 // Fetch subsidies data and populate the "subsidies" state
                 fetchData();
@@ -254,6 +269,9 @@ function Invoice() {
 
                                         const patientNameResponse = await invoiceApi.findPatientOfInvoice(invoice.invoiceId);
                                         const patientName = patientNameResponse.data;
+
+                                        const patientNricResponse = await invoiceApi.findPatientNRICOfInvoice(invoice.invoiceId);
+                                        const patientNric = maskNric(patientNricResponse.data);
                                         return {
                                                 invoiceId: invoice.invoiceId,
                                                 invoiceAmount: `$${invoice.invoiceAmount.toFixed(2)}`,
@@ -264,6 +282,7 @@ function Invoice() {
                                                 medishieldClaim: invoice.medishieldClaim,
                                                 transaction: invoice.transaction,
                                                 patientName: patientName,
+                                                patientNric: patientNric
                                         };
                                 })
                         );

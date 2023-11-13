@@ -859,6 +859,11 @@ export const invoiceApi = {
       `${REST_ENDPOINT}/invoice/findPatientOfInvoice/${id}`
     );
   },
+  findPatientNRICOfInvoice(id) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/invoice/findPatientNRICOfInvoice/${id}`
+    );
+  },
   findItemsOfInvoice(id) {
     return axiosFetch.get(`${REST_ENDPOINT}/invoice/findItemsOfInvoice/${id}`);
   },
