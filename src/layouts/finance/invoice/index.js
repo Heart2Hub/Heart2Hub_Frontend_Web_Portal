@@ -111,22 +111,23 @@ function Invoice() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedInvoiceDetails, setSelectedInvoiceDetails] = useState({});
 
-  const handleEdit = async (invoice) => {
-    setSelectedInvoiceDetails(invoice);
-    try {
-      const ehr = await invoiceApi.findPatientOfInvoice(invoice.invoiceId);
-      const items = await invoiceApi.findItemsOfInvoice(invoice.invoiceId);
-      setSelectedEHR(ehr.data);
-      setSelectedItems(items.data);
+        const handleEdit = async (invoice) => {
+                setSelectedInvoiceDetails(invoice);
+                try {
+                        const ehr = await invoiceApi.findPatientOfInvoice(invoice.invoiceId);
+                        const items = await invoiceApi.findItemsOfInvoice(invoice.invoiceId);
+                        setSelectedEHR(ehr.data);
+                        setSelectedItems(items.data);
+                        console.log(invoice)
+                        fetchData()
+                        console.log(ehr.data);
+                        console.log(items.data);
+                        setDialogOpen(true);
+                } catch (error) {
+                        console.error("Error fetching prescription records: ", error);
+                }
 
-      fetchData();
-      console.log(ehr.data);
-      console.log(items.data);
-      setDialogOpen(true);
-    } catch (error) {
-      console.error("Error fetching prescription records: ", error);
-    }
-  };
+        };
 
   const handleDialogClose = () => {
     setDialogOpen(false);
@@ -201,54 +202,67 @@ function Invoice() {
 
       // { Header: 'Breakdown', accessor: 'invoiceBreakdown', width: '10%' },
 
-      {
-        Header: "Actions",
-        Cell: ({ row }) => (
-          <>
-            <MDButton
-              style={{
-                width: "120px",
-                marginRight: "10px",
-                marginBottom: "8px",
-              }}
-              variant="contained"
-              color="info"
-              onClick={() => handleEdit(row.original)}
-            >
-              View
-            </MDButton>
-          </>
-        ),
-        width: "10%",
-      },
-    ],
-    rows: [],
-  });
-  useEffect(() => {
-    // Fetch subsidies data and populate the "subsidies" state
-    fetchData();
-  }, []);
-  const fetchData = async () => {
-    try {
-      const response = await invoiceApi.getAllInvoices();
-      const invoices = response.data;
-      console.log(response.data);
-      const mappedRows = await Promise.all(
-        invoices.map(async (invoice) => {
-          const dueDate = new Date(
-            invoice.invoiceDueDate[0],
-            invoice.invoiceDueDate[1] - 1,
-            invoice.invoiceDueDate[2],
-            invoice.invoiceDueDate[3],
-            invoice.invoiceDueDate[4],
-            invoice.invoiceDueDate[5],
-            invoice.invoiceDueDate[6]
-          ).toLocaleString("en-SG", {
-            timeZone: "Asia/Singapore",
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          });
+                        {
+                                Header: 'Actions',
+                                Cell: ({ row }) => (
+                                        <>
+                                                <MDButton
+                                                        style={{
+                                                                width: "120px",
+                                                                marginRight: "10px",
+                                                                marginBottom: "8px",
+                                                        }}
+                                                        variant="contained"
+                                                        color="info"
+                                                        onClick={() => handleEdit(row.original)}
+                                                >
+                                                        View
+                                                </MDButton>
+
+                                        </>
+                                ),
+                                width: '10%',
+                        },
+                ],
+                rows: [],
+        });
+
+        function maskNric(nric) {
+                if (nric.length >= 7) {
+                        const firstChar = nric.charAt(0);
+                        const maskedPart = '*'.repeat(nric.length - 4);
+                        const lastThreeChars = nric.slice(-3);
+                        return `${firstChar}${maskedPart}${lastThreeChars}`;
+                } else {
+                        // Handle the case where the NRIC is too short
+                        return nric;
+                }
+        }
+        useEffect(() => {
+                // Fetch subsidies data and populate the "subsidies" state
+                fetchData();
+        }, []);
+        const fetchData = async () => {
+                try {
+                        const response = await invoiceApi.getAllInvoices();
+                        const invoices = response.data;
+                        console.log(response.data);
+                        const mappedRows = await Promise.all(
+                                invoices.map(async (invoice) => {
+                                        const dueDate = new Date(
+                                                invoice.invoiceDueDate[0],
+                                                invoice.invoiceDueDate[1] - 1,
+                                                invoice.invoiceDueDate[2],
+                                                invoice.invoiceDueDate[3],
+                                                invoice.invoiceDueDate[4],
+                                                invoice.invoiceDueDate[5],
+                                                invoice.invoiceDueDate[6]
+                                        ).toLocaleString('en-SG', {
+                                                timeZone: 'Asia/Singapore',
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                        });
 
           const patientNameResponse = await invoiceApi.findPatientOfInvoice(
             invoice.invoiceId
@@ -402,64 +416,57 @@ function Invoice() {
     }
   };
 
-  return (
-    <DashboardLayout>
-      <DashboardNavbar />
-      <MDBox pt={6} pb={3}>
-        <Grid container spacing={6}>
-          <Grid item xs={12}>
-            <Card>
-              <MDBox
-                mx={2}
-                mt={-3}
-                py={3}
-                px={2}
-                variant="gradient"
-                bgColor="info"
-                borderRadius="lg"
-                coloredShadow="info"
-              >
-                <MDTypography variant="h6" color="white">
-                  Invoices
-                </MDTypography>
-              </MDBox>
-              <MDBox pt={3}>
-                <DataTable canSearch={true} table={data} />
-              </MDBox>
-            </Card>
-          </Grid>
-        </Grid>
-      </MDBox>
-      <Dialog
-        open={dialogOpen}
-        onClose={handleDialogClose}
-        PaperProps={{
-          style: {
-            minWidth: 500,
-            width: "80%",
-            maxWidth: "none",
-          },
-        }}
-      >
-        <DialogTitle sx={{ fontSize: "24px", textAlign: "center" }}>
-          Invoice Details
-        </DialogTitle>
-        <DialogContent>
-          <List>
-            <ListItem>
-              <MDTypography
-                variant="h5"
-                gutterBottom
-                style={{
-                  marginTop: "20px",
-                  marginBottom: "20px",
-                  fontWeight: "bold",
-                }}
-              >
-                Invoice Owner: {selectedEHR}
-              </MDTypography>
-            </ListItem>
-          </List>
+        return (
+                <DashboardLayout>
+                        <DashboardNavbar />
+                        <MDBox pt={6} pb={3}>
+                                <Grid container spacing={6}>
+                                        <Grid item xs={12}>
+                                                <Card>
+                                                        <MDBox
+                                                                mx={2}
+                                                                mt={-3}
+                                                                py={3}
+                                                                px={2}
+                                                                variant="gradient"
+                                                                bgColor="info"
+                                                                borderRadius="lg"
+                                                                coloredShadow="info"
+                                                        >
+                                                                <MDTypography variant="h6" color="white">
+                                                                        Invoices
+                                                                </MDTypography>
+                                                        </MDBox>
+                                                        <MDBox pt={3}>
+                                                                <DataTable canSearch={true} table={data} />
+                                                        </MDBox>
+                                                </Card>
+                                        </Grid>
+                                </Grid>
+                        </MDBox>
+                        <Dialog open={dialogOpen} onClose={handleDialogClose} PaperProps={{
+                                style: {
+                                        minWidth: 500,
+                                        width: '80%',
+                                        maxWidth: 'none',
+                                },
+                        }}>
+                                <DialogTitle sx={{ fontSize: '24px', textAlign: 'center' }}>Invoice Details</DialogTitle>
+                                <DialogContent>
+                                        <List>
+                                                <ListItem>
+                                                        <MDTypography variant="h5" gutterBottom style={{ marginTop: '20px', marginBottom: '20px', fontWeight: 'bold' }}>
+                                                                Invoice ID: {selectedInvoiceDetails.invoiceId}
+                                                        </MDTypography>
+                                                </ListItem>
+                                        </List>
+                                        <List>
+                                                <ListItem>
+                                                        <MDTypography variant="h5" gutterBottom style={{ marginTop: '20px', marginBottom: '20px', fontWeight: 'bold' }}>
+                                                                Invoice Owner: {selectedEHR}
+                                                        </MDTypography>
+                                                </ListItem>
+                                        </List>
 
           <List>
             <ListItem>
@@ -473,86 +480,73 @@ function Invoice() {
                   {/* <MDTypography variant="h5" component="div">
                                                                                 Insurance Claim Details
                                                                         </MDTypography> */}
-                  <MDTypography variant="h5">
-                    Insurance Claim ID:{" "}
-                    {selectedInvoiceDetails.insuranceClaim.insuranceClaimId}
-                  </MDTypography>
-                  <MDTypography variant="body2" color="text.secondary">
-                    Date Applied:{" "}
-                    {new Date(
-                      selectedInvoiceDetails.insuranceClaim.insuranceClaimDateApplied[0],
-                      selectedInvoiceDetails.insuranceClaim
-                        .insuranceClaimDateApplied[1] - 1,
-                      selectedInvoiceDetails.insuranceClaim.insuranceClaimDateApplied[2]
-                    ).toLocaleDateString("en-SG", {
-                      timeZone: "Asia/Singapore",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
-                  </MDTypography>
-                  <MDTypography variant="body2" color="text.secondary">
-                    Claim Amount: ${" "}
-                    {selectedInvoiceDetails.insuranceClaim.insuranceClaimAmount.toFixed(
-                      2
-                    )}
-                  </MDTypography>
-                  <MDTypography variant="body2" color="text.secondary">
-                    Insurer Name:{" "}
-                    {selectedInvoiceDetails.insuranceClaim.insurerName}
-                  </MDTypography>
-                  <MDTypography variant="body2" color="text.secondary">
-                    Is Private Insurer:{" "}
-                    {selectedInvoiceDetails.insuranceClaim.isPrivateInsurer
-                      ? "Yes"
-                      : "No"}
-                  </MDTypography>
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <IconButton
-                      aria-label="delete"
-                      onClick={() =>
-                        handleDeleteInsuranceClaim(
-                          selectedInvoiceDetails.insuranceClaim
-                            .insuranceClaimId,
-                          selectedInvoiceDetails.invoiceId,
-                          selectedInvoiceDetails
-                        )
-                      } // Assuming you have a handleDeleteInsuranceClaim function to handle the deletion
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : selectedInvoiceDetails.invoiceAmount === 0 ||
-              selectedInvoiceDetails.invoiceStatusEnum === "PAID" ? (
-              <ListItem>
-                <MDTypography variant="h6" color="text.secondary" gutterBottom>
-                  This invoice has already been paid.
-                </MDTypography>
-              </ListItem>
-            ) : (
-              <ListItem>
-                <MDButton
-                  style={{ marginRight: "10px", marginBottom: "8px" }}
-                  variant="contained"
-                  color="info"
-                  onClick={handleCreateInsuranceDialogOpen}
-                >
-                  Create Insurance Claim
-                </MDButton>
-                <CreateInsuranceClaimDialog
-                  isOpen={isCreateInsuranceDialogOpen}
-                  onClose={() => setIsCreateInsuranceDialogOpen(false)}
-                  onCreate={handleCreateInsuranceClaim}
-                  invoiceId={selectedInvoiceDetails.invoiceId}
-                  fetchData={fetchData} // Pass the selectedInvoice to the dialog component
-                  handleEdit={handleEdit}
-                />
-              </ListItem>
-            )}
-          </List>
-          <br></br>
+                                                                        <MDTypography variant="h5" >
+                                                                                Insurance Claim ID: {selectedInvoiceDetails.insuranceClaim.insuranceClaimId}
+                                                                        </MDTypography>
+                                                                        <MDTypography variant="body2" color="text.secondary">
+                                                                                Date Applied:{' '}
+                                                                                {new Date(
+                                                                                        selectedInvoiceDetails.insuranceClaim.insuranceClaimDateApplied[0],
+                                                                                        selectedInvoiceDetails.insuranceClaim.insuranceClaimDateApplied[1] - 1,
+                                                                                        selectedInvoiceDetails.insuranceClaim.insuranceClaimDateApplied[2]
+                                                                                ).toLocaleDateString('en-SG', {
+                                                                                        timeZone: 'Asia/Singapore',
+                                                                                        day: '2-digit',
+                                                                                        month: '2-digit',
+                                                                                        year: 'numeric',
+                                                                                })}
+                                                                        </MDTypography>
+                                                                        <MDTypography variant="body2" color="text.secondary">
+                                                                                Claim Amount: $ {selectedInvoiceDetails.insuranceClaim.insuranceClaimAmount.toFixed(2)}
+                                                                        </MDTypography>
+                                                                        <MDTypography variant="body2" color="text.secondary">
+                                                                                Insurer Name: {selectedInvoiceDetails.insuranceClaim.insurerName}
+                                                                        </MDTypography>
+                                                                        <MDTypography variant="body2" color="text.secondary">
+                                                                                Is Private Insurer: {selectedInvoiceDetails?.insuranceClaim?.privateInsurer ? 'Yes' : 'No'}
+
+                                                                        </MDTypography>
+                                                                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                                                <IconButton
+                                                                                        aria-label="delete"
+                                                                                        onClick={() => handleDeleteInsuranceClaim(selectedInvoiceDetails.insuranceClaim.insuranceClaimId,
+                                                                                                selectedInvoiceDetails.invoiceId, selectedInvoiceDetails)} // Assuming you have a handleDeleteInsuranceClaim function to handle the deletion
+                                                                                >
+                                                                                        <DeleteIcon />
+                                                                                </IconButton>
+                                                                        </div>
+                                                                </CardContent>
+                                                        </Card>
+                                                ) : (
+                                                        selectedInvoiceDetails.invoiceAmount === 0 || selectedInvoiceDetails.invoiceStatusEnum === "PAID" ? (
+                                                                <ListItem>
+                                                                        <MDTypography variant="h6" color="text.secondary" gutterBottom>
+                                                                                This invoice has already been paid.
+                                                                        </MDTypography>
+                                                                </ListItem>
+                                                        ) :
+                                                                <ListItem>
+
+                                                                        <MDButton
+                                                                                style={{ marginRight: '10px', marginBottom: '8px' }}
+                                                                                variant="contained"
+                                                                                color="info"
+                                                                                onClick={handleCreateInsuranceDialogOpen}
+                                                                        >
+                                                                                Create Insurance Claim
+                                                                        </MDButton>
+                                                                        <CreateInsuranceClaimDialog
+                                                                                isOpen={isCreateInsuranceDialogOpen}
+                                                                                onClose={() => setIsCreateInsuranceDialogOpen(false)}
+                                                                                onCreate={handleCreateInsuranceClaim}
+                                                                                invoiceId={selectedInvoiceDetails.invoiceId}
+                                                                                fetchData={fetchData} // Pass the selectedInvoice to the dialog component
+                                                                                handleEdit={handleEdit}
+                                                                        />
+                                                                </ListItem>
+                                                )}
+                                        </List>
+                                        <br></br>
 
           <List>
             <ListItem>

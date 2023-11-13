@@ -147,9 +147,18 @@ function AppointmentTicketModal({
 
   //Only for Discharge ticket, will create an Invoice after discharfe
   const handleDischarge = async () => {
-    // const confirmed = window.confirm(
-    //   "Are you sure you want to discharge the patient?"
-    // );
+    
+    if (!selectedAppointment.arrived) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Patient has not arrived! ",
+        })
+      );
+      return; 
+    }
+  
 
     try {
       await transactionItemApi.checkout(
