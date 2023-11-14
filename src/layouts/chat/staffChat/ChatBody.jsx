@@ -15,17 +15,20 @@ import {
   MessageSeparator,
   TypingIndicator,
 } from "@chatscope/chat-ui-kit-react";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import MDAvatar from "components/MDAvatar";
 import MDButton from "components/MDButton";
 import './ChatBody.css';
 
 const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage, 
-    setInputMessage, handleSendMessage, formatTime, selectedStaff, selectedConversation, handleConversationClick, showUnread, handleRefresh}) => {
+    setInputMessage, handleSendMessage, formatTime, selectedStaff, selectedConversation, handleConversationClick}) => {
 
     // useEffect(() => {
     //     handleRefresh()
     // }, [showUnread.length])
+
+    const [value, setValue] = useState("");
+
     return (
         <MainContainer responsive>
         <Sidebar position="left" scrollable={false}>
@@ -35,32 +38,35 @@ const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage
             color="info"
             onClick={handleOpenModal}>+ Create new chat
             </MDButton>}
+            <Search placeholder="Search..." value={value} onChange={v => setValue(v)} onClearClick={() => setValue("")} />
             <ConversationList>
-              {conversations.length !== 0 &&
-                Array.from(Object.entries(conversations)).map(([id, convo]) => {
-                  return (
-                    user === "staff" ?
-                    <Conversation
-                      key={id}
-                      name={allPeople.length > 0 ? allPeople.filter(staff => staff.staffId == id)[0].firstname + " " +  allPeople.filter(staff => staff.staffId == id)[0].lastname : ""}
-                      info={allPeople.length > 0 ? allPeople.filter(staff => staff.staffId == id)[0].staffRoleEnum + " (" + allPeople.filter(staff => staff.staffId == id)[0].unit.name + ")" : ""}
-                      onClick={() => handleConversationClick(id, convo)}
-                    //   unreadDot={showUnread.includes(id)}
-                    //   lastActivityTime="meow"
-                    >
-                        {console.log(showUnread)}
-                    </Conversation> :
-                    <Conversation
-                        key={id}
-                        name={allPeople.filter(patient => patient.electronicHealthRecordId == (id/1000))[0].firstName + " " +  
-                            allPeople.filter(patient => patient.electronicHealthRecordId == (id/1000))[0].lastName}
-                        info={"Patient"}
-                        onClick={() => handleConversationClick(id, convo)}
-                    >
-                    </Conversation>
-                  );
-                })} 
-            </ConversationList>
+                {conversations.length !== 0 &&
+                    Array.from(Object.entries(conversations)).map(([id, convo]) => {
+                    const conversationName = user === "staff"
+                        ? allPeople.length > 0 ? allPeople.filter(staff => staff.staffId == id)[0].firstname + " " + allPeople.filter(staff => staff.staffId == id)[0].lastname : ""
+                        : allPeople.filter(patient => patient.electronicHealthRecordId == (id/1000))[0].firstName + " " + allPeople.filter(patient => patient.electronicHealthRecordId == (id/1000))[0].lastName;
+
+                    const conversationInfo = user === "staff"
+                        ? allPeople.length > 0 ? allPeople.filter(staff => staff.staffId == id)[0].staffRoleEnum + " (" + allPeople.filter(staff => staff.staffId == id)[0].unit.name + ")" : ""
+                        : "Patient";
+
+                    const searchValue = value.toLowerCase();
+
+                    // Filter conversations based on the search value
+                    if (conversationName.toLowerCase().includes(searchValue) || conversationInfo.toLowerCase().includes(searchValue)) {
+                        return (
+                        <Conversation
+                            key={id}
+                            name={conversationName}
+                            info={conversationInfo}
+                            onClick={() => handleConversationClick(id, convo)}
+                        />
+                        );
+                    }
+
+                    return null; // Return null for conversations that don't match the search criteria
+                    })}
+                </ConversationList>
           </Sidebar>
 
           <ChatContainer>
@@ -98,7 +104,9 @@ const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage
                     position: "single",
                   }}
                 ></Message>
-                <Message.Header sentTime={formatTime(message.timestamp)}/>
+                <Message.Footer 
+                    sender={selectedStaff >= 1000 ? (message.senderId == (selectedStaff / 1000) ? formatTime(message.timestamp) : "") : (message.senderId == selectedStaff ? formatTime(message.timestamp) : "")}
+                    sentTime={selectedStaff >= 1000 ? (message.senderId == (selectedStaff / 1000) ? "" : formatTime(message.timestamp)) : (message.senderId == selectedStaff ? "" : formatTime(message.timestamp))}/>
               </>))}
 
             </MessageList>
