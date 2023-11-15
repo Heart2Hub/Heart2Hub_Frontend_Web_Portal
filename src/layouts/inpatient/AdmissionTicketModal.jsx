@@ -136,6 +136,8 @@ function AdmissionTicketModal({
         selectedAdmission.patientId
       );
 
+      console.log(response.data);
+
       setCartItems(response.data);
     } catch (error) {
       console.error("Error fetching cart items:", error);
@@ -147,7 +149,11 @@ function AdmissionTicketModal({
     handleGetProfileImage();
     getAssignedStaff();
     fetchPatientCart();
-    const admissionMoment = moment(selectedAdmission.admissionDateTime);
+    let admissionDateTime = selectedAdmission.admissionDateTime;
+    if (admissionDateTime.length > 6) {
+      admissionDateTime.pop();
+    }
+    const admissionMoment = moment(admissionDateTime);
     admissionMoment.subtract(1, "months");
     setAdmissionDate(admissionMoment.format("YYYY-MM-DD HH:mm:ss"));
     const dischargeMoment = moment(selectedAdmission.dischargeDateTime);
@@ -193,9 +199,14 @@ function AdmissionTicketModal({
     const dischargeDateString = dayjs(dischargeDate).format(
       "YYYY-MM-DDT12:00:00"
     );
+    const wardChargesTransactionItem = cartItems.filter(
+      (item) => item.transactionItemDescription === "Ward Charges"
+    )[0];
+
     const response = await admissionApi.updateDischargeDate(
       selectedAdmission.admissionId,
-      dischargeDateString
+      dischargeDateString,
+      wardChargesTransactionItem.transactionItemId
     );
     const updatedAdmission = { ...response.data };
     handleUpdateAdmission(updatedAdmission);

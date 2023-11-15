@@ -986,9 +986,9 @@ export const admissionApi = {
       `${REST_ENDPOINT}/admission/handleAllocateIncoming?date=${date}`
     );
   },
-  updateDischargeDate(admissionId, dischargeDate) {
+  updateDischargeDate(admissionId, dischargeDate, transactionItemId) {
     return axiosFetch.put(
-      `${REST_ENDPOINT}/admission/updateDischargeDate?admissionId=${admissionId}&dischargeDate=${dischargeDate}`
+      `${REST_ENDPOINT}/admission/updateDischargeDate?admissionId=${admissionId}&dischargeDate=${dischargeDate}&transactionItemId=${transactionItemId}`
     );
   },
   getAdmissionByAdmissionId(admissionId) {
@@ -1122,6 +1122,24 @@ export const chatApi = {
   createStaffConversation(from, to) {
     return axiosFetch.post(
       `${REST_ENDPOINT}/conversation/createStaffConversation?staffId1=${from}&staffId2=${to}`
+    );
+  },
+};
+
+export const patientRequestApi = {
+  getPatientRequests(username) {
+    return axiosFetch.get(
+      `${REST_ENDPOINT}/patientRequest/getPatientRequests?username=${username}`
+    );
+  },
+  createPatientRequest(request, username) {
+    return axiosFetch.post(
+      `${REST_ENDPOINT}/patientRequest/createPatientRequest?requestName=${request}&username=${username}`
+    );
+  },
+  deletePatientRequest(request, username) {
+    return axiosFetch.delete(
+      `${REST_ENDPOINT}/patientRequest/deletePatientRequest?requestName=${request}&username=${username}`
     );
   },
 };

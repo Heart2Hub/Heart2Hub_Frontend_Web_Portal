@@ -112,6 +112,7 @@ function ExtendAdmissionDialog({
                   format="DD/MM/YYYY"
                   value={selectedDate}
                   minDate={dayjs().add(1, "day")}
+                  maxDate={dayjs().add(7, "day")}
                   onChange={(newValue) => setSelectedDate(newValue)}
                 />
               </DemoContainer>

@@ -6,6 +6,9 @@ import {
   Skeleton,
   Tooltip,
   Icon,
+  Chip,
+  SvgIcon,
+  Stack,
 } from "@mui/material";
 import React, { useEffect } from "react";
 import "./inpatient.css";
@@ -15,6 +18,13 @@ import MDAvatar from "components/MDAvatar";
 import { truncateText } from "utility/Utility";
 import { imageServerApi } from "api/Api";
 import moment from "moment";
+import { ReactComponent as WaterIcon } from "assets/projectImages/glass-water-solid.svg";
+import { ReactComponent as ToiletIcon } from "assets/projectImages/toilet-solid.svg";
+import { ReactComponent as BathIcon } from "assets/projectImages/shower-solid.svg";
+import ClearIcon from "@mui/icons-material/Clear";
+import { patientRequestApi } from "api/Api";
+import { useDispatch } from "react-redux";
+import { displayMessage } from "store/slices/snackbarSlice";
 
 //FOR UI PURPOSES
 const tooltips = {
@@ -58,9 +68,17 @@ const tooltips = {
   ),
 };
 
+const iconMap = {
+  WATER: <WaterIcon />,
+  TOILET: <ToiletIcon />,
+  BATH: <BathIcon />,
+};
+
 function AdmissionCard({ admission, handleSelectAdmission, events }) {
+  const reduxDispatch = useDispatch();
   const [profileImage, setProfileImage] = useState(null);
   const [tooltip, setTooltip] = useState(null);
+  const [patientRequests, setPatientRequests] = useState([]);
 
   const handleGetProfileImage = async () => {
     if (admission.patientProfilePicture !== null) {
@@ -74,9 +92,13 @@ function AdmissionCard({ admission, handleSelectAdmission, events }) {
   };
 
   const handleGetTooltipColorAndMessage = () => {
-    const admissionMoment = moment(admission.admissionDateTime);
+    let admissionDateTime = admission.admissionDateTime;
+    if (admissionDateTime.length > 6) {
+      admissionDateTime.pop();
+    }
+    const admissionMoment = moment(admissionDateTime);
     admissionMoment.subtract(1, "months");
-    const hoursPassed = admissionMoment.diff(moment(), "hours");
+    const hoursPassed = moment().diff(admissionMoment, "hours");
 
     if (hoursPassed < 2 && !admission.arrived) {
       setTooltip(1);
@@ -107,16 +129,49 @@ function AdmissionCard({ admission, handleSelectAdmission, events }) {
     }
   };
 
+  const handleGetPatientRequests = async () => {
+    const response = await patientRequestApi.getPatientRequests(
+      admission.username
+    );
+    //console.log(response.data);
+    setPatientRequests(response.data);
+  };
+
   useEffect(() => {
-    handleGetProfileImage();
-    handleGetTooltipColorAndMessage();
+    if (admission) {
+      //console.log(admission);
+      handleGetProfileImage();
+      handleGetTooltipColorAndMessage();
+      handleGetPatientRequests();
+    }
   }, []);
 
+  const handleDelete = async (request) => {
+    await patientRequestApi.deletePatientRequest(
+      request.patientRequestEnum,
+      admission.username
+    );
+
+    reduxDispatch(
+      displayMessage({
+        color: "success",
+        icon: "notification",
+        title: "Success",
+        content: "Patient request has been completed!",
+      })
+    );
+
+    const updatedPatientRequests = patientRequests.filter(
+      (existingRequest) =>
+        existingRequest.patientRequestId !== request.patientRequestId
+    );
+    setPatientRequests(updatedPatientRequests);
+  };
+
   return (
-    <>
+    admission && (
       <ButtonBase
         key={admission.admissionId}
-        style={{ width: "100%", marginBottom: "10px" }}
         onClick={() => handleSelectAdmission(admission)}
       >
         <Card
@@ -126,13 +181,14 @@ function AdmissionCard({ admission, handleSelectAdmission, events }) {
           // {...provided.draggableProps}
           // {...provided.dragHandleProps}
           // ref={provided.innerRef}
+          style={{ width: "280px", margin: "10px" }}
           elevation={3}
           raised={true}
         >
           <CardContent>
             <div className="draggable-icons">
               <MDTypography variant="h5" className="draggable-id">
-                Bed {admission.bed}
+                HH-{admission.admissionId}
               </MDTypography>
               {tooltip && tooltips[tooltip]}
             </div>
@@ -171,20 +227,28 @@ function AdmissionCard({ admission, handleSelectAdmission, events }) {
                 />
               )}
             </div>
+            <Stack
+              direction="row"
+              spacing={2}
+              style={{ marginTop: 20, height: 36 }}
+            >
+              {patientRequests.map((request) => (
+                <Chip
+                  icon={
+                    <SvgIcon fontSize="medium">
+                      {iconMap[request.patientRequestEnum]}
+                    </SvgIcon>
+                  }
+                  style={{ height: 36 }}
+                  onDelete={() => handleDelete(request)}
+                  deleteIcon={<ClearIcon fontSize="small" />}
+                />
+              ))}
+            </Stack>
           </CardContent>
         </Card>
       </ButtonBase>
-
-      {/* {selectedadmission && (
-        <AdmissionTicketModal
-          openModal={openModal}
-          handleCloseModal={handleCloseModal}
-          selectedadmission={admission}
-          listOfWorkingStaff={listOfWorkingStaff}
-          forceRefresh={forceRefresh}
-        />
-      )} */}
-    </>
+    )
   );
 }
 

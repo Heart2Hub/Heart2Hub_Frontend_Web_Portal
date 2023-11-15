@@ -152,7 +152,7 @@ function TreatmentModal({
       (staff) => staff.staffId === loggedInStaff.staffId
     )[0];
 
-    console.log(facility);
+    //console.log(facility);
 
     if (facility) {
       setFacilityLocation(facility.name + " (" + facility.location + ")");
@@ -167,7 +167,10 @@ function TreatmentModal({
       const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
         loggedInStaff.unit.unitId
       );
-      setServices(servicesResponse.data);
+      const inpatientTreatments = servicesResponse.data.filter(
+        (item) => item.itemTypeEnum === "INPATIENT"
+      );
+      setServices(inpatientTreatments);
       // console.log(servicesResponse.data)
       // console.log(selectedAppointment)
     } catch (error) {
@@ -436,9 +439,9 @@ function TreatmentModal({
             </ListItem>
             <ListItem>
               <MDTypography variant="h6" gutterBottom color="black">
-                {facilityLocation !== null
-                  ? facilityLocation
-                  : "No Location Yet"}
+                {existingTreatment
+                  ? existingTreatment.location
+                  : facilityLocation}
               </MDTypography>
             </ListItem>
             <ListItem sx={{ marginTop: "10px" }}>
