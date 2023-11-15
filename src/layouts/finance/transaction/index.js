@@ -11,6 +11,7 @@ import {
 	DialogTitle,
 	List,
 	ListItem,
+	Typography,
 	CardContent,
 	IconButton,
 	Icon,
@@ -66,9 +67,11 @@ function Transaction() {
 		console.log(transaction);
 		try {
 			const response = await invoiceApi.findInvoiceUsingTransaction(transaction);
+			console.log(response.data)
 			const ehr = await invoiceApi.findPatientOfInvoice(response.data);
 			const items = await invoiceApi.findItemsOfInvoice(response.data);
 			setSelectedEHR(ehr.data);
+			setInvoiceData(response.data)
 			// setInvoiceData(response.data);
 			setSelectedItems(items.data);
 			setOpen(true);
@@ -106,8 +109,27 @@ function Transaction() {
 			{ Header: 'Transaction ID', accessor: 'transactionId', width: '10%' },
 			{ Header: 'Transaction Date', accessor: 'transactionDate', width: '20%' },
 			{ Header: 'Transaction Amount', accessor: 'transactionAmount', width: '20%' },
-			{ Header: 'Status', accessor: 'approvalStatusEnum', width: '20%' },
 			{
+				Header: 'Status',
+				accessor: 'approvalStatusEnum',
+				width: '20%',
+				Cell: ({ row }) => (
+					<Chip
+						label={
+							row.original.approvalStatusEnum === 'REJECTED'
+								? 'OUTSTANDING'
+								: row.original.approvalStatusEnum
+						}
+						color={
+							row.original.approvalStatusEnum === 'APPROVED'
+								? 'success'
+								: row.original.approvalStatusEnum === 'PENDING'
+									? 'warning'
+									: 'error'
+						}
+					/>
+				),
+			}, {
 				Header: 'Actions',
 				Cell: ({ row }) => (
 					<>
@@ -138,8 +160,27 @@ function Transaction() {
 			{ Header: 'Transaction ID', accessor: 'transactionId', width: '10%' },
 			{ Header: 'Transaction Date', accessor: 'transactionDate', width: '20%' },
 			{ Header: 'Transaction Amount', accessor: 'transactionAmount', width: '20%' },
-			{ Header: 'Status', accessor: 'approvalStatusEnum', width: '20%' },
 			{
+				Header: 'Status',
+				accessor: 'approvalStatusEnum',
+				width: '20%',
+				Cell: ({ row }) => (
+					<Chip
+						label={
+							row.original.approvalStatusEnum === 'REJECTED'
+								? 'OUTSTANDING'
+								: row.original.approvalStatusEnum
+						}
+						color={
+							row.original.approvalStatusEnum === 'APPROVED'
+								? 'success'
+								: row.original.approvalStatusEnum === 'PENDING'
+									? 'warning'
+									: 'error'
+						}
+					/>
+				),
+			}, {
 				Header: 'Actions',
 				Cell: ({ row }) => (
 					<>
@@ -283,20 +324,10 @@ function Transaction() {
 							transactionId: transaction.transactionId,
 							transactionAmount: `$${transaction.transactionAmount.toFixed(2)}`,
 							transactionDate: dueDate,
-							approvalStatusEnum: (
-								<Chip
-									label={transaction.approvalStatusEnum}
-									color={
-										transaction.approvalStatusEnum === 'APPROVED'
-											? 'success'
-											: transaction.approvalStatusEnum === 'PENDING'
-												? 'warning'
-												: 'error'
-									}
-								/>
-							),
+							approvalStatusEnum: transaction.approvalStatusEnum === 'REJECTED' ? 'OUTSTANDING' : transaction.approvalStatusEnum,
 						};
 					});
+					console.log(mappedRows)
 					dataRef.current = {
 						...dataRef.current,
 						rows: [mappedRows],
@@ -344,7 +375,7 @@ function Transaction() {
 								<Tabs value={currentTab} onChange={(e, value) => setCurrentTab(value)}>
 									<Tab value="invoices" label="All Transactions" />
 									<Tab value="profit" label="Revenue Report" />
-									<Tab value="item" label="Revenue Report for Items" />
+									<Tab value="item" label="Profit Report for Items" />
 								</Tabs>
 
 								{currentTab === 'invoices' ? (
@@ -422,6 +453,13 @@ function Transaction() {
 				<DialogContent>
 					<List>
 						<ListItem>
+							<MDTypography variant="h5" gutterBottom style={{ marginTop: '20px', fontWeight: 'bold' }}>
+								Invoice ID: {invoiceData}
+							</MDTypography>
+						</ListItem>
+					</List>
+					<List>
+						<ListItem>
 							<MDTypography variant="h5" gutterBottom style={{ marginTop: '20px', marginBottom: '20px', fontWeight: 'bold' }}>
 								Invoice Owner: {selectedEHR}
 							</MDTypography>
@@ -435,57 +473,87 @@ function Transaction() {
 								Patient's Cart:
 							</MDTypography>
 						</ListItem>
-						{selectedItems.length === 0 ? (
-							<ListItem>
-								<MDTypography variant="subtitle1">
-									Patient's cart is empty.
-								</MDTypography>
-							</ListItem>
-						) : (
-							<ListItem>
-								<TableContainer component={Paper}>
-									<Table sx={{ minWidth: 650 }} aria-label="simple table">
-										<TableHead>
-											<TableRow>
-												<TableCell> Name</TableCell>
-											</TableRow>
-										</TableHead>
-										<TableBody>
-											{selectedItems.map((item) => (
-												<TableRow
-													key={item.transactionItemId}
-													sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-												>
-													<TableCell component="th" scope="row">
-														{item.transactionItemName}
-													</TableCell>
-													<TableCell align="right">
-														Quantity: {item.transactionItemQuantity}
-													</TableCell>
-													<TableCell align="right">
-														Total Price: ${item.transactionItemPrice.toFixed(2)}
-													</TableCell>
 
-												</TableRow>
-											))}
-										</TableBody>
-										<TableRow>
-											<TableCell colSpan={2} align="right">
-												<strong>Total:</strong>
-											</TableCell>
-											<TableCell align="right">
-												<strong>
-													${selectedItems.reduce((total, item) => total + item.transactionItemPrice, 0).toFixed(2)}
-												</strong>
-											</TableCell>
-										</TableRow>
-									</Table>
-								</TableContainer>
-							</ListItem>
-						)}
+						<ListItem>
+							<TableContainer component={Paper}>
+								<Grid container spacing={2}>
+									{/* Positive Items */}
+									<Grid item xs={12} md={6}>
+										<Paper elevation={3} style={{ padding: '10px', marginBottom: '10px', height: '100%' }}>
+											<Typography variant="h6" gutterBottom>
+												Product and Services
+											</Typography>
+											{selectedItems
+												.filter(item => item.transactionItemPrice * item.transactionItemQuantity >= 0)
+												.map(item => (
+													<div key={item.transactionItemId}>
+														<Typography variant="subtitle1">
+															{item.transactionItemName}
+														</Typography>
+														<Typography variant="body2">
+															Quantity: {item.transactionItemQuantity} | Total Price: ${(
+																item.transactionItemPrice * item.transactionItemQuantity
+															).toFixed(2)}
+														</Typography>
+													</div>
+												))}
+											{/* Total Price */}
+
+											<div style={{ alignSelf: 'flex-end', paddingTop: '10px' }}>
+												<Typography variant="h5" style={{ fontWeight: 'bold', color: '#e74c3c' }}>
+													<strong> Total Payable: $
+														{selectedItems
+															.filter(item => item.transactionItemPrice * item.transactionItemQuantity >= 0)
+															.reduce((total, item) => total + item.transactionItemPrice * item.transactionItemQuantity, 0)
+															.toFixed(2)}</strong>
+
+												</Typography>
+											</div>
+										</Paper>
+									</Grid>
+									{/* Negative Items */}
+									<Grid item xs={12} md={6}>
+										<Paper elevation={3} style={{ padding: '10px', height: '100%' }}>
+											<Typography variant="h6" gutterBottom>
+												Claims and Subsidies
+											</Typography>
+											{selectedItems
+												.filter(item => item.transactionItemPrice * item.transactionItemQuantity < 0)
+												.map(item => (
+													<div key={item.transactionItemId}>
+														<Typography variant="subtitle1">
+															{item.transactionItemName}
+														</Typography>
+														<Typography variant="body2">
+															${item.transactionItemPrice.toFixed(2)}
+														</Typography>
+													</div>
+												))}
+											{/* Total Price */}
+											<div style={{ alignSelf: 'flex-end', paddingTop: '10px' }}>
+												<Typography variant="h5" style={{ fontWeight: 'bold' }}>
+													<strong>
+														Total Receivables: $
+														{selectedItems
+															.filter(item => item.transactionItemPrice * item.transactionItemQuantity < 0)
+															.reduce((total, item) => total + item.transactionItemPrice * item.transactionItemQuantity, 0)
+															.toFixed(2)}
+													</strong>
+												</Typography>
+											</div>
+										</Paper>
+									</Grid>
+								</Grid>
+
+							</TableContainer>
+						</ListItem>
 					</List>
-
-
+					<Typography align="center" variant="body1" marginTop={20} style={{ fontWeight: 'bold', color: '#e74c3c' }}>
+						<strong>Total Invoice Amount: $
+							{selectedItems.reduce((total, item) =>
+								total + item.transactionItemPrice * item.transactionItemQuantity, 0).toFixed(2)}
+						</strong>
+					</Typography>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setOpen(false)} color="primary">Close</Button>

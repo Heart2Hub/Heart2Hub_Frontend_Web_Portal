@@ -34,6 +34,9 @@ import MDButton from "components/MDButton";
 import moment from "moment";
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
+import { TextareaAutosize } from '@mui/base';
+
+
 
 
 function KnowledgeManagement() {
@@ -51,11 +54,181 @@ function KnowledgeManagement() {
 	const [selectedPost, setSelectedPost] = useState(null);
 	const [activeStep, setActiveStep] = useState(0);
 
-	
+	const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+	const [updateTitle, setUpdateTitle] = useState('');
+	const [updateBody, setUpdateBody] = useState('');
+	const [updatePostType, setUpdatePostType] = useState('');
+	const [updateImages, setUpdateImages] = useState([]);
+	const [updateImageURLs, setUpdateImageURLs] = useState([]);
+	const [updateImagePost, setUpdateImagePost] = useState([]);
+	const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+
+	const handleOpenImageDialog = (post) => {
+		setIsImageDialogOpen(true);
+		setUpdateImagePost(post);
+		setUpdateImages([...post.listOfImageDocuments]);
+
+	};
+
+	const handleCloseImageDialog = () => {
+		setIsImageDialogOpen(false);
+	};
 
 
+	const handleOpenUpdateDialog = (post) => {
+		setSelectedPost(post);
+		setUpdateTitle(post.title);
+		setUpdateBody(post.body);
+		setUpdatePostType(post.postTypeEnum);
+		setIsUpdateModalOpen(true);
+	};
 
-	
+	const handleCloseUpdateDialog = () => {
+		setIsUpdateModalOpen(false);
+	};
+
+	const handleUpdatePost = async () => {
+		const requestBody = {
+			title: updateTitle,
+			body: updateBody,
+			postType: updatePostType,
+		};
+
+		try {
+			const response = await postApi.updatePost(selectedPost.postId, requestBody);
+			fetchData();
+			reduxDispatch(
+				displayMessage({
+					color: "success",
+					icon: "notification",
+					title: "Success",
+					content: "Post Updated Successfully!",
+				})
+			);
+		} catch (error) {
+			reduxDispatch(
+				displayMessage({
+					color: "error",
+					icon: "notification",
+					title: "Error",
+					content: error.response.data,
+				})
+			);
+			console.error('Error updating post:', error);
+		}
+
+		handleCloseUpdateDialog();
+	};
+
+	const handleUpdatePhotoUpload = async (e) => {
+		try {
+			const formData = new FormData();
+			formData.append("image", e.target.files[0], e.target.files[0].name);
+			const response = await imageServerApi.uploadProfilePhoto("id", formData);
+
+			console.log("Response:", response); // Add this line
+
+			// Check if the response has a 'data' property before accessing it
+			if (response && response.data) {
+				let imageLink = response.data.filename;
+
+				const requestBody = {
+					image: imageLink,
+				};
+
+				const addImage = await postApi.addImageToPost(updateImagePost.postId, requestBody)
+				// const imageURL = URL.createObjectURL(response.data);
+				// setUpdateImageURLs((prevImages) => [...prevImages, imageURL]);
+
+				fetchData();
+				handleCloseImageDialog();
+				reduxDispatch(
+					displayMessage({
+						color: "success",
+						icon: "notification",
+						title: "Success",
+						content: "Photo Added Successfully!",
+					})
+				);
+			} else {
+				console.error('Error uploading image. Response:', response);
+			}
+
+		} catch (error) {
+			reduxDispatch(
+				displayMessage({
+					color: "error",
+					icon: "notification",
+					title: "Error",
+					content: error.response.data,
+				})
+			);
+			console.error('Error uploading image:', error);
+		}
+	};
+
+
+	// Function to handle deleting images in the update dialog
+	const handleDeleteUpdateImage = async (index) => {
+
+		if (updateImages.length <= 1) {
+			// Throw an error or handle it according to your requirements
+			reduxDispatch(
+				displayMessage({
+					color: "error",
+					icon: "notification",
+					title: "Post requires at least one Image!",
+				})
+			);
+			return;
+		}
+
+		try {
+			const deletedImage = updateImages[index];
+			const requestBody = {
+				imageLink: deletedImage.imageLink,
+
+			};
+
+			const response = await postApi.removeImage(updateImagePost.postId, requestBody);
+
+			fetchData();
+			handleCloseImageDialog();
+			reduxDispatch(
+				displayMessage({
+					color: "success",
+					icon: "notification",
+					title: "Success",
+					content: "Photo Deleted Successfully!",
+				})
+			);
+
+
+		} catch (error) {
+			reduxDispatch(
+				displayMessage({
+					color: "error",
+					icon: "notification",
+					title: "Error",
+					content: error.response.data,
+				})
+			);
+			console.error('Error deleting image:', error);
+		}
+		// const updatedImages = updateImages.filter((_, i) => i !== index);
+		// setUpdateImages(updatedImages);
+	};
+
+	const handleCloseUpdateModal = () => {
+		setIsUpdateModalOpen(false);
+		setSelectedPost(null);
+		setActiveStep(0);
+		setUpdateTitle('');
+		setUpdateBody('');
+		setUpdatePostType('');
+		setUpdateImages([]);
+	};
+
 
 	const handleViewPost = (post) => {
 		setSelectedPost(post);
@@ -253,7 +426,22 @@ function KnowledgeManagement() {
 		});
 	}, [posts]);
 
-
+	useEffect(() => {
+		const fetchUpdateImageURLs = async () => {
+			const urls = [];
+			for (const imageDocument of updateImages) {
+				try {
+					const response = await imageServerApi.getImageFromImageServer("id", imageDocument.imageLink);
+					const imageURL = URL.createObjectURL(response.data);
+					urls.push(imageURL);
+				} catch (error) {
+					console.error('Error fetching image:', error);
+				}
+			}
+			setUpdateImageURLs(urls);
+		};
+		fetchUpdateImageURLs();
+	}, [updateImages]);
 
 	return (
 		<DashboardLayout>
@@ -320,7 +508,7 @@ function KnowledgeManagement() {
 														component="img"
 														image={imageURLs[post.postId][0]}
 														alt={`Image 0`}
-														style={{ width: '100%', height: 'auto' }}
+														style={{ width: '100%', height: '700px', objectFit: 'cover' }} // Adjust the height as needed
 													/>
 												)}
 											</Box>
@@ -333,6 +521,12 @@ function KnowledgeManagement() {
 												</Button>
 												{postCreators[post.postId] && loggedInStaff && postCreators[post.postId].staffId === loggedInStaff.staffId && (
 													<>
+														<Button variant="contained" style={{ backgroundColor: 'green', color: 'white', marginLeft: 10 }} onClick={() => handleOpenUpdateDialog(post)}>
+															Edit Post
+														</Button>
+														<Button variant="contained" style={{ backgroundColor: 'green', color: 'white', marginLeft: 10 }} onClick={() => handleOpenImageDialog(post)}>
+															Edit Images
+														</Button>
 														<Button variant="contained" style={{ backgroundColor: 'red', color: 'white', marginLeft: 10 }} onClick={() => handleOpenDialog(post.postId)}>
 															Delete
 														</Button>
@@ -357,9 +551,20 @@ function KnowledgeManagement() {
 					</Button>
 				</DialogActions>
 			</Dialog>
-			<Dialog open={isModalOpen} onClose={handleCloseModal} fullWidth maxWidth="md">
+			<Dialog
+				open={isModalOpen}
+				onClose={handleCloseModal}
+				fullWidth
+				maxWidth="lg"
+				PaperProps={{
+					style: {
+						width: '100%',
+						maxHeight: '80vh',
+					},
+				}}
+			>
 				<DialogTitle>Create New Post</DialogTitle>
-				<DialogContent>
+				<DialogContent dividers>
 					<TextField
 						autoFocus
 						margin="dense"
@@ -369,14 +574,24 @@ function KnowledgeManagement() {
 						fullWidth
 						value={title}
 						onChange={(e) => setTitle(e.target.value)}
-					/>
-					<TextField
-						margin="dense"
-						id="body"
-						label="Body"
 						multiline
-						rows={4}
-						fullWidth
+						rows={2}
+					/>
+					<TextareaAutosize
+						id="body"
+						aria-label="Body"
+						placeholder="Body"
+						minRows={4}
+						maxRows={10}
+						style={{
+							width: '100%',
+							padding: '12px',
+							marginBottom: '16px',
+							border: '1px solid #ccc',
+							borderRadius: '4px',
+							resize: 'vertical', // Allow vertical resizing
+							fontFamily: 'inherit', // Use the same font as other components
+						}}
 						value={body}
 						onChange={(e) => setBody(e.target.value)}
 					/>
@@ -395,22 +610,13 @@ function KnowledgeManagement() {
 					</Select>
 					<Grid item xs={6}>
 						<MDBox>
-							<MDTypography
-								variant="button"
-								fontWeight="bold"
-								textTransform="capitalize"
-							>
+							<MDTypography variant="button" fontWeight="bold" textTransform="capitalize">
 								Upload Photo
 							</MDTypography>
-							<br></br>
-							<input
-								type="file"
-								accept="image/*"
-								onChange={handlePhotoUpload}
-							/>
-							<br></br>
+							<br />
+							<input type="file" accept="image/*" onChange={handlePhotoUpload} />
+							<br />
 						</MDBox>
-
 					</Grid>
 				</DialogContent>
 				<DialogActions>
@@ -420,23 +626,22 @@ function KnowledgeManagement() {
 					</Button>
 				</DialogActions>
 			</Dialog>
+
+
 			{isViewModalOpen && selectedPost && (
 				<Dialog open={isViewModalOpen} onClose={handleCloseViewDialog} fullWidth maxWidth="md">
 					<DialogTitle>{selectedPost.title}</DialogTitle>
 					<DialogContent>
 						<Grid container spacing={2}>
+
 							<Grid item xs={12}>
-								<Stepper activeStep={activeStep} alternativeLabel>
-									{selectedPost.listOfImageDocuments.map((image, index) => (
-										<Step key={index}>
-											<StepLabel>
-												<a href={imageURLs[selectedPost.postId][index]} target="_blank" rel="noopener noreferrer">
-													{`Click to view Image ${index + 1}`}
-												</a>
-											</StepLabel>
-										</Step>
-									))}
-								</Stepper>
+								<img
+									src={imageURLs[selectedPost.postId][activeStep]}
+									alt={selectedPost.listOfImageDocuments[activeStep].imageLink}
+									style={{ width: '100%', height: 'auto' }}
+								/>
+							</Grid>
+							<Grid item xs={12}>
 								{selectedPost.listOfImageDocuments.length > 0 && (
 									<Box>
 										<Button disabled={activeStep === 0} onClick={() => handleStepChange(activeStep - 1)}>
@@ -450,34 +655,58 @@ function KnowledgeManagement() {
 										</Button>
 									</Box>
 								)}
+								<Stepper activeStep={activeStep} alternativeLabel>
+									{selectedPost.listOfImageDocuments.map((image, index) => (
+										<Step key={index}>
+											<StepLabel>
+												<a href={imageURLs[selectedPost.postId][index]} target="_blank" rel="noopener noreferrer">
+													{`Click to view Image ${index + 1}`}
+												</a>
+											</StepLabel>
+										</Step>
+									))}
+								</Stepper>
+								{/* {selectedPost.listOfImageDocuments.length > 0 && (
+									<Box>
+										<Button disabled={activeStep === 0} onClick={() => handleStepChange(activeStep - 1)}>
+											Back
+										</Button>
+										<Button
+											disabled={activeStep === selectedPost.listOfImageDocuments.length - 1}
+											onClick={() => handleStepChange(activeStep + 1)}
+										>
+											Next
+										</Button>
+									</Box>
+								)} */}
 							</Grid>
 							<Grid item xs={12}>
-								<img
-									src={imageURLs[selectedPost.postId][activeStep]}
-									alt={selectedPost.listOfImageDocuments[activeStep].imageLink}
-									style={{ width: '100%', height: 'auto' }}
-								/>
-							</Grid>
-							<Grid item xs={12}>
-
-								<Typography variant="subtitle2" color="text.secondary" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
-									Post Type:
-									<Chip
-										label={selectedPost.postTypeEnum}
-										color={getChipColor(selectedPost.postTypeEnum)}
-										variant="outlined"
-									/>
-								</Typography>
-								<Typography variant="subtitle2" color="text.secondary" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
-									Author:
-									{postCreators[selectedPost.postId]
-										? ' ' + postCreators[selectedPost.postId].firstname + ' ' + postCreators[selectedPost.postId].lastname
-										: ''}
-								</Typography>
-
-								<Typography variant="body1" color="text.secondary" gutterBottom style={{ fontSize: '1.4rem', lineHeight: '1.6', marginTop: '1rem' }}>
-									{selectedPost.body}
-								</Typography>
+								<Card variant="outlined">
+									<CardContent>
+										<Typography variant="subtitle2" color="text.secondary" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+											Post Type:
+											<Chip
+												label={selectedPost.postTypeEnum}
+												color={getChipColor(selectedPost.postTypeEnum)}
+												variant="outlined"
+											/>
+										</Typography>
+										<Typography variant="subtitle2" color="text.secondary" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+											Author:
+											{postCreators[selectedPost.postId]
+												? ' ' + postCreators[selectedPost.postId].firstname + ' ' + postCreators[selectedPost.postId].lastname
+												: ''}
+										</Typography>
+										<Typography variant="body1" color="text.secondary" gutterBottom style={{ fontSize: '1.4rem', lineHeight: '1.6', marginTop: '1rem' }}>
+											{selectedPost.body.split('\n').map((paragraph, index) => (
+												<React.Fragment key={index}>
+													{index > 0 && <br />} {/* Add <br> between paragraphs, excluding the first one */}
+													{paragraph}
+												</React.Fragment>
+											))}
+										</Typography>
+									</CardContent>
+								</Card>
 							</Grid>
 						</Grid>
 					</DialogContent>
@@ -486,7 +715,140 @@ function KnowledgeManagement() {
 					</DialogActions>
 				</Dialog>
 			)}
-		
+			<Dialog open={isUpdateModalOpen} onClose={handleCloseUpdateModal}
+				fullWidth
+				maxWidth="lg"
+				PaperProps={{
+					style: {
+						width: '100%',
+						maxHeight: '80vh',
+					},
+				}}>
+				<DialogTitle>Update Post</DialogTitle>
+				<DialogContent>
+					<TextField
+						autoFocus
+						margin="dense"
+						id="update-title"
+						label="Title"
+						type="text"
+						fullWidth
+						value={updateTitle}
+						onChange={(e) => setUpdateTitle(e.target.value)}
+					/>
+					<TextareaAutosize
+						id="body"
+						aria-label="Body"
+						placeholder="Body"
+						minRows={4}
+						maxRows={10}
+						style={{
+							width: '100%',
+							padding: '12px',
+							marginBottom: '16px',
+							border: '1px solid #ccc',
+							borderRadius: '4px',
+							resize: 'vertical', // Allow vertical resizing
+							fontFamily: 'inherit', // Use the same font as other components
+						}}
+						value={updateBody}
+						onChange={(e) => setUpdateBody(e.target.value)}
+					/>
+					{/* <TextField
+						margin="dense"
+						id="update-body"
+						label="Body"
+						multiline
+						rows={4}
+						fullWidth
+						value={updateBody}
+						onChange={(e) => setUpdateBody(e.target.value)}
+					/> */}
+					<InputLabel id="update-post-type-label">Post Type</InputLabel>
+					<Select
+						labelId="update-post-type-label"
+						id="update-post-type"
+						value={updatePostType}
+						label="Post Type"
+						onChange={(e) => setUpdatePostType(e.target.value)}
+						fullWidth
+					>
+						<MenuItem value="ADMINISTRATIVE">ADMINISTRATIVE</MenuItem>
+						<MenuItem value="RESEARCH">RESEARCH</MenuItem>
+						<MenuItem value="ENRICHMENT">ENRICHMENT</MenuItem>
+					</Select>
+
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCloseUpdateModal}>Cancel</Button>
+					<Button onClick={handleUpdatePost} color="primary">
+						Update
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+
+			<Dialog
+				open={isImageDialogOpen}
+				onClose={handleCloseImageDialog}
+				fullWidth
+				maxWidth="xl"
+				PaperProps={{
+					style: {
+						maxHeight: '90vh',
+						height: '100%',
+					},
+				}}
+			>
+				<DialogTitle>Manage Images</DialogTitle>
+				<DialogContent>
+					<FormControl fullWidth style={{ textAlign: 'left', marginTop: 10, marginBottom: 10 }}>
+						<Input
+							id="update-image"
+							type="file"
+							accept="image/*"
+							onChange={handleUpdatePhotoUpload}
+							style={{ display: 'none' }}
+						/>
+						<label htmlFor="update-image">
+							<Button component="span" variant="contained" color="primary" style={{ backgroundColor: 'blue', color: 'white' }}>
+								Add Image
+							</Button>
+						</label>
+					</FormControl>
+					{updateImageURLs.length > 0 && (
+						<Grid container spacing={2} style={{ justifyContent: 'center' }}>
+							{updateImageURLs.map((image, index) => (
+								<Grid item key={index} xs={12}>
+									<Card>
+										<CardContent style={{ textAlign: 'center' }}>
+											<Typography variant="h4" gutterBottom>{`Image ${index + 1}`}</Typography>
+											<a href={image} target="_blank" rel="noopener noreferrer">
+												<CardMedia
+													component="img"
+													alt={`Image ${index}`}
+													src={image}
+													style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+												/>
+											</a>
+											<Button
+												onClick={() => handleDeleteUpdateImage(index)}
+												variant="contained"
+												style={{ backgroundColor: 'red', color: 'white', marginTop: 10, alignSelf: 'center' }}
+											>
+												Delete
+											</Button>
+										</CardContent>
+									</Card>
+								</Grid>
+							))}
+						</Grid>
+					)}
+
+				</DialogContent>
+			</Dialog>
+
+
 		</DashboardLayout>
 
 	);
