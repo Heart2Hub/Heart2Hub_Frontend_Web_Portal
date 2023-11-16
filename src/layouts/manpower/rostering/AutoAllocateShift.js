@@ -103,7 +103,7 @@ function AutoAllocateShift({open, handleClose, role, unit, monthDates}) {
                   color: "success",
                   icon: "notification",
                   title: "Success",
-                  content: "Shifts have been automatically allocated from " + startDate + " to " + endDate,
+                  content: "Shifts have been automatically allocated!"
                 })
             );
             handleExit();
