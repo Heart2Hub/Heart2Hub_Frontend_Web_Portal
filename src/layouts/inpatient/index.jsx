@@ -47,9 +47,11 @@ import { parseDateFromYYYYMMDDHHMMSS } from "utility/Utility";
 import TreatmentModal from "./TreatmentModal";
 import { parseDateFromLocalDateTimeWithSecs } from "utility/Utility";
 import { inpatientTreatmentApi } from "api/Api";
+import { Navigate } from "react-router-dom";
 
 function Inpatient() {
   const staff = useSelector(selectStaff);
+  console.log(staff);
   const localizer = momentLocalizer(moment);
   const reduxDispatch = useDispatch();
 
@@ -345,6 +347,12 @@ function Inpatient() {
   };
 
   useEffect(() => {
+    if (
+      staff.listOfAssignedAdmissions.length === 0 &&
+      staff.unit.listOfFacilities
+    ) {
+      return;
+    }
     if (!medicationOrderModal) {
       if (staff.staffRoleEnum === "ADMIN" || staff.staffRoleEnum === "NURSE") {
         getInitialViewForWardStaff();
@@ -369,11 +377,14 @@ function Inpatient() {
       selectedWard
     );
     const wardAdmissions = wardAdmissionsResponse.data;
+    const wardAdmissionsAssignedToStaff = wardAdmissions.filter((admission) =>
+      admission.listOfStaffsId.includes(staff.staffId)
+    );
 
-    setCurrentDayAdmissions(wardAdmissions);
+    setCurrentDayAdmissions(wardAdmissionsAssignedToStaff);
 
     //filter by room 1
-    let roomOneAdmissions = wardAdmissions.filter(
+    let roomOneAdmissions = wardAdmissionsAssignedToStaff.filter(
       (admission) => admission.room === 1
     );
 
@@ -571,23 +582,23 @@ function Inpatient() {
         }
 
         //2. Shift check
-        // const shiftStart = staffDTO.startTime[3];
-        // const shiftEnd = staffDTO.endTime[3];
+        const shiftStart = staffDTO.startTime[3];
+        const shiftEnd = staffDTO.endTime[3];
 
-        // if (
-        //   slotInfo.start.getHours() < shiftStart ||
-        //   slotInfo.end.getHours() > shiftEnd
-        // ) {
-        //   reduxDispatch(
-        //     displayMessage({
-        //       color: "error",
-        //       icon: "notification",
-        //       title: "Error Encountered",
-        //       content: "Order cannot be done outside of shift hours",
-        //     })
-        //   );
-        //   return;
-        // }
+        if (
+          slotInfo.start.getHours() < shiftStart ||
+          slotInfo.end.getHours() > shiftEnd
+        ) {
+          reduxDispatch(
+            displayMessage({
+              color: "error",
+              icon: "notification",
+              title: "Error Encountered",
+              content: "Order cannot be done outside of shift hours",
+            })
+          );
+          return;
+        }
 
         //3. Overlapping events check
         const filteredCalendarEvents = calendarEvents
@@ -669,67 +680,10 @@ function Inpatient() {
     }
   };
 
-  // const fetchAllMedicationOrders = async () => {
-  //   try {
-  //     console.log("fetch");
-  //     medicationOrderApi.getAllMedicationOrders().then((response) => {
-  //       const orders = response.data;
-
-  //       const mappedEvents = orders.map((order) => {
-  //         console.log("Orders " + order.startDate);
-  //         const title = `Medication Order`;
-
-  //         return {
-  //           title,
-  //           id: order.medicationOrderId,
-  //           // medicationOrderId: order.medicationOrderId,
-  //           // comments: order.comments,
-  //           // medication: order.medication.inventoryItemName,
-  //           start: new Date(order.startDate),
-  //           end: new Date(order.endDate),
-  //           // quantity: order.quantity,
-  //           // facilityBookingId: booking.facilityBookingId,
-  //           // owner: booking.staffUsername,
-  //           // resizable: true,
-  //           // draggable: true,
-  //           allDay: false,
-  //         };
-  //       });
-
-  //       setAdmissionOrders(mappedEvents);
-  //       console.log(admissionOrders);
-  //       // Update the calendarConfig with the new events
-  //     });
-  //   } catch (error) {
-  //     console.error("Error fetching cart items:", error);
-  //   }
-  // };
-
-  // const dischargeTomorrow = async () => {
-  //   const tomorrow = moment().add(1, "days");
-  //   tomorrow.seconds(0);
-  //   tomorrow.minutes(0);
-  //   tomorrow.hours(12);
-  //   const tomorrowDateString = tomorrow.format("YYYY-MM-DDTHH:mm:ss");
-  //   await admissionApi.handleDischarge(tomorrowDateString);
-  //   forceRefresh();
-  // };
-
-  // const allocateTomorrow = async () => {
-  //   const tomorrow = moment().add(1, "days");
-  //   tomorrow.seconds(0);
-  //   tomorrow.minutes(0);
-  //   tomorrow.hours(13);
-  //   const tomorrowDateString = tomorrow.format("YYYY-MM-DDTHH:mm:ss");
-  //   await admissionApi.handleAllocateIncoming(tomorrowDateString);
-  //   forceRefresh();
-  // };
-
-  // useEffect(() => {
-  //   fetchAllMedicationOrders();
-  // }, []);
-
-  return (
+  return staff.listOfAssignedAdmissions.length === 0 &&
+    staff.unit.listOfFacilities ? (
+    <Navigate to="/error" replace />
+  ) : (
     <DashboardLayout>
       <DashboardNavbar />
       {staff.staffRoleEnum === "ADMIN" ||
@@ -822,44 +776,6 @@ function Inpatient() {
             ) : (
               <p>No Admissions in this room</p>
             )}
-
-            {/* {admissionsByRoom.length > 0 ? (
-              admissionsByRoom.map((admission, index) => (
-                <Calendar
-                  className={index === 0 ? "has-time" : "no-time"}
-                  localizer={localizer}
-                  defaultView={Views.DAY}
-                  startAccessor="start"
-                  endAccesor="end"
-                  events={[
-                    {
-                      title: "Admission Ticket",
-                      start: new Date(),
-                      end: new Date(),
-                      allDay: true,
-                    },
-                  ]}
-                  components={{
-                    event: () =>
-                      admission.duration === null ? (
-                        <div className="no-admission">
-                          <NoAdmissionCard admission={admission} />
-                        </div>
-                      ) : (
-                        <AdmissionCard
-                          appointment={admission}
-                          index={index}
-                          listOfWorkingStaff={listOfWorkingStaff}
-                          forceRefresh={forceRefresh}
-                          handleSelectAdmission={handleSelectAdmission}
-                        />
-                      ),
-                  }}
-                />
-              ))
-            ) : (
-              <p>No Admissions assigned to you</p>
-            )} */}
           </MDBox>
         </MDBox>
       </MDBox>

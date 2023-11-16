@@ -58,6 +58,7 @@ import moment from "moment";
 import { medicationOrderApi } from "api/Api";
 import { admissionApi } from "api/Api";
 import { inpatientTreatmentApi } from "api/Api";
+import MDInput from "components/MDInput";
 
 const style = {
   position: "absolute",
@@ -89,7 +90,7 @@ const buttonColorMap = {
   DELETE: "#f44336",
   NOT_COMPLETED: "#8c8c8c",
   COMPLETE: "#f44336",
-  COMPLETED: "#00e600",
+  COMPLETED: "green",
   OVERDUE: "#ff0000",
 };
 
@@ -198,9 +199,10 @@ function TreatmentModal({
     setEndDateString(endDateString);
 
     if (existingTreatment) {
+      console.log(existingTreatment);
       setArrived(existingTreatment.arrived);
       setComments(existingTreatment.comments);
-      setSelectedService(existingTreatment.serviceItem.inventoryItemId);
+      setSelectedService(existingTreatment.serviceItem.inventoryItemName);
     }
   }, []);
 
@@ -449,7 +451,7 @@ function TreatmentModal({
                 Comments:
               </MDTypography>
             </ListItem>
-            <ListItem sx={{ marginTop: "10px" }}>
+            <ListItem>
               <textarea
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
@@ -476,12 +478,18 @@ function TreatmentModal({
             </ListItem>
 
             <List>
-              <ListItem>
+              <ListItem sx={{ marginTop: "10px" }}>
                 <MDTypography variant="h5" gutterBottom>
                   Services:
                 </MDTypography>
               </ListItem>
-              <ListItem>{renderServicesDropdown()}</ListItem>
+              <ListItem>
+                {existingTreatment ? (
+                  <MDInput value={selectedService} style={{ width: "50%" }} />
+                ) : (
+                  renderServicesDropdown()
+                )}
+              </ListItem>
             </List>
 
             {existingTreatment && (

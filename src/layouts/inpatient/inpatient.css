@@ -220,31 +220,10 @@
   background-color: green;
 }
 
-/* .admission-calendar .rbc-row-content[height~="100px"] {
-  background-color: #000000;
-} */
-
-/* .admission-calendar .rbc-toolbar {
-  display: none;
-} */
-
-/* .no-time .rbc-time-gutter {
-  width: 0;
+/* Medication order */
+.medication-order-table {
+  width: 100%;
+  font-size: 18px;
+  border-collapse: separate;
+  border-spacing: 0 10px;
 }
-
-.no-time .rbc-time-header-gutter {
-  display: none;
-}
-
-.has-time .rbc-time-view {
-  width: 300px;
-}
-
-.no-time .rbc-time-view {
-  width: 200px;
-} */
-
-/* .no-admission {
-  height: 162.48px;
-  padding: 10px;
-} */

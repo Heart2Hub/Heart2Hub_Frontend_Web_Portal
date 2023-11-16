@@ -10,7 +10,7 @@ import {
   SvgIcon,
   Stack,
 } from "@mui/material";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import "./inpatient.css";
 import MDTypography from "components/MDTypography";
 import { useState } from "react";
@@ -25,6 +25,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import { patientRequestApi } from "api/Api";
 import { useDispatch } from "react-redux";
 import { displayMessage } from "store/slices/snackbarSlice";
+import { REST_ENDPOINT } from "constants/RestEndPoint";
 
 //FOR UI PURPOSES
 const tooltips = {

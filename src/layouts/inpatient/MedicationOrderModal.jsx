@@ -57,6 +57,7 @@ import AdmissionDialog from "./AdmissionDialog";
 import moment from "moment";
 import { medicationOrderApi } from "api/Api";
 import { admissionApi } from "api/Api";
+import DataTable from "examples/Tables/DataTable";
 
 const style = {
   position: "absolute",
@@ -94,8 +95,8 @@ const otherStaffActionMap = {
 const buttonColorMap = {
   DELETE: "#f44336",
   NOT_COMPLETED: "#8c8c8c",
-  COMPLETE: "#f44336",
-  COMPLETED: "#00e600",
+  COMPLETE: "orange",
+  COMPLETED: "green",
   OVERDUE: "#ff0000",
 };
 
@@ -568,28 +569,31 @@ function MedicationOrderModal({
                 {endDateString}
               </MDTypography>
             </ListItem>
-            <ListItem>
-              <MDTypography variant="h5" gutterBottom>
-                Prescription Records:
-              </MDTypography>
-            </ListItem>
-            <ListItem>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  marginTop: 2,
-                }}
-              >
-                <MDButton
-                  onClick={handleOpenPrescriptionDialog}
-                  variant="gradient"
-                  color="primary"
-                >
-                  View Prescription Records
-                </MDButton>
-              </Box>
-            </ListItem>
+            {loggedInStaff.staffRoleEnum === "DOCTOR" && (
+              <>
+                <ListItem>
+                  <MDTypography variant="h5" gutterBottom>
+                    Prescription Records:
+                  </MDTypography>
+                </ListItem>
+                <ListItem>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <MDButton
+                      onClick={handleOpenPrescriptionDialog}
+                      variant="gradient"
+                      color="primary"
+                    >
+                      View Prescription Records
+                    </MDButton>
+                  </Box>
+                </ListItem>
+              </>
+            )}
           </List>
           {/* ... rest of the existing code ... */}
           <PrescriptionDialog
@@ -600,11 +604,11 @@ function MedicationOrderModal({
             }
             //handlePageRefresh={handlePageRefresh}
           />
-          <br></br>
-          {loggedInStaff.staffRoleEnum !== "ADMIN" ? (
-            <>
+
+          {loggedInStaff.staffRoleEnum === "DOCTOR" &&
+            orderStatus === "FUTURE" && (
               <List>
-                <ListItem sx={{ marginTop: "10px" }}>
+                <ListItem sx={{ marginTop: "30px" }}>
                   <MDTypography variant="h5" gutterBottom>
                     Comments:
                   </MDTypography>
@@ -640,9 +644,9 @@ function MedicationOrderModal({
                 </ListItem>
                 <ListItem>{renderMedicationsDropdown()}</ListItem>
               </List>
-              <br></br>
-            </>
-          ) : null}
+            )}
+          <br />
+
           <List>
             <ListItem>
               <MDTypography variant="h5" gutterBottom>
@@ -658,54 +662,83 @@ function MedicationOrderModal({
               </ListItem>
             ) : (
               <ListItem>
-                <TableContainer component={Paper}>
-                  <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Medication</TableCell>
-                        <TableCell>Quantity</TableCell>
-                        <TableCell>Comments</TableCell>
-                        <TableCell>Prescribed by</TableCell>
-                        <TableCell>Action</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {medicationOrders.map((item) => (
-                        <>
-                          <TableRow
-                            key={item.medicationOrderId}
-                            sx={{
-                              "&:last-child td, &:last-child th": {
-                                border: 0,
-                              },
-                            }}
-                          >
-                            <TableCell>
-                              {item.medication.inventoryItemName}
-                            </TableCell>
-                            <TableCell>{item.quantity}</TableCell>
-                            <TableCell>{item.comments}</TableCell>
-                            <TableCell>{item.createdBy}</TableCell>
+                <table className="medication-order-table">
+                  <tr>
+                    <th>Medication</th>
+                    <th>Quantity</th>
+                    <th>Comments</th>
+                    <th>Prescribed by</th>
+                    <th align="center">Action</th>
+                  </tr>
+                  {medicationOrders.map((item) => (
+                    <tr>
+                      <td>{item.medication.inventoryItemName}</td>
+                      <td>{item.quantity}</td>
+                      <td>{item.comments}</td>
+                      <td>{item.createdBy}</td>
+                      <td align="center">
+                        <Button
+                          variant="contained"
+                          style={{
+                            width: "80%",
+                            backgroundColor:
+                              buttonColorMap[renderActionButton(item)],
+                            color: "white",
+                          }}
+                          onClick={renderButtonOnClick(item)}
+                        >
+                          {renderActionButton(item)}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </table>
+                {/* <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Medication</TableCell>
+                      <TableCell>Quantity</TableCell>
+                      <TableCell>Comments</TableCell>
+                      <TableCell>Prescribed by</TableCell>
+                      <TableCell>Action</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {medicationOrders.map((item) => (
+                      <>
+                        <TableRow
+                          key={item.medicationOrderId}
+                          sx={{
+                            "&:last-child td, &:last-child th": {
+                              border: 0,
+                            },
+                          }}
+                        >
+                          <TableCell sx={{ minWidth: 150 }}>
+                            {item.medication.inventoryItemName}
+                          </TableCell>
+                          <TableCell>{item.quantity}</TableCell>
+                          <TableCell>{item.comments}</TableCell>
+                          <TableCell>{item.createdBy}</TableCell>
 
-                            <TableCell>
-                              <Button
-                                variant="contained"
-                                style={{
-                                  backgroundColor:
-                                    buttonColorMap[renderActionButton(item)],
-                                  color: "white",
-                                }}
-                                onClick={renderButtonOnClick(item)}
-                              >
-                                {renderActionButton(item)}
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        </>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                          <TableCell>
+                            <Button
+                              variant="contained"
+                              style={{
+                                backgroundColor:
+                                  buttonColorMap[renderActionButton(item)],
+                                color: "white",
+                              }}
+                              onClick={renderButtonOnClick(item)}
+                            >
+                              {renderActionButton(item)}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      </>
+                    ))}
+                  </TableBody>
+                </Table> */}
               </ListItem>
             )}
           </List>

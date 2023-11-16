@@ -147,7 +147,6 @@ function AppointmentTicketModal({
 
   //Only for Discharge ticket, will create an Invoice after discharfe
   const handleDischarge = async () => {
-    
     if (!selectedAppointment.arrived) {
       reduxDispatch(
         displayMessage({
@@ -156,9 +155,8 @@ function AppointmentTicketModal({
           title: "Patient has not arrived! ",
         })
       );
-      return; 
+      return;
     }
-  
 
     try {
       await transactionItemApi.checkout(
@@ -212,7 +210,10 @@ function AppointmentTicketModal({
       const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
         loggedInStaff.unit.unitId
       );
-      setServices(servicesResponse.data);
+      const outpatientServices = servicesResponse.data.filter(
+        (service) => service.itemTypeEnum === "OUTPATIENT"
+      );
+      setServices(outpatientServices);
       // console.log(servicesResponse.data)
       // console.log(selectedAppointment)
     } catch (error) {
@@ -297,7 +298,8 @@ function AppointmentTicketModal({
             color: "error",
             icon: "notification",
             title: "Error",
-            content: "Patient has allergy restrictions from selected Medication.",
+            content:
+              "Patient has allergy restrictions from selected Medication.",
           })
         );
         return;
@@ -464,7 +466,7 @@ function AppointmentTicketModal({
 
     //AMELIA REMOVED THIS LINE BELOW BECAUSE THERE WAS A BUG BUT ACTUALLY HAVENT FIX YET
 
-    // console.log("Facility Id: " + facility.facilityId); 
+    // console.log("Facility Id: " + facility.facilityId);
 
     if (facility) {
       setFacility(facility);
@@ -618,7 +620,7 @@ function AppointmentTicketModal({
 
   const handleCloseConfirmDischarge = () => {
     setConfirmDischargeOpen(false);
-  }
+  };
 
   const handleCloseAssignDialog = () => {
     reduxDispatch(
@@ -798,11 +800,11 @@ function AppointmentTicketModal({
                     {assignedStaff === null
                       ? "No Staff Assigned"
                       : assignedStaff.firstname +
-                      " " +
-                      assignedStaff.lastname +
-                      " (" +
-                      assignedStaff.staffRoleEnum +
-                      ")"}
+                        " " +
+                        assignedStaff.lastname +
+                        " (" +
+                        assignedStaff.staffRoleEnum +
+                        ")"}
                   </MDTypography>
                   <MDButton
                     disabled={loading}
@@ -1121,11 +1123,15 @@ function AppointmentTicketModal({
           </MDButton>
         </DialogActions>
       </Dialog>
-      <Dialog open={isConfirmDischargeOpen} onClose={handleCloseConfirmDischarge}>
+      <Dialog
+        open={isConfirmDischargeOpen}
+        onClose={handleCloseConfirmDischarge}
+      >
         <DialogTitle>Confirm Discharge</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to discharge {selectedAppointment.firstName} {selectedAppointment.lastName}?
+            Are you sure you want to discharge {selectedAppointment.firstName}{" "}
+            {selectedAppointment.lastName}?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
