@@ -163,7 +163,6 @@ function AppointmentsBox() {
           setPastAppointments(tempPast);
         }
       }
-      console.log(tempPast);
     } catch (error) {
       console.error("Error fetching appointment data:", error);
     }
@@ -424,6 +423,18 @@ function AppointmentsBox() {
     height: "300px",
   };
 
+  const pastAppointmentCardStyles = {
+    width: "92%",
+    margin: "20px",
+    border: "1px solid #e0e0e0",
+    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+    transition: "all 0.3s ease",
+    marginBottom: "20px",
+    padding: "12px",
+    borderRadius: "8px",
+    height: "350px",
+  };
+
   const invisibleScrollBarStyles = {
     "&::WebkitScrollbar": {
       display: "none",
@@ -542,7 +553,7 @@ function AppointmentsBox() {
 
               <Divider variant="middle" />
               {pastAppointments.map((pastAppointment, index) => (
-                <Card key={index} style={appointmentCardStyles}>
+                <Card key={index} style={pastAppointmentCardStyles}>
                   <CardContent style={{ position: "relative" }}>
                     <MDTypography variant="h4" color="info">
                       Appointment {pastAppointment.appointmentId}
