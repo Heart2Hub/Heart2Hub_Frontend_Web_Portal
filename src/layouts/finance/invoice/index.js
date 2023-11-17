@@ -113,6 +113,21 @@ function Invoice() {
         const [selectedInvoiceDetails, setSelectedInvoiceDetails] = useState({});
 
         const handleEdit = async (invoice) => {
+                const dueDate = new Date(
+                        invoice.invoiceDueDate[0],
+                        invoice.invoiceDueDate[1] - 1,
+                        invoice.invoiceDueDate[2],
+                        invoice.invoiceDueDate[3],
+                        invoice.invoiceDueDate[4],
+                        invoice.invoiceDueDate[5],
+                        invoice.invoiceDueDate[6]
+                ).toLocaleString('en-SG', {
+                        timeZone: 'Asia/Singapore',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                });
+                invoice.invoiceDueDate = dueDate
                 setSelectedInvoiceDetails(invoice);
                 try {
                         const ehr = await invoiceApi.findPatientOfInvoice(invoice.invoiceId);
@@ -471,13 +486,13 @@ function Invoice() {
                                                         </MDTypography>
                                                 </ListItem>
                                         </List>
-                                        <List>
+                                        {/* <List>
                                                 <ListItem>
-                                                        <MDTypography variant="h5" gutterBottom style={{marginBottom: '20px', fontWeight: 'bold' }}>
+                                                        <MDTypography variant="h5" gutterBottom style={{ marginBottom: '20px', fontWeight: 'bold' }}>
                                                                 Invoice Due Date: {selectedInvoiceDetails.invoiceDueDate}
                                                         </MDTypography>
                                                 </ListItem>
-                                        </List>
+                                        </List> */}
                                         <List>
                                                 <ListItem>
                                                         <Chip
@@ -499,7 +514,7 @@ function Invoice() {
                                                         </MDTypography>
                                                 </ListItem>
                                         </List>
-                                        
+
 
                                         <List>
                                                 <ListItem>
@@ -533,21 +548,36 @@ function Invoice() {
                                                                                 Claim Amount: $ {selectedInvoiceDetails.insuranceClaim.insuranceClaimAmount.toFixed(2)}
                                                                         </MDTypography>
                                                                         <MDTypography variant="body2" color="text.secondary">
-                                                                                Insurer Name: {selectedInvoiceDetails.insuranceClaim.insurerName}
+                                                                                Insurer Name:
+                                                                                <Chip
+                                                                                        label={` ${selectedInvoiceDetails.insuranceClaim.insurerName}`}
+                                                                                        color="default"
+                                                                                />
                                                                         </MDTypography>
                                                                         <MDTypography variant="body2" color="text.secondary">
-                                                                                Is Private Insurer: {selectedInvoiceDetails?.insuranceClaim?.privateInsurer ? 'Yes' : 'No'}
-
+                                                                                Private Insurer:
+                                                                                <Chip
+                                                                                        label={` ${selectedInvoiceDetails?.insuranceClaim?.privateInsurer ? 'Yes' : 'No'}`}
+                                                                                        color={selectedInvoiceDetails?.insuranceClaim?.privateInsurer ? 'primary' : 'secondary'}
+                                                                                />
                                                                         </MDTypography>
-                                                                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                                                                <IconButton
-                                                                                        aria-label="delete"
-                                                                                        onClick={() => handleDeleteInsuranceClaim(selectedInvoiceDetails.insuranceClaim.insuranceClaimId,
-                                                                                                selectedInvoiceDetails.invoiceId, selectedInvoiceDetails)} // Assuming you have a handleDeleteInsuranceClaim function to handle the deletion
-                                                                                >
-                                                                                        <DeleteIcon />
-                                                                                </IconButton>
-                                                                        </div>
+
+                                                                        {selectedInvoiceDetails && (selectedInvoiceDetails.transaction == null || selectedInvoiceDetails.transaction.approvalStatusEnum === "REJECTED") && (
+                                                                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                                                        <IconButton
+                                                                                                aria-label="delete"
+                                                                                                onClick={() =>
+                                                                                                        handleDeleteInsuranceClaim(
+                                                                                                                selectedInvoiceDetails.insuranceClaim.insuranceClaimId,
+                                                                                                                selectedInvoiceDetails.invoiceId,
+                                                                                                                selectedInvoiceDetails
+                                                                                                        )
+                                                                                                }
+                                                                                        >
+                                                                                                <DeleteIcon />
+                                                                                        </IconButton>
+                                                                                </div>
+                                                                        )}
                                                                 </CardContent>
                                                         </Card>
                                                 ) : (
@@ -682,19 +712,20 @@ function Invoice() {
                                                                                                         Reject
                                                                                                 </Button>
                                                                                         )}
-                                                                                <IconButton
-                                                                                        aria-label="delete"
-                                                                                        onClick={() =>
-                                                                                                handleDeleteMedishieldClaim(
-                                                                                                        selectedInvoiceDetails.medishieldClaim
-                                                                                                                .medishieldClaimId,
-                                                                                                        selectedInvoiceDetails.invoiceId,
-                                                                                                        selectedInvoiceDetails
-                                                                                                )
-                                                                                        }
-                                                                                >
-                                                                                        <DeleteIcon />
-                                                                                </IconButton>
+                                                                                {selectedInvoiceDetails && (selectedInvoiceDetails.transaction == null || selectedInvoiceDetails.transaction.approvalStatusEnum === "REJECTED") && (
+                                                                                        <IconButton
+                                                                                                aria-label="delete"
+                                                                                                onClick={() =>
+                                                                                                        handleDeleteMedishieldClaim(
+                                                                                                                selectedInvoiceDetails.medishieldClaim.medishieldClaimId,
+                                                                                                                selectedInvoiceDetails.invoiceId,
+                                                                                                                selectedInvoiceDetails
+                                                                                                        )
+                                                                                                }
+                                                                                        >
+                                                                                                <DeleteIcon />
+                                                                                        </IconButton>
+                                                                                )}
                                                                         </div>
                                                                 </CardContent>
                                                         </Card>
