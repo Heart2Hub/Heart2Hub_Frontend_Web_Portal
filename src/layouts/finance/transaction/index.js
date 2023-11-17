@@ -48,7 +48,8 @@ import { Bar } from 'react-chartjs-2';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import ItemProfileChart from './ItemProfitChart';
-
+import CallMadeIcon from '@mui/icons-material/CallMade';
+import CallReceivedIcon from '@mui/icons-material/CallReceived';
 
 function Transaction() {
 	const reduxDispatch = useDispatch();
@@ -346,6 +347,14 @@ function Transaction() {
 	};
 
 	const totalAmount = chartData ? parseFloat(chartData.datasets[0].data.reduce((a, b) => a + b, 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 0;
+	const oct = chartData ? parseFloat(chartData.datasets[0].data[9]).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 0;
+	const november = chartData ? parseFloat(chartData.datasets[0].data[10]).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 0;
+	// Calculate percentage change
+	const percentageChange = chartData ? ((parseFloat(chartData.datasets[0].data[10])-parseFloat(chartData.datasets[0].data[9])) / Math.abs(parseFloat(chartData.datasets[0].data[9]))) * 100 : 0;
+
+	// Format the result as a string with two decimal places
+	const formattedPercentageChange = percentageChange.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+	const avg = chartData ? (parseFloat(chartData.datasets[0].data.reduce((a, b) => a + b, 0)) / 12).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 0
 
 
 	return (
@@ -354,6 +363,7 @@ function Transaction() {
 			<MDBox pt={6} pb={3}>
 				<Grid container spacing={6}>
 					<Grid item xs={12}>
+
 						<Card>
 							<MDBox
 								mx={2}
@@ -386,10 +396,55 @@ function Transaction() {
 									</div>
 								) : currentTab === 'profit' ? (
 									<div style={{ marginTop: '30px' }}>
+										<h2 style={{ margin: '20px' }} >Revenue Report for 2023</h2>
+										<div style={{ display: 'flex'}}>
+											<Card style= {{ margin: '15px', width: '20%'}}>
+												<CardContent>
+													<h3>
+														Total Revenue (2023)
+													</h3>
+													<Typography variant="h2">
+														${totalAmount}
+													</Typography>
+												</CardContent>
+											</Card>
+											<Card style= {{ margin: '15px', width: '20%'}}>
+												<CardContent>
+													<h3>
+														Average Revenue/Month
+													</h3>
+													<Typography variant="h2">
+													    ${avg}
+													</Typography>
+												</CardContent>
+											</Card>
+											<Card style= {{ margin: '15px', width: '20%'}}>
+												<CardContent>
+													<h3>
+														Total Revenue (This Month)
+													</h3>
+													<Typography variant="h2">
+														${november}
+													</Typography>
+												</CardContent>
+											</Card>
+											<Card style= {{ margin: '15px', width: '20%'}}>
+												<CardContent>
+													<h3>
+														Revenue Change (This Month)
+													</h3>
+													<Typography variant="h2" color={formattedPercentageChange > 0 ? "green" : "red"}>
+													    {formattedPercentageChange > 0 ? 
+														<CallMadeIcon style={{marginBottom:'-8px'}}/> : 
+														<CallReceivedIcon style={{marginBottom:'-8px'}}/>}
+														{formattedPercentageChange}%
+													</Typography>
+												</CardContent>
+											</Card>
+										</div>
 										<Grid container justifyContent="center" alignItems="center">
 											{chartData && (
 												<div>
-													<h2>Revenue Report for 2023</h2>
 													<div style={{ height: '500px', width: '1000px' }}>
 														<Bar
 															id="bar-chart"
