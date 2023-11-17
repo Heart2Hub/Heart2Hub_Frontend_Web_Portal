@@ -2,6 +2,7 @@ import React from "react";
 import styles from "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import {
+Avatar,
   MainContainer,
   ChatContainer,
   MessageList,
@@ -15,6 +16,7 @@ import {
   MessageSeparator,
   TypingIndicator,
 } from "@chatscope/chat-ui-kit-react";
+import { staffApi, imageServerApi, appointmentApi } from "api/Api";
 import { useState, useEffect } from "react";
 import MDAvatar from "components/MDAvatar";
 import MDButton from "components/MDButton";
@@ -23,11 +25,59 @@ import './ChatBody.css';
 const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage, 
     setInputMessage, handleSendMessage, formatTime, selectedStaff, selectedConversation, handleConversationClick}) => {
 
-    // useEffect(() => {
-    //     handleRefresh()
-    // }, [showUnread.length])
-
     const [value, setValue] = useState("");
+    const [profilePics, setProfilePics] = useState(new Map())
+    const [avatarsLoaded, setAvatarsLoaded] = useState(false);
+    const temp = "https://png.pngtree.com/png-clipart/20210613/original/pngtree-gray-silhouette-avatar-png-image_6404679.jpg"
+
+    const handleGetProfileImages = async () => {
+        try {
+            if (user === "staff") {
+                for (let id in conversations) {
+                    const staffResp = await staffApi.getStaffByStaffId(id);
+                    const staff = staffResp.data;
+                    console.log(staff)
+                    if (staff.profilePicture !== null) {
+                      const response = await imageServerApi.getImageFromImageServer(
+                        "id",
+                        staff.profilePicture?.imageLink
+                      );
+                      const imageURL = URL.createObjectURL(response.data);
+                      setProfilePics((prevProfilePics) => new Map(prevProfilePics.set(id, imageURL)));
+                    }
+                }
+            } else {
+                for (let id in conversations) {
+                    const patientResp = await appointmentApi.viewPatientAppointments("patient" + (Number(id)/1000));
+                    const patient = patientResp.data[0];
+                    console.log(patient)
+                    if (patient.patientProfilePicture !== null) {
+                      const response = await imageServerApi.getImageFromImageServer(
+                        "id",
+                        patient.patientProfilePicture
+                      );
+                      const imageURL = URL.createObjectURL(response.data);
+                      setProfilePics((prevProfilePics) => new Map(prevProfilePics.set(id, imageURL)));
+                    }
+                }
+            }
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setAvatarsLoaded(true);
+        }
+        
+      };
+
+      const getAvatarUrl = (id) => {
+        let url = profilePics.get(id) || temp;
+        if (url === temp) handleGetProfileImages();
+        return url;
+      };
+
+    useEffect(() => {
+        if (!avatarsLoaded) handleGetProfileImages();
+    }, [avatarsLoaded])
 
     return (
         <MainContainer responsive>
@@ -50,6 +100,8 @@ const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage
                         ? allPeople.length > 0 ? allPeople.filter(staff => staff.staffId == id)[0].staffRoleEnum + " (" + allPeople.filter(staff => staff.staffId == id)[0].unit.name + ")" : ""
                         : "Patient";
 
+                    console.log(id, convo)
+
                     const searchValue = value.toLowerCase();
 
                     // Filter conversations based on the search value
@@ -60,7 +112,11 @@ const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage
                             name={conversationName}
                             info={conversationInfo}
                             onClick={() => handleConversationClick(id, convo)}
-                        />
+                        >
+                            <Avatar 
+                                src={avatarsLoaded ? getAvatarUrl(id) : temp} 
+                                name={conversationName} /> 
+                        </Conversation>
                         );
                     }
 
@@ -72,7 +128,9 @@ const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage
           <ChatContainer>
             <ConversationHeader>
               <ConversationHeader.Back />
-              <MDAvatar src={""} />
+              {selectedStaff && <Avatar 
+                    src={avatarsLoaded ? getAvatarUrl(selectedStaff) : temp} 
+                    name={"avatar"} /> }
               {user === "staff" ?
               <ConversationHeader.Content
                 userName={selectedStaff ? allPeople.filter(staff => staff.staffId == selectedStaff)[0].firstname + " " +  allPeople.filter(staff => staff.staffId == selectedStaff)[0].lastname 
