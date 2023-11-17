@@ -157,10 +157,10 @@ const routes = [
     key: "finance",
     icon: <Icon fontSize="small">attach_money</Icon>,
     route: "/finance",
-    authorizedRoles: [StaffRoleEnum.ALL],
+    authorizedRoles: [StaffRoleEnum.ADMIN],
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
         authorizedUnits={"ALL"}
       >
@@ -452,7 +452,7 @@ const routes = [
     route: "/finance/subsidy",
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
         authorizedUnits={"ALL"}
       >
@@ -466,7 +466,7 @@ const routes = [
     route: "/finance/invoice",
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
         authorizedUnits={"ALL"}
       >
@@ -480,7 +480,7 @@ const routes = [
     route: "/finance/transaction",
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
         authorizedUnits={"ALL"}
       >

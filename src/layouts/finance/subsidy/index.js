@@ -57,7 +57,7 @@ function Subsidy() {
 			console.log(updatedSubsidy)
 			console.log(updatedSubsidy.subsidyRate / 100)
 
-			if (updatedSubsidy.subsidyRate / 100 <= 0) {
+			if (updatedSubsidy.subsidyRate / 100 <= 0 || updatedSubsidy.subsidyRate / 100 > 1) {
 				reduxDispatch(
 					displayMessage({
 						color: "error",
@@ -227,7 +227,7 @@ function Subsidy() {
 			}
 			const subsidyRateBigDecimal = subsidyRatePercentage / 100;
 
-			if (subsidyRateBigDecimal <= 0) {
+			if (subsidyRateBigDecimal <= 0 || subsidyRateBigDecimal > 1) {
 				reduxDispatch(
 					displayMessage({
 						color: "error",

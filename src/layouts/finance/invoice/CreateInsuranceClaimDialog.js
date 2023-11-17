@@ -96,7 +96,6 @@ const CreateInsuranceClaimDialog = ({ isOpen, onClose, onCreate, invoiceId, fetc
 					value={insuranceClaimData.insuranceClaimAmount}
 					onChange={handleInputChange}
 				/>
-				
 				<TextField
 					fullWidth
 					label="Insurer Name"
