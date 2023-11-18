@@ -77,7 +77,7 @@ const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage
 
     useEffect(() => {
         if (!avatarsLoaded) handleGetProfileImages();
-    }, [avatarsLoaded, profilePics.size])
+    }, [avatarsLoaded])
 
     return (
         <MainContainer responsive>
@@ -128,9 +128,9 @@ const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage
           <ChatContainer>
             <ConversationHeader>
               <ConversationHeader.Back />
-              <Avatar 
+              {selectedStaff && <Avatar 
                     src={avatarsLoaded ? getAvatarUrl(selectedStaff) : temp} 
-                    name={"avatar"} /> 
+                    name={"avatar"} /> }
               {user === "staff" ?
               <ConversationHeader.Content
                 userName={selectedStaff ? allPeople.filter(staff => staff.staffId == selectedStaff)[0].firstname + " " +  allPeople.filter(staff => staff.staffId == selectedStaff)[0].lastname 
