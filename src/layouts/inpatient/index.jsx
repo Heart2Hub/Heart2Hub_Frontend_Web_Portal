@@ -295,6 +295,7 @@ function Inpatient() {
         wards.push(ward);
       }
     }
+    wards.sort();
     setWards(wards);
     setDisplayedWard(wards[0]);
 

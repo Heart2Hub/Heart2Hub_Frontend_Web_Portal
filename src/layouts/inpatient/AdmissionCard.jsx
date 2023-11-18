@@ -75,6 +75,12 @@ const iconMap = {
   BATH: <BathIcon />,
 };
 
+const iconColor = {
+  WATER: "info",
+  TOILET: "success",
+  BATH: "primary",
+};
+
 function AdmissionCard({ admission, handleSelectAdmission, events }) {
   const reduxDispatch = useDispatch();
   const [profileImage, setProfileImage] = useState(null);
@@ -240,6 +246,8 @@ function AdmissionCard({ admission, handleSelectAdmission, events }) {
                       {iconMap[request.patientRequestEnum]}
                     </SvgIcon>
                   }
+                  color={iconColor[request.patientRequestEnum]}
+                  variant="outlined"
                   style={{ height: 36 }}
                   onDelete={() => handleDelete(request)}
                   deleteIcon={<ClearIcon fontSize="small" />}
