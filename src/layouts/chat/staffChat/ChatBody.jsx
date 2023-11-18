@@ -21,6 +21,7 @@ import { useState, useEffect } from "react";
 import MDAvatar from "components/MDAvatar";
 import MDButton from "components/MDButton";
 import './ChatBody.css';
+import dayjs from 'dayjs';
 
 const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage, 
     setInputMessage, handleSendMessage, formatTime, selectedStaff, selectedConversation, handleConversationClick}) => {
@@ -69,11 +70,24 @@ const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage
         
       };
 
-      const getAvatarUrl = (id) => {
+    const getAvatarUrl = (id) => {
         let url = profilePics.get(id) || temp;
         if (url === temp) handleGetProfileImages();
         return url;
       };
+
+    function shouldShowUnreadDot(msg, id) {
+        console.log(msg)
+        if (msg.senderId === id/1000) {
+            const timestamp = msg.timestamp;
+            const twoMinutesInMillis = 2 * 60 * 1000; // 2 minutes in milliseconds
+            const currentTime = dayjs();
+            const messageTime = dayjs(timestamp, 'YYYY-MM-DD HH:mm:ss');
+
+            return currentTime.diff(messageTime) <= twoMinutesInMillis;
+        }
+        return false;
+    }
 
     useEffect(() => {
         if (!avatarsLoaded) handleGetProfileImages();
@@ -100,8 +114,6 @@ const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage
                         ? allPeople.length > 0 ? allPeople.filter(staff => staff.staffId == id)[0].staffRoleEnum + " (" + allPeople.filter(staff => staff.staffId == id)[0].unit.name + ")" : ""
                         : "Patient";
 
-                    console.log(id, convo)
-
                     const searchValue = value.toLowerCase();
 
                     // Filter conversations based on the search value
@@ -112,6 +124,7 @@ const ChatBody = ({conversations, allPeople, user, handleOpenModal, inputMessage
                             name={conversationName}
                             info={conversationInfo}
                             onClick={() => handleConversationClick(id, convo)}
+                            unreadDot={convo.listOfChatMessages.length > 0 ? shouldShowUnreadDot(convo.listOfChatMessages[convo.listOfChatMessages.length-1], id) : false}
                         >
                             <Avatar 
                                 src={avatarsLoaded ? getAvatarUrl(id) : temp} 
