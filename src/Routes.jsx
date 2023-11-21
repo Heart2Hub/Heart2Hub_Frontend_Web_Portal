@@ -28,7 +28,9 @@ import ViewAllLeaves from "layouts/manpower/leaveApplication/ViewAllLeaves";
 import CreateLeave from "layouts/manpower/leaveApplication/CreateLeave";
 import Subsidy from "layouts/finance/subsidy";
 import Invoice from "layouts/finance/invoice";
+import Transaction from "layouts/finance/transaction";
 import Pharmacy from "layouts/pharmacy";
+import Chat from "layouts/chat";
 
 import LeaveApproval from "layouts/manpower/leaveApproval";
 import ProtectedRoute from "examples/ProtectedRoute";
@@ -37,6 +39,7 @@ import ConsumableEquipmentManagement from "layouts/administration/inventory-mana
 import InventoryManagement from "layouts/administration/inventory-management";
 import MedicationManagement from "layouts/pharmacy/medication-management";
 import ServiceManagement from "layouts/administration/inventory-management/service-management";
+import KnowledgeManagement from "layouts/administration/knowledge-management";
 
 const ALL_EXCEPT_PHARMACIST = [
   StaffRoleEnum.ADMIN,
@@ -116,6 +119,23 @@ const routes = [
   },
   {
     type: "collapse",
+    name: "Chat",
+    key: "Chat",
+    icon: <Icon fontSize="small">chat</Icon>,
+    route: "/chat",
+    authorizedRoles: [StaffRoleEnum.ALL],
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+        authorizedUnits={"ALL"}
+      >
+        <Chat />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    type: "collapse",
     name: "EHR",
     key: "ehr",
     icon: <Icon fontSize="small">receipt_long</Icon>,
@@ -137,10 +157,10 @@ const routes = [
     key: "finance",
     icon: <Icon fontSize="small">attach_money</Icon>,
     route: "/finance",
-    authorizedRoles: [StaffRoleEnum.ALL],
+    authorizedRoles: [StaffRoleEnum.ADMIN],
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
         authorizedUnits={"ALL"}
       >
@@ -159,7 +179,7 @@ const routes = [
       <ProtectedRoute
         authorizedRoles={ALL_EXCEPT_PHARMACIST}
         forHeadsOnly={false}
-        authorizedUnits={"WARD"}
+        authorizedUnits={"ALL"}
       >
         <Inpatient />,
       </ProtectedRoute>
@@ -432,7 +452,7 @@ const routes = [
     route: "/finance/subsidy",
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
         authorizedUnits={"ALL"}
       >
@@ -446,7 +466,7 @@ const routes = [
     route: "/finance/invoice",
     component: (
       <ProtectedRoute
-        authorizedRoles={[StaffRoleEnum.ALL]}
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
         forHeadsOnly={false}
         authorizedUnits={"ALL"}
       >
@@ -454,6 +474,35 @@ const routes = [
       </ProtectedRoute>
     ),
   },
+  {
+    name: "Transactions Analysis",
+    key: "transaction",
+    route: "/finance/transaction",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ADMIN]}
+        forHeadsOnly={false}
+        authorizedUnits={"ALL"}
+      >
+        <Transaction />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    name: "Knowledge Management",
+    key: "knowledge-management",
+    route: "/administration/knowledge-management",
+    component: (
+      <ProtectedRoute
+        authorizedRoles={[StaffRoleEnum.ALL]}
+        forHeadsOnly={false}
+        authorizedUnits={"ALL"}
+      >
+        <KnowledgeManagement />
+      </ProtectedRoute>
+    ),
+  },
+  
 ];
 
 export default routes;

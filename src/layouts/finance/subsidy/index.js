@@ -14,6 +14,7 @@ import {
 	InputLabel,
 	Select,
 	MenuItem,
+	Chip,
 	InputAdornment
 } from '@mui/material';
 
@@ -22,7 +23,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import DataTable from "examples/Tables/DataTable";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import { subsidyApi } from 'api/Api';
+import { subsidyApi, stripeApi } from 'api/Api';
 import { useDispatch } from "react-redux";
 import { displayMessage } from "../../../store/slices/snackbarSlice";
 import MDButton from "components/MDButton";
@@ -56,7 +57,7 @@ function Subsidy() {
 			console.log(updatedSubsidy)
 			console.log(updatedSubsidy.subsidyRate / 100)
 
-			if (updatedSubsidy.subsidyRate / 100 <= 0) {
+			if (updatedSubsidy.subsidyRate / 100 <= 0 || updatedSubsidy.subsidyRate / 100 > 1) {
 				reduxDispatch(
 					displayMessage({
 						color: "error",
@@ -96,6 +97,10 @@ function Subsidy() {
 		}
 	};
 
+	const itemTypeColors = {
+		SERVICE: 'default',    
+		MEDICINE: 'primary',    
+	};
 
 	const [data, setData] = useState({
 		columns: [
@@ -108,7 +113,18 @@ function Subsidy() {
 				width: '20%',
 				Cell: ({ value }) => `${value * 100}%`,
 			},
-			{ Header: 'Item Type', accessor: 'itemTypeEnum', width: '20%' },
+			{
+				Header: 'Item Type',
+				accessor: 'itemTypeEnum',
+				width: '20%',
+				Cell: ({ value }) => (
+				  <Chip
+				    label={value}
+				    color={itemTypeColors[value]}
+				    style={{ marginRight: '5px' }}
+				  />
+				),
+			      },
 			{
 				Header: 'Minimum DOB',
 				accessor: 'minDOB',
@@ -211,7 +227,7 @@ function Subsidy() {
 			}
 			const subsidyRateBigDecimal = subsidyRatePercentage / 100;
 
-			if (subsidyRateBigDecimal <= 0) {
+			if (subsidyRateBigDecimal <= 0 || subsidyRateBigDecimal > 1) {
 				reduxDispatch(
 					displayMessage({
 						color: "error",
@@ -302,7 +318,7 @@ function Subsidy() {
 					const mappedRows = subsidies.map((subsidy) => ({
 						subsidyId: subsidy.subsidyId,
 						subsidyRate: subsidy.subsidyRate,
-						itemTypeEnum: subsidy.itemTypeEnum,
+						itemTypeEnum: subsidy.itemTypeEnum === 'INPATIENT' || subsidy.itemTypeEnum === 'OUTPATIENT' ? 'SERVICE' : subsidy.itemTypeEnum,
 						minDOB: subsidy.minDOB,
 						sex: subsidy.sex,
 						race: subsidy.race,
@@ -377,6 +393,17 @@ function Subsidy() {
 		setSubsidyToDeleteId(null);
 	};
 
+	const testStripe = async () => {
+		const requestBody = {
+			amount: 1000,
+			currency: "usd",
+			successUrl: "https://example.com/success",
+			cancelUrl: "https://example.com/cancel"
+		};
+		const response = await stripeApi.createPaymentLink(requestBody)
+		console.log(response.data)
+	}
+
 
 	return (
 		<DashboardLayout>
@@ -417,6 +444,11 @@ function Subsidy() {
 						</Card>
 					</Grid>
 				</Grid>
+				{/* <Button
+					onClick={() => testStripe()}
+				>
+					Click to try stripe
+				</Button> */}
 			</MDBox>
 			<Dialog
 				open={isDeleteConfirmationOpen}

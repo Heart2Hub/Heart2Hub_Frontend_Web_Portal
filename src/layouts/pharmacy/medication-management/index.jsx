@@ -61,7 +61,7 @@ function MedicationManagement() {
       {
         Header: "Description",
         accessor: "inventoryItemDescription",
-        width: "20%",
+        width: "10%",
       },
       { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
       {
@@ -72,6 +72,11 @@ function MedicationManagement() {
       {
         Header: "Retail Price ($)",
         accessor: "retailPricePerQuantity",
+        width: "10%",
+      },
+      {
+        Header: "Medicine Type",
+        accessor: "itemTypeEnum",
         width: "10%",
       },
       {
@@ -118,7 +123,7 @@ function MedicationManagement() {
       {
         Header: "Description",
         accessor: "inventoryItemDescription",
-        width: "20%",
+        width: "10%",
       },
       { Header: "Quantity", accessor: "quantityInStock", width: "10%" },
       {
@@ -129,6 +134,11 @@ function MedicationManagement() {
       {
         Header: "Retail Price ($)",
         accessor: "retailPricePerQuantity",
+        width: "10%",
+      },
+      {
+        Header: "Medicine Type",
+        accessor: "itemTypeEnum",
         width: "10%",
       },
       {
@@ -201,7 +211,7 @@ function MedicationManagement() {
   const [formData, setFormData] = useState({
     inventoryItemName: "",
     inventoryItemDescription: "",
-    itemTypeEnum: "MEDICINE",
+    itemTypeEnum: "",
     quantityInStock: "",
     restockPricePerQuantity: "",
     retailPricePerQuantity: "",
@@ -248,7 +258,7 @@ function MedicationManagement() {
         setFormData({
           inventoryItemName: "",
           inventoryItemDescription: "",
-          itemTypeEnum: "MEDICINE",
+          itemTypeEnum: "",
           quantityInStock: "",
           restockPricePerQuantity: "",
           retailPricePerQuantity: "",
@@ -270,7 +280,7 @@ function MedicationManagement() {
         setFormData({
           inventoryItemName: "",
           inventoryItemDescription: "",
-          itemTypeEnum: "MEDICINE",
+          itemTypeEnum: "",
           quantityInStock: "",
           restockPricePerQuantity: "",
           retailPricePerQuantity: "",
@@ -291,7 +301,7 @@ function MedicationManagement() {
         setFormData({
           inventoryItemName: "",
           inventoryItemDescription: "",
-          itemTypeEnum: "MEDICINE",
+          itemTypeEnum: "",
           quantityInStock: "",
           restockPricePerQuantity: "",
           retailPricePerQuantity: "",
@@ -313,7 +323,7 @@ function MedicationManagement() {
         setFormData({
           inventoryItemName: "",
           inventoryItemDescription: "",
-          itemTypeEnum: "MEDICINE",
+          itemTypeEnum: "",
           quantityInStock: "",
           restockPricePerQuantity: "",
           retailPricePerQuantity: "",
@@ -335,7 +345,7 @@ function MedicationManagement() {
         setFormData({
           inventoryItemName: "",
           inventoryItemDescription: "",
-          itemTypeEnum: "MEDICINE",
+          itemTypeEnum: "",
           quantityInStock: "",
           restockPricePerQuantity: "",
           retailPricePerQuantity: "",
@@ -361,7 +371,7 @@ function MedicationManagement() {
           setFormData({
             inventoryItemName: "",
             inventoryItemDescription: "",
-            itemTypeEnum: "MEDICINE",
+            itemTypeEnum: "",
             quantityInStock: "",
             restockPricePerQuantity: "",
             retailPricePerQuantity: "",
@@ -383,7 +393,7 @@ function MedicationManagement() {
           setFormData({
             inventoryItemName: "",
             inventoryItemDescription: "",
-            itemTypeEnum: "MEDICINE",
+            itemTypeEnum: "",
             quantityInStock: "",
             restockPricePerQuantity: "",
             retailPricePerQuantity: "",
@@ -534,7 +544,7 @@ function MedicationManagement() {
             inventoryItemId: null,
             inventoryItemName: "",
             inventoryItemDescription: "",
-            itemTypeEnum: "MEDICINE",
+            itemTypeEnum: "",
             quantityInStock: "",
             restockPricePerQuantity: "",
             retailPricePerQuantity: "",
@@ -820,13 +830,18 @@ function MedicationManagement() {
             onChange={handleChange}
             margin="dense"
           />
-          <TextField
-            fullWidth
-            label="Type"
-            name="itemTypeEnum"
-            value={formData.itemTypeEnum}
-            margin="dense"
-          />
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Item Type</InputLabel>
+            <Select
+              name="itemTypeEnum"
+              value={formData.itemTypeEnum}
+              onChange={handleChange}
+              sx={{ lineHeight: "3em" }}
+            >
+              <MenuItem value="MEDICINE">Medicine</MenuItem>
+              <MenuItem value="MEDICINE_INPATIENT">Inpatient Medicine</MenuItem>
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <MDButton onClick={handleCloseModal} color="primary">
@@ -964,6 +979,18 @@ function MedicationManagement() {
             onChange={handleUpdateChange}
             margin="dense"
           />
+          <FormControl fullWidth margin="dense">
+            <InputLabel>Item Type</InputLabel>
+            <Select
+              name="itemTypeEnum"
+              value={updateFormData.itemTypeEnum}
+              onChange={handleUpdateChange}
+              sx={{ lineHeight: "3em" }}
+            >
+              <MenuItem value="MEDICINE">Medicine</MenuItem>
+              <MenuItem value="MEDICINE_INPATIENT">Inpatient Medicine</MenuItem>
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <MDButton onClick={handleCloseUpdateModal} color="primary">

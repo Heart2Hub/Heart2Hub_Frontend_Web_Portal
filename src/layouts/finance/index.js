@@ -55,10 +55,10 @@ function Finance() {
             <MDBox mb={1.5}>
               <SimpleBlogCard
                 image="https://i.ibb.co/7VrXd5M/carlos-muza-hpj-Sk-U2-UYSU-unsplash.jpg"
-                title="Finance Analysis"
+                title="Transactions Analysis"
                 action={{
                   type: 'internal',
-                  route: '',
+                  route: '/finance/transaction',
                   color: 'info',
                   label: 'Continue',
                 }}

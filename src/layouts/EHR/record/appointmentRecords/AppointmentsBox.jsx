@@ -99,10 +99,7 @@ function AppointmentsBox() {
       const allAppointments = response.data;
       let temp = [];
       let tempPast = [];
-      // console.log(allAppointments)
-      // setUpcomingAppointments([]);
       for (const appointment of allAppointments) {
-        console.log(appointment);
         if (appointment.swimlaneStatusEnum !== "DONE") {
           if (temp.length === 0) {
             temp.push(appointment);
@@ -111,6 +108,7 @@ function AppointmentsBox() {
             for (const existing in temp) {
               if (existing.appointmentId === appointment.appointmentId) {
                 canAdd = false;
+                break;
               }
             }
             if (canAdd) {
@@ -120,6 +118,49 @@ function AppointmentsBox() {
           setUpcomingAppointments(temp);
         } else {
           // DO THIS FOR SR4
+          if (tempPast.length === 0) {
+            for (const staffId of appointment.listOfStaffsId) {
+              // Mapping For StaffIds
+              const staff = await staffApi.getStaffByStaffId(staffId);
+              if (!appointment.staffs) {
+                appointment.staffs = [];
+              }
+              if (
+                !appointment.staffs.some(
+                  (existingStaff) => existingStaff.staffId === staff.staffId
+                )
+              ) {
+                appointment.staffs.push(staff.data);
+              }
+            }
+            tempPast.push(appointment);
+          } else {
+            let canAdd = true;
+            for (const existing of tempPast) {
+              if (existing.appointmentId === appointment.appointmentId) {
+                canAdd = false;
+                break;
+              }
+            }
+            if (canAdd) {
+              // Mapping For StaffIds
+              for (const staffId of appointment.listOfStaffsId) {
+                const staff = await staffApi.getStaffByStaffId(staffId);
+                if (!appointment.staffs) {
+                  appointment.staffs = [];
+                }
+                if (
+                  !appointment.staffs.some(
+                    (existingStaff) => existingStaff.staffId === staff.staffId
+                  )
+                ) {
+                  appointment.staffs.push(staff);
+                }
+              }
+              tempPast.push(appointment);
+            }
+          }
+          setPastAppointments(tempPast);
         }
       }
     } catch (error) {
@@ -382,6 +423,18 @@ function AppointmentsBox() {
     height: "300px",
   };
 
+  const pastAppointmentCardStyles = {
+    width: "92%",
+    margin: "20px",
+    border: "1px solid #e0e0e0",
+    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+    transition: "all 0.3s ease",
+    marginBottom: "20px",
+    padding: "12px",
+    borderRadius: "8px",
+    height: "350px",
+  };
+
   const invisibleScrollBarStyles = {
     "&::WebkitScrollbar": {
       display: "none",
@@ -466,6 +519,84 @@ function AppointmentsBox() {
                             "------------------------------"
                           )[1]
                         : "-"}
+                    </MDTypography>
+                  </CardContent>
+                </Card>
+              ))}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={6}>
+          <Card
+            style={{
+              height: "600px",
+              overflowY: "auto",
+              ...invisibleScrollBarStyles,
+            }}
+          >
+            <CardContent>
+              <MDBox
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: "20px",
+                  marginLeft: "20px",
+                  marginBottom: "20px",
+                }}
+              >
+                <MDTypography variant="h3" style={{ padding: "10px 20px" }}>
+                  List of Past Appointments:
+                </MDTypography>
+              </MDBox>
+
+              <Divider variant="middle" />
+              {pastAppointments.map((pastAppointment, index) => (
+                <Card key={index} style={pastAppointmentCardStyles}>
+                  <CardContent style={{ position: "relative" }}>
+                    <MDTypography variant="h4" color="info">
+                      Appointment {pastAppointment.appointmentId}
+                    </MDTypography>
+                    <MDTypography
+                      variant="h6"
+                      style={{ marginTop: "8px", fontWeight: "bold" }}
+                    >
+                      Actual DateTime:{" "}
+                      {formatDateToYYYYMMDDHHMM(
+                        parseDateFromLocalDateTimeWithSecs(
+                          pastAppointment.actualDateTime
+                        )
+                      )}
+                    </MDTypography>
+                    <MDTypography variant="h6" style={{ marginTop: "8px" }}>
+                      Department: {pastAppointment.departmentName}
+                    </MDTypography>
+                    <MDTypography variant="h6" style={{ marginTop: "8px" }}>
+                      Description: {pastAppointment.description}
+                    </MDTypography>
+                    <MDTypography variant="h6" style={{ marginTop: "8px" }}>
+                      Comments :{" "}
+                      {pastAppointment.comments.length > 0
+                        ? pastAppointment.comments.split(
+                            "------------------------------"
+                          )[0] +
+                          ", " +
+                          pastAppointment.comments.split(
+                            "------------------------------"
+                          )[1]
+                        : "-"}
+                    </MDTypography>
+                    <MDTypography variant="h6" style={{ marginTop: "8px" }}>
+                      Staffs :
+                      <ul style={{ marginTop: "8px", marginLeft: "20px" }}>
+                        {pastAppointment.staffs.map((staff, index) => (
+                          <li key={index}>
+                            {staff.staffRoleEnum} {staff.firstname}{" "}
+                            {staff.lastname}
+                          </li>
+                        ))}
+                      </ul>
                     </MDTypography>
                   </CardContent>
                 </Card>

@@ -1,0 +1,7 @@
+.cs-message-input__content-editor-wrapper {
+    margin-left: 10px;
+}
+
+.cs-message-input__tools .cs-button--attachment {
+    display: none;
+}

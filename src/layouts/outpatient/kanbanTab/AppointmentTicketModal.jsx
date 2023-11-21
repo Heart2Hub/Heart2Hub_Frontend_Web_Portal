@@ -147,9 +147,16 @@ function AppointmentTicketModal({
 
   //Only for Discharge ticket, will create an Invoice after discharfe
   const handleDischarge = async () => {
-    // const confirmed = window.confirm(
-    //   "Are you sure you want to discharge the patient?"
-    // );
+    if (!selectedAppointment.arrived) {
+      reduxDispatch(
+        displayMessage({
+          color: "error",
+          icon: "notification",
+          title: "Patient has not arrived! ",
+        })
+      );
+      return;
+    }
 
     try {
       await transactionItemApi.checkout(
@@ -189,15 +196,24 @@ function AppointmentTicketModal({
       const medicationsResponse = await inventoryApi.getAllMedicationsByAllergy(
         selectedAppointment.patientId
       );
-      setMedicationsAllergy(medicationsResponse.data);
+      const outpatientMedicationAllergy = medicationsResponse.data.filter(
+        (item) => item.itemTypeEnum !== "MEDICINE_INPATIENT"
+      );
+      setMedicationsAllergy(outpatientMedicationAllergy);
 
       const medicationsResponse2 = await inventoryApi.getAllMedication();
-      setMedications(medicationsResponse2.data);
+      const outpatientMedication = medicationsResponse2.data.filter(
+        (item) => item.itemTypeEnum !== "MEDICINE_INPATIENT"
+      );
+      setMedications(outpatientMedication);
 
       const servicesResponse = await inventoryApi.getAllServiceItemByUnit(
         loggedInStaff.unit.unitId
       );
-      setServices(servicesResponse.data);
+      const outpatientServices = servicesResponse.data.filter(
+        (service) => service.itemTypeEnum === "OUTPATIENT"
+      );
+      setServices(outpatientServices);
       // console.log(servicesResponse.data)
       // console.log(selectedAppointment)
     } catch (error) {
@@ -273,20 +289,21 @@ function AppointmentTicketModal({
       };
 
       const existsInAllergy = medicationsAllergy.some(
-				(item) => item.inventoryItemId === requestBody.inventoryItem
-			    );
-		    
-			    if (!existsInAllergy) {
-				reduxDispatch(
-					displayMessage({
-						color: "error",
-						icon: "notification",
-						title: "Error",
-						content: "Patient has allergy restrictions from selected Medication.",
-					})
-				);
-				return;	
-			    }
+        (item) => item.inventoryItemId === requestBody.inventoryItem
+      );
+
+      if (!existsInAllergy) {
+        reduxDispatch(
+          displayMessage({
+            color: "error",
+            icon: "notification",
+            title: "Error",
+            content:
+              "Patient has allergy restrictions from selected Medication.",
+          })
+        );
+        return;
+      }
       console.log(requestBody);
 
       transactionItemApi
@@ -447,7 +464,9 @@ function AppointmentTicketModal({
       (staff) => staff.staffId === staffId
     )[0];
 
-    console.log("Facility Id: " + facility.facilityId);
+    //AMELIA REMOVED THIS LINE BELOW BECAUSE THERE WAS A BUG BUT ACTUALLY HAVENT FIX YET
+
+    // console.log("Facility Id: " + facility.facilityId);
 
     if (facility) {
       setFacility(facility);
@@ -601,7 +620,7 @@ function AppointmentTicketModal({
 
   const handleCloseConfirmDischarge = () => {
     setConfirmDischargeOpen(false);
-  }
+  };
 
   const handleCloseAssignDialog = () => {
     reduxDispatch(
@@ -1104,11 +1123,15 @@ function AppointmentTicketModal({
           </MDButton>
         </DialogActions>
       </Dialog>
-      <Dialog open={isConfirmDischargeOpen} onClose={handleCloseConfirmDischarge}>
+      <Dialog
+        open={isConfirmDischargeOpen}
+        onClose={handleCloseConfirmDischarge}
+      >
         <DialogTitle>Confirm Discharge</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to discharge {selectedAppointment.firstName} {selectedAppointment.lastName}?
+            Are you sure you want to discharge {selectedAppointment.firstName}{" "}
+            {selectedAppointment.lastName}?
           </DialogContentText>
         </DialogContent>
         <DialogActions>

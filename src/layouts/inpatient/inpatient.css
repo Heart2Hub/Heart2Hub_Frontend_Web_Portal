@@ -182,24 +182,12 @@
   padding: 5px;
 }
 
-.admission-calendar .rbc-toolbar {
+.admission-calendar .rbc-toolbar > :nth-child(3) {
   display: none;
 }
 
-.no-time .rbc-time-gutter {
-  width: 0;
-}
-
-.no-time .rbc-time-header-gutter {
-  display: none;
-}
-
-.has-time .rbc-time-view {
+.admission-calendar .rbc-time-header-content {
   width: 300px;
-}
-
-.no-time .rbc-time-view {
-  width: 200px;
 }
 
 .admission-calendar .rbc-event,
@@ -211,7 +199,31 @@
   display: none;
 }
 
-.no-admission {
-  height: 162.48px;
-  padding: 10px;
+.admission-calendar .rbc-event-label {
+  display: none;
+}
+
+/* COLORS FOR CALENDAR EVENTS */
+.admission-calendar .rbc-events-container .rbc-event {
+  background-color: #265985;
+}
+
+.admission-calendar .rbc-events-container .rbc-event:has(.orange-event) {
+  background-color: orange;
+}
+
+.admission-calendar .rbc-events-container .rbc-event:has(.red-event) {
+  background-color: red;
+}
+
+.admission-calendar .rbc-events-container .rbc-event:has(.green-event) {
+  background-color: green;
+}
+
+/* Medication order */
+.medication-order-table {
+  width: 100%;
+  font-size: 18px;
+  border-collapse: separate;
+  border-spacing: 0 10px;
 }
